@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8" />
+    <title>
+        成都亚原软件有限公司-首页
+    </title>
+    <link href="assets/icons/logo_large.png" rel="icon" />
+    <link href="widgets/weather_time_widget.css" rel="stylesheet" />
+    <link href="assets/css/context_menu.css" rel="stylesheet" />
+    <script defer="" src="widgets/weather_time_widget_v3.js"></script>
+    <link href="assets/css/main.css" rel="stylesheet" />
+    <script defer="True" src="assets/js/main.js"></script>
+    <script defer="True" src="assets/js/snap_drag.js"></script>
+</head>
+<body onload="makeDesktopIconsDraggable();enterFullscreen()">
+    <div class="desktop">
+        <div class="power-menu" id="power-menu" style="display:none">
+            <div class="power-item" onclick="document.getElementById('power-menu').style.display = 'none'">
+                <span class="emoji">
+                    🔒
+                </span>
+                <span>
+                    锁定
+                </span>
+            </div>
+            <div class="power-item" onclick="document.getElementById('power-menu').style.display = 'none'">
+                <span class="emoji">
+                    🌙
+                </span>
+                <span>
+                    休眠
+                </span>
+            </div>
+            <div class="power-item" onclick="shutdownSystem()">
+                <span class="emoji">
+                    ⏻
+                </span>
+                <span>
+                    关闭
+                </span>
+            </div>
+            <div class="power-item" onclick="sessionStorage.removeItem('booted'); location.reload()">
+                <span class="emoji">
+                    🔄
+                </span>
+                <span>
+                    重新启动
+                </span>
+            </div>
+        </div>
+        <div class="icon" id="web" onclick="openWindow('web', '网站建设', 'web.html', 'assets/icons/web.png')">
+            <img src="assets/icons/web.png" />
+            <label>
+                网站建设
+            </label>
+        </div>
+        <div class="icon" id="cloud" onclick="openWindow('cloud', '云服务', 'cloud.html', 'assets/icons/cloud.png')">
+            <img src="assets/icons/cloud.png" />
+            <label>
+                云服务
+            </label>
+        </div>
+        <div class="icon" id="yunmishu" onclick="openWindow('yunmishu_root', '云秘书', '', 'assets/icons/cloud_secretary.png')">
+            <img src="assets/icons/cloud_secretary.png" />
+            <label>
+                云秘书
+            </label>
+        </div>
+        <div class="icon" id="software" onclick="openWindow('software', '软件开发', 'software.html', 'assets/icons/code.png')">
+            <img src="assets/icons/code.png" />
+            <label>
+                软件开发
+            </label>
+        </div>
+        <div class="icon" id="japan" onclick="openWindow('japan', '对日外包', 'japan.html', 'assets/icons/japan.png')">
+            <img src="assets/icons/japan.png" />
+            <label>
+                对日外包
+            </label>
+        </div>
+        <div class="icon" id="news" onclick="openWindow('news', '新闻中心', 'news.html', 'assets/icons/news.png')">
+            <img src="assets/icons/news.png" />
+            <label>
+                新闻中心
+            </label>
+        </div>
+        <div class="icon" id="contact" onclick="openWindow('contact', '联系我们', 'contact.html', 'assets/icons/contact.png')">
+            <img src="assets/icons/contact.png" />
+            <label>
+                联系我们
+            </label>
+        </div>
+    </div>
+    <div class="taskbar">
+        <div id="taskbar-datetime" onclick="toggleCalendar()">
+            <div id="clock-time">
+                --:--
+            </div>
+            <div id="clock-date">
+                ----/--/--
+            </div>
+        </div>
+        <div class="start-button" onclick="toggleStartMenu()">
+            <img alt="开始" src="assets/icons/logo_large.png" />
+        </div>
+    </div>
+    <!-- Weather & Time Widget -->
+    <div class="weather-widget" id="weatherTimeWidget">
+        <div class="weather-header">
+            <span id="weather-location">
+                Loading...
+            </span>
+            <button id="closeWeatherBtn">
+                ✕
+            </button>
+        </div>
+        <div class="weather-info">
+            <img alt="Weather" id="weather-icon" src="" />
+            <div>
+                <div id="weather-temp">
+                    --°C
+                </div>
+                <div id="weather-desc">
+                    Loading...
+                </div>
+            </div>
+        </div>
+        <div class="time-info">
+            <div id="local-time">
+                --:--
+            </div>
+        </div>
+    </div>
+    <!-- 页脚版权信息 -->
+    <div id="desktop-footer">
+    </div>
+    <script src="widgets/context_menu.js"></script>
+    <div id="calendar-popup">
+        <header>
+            <button id="prev-month">
+                ←
+            </button>
+            <h4 id="calendar-header">
+                ...
+            </h4>
+            <button id="next-month">
+                →
+            </button>
+        </header>
+        <div class="days" id="calendar-days">
+        </div>
+    </div>
+    <!-- 页脚版权信息 -->
+    <div id="desktop-footer" style="
+  position: fixed;
+  right: 16px;
+  bottom: 52px;
+  color: white;
+  font-size: 12px;
+  z-index: 9999;
+  opacity: 0.8;
+  pointer-events: none;">
+    </div>
+    <!-- Win11 Start Menu -->
+    <!-- Win11 中文开始菜单 -->
+    <div id="start-menu">
+        <ul>
+            <li onclick="openWindow('panel', '控制面板', 'panel.html', 'assets/icons/panel.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="控制面板" src="assets/icons/panel.png" />
+                <span>
+                    控制面板
+                </span>
+            </li>
+            <li onclick="openWindow('road','问道', 'road.html', 'assets/icons/wendao.png');document.getElementById('start-menu').style.display='none'">
+                <img src="assets/icons/wendao.png">
+                <span>问道</span>
+            </li>
+            <li onclick="openWindow('sysinfo', '系统信息', 'sysinfo.html', 'assets/icons/sysinfo.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="系统信息" src="assets/icons/sysinfo.png" />
+                <span>
+                    系统信息
+                </span>
+            </li>
+            <li onclick="openWindow('yunmishu_root', '云秘书', '', 'assets/icons/cloud_secretary.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="云秘书" src="assets/icons/cloud_secretary.png" />
+                <span>
+                    云秘书
+                </span>
+            </li>
+            <li onclick="openWindow('edge', '浏览器', 'edge.html', 'assets/icons/edge.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="浏览器" src="assets/icons/edge.png" />
+                <span>
+                    浏览器
+                </span>
+            </li>
+            <li onclick="openWindow('mail', '邮件', 'mail.html', 'assets/icons/mail.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="邮件" src="assets/icons/mail.png" />
+                <span>
+                    邮件
+                </span>
+            </li>
+            <li onclick="openWindow('calendar', '日历', 'calendar.html', 'assets/icons/calendar.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="日历" src="assets/icons/calendar.png" />
+                <span>
+                    日历
+                </span>
+            </li>
+            <li onclick="openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png');document.getElementById('start-menu').style.display='none'">
+                <img alt="设置" src="assets/icons/settings.png" />
+                <span>
+                    设置
+                </span>
+            </li>
+            <li class="power-btn" onclick="togglePowerMenu();">
+                <img alt="电源" src="assets/icons/power.png" />
+                <span>
+                    电源
+                </span>
+            </li>
+        </ul>
+    </div>
+    <div class="context-menu" id="window-context-menu" style="display:none; position:absolute; z-index:2147483648">
+        <ul>
+            <li onclick="minimizeTargetWindow();">
+                最小化
+            </li>
+            <li onclick="maximizeTargetWindow()">
+                缩放
+            </li>
+            <li onclick="closeTargetWindow()">
+                关闭
+            </li>
+        </ul>
+    </div>
+    <script src="assets/js/tw.js"></script>
+</body>
+</html>

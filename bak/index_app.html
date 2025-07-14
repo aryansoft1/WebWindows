@@ -1,0 +1,1061 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+  <title>成都亚原软件有限公司-首页</title>
+  <link rel="icon" href="assets/icons/logo_large.png">
+  <style>
+    body {
+      background: url('assets/icons/wall_aryan.jpg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    .desktop {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .icon {
+      width: 72px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .icon img {
+      width: 64px;
+      height: 64px;
+      padding: 6px;
+      object-fit: contain;
+      background-color: transparent;
+      border-radius: 12px;
+      transition: background 0.3s;
+    }
+    .icon:hover img {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .icon label {
+      display: block;
+      font-size: 12px;
+      color: white;
+      margin-top: 4px;
+    }
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.3);
+    }
+    .start-button {
+      width: 38px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      cursor: pointer;
+    }
+    .start-button img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    .start-menu {
+      display: none;
+      position: fixed;
+      bottom: 50px;
+      left: 10px;
+      width: 220px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+      padding: 16px;
+    }
+    .start-menu h4 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #222;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 8px;
+    }
+    .start-menu ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .start-menu li {
+      padding: 6px 0;
+      color: #333;
+      cursor: pointer;
+    }
+    .start-menu li:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  </style>
+
+  <link rel="stylesheet" href="widgets/weather_time_widget.css">
+  <script defer src="widgets/weather_time_widget_v3.js"></script>
+
+<style>
+#taskbar-time { bottom: 9px !important; cursor: default;}
+</style>
+
+<style>
+#calendar-popup {
+  position: fixed;
+  bottom: 60px;
+  right: 10px;
+  background: #1e1e1e;
+  color: white;
+  padding: 14px;
+  border-radius: 10px;
+  display: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  width: 220px;
+  font-family: 'Segoe UI', sans-serif;
+  z-index: 9999;
+}
+#calendar-popup header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+#calendar-popup button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+#calendar-popup h4 {
+  margin: 0;
+  font-size: 16px;
+}
+#calendar-popup .days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+#calendar-popup .day {
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  text-align: center;
+  border-radius: 4px;
+  background: #333;
+  font-size: 13px;
+}
+#calendar-popup .today {
+  background: #0078D7;
+}
+</style>
+
+<style>
+.company-info {
+  position: absolute;
+  top: 8px;
+  left: 20px;
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+  font-size: 14px;
+  color: white;
+  text-shadow: 0 0 2px #000;
+  z-index: 9999;
+}
+
+.taskbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(255,255,255,0.3);
+}
+</style>
+
+<style>
+.company-info {
+  color: white;
+  font-size: 12px;
+  margin-right: auto;
+  padding-left: 10px;
+  line-height: 1.2;
+  font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+}
+
+#taskbar-time {
+  position: absolute;
+  bottom: 12px;
+  right: 10px;
+  text-align: right;
+  color: white;
+  font-size: 12px;
+  line-height: 1.2;
+cursor: default;}
+</style>
+
+<style>
+.window {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 120, 215, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.window-header {
+  height: 32px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+
+.window-header .button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-left: 8px;
+  background: #e81123;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+
+.window-header .button:hover {
+  filter: brightness(1.2);
+}
+</style>
+
+<style>
+.window {
+  will-change: top, left;
+  transition: none !important;
+}
+</style>
+
+<style>
+.window-header {
+  height: 36px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+</style>
+
+<style>
+.window-header {
+  height: 36px;
+  background: rgba(32, 32, 32, 0.6);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  color: white;
+  font-family: "Segoe UI", sans-serif;
+  font-size: 13px;
+}
+
+.window-header .title {
+  flex-grow: 1;
+  user-select: none;
+}
+
+.window-header .buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.window-header .button {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.window-header .button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.window-header .button.close:hover {
+  background: #e81123;
+}
+
+.window-header .button svg {
+  width: 14px;
+  height: 14px;
+  stroke: white;
+  stroke-width: 2;
+  fill: none;
+}
+</style>
+
+<style>
+.window, .window * {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+</style>
+
+<style>
+.weather-widget, .weather-widget * {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+</style>
+
+<style>
+.window-header img.window-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+.window-header .title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-grow: 1;
+  color: white;
+}
+</style>
+</head>
+<body>
+  <div class="desktop">
+    <div class="icon"><img src="assets/icons/web.png"><label>网站建设</label></div>
+    <div class="icon"><img src="assets/icons/cloud.png"><label>云服务</label></div>
+    <div class="icon" id="software" onclick="openWindow('software', '软件开发', 'software.html')">
+  <img src="assets/icons/code.png">
+  <label>软件开发</label>
+</div>
+    <div class="icon"><img src="assets/icons/japan.png"><label>对日外包</label></div>
+    <div class="icon"><img src="assets/icons/news.png"><label>新闻中心</label></div>
+    <div class="icon"><img src="assets/icons/contact.png"><label>联系我们</label></div>
+  </div>
+  <div class="taskbar">
+  <div id="taskbar-time" onclick="toggleCalendar()">
+  <div id="clock-time">--:--</div>
+  <div id="clock-date">----/--/--</div>
+</div>
+
+
+
+
+
+
+
+    <div class="start-button" onclick="toggleStartMenu()">
+      <img src="assets/icons/logo_large.png" alt="开始">
+    </div>
+  </div>
+  <div class="start-menu" id="startMenu">
+    <h4>开始菜单</h4>
+    <ul>
+      <li>控制面板</li>
+      <li>个性化</li>
+      <li>系统信息</li>
+    </ul>
+  </div>
+  <script>
+    function toggleStartMenu() {
+      const menu = document.getElementById('startMenu');
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+    window.addEventListener('click', function(e) {
+      const menu = document.getElementById('startMenu');
+      const btn = document.querySelector('.start-button');
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+  </script>
+
+  <!-- Weather & Time Widget -->
+  <div id="weatherTimeWidget" class="weather-widget">
+    <div class="weather-header">
+      <span id="weather-location">Loading...</span>
+      <button id="closeWeatherBtn">✕</button>
+    </div>
+    <div class="weather-info">
+      <img id="weather-icon" src="" alt="Weather" />
+      <div>
+        <div id="weather-temp">--°C</div>
+        <div id="weather-desc">Loading...</div>
+      </div>
+    </div>
+    <div class="time-info">
+      <div id="local-time">--:--</div>
+    </div>
+  </div>
+
+<!-- 页脚版权信息 -->
+<div id="desktop-footer"></div>
+
+<script src="widgets/calendar_taskbar.js"></script>
+
+<script src="widgets/context_menu.js"></script>
+
+
+<script>
+function updateClock() {
+  const elTime = document.getElementById('clock-time');
+  const elDate = document.getElementById('clock-date');
+  const now = new Date();
+
+  if (elTime) {
+    const hh = String(now.getHours()).padStart(2, '0');
+    const mm = String(now.getMinutes()).padStart(2, '0');
+    elTime.textContent = `${hh}:${mm}`;
+  }
+
+  if (elDate) {
+    const yyyy = now.getFullYear();
+    const mo = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    elDate.textContent = `${yyyy}/${mo}/${dd}`;
+  }
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+
+
+<div id="calendar-popup">
+  <header>
+    <button id="prev-month">&#8592;</button>
+    <h4 id="calendar-header">...</h4>
+    <button id="next-month">&#8594;</button>
+  </header>
+  <div class="days" id="calendar-days"></div>
+</div>
+
+<script>
+let calendarDate = new Date();
+function buildCalendar(date) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const today = new Date();
+  const daysEl = document.getElementById('calendar-days');
+  const headerEl = document.getElementById('calendar-header');
+  daysEl.innerHTML = '';
+  headerEl.textContent = year + '/' + String(month + 1).padStart(2, '0');
+  const firstDay = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+  for (let i = 0; i < firstDay; i++) {
+    const blank = document.createElement('div');
+    blank.className = 'day';
+    blank.textContent = '';
+    daysEl.appendChild(blank);
+  }
+  for (let d = 1; d <= totalDays; d++) {
+    const el = document.createElement('div');
+    el.className = 'day';
+    el.textContent = d;
+    if (
+      d === today.getDate() &&
+      month === today.getMonth() &&
+      year === today.getFullYear()
+    ) el.classList.add('today');
+    daysEl.appendChild(el);
+  }
+}
+document.getElementById('taskbar-time')?.addEventListener('click', () => {
+  const popup = document.getElementById('calendar-popup');
+  const isVisible = popup.style.display === 'block';
+  popup.style.display = isVisible ? 'none' : 'block';
+  if (!isVisible) buildCalendar(calendarDate);
+});
+document.getElementById('prev-month')?.addEventListener('click', () => {
+  calendarDate.setMonth(calendarDate.getMonth() - 1);
+  buildCalendar(calendarDate);
+});
+document.getElementById('next-month')?.addEventListener('click', () => {
+  calendarDate.setMonth(calendarDate.getMonth() + 1);
+  buildCalendar(calendarDate);
+});
+</script>
+
+
+<script>
+
+function openWindow(id, title, url) {
+  if (document.getElementById("win-" + id)) return;
+
+  const win = document.createElement("div");
+  win.className = "window";
+  win.id = "win-" + id;
+  win.style.position = "absolute";
+  win.style.top = "100px";
+  win.style.left = "100px";
+  win.style.width = "600px";
+  win.style.height = "400px";
+  win.style.zIndex = "1001";
+
+  const titleBar = document.createElement("div");
+  titleBar.className = "window-header";
+  titleBar.innerHTML = `
+    <div class="title">${title}</div>
+    <div class="buttons">
+      <div class="button minimize" title="最小化">_</div>
+      <div class="button maximize" title="最大化">⬜</div>
+      <div class="button close" title="关闭" onclick="document.getElementById('win-${id}').remove()">✕</div>
+    </div>
+  `;
+
+  const content = document.createElement("div");
+  content.style.height = "calc(100% - 36px)";
+  content.style.overflow = "auto";
+  fetch(url)
+    .then(resp => resp.text())
+    .then(html => content.innerHTML = html)
+    .catch(() => content.innerHTML = "<p style='padding:1rem'>加载失败：" + url + "</p>");
+
+  win.appendChild(titleBar);
+  win.appendChild(content);
+  document.body.appendChild(win);
+}
+
+</script>
+
+<script>
+
+function openWindow(id, title, url) {
+  if (document.getElementById("win-" + id)) return;
+
+  const win = document.createElement("div");
+  win.className = "window";
+  win.id = "win-" + id;
+  win.style.position = "absolute";
+  win.style.top = "100px";
+  win.style.left = "100px";
+  win.style.width = "600px";
+  win.style.height = "400px";
+  win.style.zIndex = "1001";
+
+  const titleBar = document.createElement("div");
+  titleBar.className = "window-header";
+  titleBar.innerHTML = `
+    <div class="title">${title}</div>
+    <div class="buttons">
+      <div class="button minimize" title="最小化">_</div>
+      <div class="button maximize" title="最大化">⬜</div>
+      <div class="button close" title="关闭" onclick="document.getElementById('win-${id}').remove()">✕</div>
+    </div>
+  `;
+
+  const content = document.createElement("div");
+  content.style.height = "calc(100% - 36px)";
+  content.style.overflow = "auto";
+  fetch(url)
+    .then(resp => resp.text())
+    .then(html => content.innerHTML = html)
+    .catch(() => content.innerHTML = "<p style='padding:1rem'>加载失败：" + url + "</p>");
+
+  win.appendChild(titleBar);
+  win.appendChild(content);
+  document.body.appendChild(win);
+}
+
+
+function closeWindow(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function maximizeWindow(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.top = "0px";
+    el.style.left = "0px";
+    el.style.width = "100vw";
+    el.style.height = "100vh";
+  }
+}
+
+function minimizeWindow(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = "none";
+    // 可扩展为记录最小化状态
+  }
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const allTimes = document.querySelectorAll("#taskbar-time");
+  allTimes.forEach(el => {
+    if (!el.querySelector("#clock-time")) {
+      el.remove(); // 删除不是主任务栏的幽灵副本
+    }
+  });
+});
+</script>
+
+
+<script>
+document.addEventListener('click', function (e) {
+  const calendar = document.getElementById('calendar');
+  const time = document.getElementById('taskbar-time');
+  if (calendar && !calendar.contains(e.target) && !time.contains(e.target)) {
+    calendar.style.display = 'none';
+  }
+});
+</script>
+
+
+<script>
+function toggleCalendar() {
+  const calendar = document.getElementById('calendar');
+  if (calendar) {
+    calendar.style.display = (calendar.style.display === 'block') ? 'none' : 'block';
+  }
+}
+</script>
+
+<script>
+function toggleMaximizeWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+
+  if (win.dataset.maximized === "true") {
+    // restore
+    win.style.top = win.dataset.prevTop;
+    win.style.left = win.dataset.prevLeft;
+    win.style.width = win.dataset.prevWidth;
+    win.style.height = win.dataset.prevHeight;
+    win.dataset.maximized = "false";
+  } else {
+    // maximize
+    win.dataset.prevTop = win.style.top;
+    win.dataset.prevLeft = win.style.left;
+    win.dataset.prevWidth = win.style.width;
+    win.dataset.prevHeight = win.style.height;
+    win.style.top = "0";
+    win.style.left = "0";
+    win.style.width = "100%";
+    win.style.height = "100%";
+    win.style.zIndex = "1000";
+    win.dataset.maximized = "true";
+  }
+}
+</script>
+<script>
+function toggleMaximizeWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  const maximizeBtn = win.querySelector(".btn-maximize");
+
+  if (win.dataset.maximized === "true") {
+    // restore
+    win.style.top = win.dataset.prevTop;
+    win.style.left = win.dataset.prevLeft;
+    win.style.width = win.dataset.prevWidth;
+    win.style.height = win.dataset.prevHeight;
+    win.dataset.maximized = "false";
+    if (maximizeBtn) maximizeBtn.innerHTML = "🗖";
+  } else {
+    // maximize
+    win.dataset.prevTop = win.style.top;
+    win.dataset.prevLeft = win.style.left;
+    win.dataset.prevWidth = win.style.width;
+    win.dataset.prevHeight = win.style.height;
+    win.style.top = "0";
+    win.style.left = "0";
+    win.style.width = "100%";
+    win.style.height = "100%";
+    win.style.zIndex = "1000";
+    win.dataset.maximized = "true";
+    if (maximizeBtn) maximizeBtn.innerHTML = "🗗";
+  }
+}
+</script>
+
+<script>
+function toggleMaximizeWindow(id) {
+  const win = document.getElementById(id);
+  if (!win) return;
+  const maximizeBtn = win.querySelector(".btn-maximize");
+
+  if (win.dataset.maximized === "true") {
+    win.style.top = win.dataset.prevTop;
+    win.style.left = win.dataset.prevLeft;
+    win.style.width = win.dataset.prevWidth;
+    win.style.height = win.dataset.prevHeight;
+    win.dataset.maximized = "false";
+    if (maximizeBtn) maximizeBtn.innerHTML = "🗖";
+  } else {
+    win.dataset.prevTop = win.style.top;
+    win.dataset.prevLeft = win.style.left;
+    win.dataset.prevWidth = win.style.width;
+    win.dataset.prevHeight = win.style.height;
+    win.style.top = "0";
+    win.style.left = "0";
+    win.style.width = "100%";
+    win.style.height = "100%";
+    win.style.zIndex = "1000";
+    win.dataset.maximized = "true";
+    if (maximizeBtn) maximizeBtn.innerHTML = "🗗";
+  }
+}
+</script>
+
+
+<!-- 页脚版权信息 -->
+<div id="desktop-footer" style="
+  position: fixed;
+  right: 16px;
+  bottom: 52px;
+  color: white;
+  font-size: 12px;
+  z-index: 9999;
+  opacity: 0.8;
+  pointer-events: none;"></div>
+
+<script>
+window.onload = function () {
+  document.querySelectorAll('.window').forEach(win => {
+    const header = win.querySelector('.window-header');
+    if (!header) return;
+
+    let isDragging = false, offsetX = 0, offsetY = 0;
+    let isMaximized = false;
+    let prev = {};
+
+    header.addEventListener('mousedown', e => {
+      isDragging = true;
+      offsetX = e.clientX - win.offsetLeft;
+      offsetY = e.clientY - win.offsetTop;
+      win.style.zIndex = Date.now(); // bring to front
+    });
+
+    document.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      let x = e.clientX - offsetX;
+      let y = e.clientY - offsetY;
+
+      const snap = 20;
+      const maxW = window.innerWidth - win.offsetWidth;
+      const maxH = window.innerHeight - win.offsetHeight;
+      if (Math.abs(x) < snap) x = 0;
+      if (Math.abs(x - maxW) < snap) x = maxW;
+      if (Math.abs(y) < snap) y = 0;
+      if (Math.abs(y - maxH) < snap) y = maxH;
+
+      win.style.left = x + 'px';
+      win.style.top = y + 'px';
+    });
+
+    document.addEventListener('mouseup', () => isDragging = false);
+
+    header.addEventListener('dblclick', () => {
+      if (!isMaximized) {
+        prev = {
+          top: win.style.top,
+          left: win.style.left,
+          width: win.style.width,
+          height: win.style.height
+        };
+        win.style.top = '0';
+        win.style.left = '0';
+        win.style.width = '100vw';
+        win.style.height = '100vh';
+      } else {
+        win.style.top = prev.top;
+        win.style.left = prev.left;
+        win.style.width = prev.width;
+        win.style.height = prev.height;
+      }
+      isMaximized = !isMaximized;
+    });
+  });
+};
+</script>
+
+
+
+
+
+<script>
+function bindWindowBehavior(win) {
+  const header = win.querySelector('.window-header');
+  const minimizeBtn = header?.querySelector('.button.minimize');
+  const maximizeBtn = header?.querySelector('.button.maximize');
+  const closeBtn = header?.querySelector('.button.close');
+
+  let isDragging = false, offsetX = 0, offsetY = 0;
+  let isMaximized = false;
+  let prev = {};
+
+  header?.addEventListener('mousedown', e => {
+    isDragging = true;
+    offsetX = e.clientX - win.offsetLeft;
+    offsetY = e.clientY - win.offsetTop;
+    win.style.zIndex = Date.now();
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!isDragging) return;
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+    const snap = 20;
+    const maxW = window.innerWidth - win.offsetWidth;
+    const maxH = window.innerHeight - win.offsetHeight;
+    if (Math.abs(x) < snap) x = 0;
+    if (Math.abs(x - maxW) < snap) x = maxW;
+    if (Math.abs(y) < snap) y = 0;
+    if (Math.abs(y - maxH) < snap) y = maxH;
+    win.style.left = x + 'px';
+    win.style.top = y + 'px';
+  });
+
+  document.addEventListener('mouseup', () => isDragging = false);
+  header?.addEventListener('dblclick', () => toggleMaximize());
+  maximizeBtn?.addEventListener('click', () => toggleMaximize());
+  minimizeBtn?.addEventListener('click', () => {
+    win.style.display = 'none';
+    updateTaskbarActive(win.id, false);
+  });
+  closeBtn?.addEventListener('click', () => {
+    win.remove();
+    const icon = document.querySelector('.taskbar-app[data-id="' + win.id + '"]');
+    icon?.remove();
+  });
+
+  function toggleMaximize() {
+    if (!isMaximized) {
+      prev = {
+        top: win.style.top,
+        left: win.style.left,
+        width: win.style.width,
+        height: win.style.height
+      };
+      win.style.top = '0';
+      win.style.left = '0';
+      win.style.width = '100vw';
+      win.style.height = '100vh';
+    } else {
+      win.style.top = prev.top;
+      win.style.left = prev.left;
+      win.style.width = prev.width;
+      win.style.height = prev.height;
+    }
+    isMaximized = !isMaximized;
+  }
+}
+
+function createTaskbarIcon(id, title, iconUrl) {
+  const taskbar = document.querySelector('.taskbar');
+  if (!taskbar || document.querySelector('[data-id="win-' + id + '"]')) return;
+
+  const icon = document.createElement('div');
+  icon.className = 'taskbar-app';
+  icon.dataset.id = 'win-' + id;
+  icon.title = title;
+  icon.style.display = 'flex';
+  icon.style.alignItems = 'center';
+  icon.style.gap = '6px';
+  icon.style.marginLeft = '6px';
+  icon.style.padding = '4px 8px';
+  icon.style.borderRadius = '6px';
+  icon.style.cursor = 'pointer';
+  icon.style.background = 'rgba(255,255,255,0.15)';
+  icon.style.color = 'white';
+  icon.style.fontSize = '12px';
+
+  const img = document.createElement('img');
+  img.src = iconUrl;
+  img.style.width = '18px';
+  img.style.height = '18px';
+  img.style.borderRadius = '4px';
+
+  icon.appendChild(img);
+  taskbar.appendChild(icon);
+
+  icon.addEventListener('click', () => {
+    const win = document.getElementById('win-' + id);
+    if (win) {
+      const isVisible = win.style.display !== 'none';
+      win.style.display = isVisible ? 'none' : 'block';
+      if (!isVisible) win.style.zIndex = Date.now();
+      updateTaskbarActive('win-' + id, !isVisible);
+    }
+  });
+
+  updateTaskbarActive('win-' + id, true);
+}
+
+function updateTaskbarActive(id, isActive) {
+  const icon = document.querySelector('.taskbar-app[data-id="' + id + '"]');
+  if (icon) {
+    icon.style.background = isActive
+      ? 'rgba(255,255,255,0.3)'
+      : 'rgba(255,255,255,0.1)';
+  }
+}
+
+const originalOpenWindow = window.openWindow;
+window.openWindow = function(id, title, url, iconUrl) {
+  const winId = "win-" + id;
+  const existing = document.getElementById(winId);
+  if (existing) {
+    if (existing.style.display === "none") {
+      existing.style.display = "block";
+      updateTaskbarActive(winId, true);
+    }
+    existing.style.zIndex = Date.now();
+    return;
+  }
+
+  const win = document.createElement("div");
+  win.className = "window";
+  win.id = winId;
+  win.style.position = "absolute";
+  win.style.top = "80px";
+  win.style.left = "180px";
+  win.style.width = "600px";
+  win.style.height = "400px";
+  win.style.zIndex = "1001";
+
+  const titleBar = document.createElement("div");
+  titleBar.className = "window-header";
+  titleBar.innerHTML = `
+    <img class="window-icon" src="${iconUrl}" alt="icon">
+    <div class="title">${title}</div>
+    <div class="buttons">
+      <div class="button minimize" title="最小化">_</div>
+      <div class="button maximize" title="最大化">⬜</div>
+      <div class="button close" title="关闭">✕</div>
+    </div>
+  `;
+
+  const content = document.createElement("div");
+  content.style.height = "calc(100% - 36px)";
+  content.style.overflow = "auto";
+  fetch(url)
+    .then(resp => resp.text())
+    .then(html => content.innerHTML = html)
+    .catch(() => content.innerHTML = "<p style='padding:1rem'>加载失败：" + url + "</p>");
+
+  win.appendChild(titleBar);
+  win.appendChild(content);
+  document.body.appendChild(win);
+
+  bindWindowBehavior(win);
+  createTaskbarIcon(id, title, iconUrl);
+};
+</script>
+
+
+
+
+
+<script>
+function createTaskbarIcon(id, title) {
+  const existing = document.querySelector('.taskbar-app[data-id="' + id + '"]');
+  if (existing) return;
+
+  const taskbar = document.querySelector('.taskbar');
+  const icon = document.createElement("div");
+  icon.className = "taskbar-app";
+  icon.dataset.id = "win-" + id;
+  icon.textContent = title;
+  icon.style.marginLeft = "6px";
+  icon.style.padding = "4px 8px";
+  icon.style.background = "rgba(255,255,255,0.2)";
+  icon.style.borderRadius = "6px";
+  icon.style.cursor = "pointer";
+  icon.style.fontSize = "12px";
+  icon.style.color = "#fff";
+  icon.style.userSelect = "none";
+  icon.addEventListener("click", () => {
+    const win = document.getElementById("win-" + id);
+    if (win) {
+      if (win.style.display === "none") {
+        win.style.display = "block";
+        win.style.zIndex = Date.now();
+      } else {
+        win.style.display = "none";
+      }
+    }
+  });
+  taskbar.appendChild(icon);
+}
+
+// 包装 openWindow 以添加任务栏图标
+const originalOpenWindow = window.openWindow;
+window.openWindow = function(id, title, url) {
+  const existing = document.getElementById("win-" + id);
+  if (existing) {
+    if (existing.style.display === "none") {
+      existing.style.display = "block";
+      existing.style.zIndex = Date.now();
+    } else {
+      existing.style.zIndex = Date.now();
+    }
+    return;
+  }
+  originalOpenWindow(id, title, url);
+  const win = document.getElementById("win-" + id);
+  if (win) {
+    bindWindowBehavior(win);
+    createTaskbarIcon(id, title);
+  }
+};
+</script>
+
+<script>
+document.querySelectorAll('.icon-tile').forEach(tile => {
+  tile.addEventListener('click', () => {
+    const id = tile.dataset.id || tile.id || Math.random().toString(36).substring(2, 8);
+    const title = tile.querySelector('label')?.innerText || '窗口';
+    const icon = tile.querySelector('img')?.src || '';
+    const href = tile.dataset.href || tile.getAttribute('data-href') || '';
+    if (href) {
+      openWindow(id, title, href, icon);
+    }
+  });
+});
+</script>
+</body>
+</html>

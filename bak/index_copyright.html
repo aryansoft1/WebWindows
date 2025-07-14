@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>成都亚原软件有限公司-首页</title>
+  <link rel="icon" href="assets/icons/logo_large.png">
+  <style>
+    body {
+      background: url('assets/icons/wall_aryan.jpg') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", sans-serif;
+      overflow: hidden;
+    }
+    .desktop {
+      position: absolute;
+      top: 40px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+    .icon {
+      width: 72px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .icon img {
+      width: 64px;
+      height: 64px;
+      padding: 6px;
+      object-fit: contain;
+      background-color: transparent;
+      border-radius: 12px;
+      transition: background 0.3s;
+    }
+    .icon:hover img {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .icon label {
+      display: block;
+      font-size: 12px;
+      color: white;
+      margin-top: 4px;
+    }
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 42px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.3);
+    }
+    .start-button {
+      width: 38px;
+      height: 38px;
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      cursor: pointer;
+    }
+    .start-button img {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+    }
+    .start-menu {
+      display: none;
+      position: fixed;
+      bottom: 50px;
+      left: 10px;
+      width: 220px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.3);
+      padding: 16px;
+    }
+    .start-menu h4 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #222;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 8px;
+    }
+    .start-menu ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+    }
+    .start-menu li {
+      padding: 6px 0;
+      color: #333;
+      cursor: pointer;
+    }
+    .start-menu li:hover {
+      background: rgba(0, 0, 0, 0.05);
+    }
+  </style>
+
+  <link rel="stylesheet" href="widgets/weather_time_widget.css">
+  <script defer src="widgets/weather_time_widget_v3.js"></script>
+</head>
+<body>
+  <div class="desktop">
+    <div class="icon"><img src="assets/icons/web.png"><label>网站建设</label></div>
+    <div class="icon"><img src="assets/icons/cloud.png"><label>云服务</label></div>
+    <div class="icon"><img src="assets/icons/code.png"><label>软件开发</label></div>
+    <div class="icon"><img src="assets/icons/japan.png"><label>对日外包</label></div>
+    <div class="icon"><img src="assets/icons/news.png"><label>新闻中心</label></div>
+    <div class="icon"><img src="assets/icons/contact.png"><label>联系我们</label></div>
+  </div>
+  <div class="taskbar">
+    <div class="start-button" onclick="toggleStartMenu()">
+      <img src="assets/icons/logo_large.png" alt="开始">
+    </div>
+  </div>
+  <div class="start-menu" id="startMenu">
+    <h4>开始菜单</h4>
+    <ul>
+      <li>控制面板</li>
+      <li>个性化</li>
+      <li>系统信息</li>
+    </ul>
+  </div>
+  <script>
+    function toggleStartMenu() {
+      const menu = document.getElementById('startMenu');
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+    window.addEventListener('click', function(e) {
+      const menu = document.getElementById('startMenu');
+      const btn = document.querySelector('.start-button');
+      if (!btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+  </script>
+
+  <!-- Weather & Time Widget -->
+  <div id="weatherTimeWidget" class="weather-widget">
+    <div class="weather-header">
+      <span id="weather-location">Loading...</span>
+      <button id="closeWeatherBtn">✕</button>
+    </div>
+    <div class="weather-info">
+      <img id="weather-icon" src="" alt="Weather" />
+      <div>
+        <div id="weather-temp">--°C</div>
+        <div id="weather-desc">Loading...</div>
+      </div>
+    </div>
+    <div class="time-info">
+      <div id="local-time">--:--</div>
+    </div>
+  </div>
+
+<!-- 页脚版权信息 -->
+<div id="desktop-footer" style="position: fixed; right: 16px; bottom: 52px; color: white; font-size: 12px; z-index: 9999; opacity: 0.8; pointer-events: none;">
+  成都亚原软件有限公司 2015-2025 蜀ICP备16006466号-6
+</div>
+
+<script src="widgets/calendar_taskbar.js"></script>
+<script src="widgets/taskbar_weather.js"></script>
+<script src="widgets/context_menu.js"></script>
+
+
+<script>
+function updateClock() {
+  const elTime = document.getElementById('desktop-clock-time');
+  const elDate = document.getElementById('desktop-clock-date');
+  const now = new Date();
+  if (elTime) elTime.textContent = now.toLocaleTimeString();
+  if (elDate) elDate.textContent = now.toLocaleDateString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+
+</body>
+</html>

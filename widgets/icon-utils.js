@@ -1,0 +1,1 @@
+// icon-utils.js - placeholder for future utility functions

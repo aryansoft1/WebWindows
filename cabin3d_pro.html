@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>航班号轨迹查询（高亮飞机）</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: "Microsoft YaHei", sans-serif; }
+    #searchBar {
+      position: absolute; top: 10px; left: 10px; z-index: 100;
+      background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px;
+    }
+    #searchBar input { width: 100px; font-size: 14px; }
+    #searchBar button { margin-left: 4px; }
+  </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<div id="searchBar">
+  <input type="text" id="flightInput" placeholder="航班号" />
+  <button onclick="searchFlight()">查询</button>
+</div>
+
+<script>
+Cesium.Ion.defaultAccessToken = '';
+
+const viewer = new Cesium.Viewer('cesiumContainer', {
+  imageryProvider: false,
+  baseLayerPicker: false,
+  terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+  timeline: false,
+  animation: false,
+  geocoder: false,
+  shouldAnimate: false
+});
+
+// 添加天地图图层
+const imgLayer = new Cesium.WebMapTileServiceImageryProvider({
+  url: 'https://t{s}.tianditu.gov.cn/img_w/wmts?tk=96dc94f4824056d576af59ac9bc161b9',
+  layer: 'img',
+  style: 'default',
+  format: 'tiles',
+  tileMatrixSetID: 'w',
+  subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+  maximumLevel: 18
+});
+viewer.imageryLayers.addImageryProvider(imgLayer);
+
+const ciaLayer = new Cesium.WebMapTileServiceImageryProvider({
+  url: 'https://t{s}.tianditu.gov.cn/cia_w/wmts?tk=96dc94f4824056d576af59ac9bc161b9',
+  layer: 'cia',
+  style: 'default',
+  format: 'tiles',
+  tileMatrixSetID: 'w',
+  subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+  maximumLevel: 18
+});
+viewer.imageryLayers.addImageryProvider(ciaLayer);
+
+viewer.scene.globe.enableLighting = true;
+
+// 航班预设路线数据
+const flightRoutes = {
+  "CI8": [[121.0, 25.0], [135.0, 35.0], [150.0, 40.0], [-120.0, 34.0]],
+  "JL99": [[139.7, 35.6], [160.0, 45.0], [-130.0, 40.0]],
+  "NH118": [[135.5, 34.7], [140.0, 38.0], [170.0, 50.0], [-125.0, 36.0]]
+};
+
+let currentRouteEntity = null;
+let planeBillboard = null;
+let planeMarker = null;
+
+function searchFlight() {
+  const flightId = document.getElementById("flightInput").value.toUpperCase();
+  const route = flightRoutes[flightId];
+  if (!route) {
+    alert("未找到该航班号的轨迹！");
+    return;
+  }
+
+  // 清除旧路线与飞机
+  if (currentRouteEntity) viewer.entities.remove(currentRouteEntity);
+  if (planeBillboard) viewer.entities.remove(planeBillboard);
+  if (planeMarker) viewer.entities.remove(planeMarker);
+
+  const positions = route.map(coord => Cesium.Cartesian3.fromDegrees(coord[0], coord[1], 150000));
+
+  // 添加路线
+  currentRouteEntity = viewer.entities.add({
+    polyline: {
+      positions: positions,
+      width: 4,
+      material: new Cesium.PolylineGlowMaterialProperty({
+        glowPower: 0.1,
+        color: Cesium.Color.LIME
+      })
+    }
+  });
+
+  const start = Cesium.Cartesian3.fromDegrees(route[0][0], route[0][1], 150000);
+
+  // 添加 emoji 飞机图标
+  planeBillboard = viewer.entities.add({
+    position: start,
+    billboard: {
+      image: "https://img.icons8.com/emoji/96/airplane-emoji.png",
+      scale: 1.2,
+      verticalOrigin: Cesium.VerticalOrigin.CENTER
+    },
+    label: {
+      text: flightId,
+      font: "16px sans-serif",
+      fillColor: Cesium.Color.YELLOW,
+      outlineColor: Cesium.Color.BLACK,
+      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+      pixelOffset: new Cesium.Cartesian2(0, -30)
+    }
+  });
+
+  // 添加发光标记圈
+  planeMarker = viewer.entities.add({
+    position: start,
+    ellipse: {
+      semiMinorAxis: 50000.0,
+      semiMajorAxis: 50000.0,
+      material: Cesium.Color.YELLOW.withAlpha(0.4),
+      height: 0
+    }
+  });
+
+  viewer.flyTo(planeBillboard);
+}
+</script>
+</body>
+</html>

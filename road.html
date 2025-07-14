@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<title>问道・导航中心</title>
+<link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" rel="stylesheet"/>
+<link href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" rel="stylesheet"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f2f2f7;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: space-around;
+            background: #ffffff;
+            border-bottom: 1px solid #ccc;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            color: #555;
+            border-bottom: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 13px;
+        }
+
+            .tab i {
+                font-size: 20px;
+                margin-bottom: 4px;
+            }
+
+            .tab.active {
+                font-weight: bold;
+                color: #007aff;
+                border-bottom: 2px solid #007aff;
+                background: #f9f9f9;
+            }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+        }
+
+            .tab-content.active {
+                display: block;
+            }
+
+        #map {
+            width: 100%;
+            height: 70vh;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .input-box {
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 4px rgba(0,0,0,0.05);
+        }
+
+            .input-box input {
+                width: 200px;
+                margin-right: 10px;
+                padding: 6px;
+            }
+
+            .input-box button {
+                padding: 6px 12px;
+            }
+
+        .placeholder-box {
+            padding: 40px;
+            color: #888;
+            text-align: center;
+            background: #fff;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+    </style>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css" rel="stylesheet"/>
+<script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+<link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet"/>
+</head>
+<body>
+<div class="tabs">
+<div class="tab active" onclick="switchTab(0)"><i class="fas fa-globe"></i>问・外邦</div>
+<div class="tab" onclick="switchTab(1)"><i class="fas fa-map-marked-alt"></i>问・中华</div>
+<div class="tab" onclick="switchTab(2)"><i class="fas fa-plane"></i>问・苍穹</div>
+</div><div id="searchBar" style="position:absolute; top:10px; left:10px; z-index:999; background:rgba(0,0,0,0.6); padding:10px; border-radius:8px;">
+<input id="flightInput" placeholder="航班号" type="text"/>
+<button onclick="searchFlight()">查询</button>
+</div>
+<div class="tab-content active">
+<div class="input-box">
+<input id="start-city" placeholder="起点城市，如 Tokyo" type="text"/>
+<input id="end-city" placeholder="终点城市，如 Osaka" type="text"/>
+<button id="start-btn">开始导航</button>
+</div>
+<div id="map"></div>
+</div>
+<div class="tab-content">
+<div class="placeholder-box">🚧 中国版导航即将上线，敬请期待！</div>
+</div>
+<div class="tab-content"><div id="flightInfoBar" style="background:#2c3e50; color:white; padding:6px 20px; border-radius:0 0 10px 10px; font-size:14px; z-index:1; margin-bottom:5px;">航班 JL99 | 台北 → 洛杉矶 | 距离 <span id="remainingDistance">2792</span> 公里 | 剩余时间 <span id="remainingTime">2:30</span></div>
+<div id="cesiumContainer" style="width:100%; height:80vh;"></div>
+<div style="position:absolute; bottom:28px; left:50%; transform:translateX(-50%); width:50%; z-index:999;"><div style="background:#aaa; height:8px; border-radius:4px;"><div id="progressBar" style="height:8px; width:60%; background:#3498db; border-radius:4px;"></div></div></div><div style="margin:10px auto; width:60%;"><div style="background:#aaa; height:8px; border-radius:4px;"><div id="progressBar" style="height:8px; width:60%; background:#3498db; border-radius:4px;"></div></div></div><div id="timeInfoBar" style="background:#1a1a1a; color:white; display:flex; justify-content:space-around; padding:5px 0; font-size:13px; margin-top:8px;"><div>目的地时间: <span id="destTime">5:02 上午</span></div><div>出发地时间: <span id="departTime">9:02 下午</span></div><div>当前位置时间: <span id="currentTime">10:02 下午</span></div></div></div>
+<div id="flight-map" style="height: 500px;"></div>
+<script>
+            let flightMap;
+
+            const mockFlightPaths = {
+                'JAL2': [
+                    [35.5494, 139.7798],  // 东京羽田
+                    [33.5902, 130.4017],  // 福冈中转
+                    [31.1443, 121.8083]   // 上海浦东
+                ],
+                'CA981': [
+                    [40.0799, 116.6031],  // 北京首都
+                    [61.1743, -149.9983], // 安克雷奇
+                    [40.6413, -73.7781]   // 纽约JFK
+                ]
+            };
+
+            function loadMockFlightPath() {
+                const flightId = document.getElementById('flight-id-input').value.trim().toUpperCase();
+                const coords = mockFlightPaths[flightId];
+
+                if (!coords) {
+                    alert("未找到该航班的航线，请检查航班号或添加模拟数据");
+                    return;
+                }
+
+                if (!flightMap) {
+                    flightMap = L.map('flight-map').setView(coords[0], 4);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(flightMap);
+                } else {
+                    flightMap.setView(coords[0], 4);
+                    flightMap.eachLayer(layer => {
+                        if (!(layer instanceof L.TileLayer)) flightMap.removeLayer(layer);
+                    });
+                }
+
+                // 绘制航线
+                L.polyline(coords, { color: 'blue' }).addTo(flightMap);
+                L.marker(coords[0]).bindPopup("起点").addTo(flightMap).openPopup();
+                L.marker(coords[coords.length - 1]).bindPopup("终点").addTo(flightMap);
+                if (coords.length > 2) {
+                    for (let i = 1; i < coords.length - 1; i++) {
+                        L.circleMarker(coords[i], { radius: 6, color: 'green' }).addTo(flightMap).bindPopup("经停点");
+                    }
+                }
+            }
+        </script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+<script>
+        // 禁用右键菜单
+        document.addEventListener("contextmenu", e => e.preventDefault());
+
+        function switchTab(index) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            tabs.forEach((tab, i) => {
+                tab.classList.toggle('active', i === index);
+                contents[i].classList.toggle('active', i === index);
+            
+    if (index === 2) {
+        setTimeout(initCesium, 300);
+    }
+});
+        }
+
+        window.addEventListener("DOMContentLoaded", function () {
+            // 默认显示当前位置地图
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (pos) {
+                    const lat = pos.coords.latitude;
+                    const lon = pos.coords.longitude;
+
+                    if (window.map) window.map.remove();  // 移除已有地图实例
+                    window.map = L.map("map").setView([lat, lon], 12);  // 初始化地图
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors',
+                    }).addTo(window.map);
+
+                    L.marker([lat, lon]).addTo(window.map).bindPopup("当前位置").openPopup();
+                }, function (err) {
+                    console.warn("定位失败，默认设置位置：", err);
+                    const defaultLat = 39.9042;  // 默认位置：北京
+                    const defaultLon = 116.4074;
+
+                    if (window.map) window.map.remove();  // 移除已有地图实例
+                    window.map = L.map("map").setView([defaultLat, defaultLon], 12);  // 初始化地图
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors',
+                    }).addTo(window.map);
+
+                    L.marker([defaultLat, defaultLon]).addTo(window.map).bindPopup("默认位置（北京）").openPopup();
+                });
+            }
+
+            async function geocode(city) {
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (data.length === 0) throw new Error("无法找到城市: " + city);
+                return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            }
+
+            window.route = async function () {
+                const city1 = document.getElementById("start-city").value.trim();
+                const city2 = document.getElementById("end-city").value.trim();
+
+                if (!city1 || !city2) {
+                    alert("请输入两个城市名称！");
+                    return;
+                }
+
+                try {
+                    const [lat1, lon1] = await geocode(city1);
+                    const [lat2, lon2] = await geocode(city2);
+
+                    if (window.map) {
+                        window.map.remove();  // 移除已有地图实例
+                    }
+
+                    window.map = L.map("map").setView([lat1, lon1], 7);  // 初始化地图
+
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors',
+                    }).addTo(window.map);
+
+                    L.Routing.control({
+                        waypoints: [
+                            L.latLng(lat1, lon1),
+                            L.latLng(lat2, lon2),
+                        ],
+                        routeWhileDragging: false,
+                    }).addTo(window.map);
+
+                } catch (err) {
+                    alert("导航失败：" + err.message);
+                    console.error("导航失败：", err);
+                }
+            };
+
+            document.getElementById("start-btn").addEventListener("click", window.route);
+        });
+    </script>
+</body>
+</html>
+<script>
+async function getCityName(lat, lon) {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`;
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const addr = data.address;
+        console.log("Reverse geocode result for", lat, lon, "=>", addr);
+        return addr.city || addr.town || addr.village || addr.state || addr.country || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+    } catch (e) {
+        console.warn("Failed to fetch city name for", lat, lon, e);
+        return `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+    }
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 6371; // 地球半径 km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+let cesiumViewer, currentRouteEntity, planeBillboard, planeMarker;
+
+function initCesium() {
+    if (cesiumViewer) return;
+
+    cesiumViewer = new Cesium.Viewer('cesiumContainer', {
+        imageryProvider: false,
+        baseLayerPicker: false,
+        terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+        timeline: false,
+        animation: false,
+        geocoder: false,
+        shouldAnimate: false
+    });
+
+    const imgLayer = new Cesium.WebMapTileServiceImageryProvider({
+        url: 'https://t{s}.tianditu.gov.cn/img_w/wmts?tk=96dc94f4824056d576af59ac9bc161b9',
+        layer: 'img', style: 'default', format: 'tiles', tileMatrixSetID: 'w',
+        subdomains: ['0','1','2','3','4','5','6','7'],
+        maximumLevel: 18
+    });
+    cesiumViewer.imageryLayers.addImageryProvider(imgLayer);
+
+    const ciaLayer = new Cesium.WebMapTileServiceImageryProvider({
+        url: 'https://t{s}.tianditu.gov.cn/cia_w/wmts?tk=96dc94f4824056d576af59ac9bc161b9',
+        layer: 'cia', style: 'default', format: 'tiles', tileMatrixSetID: 'w',
+        subdomains: ['0','1','2','3','4','5','6','7'],
+        maximumLevel: 18
+    });
+    cesiumViewer.imageryLayers.addImageryProvider(ciaLayer);
+
+    cesiumViewer.scene.globe.enableLighting = true;
+}
+
+const flightRoutes = {
+    "CI8": [[121.0, 25.0], [135.0, 35.0], [150.0, 40.0], [-120.0, 34.0]],
+    "JL99": [[139.7, 35.6], [160.0, 45.0], [-130.0, 40.0]],
+    "NH118": [[135.5, 34.7], [140.0, 38.0], [170.0, 50.0], [-125.0, 36.0]]
+};
+
+function searchFlight() {
+    const flightId = document.getElementById("flightInput").value.toUpperCase();
+    const route = flightRoutes[flightId];
+    if (!route) {
+        alert("未找到该航班号的轨迹！");
+        return;
+    }
+
+    if (currentRouteEntity) cesiumViewer.entities.remove(currentRouteEntity);
+    if (planeBillboard) cesiumViewer.entities.remove(planeBillboard);
+    if (planeMarker) cesiumViewer.entities.remove(planeMarker);
+
+    const positions = route.map(coord => Cesium.Cartesian3.fromDegrees(coord[0], coord[1], 150000));
+
+    currentRouteEntity = cesiumViewer.entities.add({
+        polyline: {
+            positions: positions,
+            width: 4,
+            material: new Cesium.PolylineGlowMaterialProperty({
+                glowPower: 0.1,
+                color: Cesium.Color.LIME
+            })
+        }
+    });
+
+    const start = Cesium.Cartesian3.fromDegrees(route[0][0], route[0][1], 150000);
+
+    planeBillboard = cesiumViewer.entities.add({
+        position: start,
+        billboard: {
+            image: "https://img.icons8.com/emoji/96/airplane-emoji.png",
+            scale: 1.2,
+            verticalOrigin: Cesium.VerticalOrigin.CENTER
+        },
+        label: {
+            text: flightId,
+            font: "16px sans-serif",
+            fillColor: Cesium.Color.YELLOW,
+            outlineColor: Cesium.Color.BLACK,
+            style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+            verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+            pixelOffset: new Cesium.Cartesian2(0, -30)
+        }
+    });
+
+    planeMarker = cesiumViewer.entities.add({
+        position: start,
+        ellipse: {
+            semiMinorAxis: 50000.0,
+            semiMajorAxis: 50000.0,
+            material: Cesium.Color.YELLOW.withAlpha(0.4),
+            height: 0
+        }
+    });
+
+    cesiumViewer.flyTo(planeBillboard);
+
+    const startCoord = route[0];
+    const endCoord = route[route.length - 1];
+    const distanceKm = haversine(startCoord[1], startCoord[0], endCoord[1], endCoord[0]);
+    const avgSpeed = 900; // km/h
+    const hours = distanceKm / avgSpeed;
+    const hr = Math.floor(hours);
+    const min = Math.round((hours - hr) * 60);
+    const durationStr = `${hr}:${min.toString().padStart(2, '0')}`;
+
+    document.getElementById("remainingDistance").innerText = Math.round(distanceKm);
+    document.getElementById("remainingTime").innerText = durationStr;
+    document.getElementById("progressBar").style.width = "60%";
+
+    const cityStart = await getCityName(startCoord[1], startCoord[0]);
+    const cityEnd = await getCityName(endCoord[1], endCoord[0]);
+
+    const infoBar = document.getElementById("flightInfoBar");
+    if (infoBar) {
+        infoBar.innerHTML = "航班 " + flightId + " | " + cityStart + " → " + cityEnd +
+            " | 距离 <span id='remainingDistance'>" + Math.round(distanceKm) +
+            "</span> 公里 | 剩余时间 <span id='remainingTime'>" + durationStr + "</span>";
+    }
+
+    document.getElementById("destTime").innerText = "5:02 上午";
+    document.getElementById("departTime").innerText = "9:02 下午";
+    document.getElementById("currentTime").innerText = "10:02 下午";
+
+
+    document.getElementById("remainingDistance").innerText = "2792";
+    document.getElementById("remainingTime").innerText = "2:30";
+    document.getElementById("destTime").innerText = "5:02 上午";
+    document.getElementById("departTime").innerText = "9:02 下午";
+    document.getElementById("currentTime").innerText = "10:02 下午";
+    document.getElementById("progressBar").style.width = "60%";
+
+    const infoBar = document.getElementById("flightInfoBar");
+    if (infoBar) {
+        infoBar.innerHTML = "航班 " + flightId + " | 台北 → 洛杉矶 | 距离 <span id='remainingDistance'>2792</span> 公里 | 剩余时间 <span id='remainingTime'>2:30</span>";
+    }
+
+
+    document.getElementById("remainingDistance").innerText = "2792";
+    document.getElementById("remainingTime").innerText = "2:30";
+    document.getElementById("destTime").innerText = "5:02 上午";
+    document.getElementById("departTime").innerText = "9:02 下午";
+    document.getElementById("currentTime").innerText = "10:02 下午";
+    document.getElementById("progressBar").style.width = "60%";
+
+}
+</script>

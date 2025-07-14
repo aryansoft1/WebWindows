@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>飞行轨迹演示</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.114/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    html, body, #cesiumContainer { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: "Microsoft YaHei", sans-serif; }
+    #infoTop {
+      position: absolute;
+      top: 0; width: 100%;
+      background: rgba(0,0,64,0.6); color: #fff;
+      text-align: center; padding: 6px; font-size: 15px; z-index: 10;
+    }
+    #infoBottom {
+      position: absolute; bottom: 0; width: 100%;
+      color: #fff; background: rgba(0,0,0,0.5);
+      font-size: 14px; display: flex; justify-content: space-between; padding: 6px 12px; z-index: 10;
+    }
+    #progressBar {
+      position: absolute; bottom: 26px; left: 0; width: 100%; height: 6px; background: #333;
+    }
+    #progress { height: 100%; background: lime; width: 0%; }
+  </style>
+</head>
+<body>
+<div id="cesiumContainer"></div>
+<div id="infoTop">航班：台北 → 洛杉矶　距离：<span id="distLeft">----</span> 公里　剩余时间：<span id="timeLeft">--:--</span></div>
+<div id="progressBar"><div id="progress"></div></div>
+<div id="infoBottom">
+  <div>出发地（台北）当地时间：<span id="departTime">--:-- --</span></div>
+  <div>当前位置（估算）当地时间：<span id="currentTime">--:-- --</span></div>
+  <div>目的地当地时间：<span id="arrivalTime">--:-- --</span></div>
+</div>
+
+<script>
+
+function getTimeString(date, timeZone) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    timeZone: timeZone
+  }).format(date);
+}
+
+Cesium.Ion.defaultAccessToken = '';
+const viewer = new Cesium.Viewer('cesiumContainer', {
+  imageryProvider: false,
+  baseLayerPicker: false,
+  terrainProvider: new Cesium.EllipsoidTerrainProvider(),
+  timeline: false,
+  animation: false,
+  geocoder: false,
+  shouldAnimate: true
+});
+
+// 天地图图层
+const imgLayer = new Cesium.WebMapTileServiceImageryProvider({
+  url: 'https://t{s}.tianditu.gov.cn/img_w/wmts?tk=96dc94f4824056d576af59ac9bc161b9',
+  layer: 'img',
+  style: 'default',
+  format: 'tiles',
+  tileMatrixSetID: 'w',
+  subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+  maximumLevel: 18
+});
+viewer.imageryLayers.addImageryProvider(imgLayer);
+
+const ciaLayer = new Cesium.WebMapTileServiceImageryProvider({
+  url: 'https://t{s}.tianditu.gov.cn/cia_w/wmts?tk=96dc94f4824056d576af59ac9bc161b9',
+  layer: 'cia',
+  style: 'default',
+  format: 'tiles',
+  tileMatrixSetID: 'w',
+  subdomains: ['0', '1', '2', '3', '4', '5', '6', '7'],
+  maximumLevel: 18
+});
+viewer.imageryLayers.addImageryProvider(ciaLayer);
+
+// 飞行路径
+const route = [
+  [121.0, 25.0],  // 台北
+  [135.0, 35.0],
+  [150.0, 40.0],
+  [170.0, 45.0],
+  [-120.0, 34.0]  // 洛杉矶附近
+];
+const startTime = Cesium.JulianDate.now();
+const stopTime = Cesium.JulianDate.addSeconds(startTime, route.length * 120, new Cesium.JulianDate());
+viewer.clock.startTime = startTime.clone();
+viewer.clock.stopTime = stopTime.clone();
+viewer.clock.currentTime = startTime.clone();
+viewer.clock.clockRange = Cesium.ClockRange.CLAMPED;
+viewer.clock.multiplier = 1;
+
+const property = new Cesium.SampledPositionProperty();
+route.forEach((coord, i) => {
+  const time = Cesium.JulianDate.addSeconds(startTime, i * 120, new Cesium.JulianDate());
+  const pos = Cesium.Cartesian3.fromDegrees(coord[0], coord[1], 150000);
+  property.addSample(time, pos);
+});
+
+const plane = viewer.entities.add({
+  availability: new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({start: startTime, stop: stopTime})]),
+  position: property,
+  orientation: new Cesium.VelocityOrientationProperty(property),
+  model: {
+    uri: "https://cesium.com/downloads/cesiumjs/releases/1.114/Apps/SampleData/models/CesiumAir/Cesium_Air.glb",
+    minimumPixelSize: 48,
+    maximumScale: 100,
+    runAnimations: false
+  },
+  path: {
+    resolution: 1,
+    material: new Cesium.PolylineGlowMaterialProperty({
+      glowPower: 0.1,
+      color: Cesium.Color.LIME
+    }),
+    width: 4
+  }
+});
+
+viewer.entities.add({
+  position: property,
+  orientation: new Cesium.VelocityOrientationProperty(property),
+  billboard: {
+    image: "https://img.icons8.com/emoji/48/airplane-emoji.png",
+    scale: 0.9,
+    alignedAxis: new Cesium.VelocityVectorProperty(property, false),
+    verticalOrigin: Cesium.VerticalOrigin.CENTER
+  }
+});
+
+// 相机跟随
+
+viewer.clock.onTick.addEventListener(function(clock) {
+  const pos = plane.position.getValue(clock.currentTime);
+  if (pos) {
+    viewer.camera.lookAt(pos, new Cesium.Cartesian3(-300000, -300000, 100000));
+  }
+  const total = Cesium.JulianDate.secondsDifference(stopTime, startTime);
+  const current = Cesium.JulianDate.secondsDifference(clock.currentTime, startTime);
+  const percent = Math.min(100, Math.max(0, current / total * 100));
+  document.getElementById("progress").style.width = percent + "%";
+  const remaining = total - current;
+  const mins = Math.floor(remaining / 60);
+  const secs = Math.floor(remaining % 60);
+  document.getElementById("timeLeft").innerText = `${mins}:${secs.toString().padStart(2, '0')}`;
+  document.getElementById("distLeft").innerText = Math.floor((1 - percent / 100) * 2792);
+
+  const now = new Date();
+
+  // 出发地时间（台北 UTC+8）
+  const taipeiOffset = 8;
+  const depart = new Date(now.getTime() + (taipeiOffset - now.getTimezoneOffset() / 60) * 3600000);
+  document.getElementById("departTime").innerText = getTimeString(now, "Asia/Taipei");
+
+  // 当前飞机位置时间（基于经度估算）
+  if (pos) {
+    const cartographic = Cesium.Cartographic.fromCartesian(pos);
+    const lon = Cesium.Math.toDegrees(cartographic.longitude);
+    const offset = Math.floor((lon + 7.5) / 15);  // 四舍五入到最近时区
+    const localNow = new Date(now.getTime() + offset * 3600000);
+    document.getElementById("currentTime").innerText = getTimeString(localNow, "UTC");
+  }
+
+  // 目的地时间（洛杉矶 UTC-7）
+  const laOffset = -7;
+  const arrival = new Date(now.getTime() + (laOffset - now.getTimezoneOffset() / 60) * 3600000);
+  document.getElementById("arrivalTime").innerText = getTimeString(now, "America/Los_Angeles");
+});
+</script>
+</body>
+</html>

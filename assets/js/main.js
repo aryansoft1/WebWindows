@@ -1095,3 +1095,21 @@ document.addEventListener("DOMContentLoaded", () => {
 window.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 });
+function initUserStatus() {
+  const username = sessionStorage.getItem("username");
+  const avatar = sessionStorage.getItem("avatar");
+
+  const nameEl = document.getElementById("login-username");
+  const avatarEl = document.getElementById("login-avatar");
+
+  if (username && avatar) {
+    nameEl.textContent = username;
+    avatarEl.src = avatar;
+  } else {
+    nameEl.textContent = "线下用户";
+    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png"; // 别忘放这张图
+  }
+  const statusEl = document.getElementById("login-status");
+  statusEl.style.background = username ? "#44cc44" : "#cc8800";
+}
+initUserStatus();

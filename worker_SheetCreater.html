@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>Worker SheetCreator</title>
+<link rel="stylesheet" href="static/fonts/iconfont.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/plugins.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css">
+  <style>
+    body { margin:0; font-family:"Segoe UI", sans-serif; background:#1a1a1a; color:white; height: 100%; }
+    #toolbar { display:flex; align-items:center; padding:10px; background:#2c2c2c; border-bottom:1px solid #444; }
+    #luckysheet { width:100vw; height:calc(100vh - 50px); min-height: 600px; }
+    input[type="file"] { display:none; }
+    label.button, button {
+      background:#3f3f3f; color:#f0f0f0; padding:6px 14px; border-radius:5px; cursor:pointer;
+      border:none; margin-right:12px; font-size:14px;
+    }
+    label.button:hover, button:hover { background:#555; }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <label class="button" for="upload">📂 打开文件</label>
+    <input type="file" id="upload" accept=".xlsx">
+    <button id="save">💾 保存为 Excel</button>
+    <div style="margin-left:auto; opacity:0.5; font-size:12px;">WebWindows Worker • SheetCreator</div>
+  </div>
+  <div id="luckysheet"></div>
+
+  <script src="https://unpkg.com/luckysheet@2.1.13/dist/plugins/js/plugin.js"></script>
+  <script src="https://unpkg.com/luckysheet@2.1.13/dist/luckysheet.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    document.getElementById('upload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onerror = function () {
+        alert("读取文件失败，请换个文件试试。");
+      };
+
+      reader.onload = function (e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellStyles: true });
+
+          const luckysheetData = [];
+
+          workbook.SheetNames.forEach((sheetName, idx) => {
+            const sheet = workbook.Sheets[sheetName];
+            if (!sheet['!ref']) return;
+
+            const range = XLSX.utils.decode_range(sheet['!ref']);
+            const merges = sheet['!merges'] || [];
+            const cols = sheet['!cols'] || [];
+
+            const sheetData = {
+              name: sheetName,
+              color: '',
+              index: idx,
+              status: idx === 0 ? 1 : 0,
+              order: idx,
+              data: [],
+              config: {
+                merge: {},
+                columnlen: {}
+              }
+            };
+
+            cols.forEach((col, i) => {
+              if (col && col.wpx) {
+                sheetData.config.columnlen[i] = col.wpx;
+              }
+            });
+
+            merges.forEach(merge => {
+              const key = `${merge.s.r}_${merge.s.c}`;
+              sheetData.config.merge[key] = {
+                r: merge.s.r,
+                c: merge.s.c,
+                rs: merge.e.r - merge.s.r + 1,
+                cs: merge.e.c - merge.s.c + 1
+              };
+            });
+
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+              const row = [];
+              for (let C = range.s.c; C <= range.e.c; ++C) {
+                const addr = XLSX.utils.encode_cell({ r: R, c: C });
+                const cell = sheet[addr];
+                if (!cell) {
+                  row.push(null);
+                  continue;
+                }
+
+                const value = cell.v;
+                const formula = cell.f;
+                const style = cell.s || {};
+                const font = style.font || {};
+                const fill = style.fill || {};
+                const alignment = style.alignment || {};
+
+                const cellObj = { v: value };
+
+                if (formula) cellObj.f = formula;
+                const fg = fill.fgColor?.rgb?.match(/[0-9A-F]{6}$/i)?.[0];
+                if (fg) cellObj.bg = `#${fg}`;
+                const fc = font.color?.rgb?.match(/[0-9A-F]{6}$/i)?.[0];
+                if (fc) cellObj.fc = `#${fc}`;
+                if (font.bold) cellObj.bl = 1;
+                if (font.italic) cellObj.it = 1;
+                if (font.name) cellObj.ff = font.name;
+                if (font.sz) cellObj.fs = font.sz;
+                if (alignment.horizontal) cellObj.ht = alignment.horizontal;
+                if (alignment.vertical) cellObj.vt = alignment.vertical;
+
+                row.push(cellObj);
+              }
+              sheetData.data.push(row);
+            }
+
+            luckysheetData.push(sheetData);
+          });
+
+          luckysheet.destroy();
+          luckysheet.create({
+            container: 'luckysheet',
+            data: luckysheetData,
+            lang: 'zh',
+            title: 'Worker SheetCreator',
+            showinfobar: true,
+            showtoolbar: true,
+            showtoolbarConfig: {
+              undoRedo: true,
+              paintFormat: true,
+              currencyFormat: true,
+              percentageFormat: true,
+              numberDecrease: true,
+              numberIncrease: true,
+              moreFormats: true,
+              font: true,
+              fontSize: true,
+              bold: true,
+              italic: true,
+              strikethrough: true,
+              underline: true,
+              textColor: true,
+              fillColor: true,
+              border: true,
+              mergeCell: true,
+              horizontalAlignMode: true,
+              verticalAlignMode: true,
+              textWrapMode: true,
+              textRotateMode: true,
+              image: true,
+              link: true,
+              chart: true,
+              postil: true,
+              pivotTable: true,
+              function: true
+            },
+            showstatisticBar: true,
+            showsheetbar: true,
+            gridLineColor: '#444'
+          });
+
+          setTimeout(() => {
+            const logoEl = document.querySelector('.luckysheet_info_detail');
+            if (logoEl) {
+              logoEl.innerHTML = '<strong style="font-size:14px;color:#ccc">🧠 Worker SheetCreator</strong>';
+            }
+          }, 300);
+
+        } catch (err) {
+          console.error(err);
+          alert("解析 Excel 文件出错。");
+        }
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('save').addEventListener('click', function() {
+      const luckysheetData = luckysheet.getAllSheets();
+      const sheet = luckysheetData[0].data;
+      const ws = XLSX.utils.aoa_to_sheet(sheet.map(r => r.map(c => c?.v || "")));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+      XLSX.writeFile(wb, "Worker_SheetCreator.xlsx");
+    });
+  </script>
+</body>
+</html>

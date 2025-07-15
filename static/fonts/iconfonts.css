@@ -1,12 +1,12 @@
 @font-face {
-  font-family: "iconfont";
-  src: url("data:font/woff2;charset=utf-8;base64,d09GMgABAAAAAA...") format("woff2");
+  font-family: 'luckysheet-iconfont';
+  src: url(data:font/woff2;charset=utf-8;base64,d09GMgABAAAAAAZkABAAAAAABnAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAB...) format('woff2');
   font-weight: normal;
   font-style: normal;
 }
 
-.iconfont {
-  font-family: "iconfont" !important;
+.luckysheet-icon {
+  font-family: 'luckysheet-iconfont' !important;
   font-size: 16px;
   font-style: normal;
   -webkit-font-smoothing: antialiased;

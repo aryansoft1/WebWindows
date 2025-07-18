@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>登录 - WebWindows</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen font-sans">
+  <div class="w-[400px] p-6 bg-white/70 backdrop-blur-md shadow-xl rounded-xl">
+    <h2 class="text-2xl font-semibold text-center mb-6">登录 WebWindows</h2>
+
+    <input type="text" id="username" placeholder="用户名"
+      class="w-full px-4 py-2 border rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <input type="password" id="password" placeholder="密码"
+      class="w-full px-4 py-2 border rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <canvas id="captchaCanvas" width="120" height="36" title="点击刷新验证码"
+      class="mb-2 rounded-md cursor-pointer border mx-auto"></canvas>
+
+    <input type="text" id="captchaInput" placeholder="请输入验证码"
+      class="w-full px-4 py-2 border rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-400" />
+
+    <button onclick="login()"
+      class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl transition">登录</button>
+
+    <div id="errorMsg" class="text-red-500 text-sm text-center mt-3 hidden">登录失败，请检查输入</div>
+  </div>
+
+  <script src="assets/js/login.js"></script>
+</body>
+</html>

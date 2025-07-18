@@ -302,6 +302,25 @@ function toggleMaximizeWindow(id) {
 
 
 window.onload = function () {
+    const popup = document.getElementById('user-popup');
+    if (sessionStorage.getItem('username') != '' && sessionStorage.getItem('username') != null) {
+    popup.innerHTML = `
+        <div class="text-sm text-center mb-2 text-gray-700">欢迎你：${sessionStorage.getItem('username')}</div>
+        <div class="text-sm text-center mb-2 text-gray-700">角色：普通用户</div>
+        <button onclick="logout()" class="...">注销</button>
+    `;
+    } else {
+    popup.innerHTML = ''; // 或 hidden
+    }
+    document.getElementById('login-username').addEventListener('click', () => {
+            const username = sessionStorage.getItem('username');
+            if (username != null && username!='') {
+                showUserMenu(); // 显示用户菜单
+            } else {
+                openWindow('login', '登录', 'login.html', 'https://cdn-icons-png.flaticon.com/512/747/747376.png', true, 'login-type');
+                document.getElementById('start-menu').style.display = 'none';
+            }
+    });
     document.querySelectorAll('.window').forEach(win => {
         const header = win.querySelector('.window-header');
         if (!header) return;
@@ -360,6 +379,7 @@ window.onload = function () {
             isMaximized = !isMaximized;
         });
     });
+    initUserStatus();
 };
 
 
@@ -449,6 +469,7 @@ document.querySelectorAll('.icon-tile').forEach(tile => {
 
 
 document.querySelectorAll('.icon').forEach(icon => {
+    if (icon.classList.contains('no-auto')) return; 
     icon.addEventListener('click', () => {
         const id = icon.id || Math.random().toString(36).slice(2, 8);
         const title = icon.querySelector('label')?.innerText || '窗口';
@@ -547,8 +568,9 @@ function padTitleBarTouch(win, titleBar) {
     });
 
 }
+
 function openCloudWindow() {
-    if (document.getElementById("win-yunmishu_cloud")) {
+    if (document.getElementById("win-yunmishu_cloud") || document.getElementById("win-yunmishu_cloud")) {
         return;
     }
     const win = document.createElement("div");
@@ -599,7 +621,7 @@ function openCloudWindow() {
     createTaskbarIcon("yunmishu_cloud", "云秘书对日外贸评测中心", 'assets/icons/cloud_secretary.png')
     updateTaskbarActive(win.id, true);
 }
-function openWindow(id, title, url, iconUrl, useIframe = false) {
+function openWindow(id, title, url, iconUrl, useIframe = false, type = '') {
     //云秘书逻辑
     if (id == "yunmishu_root") {
         if (document.getElementById("win-yunmishu_root")) {
@@ -608,7 +630,7 @@ function openWindow(id, title, url, iconUrl, useIframe = false) {
         const win = document.createElement("div");
         const content = document.createElement("div");
         const titleBar = document.createElement("div");
-        win.className = "window";
+        win.className = type ? `window ${type}` : 'window';
         win.id = "win-yunmishu_root";
         win.style.position = "absolute";
         win.style.top = "120px";
@@ -655,7 +677,7 @@ function openWindow(id, title, url, iconUrl, useIframe = false) {
     }
     if (document.getElementById('win-' + id)) return;
     const win = document.createElement('div');
-    win.className = 'window';
+    win.className = type ? `window ${type}` : 'window';
     win.id = 'win-' + id;
     win.style.position = 'absolute';
     win.style.top = '120px';
@@ -678,7 +700,7 @@ function openWindow(id, title, url, iconUrl, useIframe = false) {
     const content = document.createElement('div');
     content.style.height = 'calc(100% - 30px)';
     content.style.overflow = 'auto';
-    if (url.includes("settings.html") || url.includes("road.html")) {
+    if (useIframe) {
         const iframe = document.createElement("iframe");
         iframe.src = url;
         iframe.style.width = "100%";
@@ -1096,20 +1118,58 @@ window.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 });
 function initUserStatus() {
-  const username = sessionStorage.getItem("username");
-  const avatar = sessionStorage.getItem("avatar");
+  const nameEl = document.getElementById('login-username');
+  const avatarEl = document.getElementById('login-avatar');
+  const statusDot = document.getElementById('login-status');
 
-  const nameEl = document.getElementById("login-username");
-  const avatarEl = document.getElementById("login-avatar");
+  const username = sessionStorage.getItem('username');
 
-  if (username && avatar) {
+  if (username != '' && username != null) {
     nameEl.textContent = username;
-    avatarEl.src = avatar;
+    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/747/747376.png";
+    statusDot.style.backgroundColor = '#44cc44';
+    
   } else {
-    nameEl.textContent = "线下用户";
-    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png"; // 别忘放这张图
+    nameEl.textContent = '线下用户';
+    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    statusDot.style.backgroundColor = '#cc8800';
   }
-  const statusEl = document.getElementById("login-status");
-  statusEl.style.background = username ? "#44cc44" : "#cc8800";
+  document.getElementById("user-popup").style.display = "none";
 }
-initUserStatus();
+function showUserMenu() {
+  const menu = document.getElementById("user-popup");
+  const btn = document.getElementById("login-username");
+
+  if (!menu || !btn) return;
+
+  menu.classList.add('show');
+}
+
+function toggleUserPopup(e) {
+  e.stopPropagation(); // 防止冒泡关闭
+  const popup = document.getElementById('user-popup');
+  popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
+}
+
+// 登录成功后绑定点击事件
+const userArea = document.getElementById('start-menu-login');
+if (userArea) {
+  userArea.addEventListener('click', toggleUserPopup);
+}
+
+// 点击其他区域自动关闭
+document.addEventListener('click', function (e) {
+  const popup = document.getElementById('user-popup');
+  if (!popup.contains(e.target) && !document.getElementById('start-menu-login').contains(e.target)) {
+    popup.style.display = 'none';
+  }
+});
+
+
+function logout() {
+  sessionStorage.removeItem('username');
+  document.getElementById("user-popup").style.display = "none";
+  initUserStatus();
+}
+
+

@@ -2,14 +2,61 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <title>WebWindows Workder・SheetEditor</title>
+  <title>WebWindows Worker・SheetEditor</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css" />
-  <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js"></script>
-  <script src="https://unpkg.com/luckyexcel@0.0.8/lib/luckyexcel.umd.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js">
+    function restoreImages(luckysheetfile) {
+      if (!luckysheetfile.images) return;
+      for (const key in luckysheetfile.images) {
+        luckysheet.insertImage(luckysheetfile.images[key]);
+      }
+    }
+
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js">
+    function restoreImages(luckysheetfile) {
+      if (!luckysheetfile.images) return;
+      for (const key in luckysheetfile.images) {
+        luckysheet.insertImage(luckysheetfile.images[key]);
+      }
+    }
+
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
+    function restoreImages(luckysheetfile) {
+      if (!luckysheetfile.images) return;
+      for (const key in luckysheetfile.images) {
+        luckysheet.insertImage(luckysheetfile.images[key]);
+      }
+    }
+
+</script>
+  <script src="https://unpkg.com/luckyexcel@1.0.1/dist/luckyexcel.umd.js">
+    function restoreImages(luckysheetfile) {
+      if (!luckysheetfile.images) return;
+      for (const key in luckysheetfile.images) {
+        luckysheet.insertImage(luckysheetfile.images[key]);
+      }
+    }
+
+</script>
+<!-- 替代 chartmix.css -->
+<link rel="stylesheet" href="https://unpkg.com/@dream-num/luckysheet@2.1.13/dist/expendPlugins/chart/chartmix.css" />
+
+<!-- 替代 chartmix.umd.min.js -->
+<script src="https://unpkg.com/@dream-num/luckysheet@2.1.13/dist/expendPlugins/chart/chartmix.umd.min.js">
+    function restoreImages(luckysheetfile) {
+      if (!luckysheetfile.images) return;
+      for (const key in luckysheetfile.images) {
+        luckysheet.insertImage(luckysheetfile.images[key]);
+      }
+    }
+
+</script>
+
+
   <style>
     html, body {
       margin: 0;
@@ -27,23 +74,25 @@
       user-select: none;
     }
     .menu {
-      position: relative;
-      margin-right: 20px;
-      cursor: pointer;
-    }
+  display: inline-block;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+
     .menu:hover .dropdown {
       display: block;
     }
-    .dropdown {
-      display: none;
-      position: absolute;
-      top: 36px;
-      left: 0;
-      background: white;
-      border: 1px solid #ccc;
-      min-width: 120px;
-      z-index: 1000;
-    }
+  .dropdown {
+    display: none;
+    position: absolute;
+    background: white;
+    border: 1px solid #ccc;
+    min-width: 120px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 9999;
+  }
+
     .dropdown li {
       padding: 6px 12px;
       cursor: pointer;
@@ -52,35 +101,63 @@
     .dropdown li:hover {
       background: #eee;
     }
+    #editDropdown, #fileDropdown {
+  display: none;
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 9999;
+}
+
     #luckysheet {
       width: 100%;
-      height: calc(100vh - 36px);
+      height: calc(100% - 36px);
     }
+.luckysheet-grid-window {
+  z-index: 0 !important;
+}
+
+.luckysheet {
+  z-index: 0 !important;
+}
   </style>
 </head>
 <body>
   <div id="menubar">
-    <div class="menu">文件 ▾
-      <ul class="dropdown">
-        <li onclick="openFile()">打开</li>
-        <li onclick="saveFile()">保存</li>
-        <li onclick="exportExcel()">导出 Excel</li>
-      </ul>
-    </div>
-    <div class="menu">编辑 ▾
-      <ul class="dropdown">
-        <li onclick="findText()">查找</li>
-        <li onclick="undo()">撤销</li>
-        <li onclick="redo()">重做</li>
-      </ul>
-    </div>
+    <div class="menu" id="fileMenu">文件 ▾</div>
+    <ul class="dropdown" id="fileDropdown">
+      <li onclick="openFile()">打开</li>
+      <li onclick="saveFile()">保存</li>
+      <li onclick="exportExcel()">导出 Excel</li>
+    </ul>
+
+    <div class="menu" id="editMenu">编辑 ▾</div>
+    <ul class="dropdown" id="editDropdown">
+      <li onclick="cutText()">剪切</li>
+      <li onclick="copyText()">复制</li>
+      <li onclick="pasteText()">粘贴</li>
+      <li onclick="undo()">撤销</li>
+      <li onclick="redo()">重做</li>
+      <li onclick="findText()">查找</li>
+    </ul>
+
     <input type="file" id="fileInput" style="display:none" accept=".xlsx,.xls" />
   </div>
 
   <div id="luckysheet"></div>
 
   <script>
-    luckysheet.create({ container: 'luckysheet' });
+    window.luckyexcel = window.luckyexcel || window.LuckyExcel;
+    luckysheet.create({ container: 'luckysheet' ,lang: 'zh'});
+window.onload = function () {
+      const info = document.querySelector('.luckysheet_info_detail');
+      if (info) {
+        info.innerHTML = '<img src="assets/icons/sheeteditor.png" style="height:38px; vertical-align:middle; margin-right:6px;"> SheetEditor';
+      }
+      
+    };
 
     function exportExcel() {
       const luckysheetData = luckysheet.getluckysheetfile();
@@ -92,23 +169,43 @@
       document.getElementById("fileInput").click();
     }
 
-    document.getElementById("fileInput").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        luckyexcel.transformExcelToLuckyByArray(data, function (exportJson, luckysheetfile) {
-          if (!exportJson.sheets || exportJson.sheets.length === 0) {
-            alert("无法识别的 Excel 文件");
-            return;
-          }
-          luckysheet.destroy();
-          luckysheet.create({ container: 'luckysheet', data: exportJson.sheets });
-        });
-      };
-      reader.readAsArrayBuffer(file);
-    });
+   document.getElementById("fileInput").addEventListener("change", function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  luckyexcel.transformExcelToLucky(file, function (exportJson, luckysheetfile) {
+    if (!exportJson.sheets || exportJson.sheets.length === 0) {
+      alert("无法识别的 Excel 文件");
+      return;
+    }
+
+    luckysheet.destroy();
+    
+    luckysheet.destroy();
+    luckysheet.create({ container: 'luckysheet', data: exportJson.sheets ,lang: 'zh' });
+
+    // 插入图片
+    restoreImages(luckysheetfile);
+    const fileName = file.name;
+
+    
+
+    
+    document.querySelector('.luckysheet_info_detail').innerHTML =
+  `<img src="assets/icons/sheeteditor.png" style="height:38px; vertical-align:middle; margin-right:6px;">
+   SheetEditor - ${fileName}`;
+
+// 手动修复工具栏的位置
+setTimeout(() => {
+  const toolbar = document.querySelector('.luckysheet-toolbar');
+  if (toolbar) {
+    toolbar.style.top = '36px';
+  }
+}, 50); // 等待一点时间让 DOM 加载完
+
+  });
+});
+
 
     function saveFile() {
       const data = JSON.stringify(luckysheet.getluckysheetfile());
@@ -133,6 +230,51 @@
     function redo() {
       luckysheet.redo();
     }
-  </script>
+      const fileMenu = document.getElementById("fileMenu");
+  const fileDropdown = document.getElementById("fileDropdown");
+
+  fileMenu.addEventListener("click", function (e) {
+    const rect = fileMenu.getBoundingClientRect();
+    fileDropdown.style.left = rect.left + "px";
+    fileDropdown.style.top = "20px";
+    fileDropdown.style.display = 
+      fileDropdown.style.display === "block" ? "none" : "block";
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!fileMenu.contains(e.target) && !fileDropdown.contains(e.target)) {
+      fileDropdown.style.display = "none";
+    }
+  });
+  const editMenu = document.getElementById("editMenu");
+const editDropdown = document.getElementById("editDropdown");
+
+editMenu.addEventListener("click", function () {
+  const rect = editMenu.getBoundingClientRect();
+  editDropdown.style.left = rect.left + "px";
+  editDropdown.style.top = "20px";
+  editDropdown.style.display = 
+    editDropdown.style.display === "block" ? "none" : "block";
+});
+
+// 全局点击关闭两个菜单
+document.addEventListener("click", function (e) {
+  if (!fileMenu.contains(e.target) && !fileDropdown.contains(e.target)) {
+    fileDropdown.style.display = "none";
+  }
+  if (!editMenu.contains(e.target) && !editDropdown.contains(e.target)) {
+    editDropdown.style.display = "none";
+  }
+});
+
+  
+    function restoreImages(luckysheetfile) {
+      if (!luckysheetfile.images) return;
+      for (const key in luckysheetfile.images) {
+        luckysheet.insertImage(luckysheetfile.images[key]);
+      }
+    }
+
+</script>
 </body>
 </html>

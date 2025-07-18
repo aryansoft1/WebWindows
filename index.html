@@ -13,7 +13,7 @@
     <script defer="True" src="assets/js/main.js"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
 </head>
-<body onload="makeDesktopIconsDraggable();enterFullscreen()">
+<body onload="makeDesktopIconsDraggable();enterFullscreen();initUserStatus();">
     <div class="desktop">
         <div class="power-menu" id="power-menu" style="display:none">
             <div class="power-item" onclick="document.getElementById('power-menu').style.display = 'none'">
@@ -91,6 +91,11 @@
                 联系我们
             </label>
         </div>
+        <div class="icon no-auto" id="sheeteditor" onclick="openWindow('SheetEditor', 'Worker SheetEditor' , 'worker_SheetCreater.html', 'assets/icons/sheeteditor.png', true)">
+            <img src="assets/icons/sheeteditor.png" />
+            <label>Sheet Editor</label>
+        </div>
+
     </div>
     <div class="taskbar">
         <div id="taskbar-datetime" onclick="toggleCalendar()">
@@ -165,9 +170,9 @@
     <!-- Win11 Start Menu -->
     <!-- Win11 中文开始菜单 -->
     <div id="start-menu">
-        <div id="start-menu-login" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
+        <div id="start-menu-login" style="cursor:default; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
     <div style="display: flex; align-items: center;">
-  <img id="login-avatar" src="assets/avatar/default.png" alt="avatar" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 8px;">
+  <img id="login-avatar" src="assets/icons/149071.png" alt="avatar" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 8px;">
   <span id="login-username">线下用户</span>
   <span id="login-status" style="width: 8px; height: 8px; background: #cc8800; border-radius: 50%; display: inline-block; margin-left: 6px;"></span>
 </div>
@@ -175,15 +180,21 @@
       ⏻
     </button>
   </div>
+<div id="user-popup" class="absolute bottom-14 left-3 bg-white shadow-xl border rounded-md w-40 p-2 hidden z-50">
+  <div class="text-sm text-center mb-2 text-gray-700">admin</div>
+  <button onclick="logout()" class="w-full text-red-600 hover:text-white hover:bg-red-500 py-1 rounded">
+    注销
+  </button>
+</div>
 
         <ul>
-            <li onclick="openWindow('panel', '控制面板', 'panel.html', 'assets/icons/panel.png');document.getElementById('start-menu').style.display='none'">
-                <img alt="控制面板" src="assets/icons/panel.png" />
+            <li onclick="openWindow('explorer','云资料', 'cloud/browser/files.asp', 'assets/icons/explorer.png', true);document.getElementById('start-menu').style.display='none'">
+                <img alt="云资料" src="assets/icons/explorer.png" />
                 <span>
-                    控制面板
+                    云资料
                 </span>
             </li>
-            <li onclick="openWindow('road','问道', 'road.html', 'assets/icons/wendao.png');document.getElementById('start-menu').style.display='none'">
+            <li onclick="openWindow('road','问道', 'road.html', 'assets/icons/wendao.png', true);document.getElementById('start-menu').style.display='none'">
                 <img src="assets/icons/wendao.png">
                 <span>问道</span>
             </li>
@@ -217,7 +228,7 @@
                     日历
                 </span>
             </li>
-            <li onclick="openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png');document.getElementById('start-menu').style.display='none'">
+            <li onclick="openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png',true);document.getElementById('start-menu').style.display='none'">
                 <img alt="设置" src="assets/icons/settings.png" />
                 <span>
                     设置

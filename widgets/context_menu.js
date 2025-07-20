@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
         item.addEventListener("click", () => {
             menu.style.display = "none";
             if (text === "刷新") refreshDesktop();
-            if (text === "设置") openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png');
+            if (text === "设置") openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png', true);
         });
         menu.appendChild(item);
     });

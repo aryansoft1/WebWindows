@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>系统信息</title>
+  <link rel="stylesheet" href="assets/css/sysinfo.css">
+</head>
+<body>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('run')">运行配置</button>
+    <button class="tab-btn" onclick="showTab('local')">本地配置</button>
+  </div>
+
+  <div id="tab-run" class="tab-content active">
+    <div class="card">
+      <h3>CPU 信息</h3>
+      <div class="info-row"><strong>型号：</strong><span id="cpuModel">--</span></div>
+      <div class="info-row"><strong>使用率：</strong><span id="cpuUsage">--</span></div>
+    </div>
+
+    <div class="card">
+      <h3>内存信息</h3>
+      <div class="label-row">
+        <span>已用：<span id="memUsedText">--</span></span>
+        <span>总容量：<span id="memTotalText">--</span></span>
+      </div>
+      <div class="progress-container">
+        <div id="memUsedBar" class="progress-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>系统信息</h3>
+      <div class="info-row"><strong>操作系统：</strong>WebWindows V2</div>
+    </div>
+
+    <div class="card">
+      <h3>磁盘使用</h3>
+      <div class="label-row">
+        <span>系统占用：<span id="sysUsed">--</span></span>
+        <span>用户占用：<span id="userUsed">--</span></span>
+      </div>
+      <div class="label-row">
+        <span>总容量：<span id="diskTotal">--</span></span>
+        <span></span>
+      </div>
+      <div class="progress-container">
+        <div id="diskBar" class="progress-bar" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <p style="font-size: 12px; color: gray;">* 当前为测试运行环境，部分信息如 CPU 使用率、内存使用率可能不可用</p>
+  </div>
+
+  <div id="tab-local" class="tab-content">
+    <div class="card">
+  <h3>设备信息</h3>
+  <div class="info-row"><strong>CPU 核心数：</strong><span id="cpuCores">--</span></div>
+  <div class="info-row"><strong>设备内存：</strong><span id="deviceMemory">--</span></div>
+  <div class="info-row"><strong>分辨率：</strong><span id="screenSize">--</span></div>
+</div>
+
+    <div class="card">
+      <h3>显示信息</h3>
+      <div class="info-row"><strong>用户代理：</strong><span id="ua"></span></div>
+      <div class="info-row"><strong>平台：</strong><span id="platform"></span></div>
+      <div class="info-row"><strong>语言：</strong><span id="language"></span></div>
+    </div>
+  </div>
+
+  <script src="assets/js/sysinfo.js"></script>
+</body>
+</html>

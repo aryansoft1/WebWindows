@@ -621,7 +621,7 @@ function openCloudWindow() {
     createTaskbarIcon("yunmishu_cloud", "云秘书对日外贸评测中心", 'assets/icons/cloud_secretary.png')
     updateTaskbarActive(win.id, true);
 }
-function openWindow(id, title, url, iconUrl, useIframe = false, type = '') {
+function openWindow(id, title, url, iconUrl, useIframe = false, type = '', width = '700px', height = '400px') {
     //云秘书逻辑
     if (id == "yunmishu_root") {
         if (document.getElementById("win-yunmishu_root")) {
@@ -635,8 +635,8 @@ function openWindow(id, title, url, iconUrl, useIframe = false, type = '') {
         win.style.position = "absolute";
         win.style.top = "120px";
         win.style.left = "120px";
-        win.style.width = "700px";
-        win.style.height = "400px";
+        win.style.width = width;
+        win.style.height = height;
         win.style.zIndex = "1001";
         if (!useIframe) {
             titleBar.className = "window-header";
@@ -682,8 +682,8 @@ function openWindow(id, title, url, iconUrl, useIframe = false, type = '') {
     win.style.position = 'absolute';
     win.style.top = '120px';
     win.style.left = '180px';
-    win.style.width = '700px';
-    win.style.height = '400px';
+    win.style.width = width;
+    win.style.height = height;
     win.style.zIndex = '1001';
     const titleBar = document.createElement('div');
     titleBar.className = 'window-header';
@@ -709,11 +709,6 @@ function openWindow(id, title, url, iconUrl, useIframe = false, type = '') {
         iframe.style.borderRadius = "8px";
         content.style.overflow = '';
         content.innerHTML = "";
-        win.style.height = '500px'
-        if (url.includes("road.html")) {
-            win.style.width = "720px";
-            win.style.height = "556px";
-        }
         content.appendChild(iframe);
 
         // ✅ 屏蔽 iframe 自身右键菜单

@@ -25,3 +25,14 @@
     background: #0078D7;
     color: white;
 }
+.context-menu ul li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.context-menu ul li i {
+  font-size: 16px;
+}

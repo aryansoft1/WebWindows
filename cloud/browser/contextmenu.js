@@ -25,4 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fileMenu.style.display = "none";
         blankMenu.style.display = "none";
     });
+    if (window.lucide && typeof lucide.createIcons === "function") {
+         lucide.createIcons();
+  }
 });

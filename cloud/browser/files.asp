@@ -8,7 +8,7 @@ Set fso = Server.CreateObject("Scripting.FileSystemObject")
 
 basePath = Server.MapPath("../file/admin")
 relativePath = Request.QueryString("path")
-If relativePath = "" Then relativePath = ""
+relativePath = Replace(relativePath, "/", "\") ' 转换为 Windows 路径
 
 fullPath = basePath
 If relativePath <> "" Then fullPath = basePath & "\" & relativePath
@@ -40,6 +40,7 @@ If viewMode = "" Then viewMode = "detail"
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
+<div class="wrapper" style="display: flex;">
     <h2>📁 WebWindows 云资料</h2>
 <div class="toolbar">
   <div class="toolbar-left">
@@ -60,12 +61,11 @@ If viewMode = "" Then viewMode = "detail"
     </select>
     </div>
 </div>
-
-
-
-
-    <div class="wrapper">
-    <div class="file-list <%=viewMode%>">
+  <div class="main">
+  <div id="sidebar">
+    <ul id="folder-tree"></ul>
+  </div>
+  <div class="file-list <%=viewMode%>">
         <%
         Dim sf
         For Each sf in subfolders
@@ -146,10 +146,17 @@ If viewMode = "" Then viewMode = "detail"
         Response.Write "<div class='file-item file " & cssClass & "'>"
         Response.Write "<img src='" & imgSrc & "'>"
         Response.Write "<div class='file-name' title='" & fname & "'>" & fname & "</div>"
+        '详细模式显示文件具体信息
+        If viewMode = "detail" Then
+            Response.Write "<div class='file-size'>" & FormatFileSize(f.Size) & "</div>"
+            Response.Write "<div class='file-created'>" & f.DateCreated & "</div>"
+            Response.Write "<div class='file-modified'>" & f.DateLastModified & "</div>"
+        End If
         Response.Write "</div>"
       Next
 
         %>
+    </div>
     </div>
     </div>
 <!-- 文件菜单 -->
@@ -165,17 +172,43 @@ If viewMode = "" Then viewMode = "detail"
 <!-- 空白区域菜单 -->
 <div class="context-menu" id="blankContextMenu">
   <ul>
-    <li onclick="window.location.href='files.asp?view=detail'">详细显示</li>
-    <li onclick="window.location.href='files.asp?view=small'">小图标</li>
-    <li onclick="window.location.href='files.asp?view=large'">大图标</li>
+    <li onclick="window.location.href='files.asp?view=detail'"><i data-lucide="list"></i> 详细显示</li>
+    <li onclick="window.location.href='files.asp?view=small'"><i data-lucide="grid-2x2"></i> 小图标</li>
+    <li onclick="window.location.href='files.asp?view=large'"><i data-lucide="layout-grid"></i> 大图标</li>
     <hr>
-    <li onclick="window.location.href='files.asp?sort=name'">按名称排序</li>
-    <li onclick="window.location.href='files.asp?sort=date'">按时间排序</li>
-    <li onclick="window.location.href='files.asp?sort=size'">按大小排序</li>
+    <li onclick="window.location.href='files.asp?sort=name'"><i data-lucide="sort-asc"></i> 按名称排序</li>
+    <li onclick="window.location.href='files.asp?sort=date'"><i data-lucide="calendar-days"></i> 按时间排序</li>
+    <li onclick="window.location.href='files.asp?sort=size'"><i data-lucide="database"></i> 按大小排序</li>
+     <hr>
+    <li onclick="createNewFolder()">🗂️ 新建文件夹</li>
   </ul>
+</div>
+<!-- 新建文件夹弹出层 -->
+<div id="newFolderModal" class="modal">
+  <div class="modal-content">
+    <h3>🗂️ 新建文件夹</h3>
+    <input type="text" id="newFolderName" placeholder="请输入文件夹名称">
+    <div class="modal-buttons">
+      <button onclick="submitNewFolder()">创建</button>
+      <button onclick="closeNewFolderModal()">取消</button>
+    </div>
+  </div>
 </div>
 
 <script src="contextmenu.js"></script>
 <script src="toolbar.js"></script>
 </body>
 </html>
+<%
+Function FormatFileSize(bytes)
+    If bytes < 1024 Then
+        FormatFileSize = bytes & " B"
+    ElseIf bytes < 1024 * 1024 Then
+        FormatFileSize = FormatNumber(bytes / 1024, 2) & " KB"
+    ElseIf bytes < 1024 * 1024 * 1024 Then
+        FormatFileSize = FormatNumber(bytes / 1024 / 1024, 2) & " MB"
+    Else
+        FormatFileSize = FormatNumber(bytes / 1024 / 1024 / 1024, 2) & " GB"
+    End If
+End Function
+%>

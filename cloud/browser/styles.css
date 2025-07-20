@@ -1,35 +1,36 @@
 html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-}
-.wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
-    background: #f8f9fa;
-    padding: 20px;
-    margin: 0;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: #f8f9fa;
+  padding: 20px;
+}
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 h2 {
-    font-size: 22px;
-    margin-bottom: 10px;
-    color: #333;
+  font-size: 22px;
+  margin-bottom: 10px;
+  color: #333;
 }
 
+/* ===== 工具栏样式 ===== */
 .toolbar {
   display: flex;
-  justify-content: space-between; /* 左右两侧 */
+  justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
   background: #f0f0f0;
   border-bottom: 1px solid #ccc;
-  box-shadow: inset 0 -1px 0 #ddd; /* 上下分离的线条感 */
+  box-shadow: inset 0 -1px 0 #ddd;
   gap: 12px;
   flex-wrap: wrap;
 }
@@ -39,7 +40,6 @@ h2 {
   align-items: center;
   gap: 8px;
 }
-/* 分离感增强（可选加点立体感） */
 .toolbar::after {
   content: "";
   display: block;
@@ -47,7 +47,6 @@ h2 {
   background: linear-gradient(to bottom, #eee, transparent);
   width: 100%;
 }
-/* 通用按钮样式 */
 .toolbar .icon-btn {
   display: flex;
   align-items: center;
@@ -59,22 +58,16 @@ h2 {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
 .toolbar .icon-btn:hover {
   background-color: #e4e4e4;
 }
-
-/* 图标样式（Lucide 默认是 SVG，已载入） */
 .toolbar .icon-btn i {
   width: 20px;
   height: 20px;
   stroke-width: 1.5;
   color: #333;
 }
-
-/* 下拉框样式 */
 .toolbar select {
-  -webkit-appearance: none; /* 移除原生样式 */
   appearance: none;
   padding: 8px 12px;
   font-size: 16px;
@@ -94,153 +87,119 @@ h2 {
   outline: none;
 }
 .toolbar a {
-    text-decoration: none;
-    color: #0078D7;
-    margin-right: 8px;
+  text-decoration: none;
+  color: #0078D7;
+  margin-right: 8px;
 }
-
 .toolbar a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
+/* ===== 文件区域 ===== */
 .file-list {
-    flex-grow: 1;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    padding: 10px;
-    position: relative;
-    overflow-y: auto;
+  flex-grow: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 10px;
+  position: relative;
+  overflow-y: auto;
 }
 
-
-.file-item {
-    width: 100px;
-    max-height: 100px;
-    overflow: hidden;
-    text-align: center;
-    font-size: 12px;
-    cursor: pointer;
-    transition: background 0.2s ease;
-    border-radius: 6px;
-    padding: 5px;
+/* 图标视图（small / large） */
+.file-list.small .file-item{
+  width: 100px;
+  height:80px;
 }
-
-.file-item:hover {
-    background: #e9f2ff;
-}
-
-.file-item img {
-    width: 64px;
-    height: 64px;
-    max-height: 100px;
-    object-fit: contain;
-    border: none;
-    margin-bottom: 4px;
-}
-
-.file-list.small .file-item img {
-    width: 36px;
-    height: 36px;
-}
-
-.file-list.detail {
-    flex-direction: column;
-    font-size: 14px;
-}
-
-.file-list.detail .file-item {
-    display: flex;
-    align-items: center;
-    text-align: left;
-    width: 100%;
-    padding: 8px 5px;
-    border-bottom: 1px solid #eee;
-    white-space: nowrap;        /* 禁止换行 */
-    overflow: hidden;           /* 隐藏超出 */
-    text-overflow: ellipsis;    /* 加省略号 */
-}
-
-.file-list.detail .file-item img {
-    width: 24px;
-    height: 24px;
-    margin-right: 10px;
-    border: none;
-}
-
-.file-name {
-    word-break: break-word;
-    white-space: normal;
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.2em;
-}
-/* 图标视图：多行显示 */
-.file-list.large .file-name,
-.file-list.small .file-name,
-.file-list.detail .file-name {
-    max-width: 100%;
-    white-space: nowrap;         /* 不换行 */
-    overflow: hidden;            /* 超出隐藏 */
-    text-overflow: ellipsis;     /* 超出部分显示省略号 */
-}
-
-/* 详细视图：单行省略号 */
-.file-list .file-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 预留不同文件类型样式 */
-.file-item.excel img { border-color: #1d6f42; }
-.file-item.image img { border-color: #7e57c2; }
-.file-item.word img { border-color: #2b579a; }
-.file-item.pdf img { border-color: #c62828; }
-.file-item.default img { border-color: #ccc; }
-
-.file-list.detail .file-item img {
-    width: 24px;
-    height: 24px;
-    flex-shrink: 0;
-    border: none;
-}
-
-/* 图标视图下也支持同样结构 */
-.file-list.small .file-item,
 .file-list.large .file-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   width: 100px;
+  height:100px;
   padding: 5px;
   text-align: center;
 }
-
-/* 图标尺寸 */
 .file-list.small .file-item img {
   width: 36px;
   height: 36px;
 }
-
 .file-list.large .file-item img {
   width: 64px;
   height: 64px;
 }
 
-/* 文件名统一样式 */
+/* 通用文件项样式 */
+.file-item {
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  transition: background 0.2s ease;
+  border-radius: 6px;
+  padding: 5px;
+}
+.file-item:hover {
+  background: #e9f2ff;
+}
+.file-item img {
+  object-fit: contain;
+  border: none;
+  margin-bottom: 4px;
+}
+
+/* 文件名样式（所有视图共用） */
 .file-name {
   margin-top: 5px;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: center;
-  max-width: 100%;
 }
 
-/* 详细视图：文件夹结构横向排布 */
+/* ===== 详细视图 ===== */
+.file-list.detail {
+  flex-direction: column;
+  font-size: 14px;
+}
+.file-list.detail .file-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 13px;
+  border-bottom: 1px solid #eee;
+}
+.file-list.detail .file-item img {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.file-list.detail .file-name {
+  flex: 1;
+  min-width: 200px;
+  text-align: left !important;
+}
+.file-list.detail .file-size,
+.file-list.detail .file-created,
+.file-list.detail .file-modified {
+  width: 140px;
+  text-align: left;
+  white-space: nowrap;
+  font-size: 12px;
+  font-family: monospace;
+  color: #666;
+}
+
+/* ===== 文件类型颜色标识 ===== */
+.file-item.excel img { border-color: #1d6f42; }
+.file-item.image img { border-color: #7e57c2; }
+.file-item.word img { border-color: #2b579a; }
+.file-item.pdf img { border-color: #c62828; }
+.file-item.default img { border-color: #ccc; }
+
+/* ===== 文件夹结构（文件夹链接布局）===== */
 .file-list.detail .file-item.folder .file-link {
   display: flex !important;
   align-items: center;
@@ -248,13 +207,11 @@ h2 {
   text-decoration: none;
   color: inherit;
 }
-
 .file-list.detail .file-item.folder img {
   width: 24px;
   height: 24px;
   flex-shrink: 0;
 }
-
 .file-list.detail .file-item.folder .file-name {
   flex-grow: 1;
   overflow: hidden;
@@ -271,4 +228,90 @@ h2 {
   height: 100%;
   text-decoration: none;
   color: inherit;
+}
+#folder-tree {
+  list-style: none;
+  padding-left: 10px;
+  font-size: 14px;
+}
+
+.folder-node > .folder-label {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.folder-node > .folder-label:hover {
+  background: #e0e0e0;
+}
+
+.folder-node.selected > .folder-label {
+  background: #cce5ff;
+  font-weight: bold;
+}
+
+.subfolders {
+  margin-left: 16px;
+  display: none;
+}
+
+.folder-node.expanded > .subfolders {
+  display: block;
+}
+.toggle-icon {
+  display: inline-block;
+  width: 1em;
+  margin-right: 4px;
+  transition: transform 0.2s ease;
+}
+.folder-node.expanded > .folder-label .toggle-icon {
+  transform: rotate(90deg);
+}
+.main {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+#sidebar {
+  width: 175px;
+  background-color: #f5f7fa;                /* ✅ 明显不同于右侧 */
+  border-right: 1px solid #ccc;             /* ✅ 显式分割线 */
+  box-shadow: 2px 0 4px rgba(0,0,0,0.04);    /* ✅ 柔和阴影，增加分层感 */
+  padding: 10px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  background: #fff;
+  width: 300px;
+  padding: 20px;
+  border-radius: 10px;
+  margin: 15% auto;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.modal-content input {
+  width: 90%;
+  padding: 8px;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.modal-buttons button {
+  margin: 0 10px;
+  padding: 6px 16px;
+  font-size: 14px;
 }

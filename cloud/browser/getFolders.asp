@@ -42,30 +42,29 @@ Function BuildFolderTreeSafe(f, depth, currentPath)
         Exit Function
     End If
 
-    Dim result, subFolder, fullPath
+    Dim result, subFolder, serverPath, webPath
     result = "["
 
     For Each subFolder In f.SubFolders
-        fullPath = currentPath & "\" & subFolder.Name
+        serverPath = f.Path & "\" & subFolder.Name ' 用于递归文件系统，不用于 path 字段
 
-        ' 避免死循环
-        If LCase(fullPath) <> LCase(currentPath) Then
-            result = result & "{""name"":""" & EscapeJSON(subFolder.Name) & """,""isFolder"":true"
+        result = result & "{""name"":""" & EscapeJSON(subFolder.Name) & """,""isFolder"":true"
 
-            If recursive Then
-                result = result & ",""children"":" & BuildFolderTreeSafe(subFolder, depth + 1, fullPath)
-            End If
-
-            Dim subPath
-            If currentPath = "" Then
-                subPath = subFolder.Name
-            Else
-                subPath = currentPath & "/" & subFolder.Name
-            End If
-            result = result &  ",""path"":""" & subPath & """"
-
-            result = result & "},"
+        ' 构建 Web 路径
+        If currentPath = "" Then
+            webPath = subFolder.Name
+        Else
+            webPath = currentPath & "/" & subFolder.Name
         End If
+
+        result = result & ",""path"":""" & EscapeJSON(webPath) & """"
+
+        ' 递归 children
+        If recursive Then
+            result = result & ",""children"":" & BuildFolderTreeSafe(subFolder, depth + 1, webPath)
+        End If
+
+        result = result & "},"
     Next
 
     If Right(result, 1) = "," Then result = Left(result, Len(result) - 1)

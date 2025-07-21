@@ -26,7 +26,7 @@ sortBy = LCase(Request.QueryString("sort"))
 If sortBy = "" Then sortBy = "name"
 
 viewMode = LCase(Request.QueryString("view"))
-If viewMode = "" Then viewMode = "detail"
+If viewMode = "" Then viewMode = "large"
 %>
 
 <!DOCTYPE html>
@@ -36,7 +36,6 @@ If viewMode = "" Then viewMode = "detail"
     <title>WebWindows 云资料</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="contextmenu.css">
-    <link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
 <body>
@@ -69,11 +68,12 @@ If viewMode = "" Then viewMode = "detail"
         <%
         Dim sf
         For Each sf in subfolders
-            Response.Write "<div class='file-item folder'>"
-            Response.Write "  <a class='file-link' title='" & sf.Name & "' href='files.asp?path=" & Server.URLEncode(relativePath & "\" & sf.Name) & "'>"
+            Dim folderPath
+            folderPath = relativePath & "\" & sf.Name
+
+            Response.Write "<div title='" & sf.Name & "' class='file-item folder' data-path='" & folderPath & "' data-is-folder='true'>"
             Response.Write "    <img src='https://cdn-icons-png.flaticon.com/128/716/716784.png'>"
             Response.Write "    <div class='file-name'>" & sf.Name & "</div>"
-            Response.Write "  </a>"
             Response.Write "</div>"
         Next
 
@@ -143,7 +143,9 @@ If viewMode = "" Then viewMode = "detail"
             End If
         End If
 
-        Response.Write "<div class='file-item file " & cssClass & "'>"
+        Dim filePath
+        filePath = relativePath & "\" & fname
+        Response.Write "<div class='file-item file " & cssClass & "' data-path='" & filePath & "' data-is-folder='false'>"
         Response.Write "<img src='" & imgSrc & "'>"
         Response.Write "<div class='file-name' title='" & fname & "'>" & fname & "</div>"
         '详细模式显示文件具体信息
@@ -159,30 +161,34 @@ If viewMode = "" Then viewMode = "detail"
     </div>
     </div>
     </div>
-<!-- 文件菜单 -->
+<!-- 文件右键菜单 -->
+<!-- 文件右键菜单 -->
 <div class="context-menu" id="fileContextMenu">
   <ul>
-    <li onclick="alert('打开')">打开</li>
-    <li onclick="alert('复制')">复制</li>
-    <li onclick="alert('剪切')">剪切</li>
-    <li onclick="alert('删除')">删除</li>
+    <li onclick="openSelected()">📂 打开</li>
+    <li onclick="alert('复制')">📄 复制</li>
+    <li onclick="alert('剪切')">✂️ 剪切</li>
+    <li onclick="alert('删除')">🗑️ 删除</li>
   </ul>
 </div>
 
 <!-- 空白区域菜单 -->
 <div class="context-menu" id="blankContextMenu">
   <ul>
-    <li onclick="window.location.href='files.asp?view=detail'"><i data-lucide="list"></i> 详细显示</li>
-    <li onclick="window.location.href='files.asp?view=small'"><i data-lucide="grid-2x2"></i> 小图标</li>
-    <li onclick="window.location.href='files.asp?view=large'"><i data-lucide="layout-grid"></i> 大图标</li>
+    <li onclick="window.location.href='files.asp?view=detail'">📃 详细显示</li>
+    <li onclick="window.location.href='files.asp?view=small'">🔲 小图标</li>
+    <li onclick="window.location.href='files.asp?view=large'">🔳 大图标</li>
     <hr>
-    <li onclick="window.location.href='files.asp?sort=name'"><i data-lucide="sort-asc"></i> 按名称排序</li>
-    <li onclick="window.location.href='files.asp?sort=date'"><i data-lucide="calendar-days"></i> 按时间排序</li>
-    <li onclick="window.location.href='files.asp?sort=size'"><i data-lucide="database"></i> 按大小排序</li>
-     <hr>
-    <li onclick="createNewFolder()">🗂️ 新建文件夹</li>
+    <li onclick="window.location.href='files.asp?sort=name'">🔠 按名称排序</li>
+    <li onclick="window.location.href='files.asp?sort=date'">📅 按时间排序</li>
+    <li onclick="window.location.href='files.asp?sort=size'">💾 按大小排序</li>
+    <hr>
+    <li onclick="createNewFolder()">📁 新建文件夹</li>
   </ul>
 </div>
+
+
+
 <!-- 新建文件夹弹出层 -->
 <div id="newFolderModal" class="modal">
   <div class="modal-content">

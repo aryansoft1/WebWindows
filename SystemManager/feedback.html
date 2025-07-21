@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>咨询管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-sm text-gray-800">
+  <div class="p-6">
+    <h1 class="text-2xl font-bold mb-4">📩 咨询管理</h1>
+    <p class="text-gray-600 mb-6">查看用户提交的反馈与问题，支持回复、评级和状态更新。</p>
+
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <label class="text-gray-700 mr-2">状态筛选：</label>
+        <select class="border rounded px-2 py-1">
+          <option>全部</option>
+          <option>未处理</option>
+          <option>已回复</option>
+        </select>
+      </div>
+      <button class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">📤 导出反馈</button>
+    </div>
+
+    <table class="w-full table-auto bg-white shadow rounded">
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="p-3">编号</th>
+          <th class="p-3">提交人</th>
+          <th class="p-3">联系方式</th>
+          <th class="p-3">内容摘要</th>
+          <th class="p-3">提交时间</th>
+          <th class="p-3">紧急程度</th>
+          <th class="p-3">星级</th>
+          <th class="p-3">状态</th>
+          <th class="p-3">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- 示例反馈项 -->
+        <tr class="border-t">
+          <td class="p-3 font-mono">F20250720001</td>
+          <td class="p-3">张三</td>
+          <td class="p-3">zhang@example.com</td>
+          <td class="p-3 truncate max-w-xs">系统登录失败，请求帮助解决...</td>
+          <td class="p-3">2025-07-20</td>
+          <td class="p-3 text-red-600 font-bold">高</td>
+          <td class="p-3 text-yellow-500">⭐⭐⭐⭐☆</td>
+          <td class="p-3 text-red-600">未处理</td>
+          <td class="p-3 space-x-2">
+            <button onclick="openReplyModal('张三', 'F20250720001')" class="text-blue-600 hover:underline">回复</button>
+            <button class="text-gray-600 hover:underline">标记已处理</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 回复弹窗 -->
+  <div id="replyModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-2xl rounded shadow p-6 relative">
+      <h2 class="text-xl font-semibold mb-3">回复咨询 - <span id="modalUser" class="text-blue-600"></span>
+        <span class="text-gray-500 text-sm ml-2" id="modalID"></span></h2>
+
+      <!-- 历史记录 -->
+      <div class="space-y-3 mb-4 max-h-64 overflow-y-auto">
+        <div class="flex items-start space-x-3">
+          <img src="https://i.pravatar.cc/40?img=12" class="w-8 h-8 rounded-full" />
+          <div>
+            <div class="text-xs text-gray-600">管理员 · 2025-07-20 14:32</div>
+            <div class="bg-gray-100 p-2 rounded">您好，我们已修复登录问题，请您重新尝试。</div>
+          </div>
+        </div>
+        <div class="flex items-start space-x-3">
+          <img src="https://i.pravatar.cc/40?img=20" class="w-8 h-8 rounded-full" />
+          <div>
+            <div class="text-xs text-gray-600">张三 · 2025-07-20 15:02</div>
+            <div class="bg-gray-100 p-2 rounded">已尝试，可以正常使用，谢谢！</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 回复输入 -->
+      <div class="space-y-2">
+        <textarea id="replyText" class="w-full border rounded p-2 h-24 resize-none" placeholder="输入内容，可使用 @用户、😀 表情..."></textarea>
+        <div class="flex items-center justify-between">
+          <div class="space-x-2">
+            <button onclick="insertEmoji('😀')" class="text-lg">😀</button>
+            <label class="cursor-pointer text-gray-600 hover:text-black">
+              📎 附件
+              <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)">
+            </label>
+            <span id="fileName" class="text-xs text-gray-500"></span>
+          </div>
+          <div>
+            <button onclick="sendReply()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">发送</button>
+            <button onclick="closeReplyModal()" class="ml-2 text-gray-600 hover:underline">关闭</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS 控制逻辑 -->
+  <script>
+    function openReplyModal(user, id) {
+      document.getElementById('modalUser').innerText = user;
+      document.getElementById('modalID').innerText = id;
+      document.getElementById('replyModal').classList.remove('hidden');
+      document.getElementById('replyModal').classList.add('flex');
+    }
+
+    function closeReplyModal() {
+      document.getElementById('replyModal').classList.add('hidden');
+    }
+
+    function insertEmoji(emoji) {
+      const textarea = document.getElementById('replyText');
+      textarea.value += emoji;
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      document.getElementById('fileName').innerText = file ? file.name : '';
+    }
+
+    function sendReply() {
+      const text = document.getElementById('replyText').value.trim();
+      if (!text) return alert("请输入内容");
+      alert("已发送回复（模拟）：" + text);
+      document.getElementById('replyText').value = '';
+      document.getElementById('fileName').innerText = '';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>系统设置</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-sm text-gray-800">
+  <div class="p-6 space-y-10">
+    <div>
+      <h1 class="text-2xl font-bold mb-4">⚙️ 系统设置</h1>
+      <p class="text-gray-600 mb-6">配置后台系统的基础行为与管理员账号信息。</p>
+    </div>
+
+    <!-- 管理员账户 -->
+    <div class="bg-white rounded shadow p-4">
+      <h2 class="text-lg font-semibold mb-3">👤 后台管理员账号</h2>
+      <table class="w-full table-auto">
+        <thead class="bg-gray-100 text-left">
+          <tr>
+            <th class="p-3">昵称</th>
+            <th class="p-3">账号</th>
+            <th class="p-3">最后登录</th>
+            <th class="p-3">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-t">
+            <td class="p-3">系统管理员</td>
+            <td class="p-3">admin</td>
+            <td class="p-3">2025-07-21 12:43</td>
+            <td class="p-3 space-x-2">
+              <button class="text-blue-600 hover:underline">修改密码</button>
+              <button class="text-red-600 hover:underline">删除</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 系统配置 -->
+    <div class="bg-white rounded shadow p-4">
+      <h2 class="text-lg font-semibold mb-3">🛠️ 系统参数配置</h2>
+      <ul class="space-y-2 text-gray-700">
+        <li><strong>系统名称：</strong>WebWindows 管理后台</li>
+        <li><strong>默认接口前缀：</strong>https://admin.webwindows.com/api/</li>
+        <li><strong>多因素登录：</strong>已启用</li>
+        <li><strong>自动登出时间：</strong>30 分钟</li>
+      </ul>
+    </div>
+
+    <!-- 日志管理（占位） -->
+    <div class="bg-white rounded shadow p-4">
+      <h2 class="text-lg font-semibold mb-3">📜 系统日志（预留）</h2>
+      <p class="text-gray-500">该区域用于未来扩展日志记录与行为追踪。</p>
+    </div>
+  </div>
+</body>
+</html>

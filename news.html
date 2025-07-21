@@ -1,76 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
   <title>新闻中心</title>
-  <style>
-    .news-wrapper {
-      font-family: "Segoe UI", sans-serif;
-    }
-    .news-wrapper .explorer {
-      display: flex;
-      height: 100vh;
-    }
-    .news-wrapper .sidebar {
-      width: 200px;
-      background: #f4f4f4;
-      padding: 16px;
-      border-right: 1px solid #ccc;
-    }
-    .news-wrapper .main {
-      flex: 1;
-      padding: 16px 24px;
-      overflow: auto;
-    }
-    .news-wrapper table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
-    .news-wrapper thead th {
-      position: relative;
-      background: #f8f8f8;
-      height: 28px;
-      padding: 0 8px;
-      font-size: 13px;
-      font-weight: 400;
-      color: #333;
-      text-align: left;
-      border-right: 1px solid #ddd;
-      vertical-align: middle;
-    }
-    .news-wrapper thead th:hover {
-      background: #e9f4ff;
-    }
-    .news-wrapper .sort-icon {
-      position: absolute;
-      right: 6px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 10px;
-      color: #999;
-    }
-    .news-wrapper td {
-      padding: 6px 10px;
-      border-bottom: 1px solid #eee;
-    }
-    .news-wrapper .filename {
-      display: flex;
-      align-items: center;
-    }
-    .news-wrapper .icon {
-      width: 16px;
-      height: 16px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-    .news-wrapper tr.group td {
-      padding-top: 10px;
-      color: #000;
-      font-size: 14px;
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/news.css" />
 </head>
 <body>
   <div class="news-wrapper">
@@ -94,34 +27,14 @@
               <th>大小 <span class="sort-icon">▾</span></th>
             </tr>
           </thead>
-          <tbody>
-            <tr class="group"><td colspan="5">今天</td></tr>
-            <tr>
-              <td class="filename"><img src="assets/icons/html-icon.png" class="icon">news_1.html</td>
-              <td>通知公告</td>
-              <td>2025-05-09</td>
-              <td>HTML 文件</td>
-              <td>7 KB</td>
-            </tr>
-            <tr>
-              <td class="filename"><img src="assets/icons/html-icon.png" class="icon">news_2.html</td>
-              <td>公司新闻</td>
-              <td>2025-05-09</td>
-              <td>HTML 文件</td>
-              <td>5 KB</td>
-            </tr>
-            <tr class="group"><td colspan="5">更早</td></tr>
-            <tr>
-              <td class="filename"><img src="assets/icons/html-icon.png" class="icon">news_3.html</td>
-              <td>行业动态</td>
-              <td>2024-07-28</td>
-              <td>HTML 文件</td>
-              <td>8 KB</td>
-            </tr>
+          <tbody id="news-list">
+            <tr><td colspan="5" class="text-gray-500">正在加载新闻...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
+
+  <script src="assets/js/news.js"></script>
 </body>
 </html>

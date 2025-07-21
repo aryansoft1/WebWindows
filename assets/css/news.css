@@ -1,0 +1,76 @@
+.news-wrapper {
+  font-family: "Segoe UI", sans-serif;
+}
+.news-wrapper .explorer {
+  display: flex;
+  height: 100vh;
+}
+.news-wrapper .sidebar {
+  width: 200px;
+  background: #f4f4f4;
+  padding: 16px;
+  border-right: 1px solid #ccc;
+}
+.news-wrapper .main {
+  flex: 1;
+  padding: 16px 24px;
+  overflow: auto;
+}
+.news-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.news-wrapper thead th {
+  position: relative;
+  background: #f8f8f8;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 400;
+  color: #333;
+  text-align: left;
+  border-right: 1px solid #ddd;
+  vertical-align: middle;
+}
+.news-wrapper thead th:hover {
+  background: #e9f4ff;
+}
+.news-wrapper .sort-icon {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: #999;
+}
+.news-wrapper td {
+  padding: 6px 10px;
+  border-bottom: 1px solid #eee;
+}
+.news-wrapper .filename {
+  display: flex;
+  align-items: center;
+}
+.news-wrapper .icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.news-wrapper tr.group td {
+  padding-top: 10px;
+  color: #000;
+  font-size: 14px;
+}
+/* 通用链接样式美化 */
+.news-wrapper a {
+  color: #1a73e8;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.news-wrapper a:hover {
+  text-decoration: underline;
+  color: #0b59c7;
+}

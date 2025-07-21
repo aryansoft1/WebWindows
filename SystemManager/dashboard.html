@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>仪表盘 - WebWindows 管理系统</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 p-6">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">管理系统仪表盘</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 卡片1：用户数量 -->
+      <div class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-xl font-semibold mb-2">注册用户</h2>
+        <p class="text-3xl font-bold text-blue-600">--</p>
+      </div>
+
+      <!-- 卡片2：上传资料总数 -->
+      <div class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-xl font-semibold mb-2">资料总数</h2>
+        <p class="text-3xl font-bold text-green-600">--</p>
+      </div>
+
+      <!-- 卡片3：咨询待回复 -->
+      <div class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-xl font-semibold mb-2">待回复咨询</h2>
+        <p class="text-3xl font-bold text-red-600">--</p>
+      </div>
+    </div>
+
+    <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-xl font-semibold mb-4">近期系统活动</h2>
+        <ul class="text-sm list-disc pl-5 space-y-2 text-gray-600">
+          <li>登录成功：管理员</li>
+          <li>新用户注册：user01</li>
+          <li>上传文件：user01 上传了 report.docx</li>
+        </ul>
+      </div>
+      <div class="bg-white shadow rounded-xl p-5">
+        <h2 class="text-xl font-semibold mb-4">系统提示</h2>
+        <ul class="text-sm list-disc pl-5 space-y-2 text-gray-600">
+          <li>请及时备份数据库</li>
+          <li>数据中心连接状态良好</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

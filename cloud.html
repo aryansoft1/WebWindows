@@ -1,17 +1,64 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>云服务</title>
   <style>
     body {
-      font-family: "Segoe UI", sans-serif;
-      padding: 1rem;
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f4;
+    }
+    .container {
+      max-width: 1000px;
+      padding: 20px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      font-size: 24px;
+      margin-top: 40px;
+      color: #333;
+    }
+    .section {
+      margin-top: 30px;
+    }
+    .section img {
+      max-width: 100%;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    .btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background: #0078d7;
+      color: white;
+      text-decoration: none;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #005aaf;
     }
   </style>
 </head>
 <body>
-  <h2>云服务</h2>
-  <p>这是“云服务”模块的内容展示。</p>
+  <div class="container">
+    <h1>云服务</h1>
+
+    <div class="section">
+      <h2>云建站</h2>
+      <p>无需技术背景，即可轻松搭建属于您的企业或个人网站，快速上线展示。</p>
+      <img src="assets/images/cloud-website.jpg" alt="云建站">
+      <!-- 蓝色按钮省略 -->
+    </div>
+
+    <div class="section">
+      <h2>云服务器</h2>
+      <p>弹性配置、快速部署，适合开发者和企业部署 Web 应用、数据库、API 服务等。支持自定义镜像与远程连接。</p>
+      <img src="assets/images/cloud-server.jpg" alt="云服务器">
+      <a class="btn" href="#">详情与我们联系</a>
+    </div>
+  </div>
 </body>
 </html>

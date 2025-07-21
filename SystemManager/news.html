@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>新闻管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-sm text-gray-800">
+  <div class="p-6">
+    <h1 class="text-2xl font-bold mb-4">📰 新闻管理</h1>
+    <p class="text-gray-600 mb-6">用于发布、管理新闻内容，可进行分类、编辑与删除。</p>
+
+    <div class="flex justify-between items-center mb-4">
+      <div>
+        <label class="text-gray-700 mr-2">筛选分类：</label>
+        <select class="border rounded px-2 py-1">
+          <option>全部</option>
+          <option>系统更新</option>
+          <option>公告</option>
+        </select>
+      </div>
+      <button class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">➕ 发布新闻</button>
+    </div>
+
+    <table class="w-full table-auto bg-white shadow rounded">
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="p-3">标题</th>
+          <th class="p-3">分类</th>
+          <th class="p-3">发布时间</th>
+          <th class="p-3">操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-t">
+          <td class="p-3">系统维护通知</td>
+          <td class="p-3">公告</td>
+          <td class="p-3">2025-07-20</td>
+          <td class="p-3 space-x-2">
+            <button class="text-blue-600 hover:underline">编辑</button>
+            <button class="text-red-600 hover:underline">删除</button>
+          </td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">WebWindows V2 发布说明</td>
+          <td class="p-3">系统更新</td>
+          <td class="p-3">2025-07-15</td>
+          <td class="p-3 space-x-2">
+            <button class="text-blue-600 hover:underline">编辑</button>
+            <button class="text-red-600 hover:underline">删除</button>
+          </td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">云资料模块上线</td>
+          <td class="p-3">系统更新</td>
+          <td class="p-3">2025-07-10</td>
+          <td class="p-3 space-x-2">
+            <button class="text-blue-600 hover:underline">编辑</button>
+            <button class="text-red-600 hover:underline">删除</button>
+          </td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">关于提升数据安全的通知</td>
+          <td class="p-3">公告</td>
+          <td class="p-3">2025-06-28</td>
+          <td class="p-3 space-x-2">
+            <button class="text-blue-600 hover:underline">编辑</button>
+            <button class="text-red-600 hover:underline">删除</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

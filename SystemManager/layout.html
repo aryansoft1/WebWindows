@@ -1,0 +1,45 @@
+<!-- layout.html -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+    }
+    .sidebar-link {
+      @apply block px-4 py-2 hover:bg-gray-700 rounded;
+    }
+    .sidebar-link.active {
+      @apply bg-gray-700;
+    }
+  </style>
+</head>
+<body class="flex h-screen bg-gray-100 text-sm text-gray-800">
+
+  <!-- 侧边导航 -->
+  <aside class="w-64 bg-gray-800 text-white flex-shrink-0">
+    <div class="p-4 text-xl font-bold border-b border-gray-700">
+      WebWindows 后台
+    </div>
+    <nav class="mt-2 space-y-1">
+      <a href="dashboard.html" class="sidebar-link">📊 系统概览</a>
+      <a href="users.html" class="sidebar-link">👤 用户管理</a>
+      <a href="files.html" class="sidebar-link">📁 云资料管理</a>
+      <a href="news.html" class="sidebar-link">📰 新闻管理</a>
+      <a href="feedback.html" class="sidebar-link">💬 用户咨询管理</a>
+      <a href="datacenter.html" class="sidebar-link">🌐 数据中心管理</a>
+      <a href="settings.html" class="sidebar-link">⚙️ 系统设置</a>
+    </nav>
+  </aside>
+
+  <!-- 主内容区域 -->
+  <main class="flex-1 p-6 overflow-y-auto">
+    {{content}}
+  </main>
+
+</body>
+</html>

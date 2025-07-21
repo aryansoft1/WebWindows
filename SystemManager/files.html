@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>云资料管理</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-sm text-gray-800">
+  <div class="p-6">
+    <h1 class="text-2xl font-bold mb-4">云资料管理</h1>
+    <p class="text-gray-600 mb-6">
+      出于隐私保护，仅在用户授权情况下可查看其资料内容。可在下方列表中发送请求，用户确认后权限生效。
+    </p>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full bg-white shadow rounded-lg overflow-hidden">
+        <thead class="bg-gray-100 text-gray-700 text-left">
+          <tr>
+            <th class="px-4 py-3">用户名</th>
+            <th class="px-4 py-3">所属数据中心</th>
+            <th class="px-4 py-3">文件数量</th>
+            <th class="px-4 py-3">已用空间</th>
+            <th class="px-4 py-3">访问权限</th>
+            <th class="px-4 py-3">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-t hover:bg-gray-50">
+            <td class="px-4 py-3">alice</td>
+            <td class="px-4 py-3">数据中心A</td>
+            <td class="px-4 py-3">124</td>
+            <td class="px-4 py-3">3.2 GB</td>
+            <td class="px-4 py-3 text-green-600">已授权（剩余 12小时）</td>
+            <td class="px-4 py-3 space-x-2">
+              <button class="px-2 py-1 bg-blue-500 text-white rounded">进入查看</button>
+              <button class="px-2 py-1 bg-red-500 text-white rounded">撤销权限</button>
+            </td>
+          </tr>
+          <tr class="border-t hover:bg-gray-50">
+            <td class="px-4 py-3">bob</td>
+            <td class="px-4 py-3">数据中心B</td>
+            <td class="px-4 py-3">67</td>
+            <td class="px-4 py-3">1.1 GB</td>
+            <td class="px-4 py-3 text-yellow-600">未授权</td>
+            <td class="px-4 py-3">
+              <button class="px-2 py-1 bg-green-600 text-white rounded">发送请求</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

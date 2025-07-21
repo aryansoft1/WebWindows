@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebWindows 管理系统</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/icons/lucide.css">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+</head>
+<body class="flex h-screen overflow-hidden">
+  <!-- 左侧导航栏 -->
+  <aside class="w-64 bg-gray-800 text-white flex-shrink-0 flex flex-col">
+    <div class="text-2xl font-bold px-4 py-5 border-b border-gray-700">WebWindows 管理</div>
+    <nav class="flex-1 overflow-y-auto p-3 space-y-2">
+      <a href="dashboard.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">🏠 首页</a>
+      <a href="users.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">👥 用户管理</a>
+      <a href="files.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">📁 云资料管理</a>
+      <a href="news.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">📰 新闻管理</a>
+      <a href="feedback.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">📬 咨询反馈</a>
+      <a href="datacenter.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">🌐 数据中心</a>
+      <a href="settings.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">⚙️ 系统设置</a>
+    </nav>
+    <div class="border-t border-gray-700 p-3 text-sm text-gray-400">© 2025 AryanSoft</div>
+  </aside>
+
+  <!-- 主内容区域 -->
+  <main class="flex-grow bg-gray-50">
+    <iframe name="mainFrame" src="dashboard.html" class="w-full h-full border-0"></iframe>
+  </main>
+
+  <script>
+    if (window.lucide && typeof lucide.createIcons === "function") {
+      lucide.createIcons();
+    }
+  </script>
+</body>
+</html>

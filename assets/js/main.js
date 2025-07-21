@@ -745,6 +745,18 @@ function updateTaskbarActive(id, isActive) {
     }
 }
 
+function disableIframes() {
+  document.querySelectorAll("iframe").forEach(iframe => {
+    iframe.dataset.prevPointer = iframe.style.pointerEvents;
+    iframe.style.pointerEvents = "none";
+  });
+}
+
+function restoreIframes() {
+  document.querySelectorAll("iframe").forEach(iframe => {
+    iframe.style.pointerEvents = iframe.dataset.prevPointer || "";
+  });
+}
 
 (function () {
     const directions = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
@@ -758,6 +770,57 @@ function updateTaskbarActive(id, isActive) {
         });
         win.dataset.resizable = "true";
     };
+    // main.js 更新版本：使用专用边角拖动机制进行窗口缩放（避免 iframe 卡顿）
+
+    function initWindowResize(win, cornerEl) {
+    let startX, startY, startWidth, startHeight;
+
+    cornerEl.addEventListener("mousedown", function (e) {
+        e.preventDefault();
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = parseInt(document.defaultView.getComputedStyle(win).width, 10);
+        startHeight = parseInt(document.defaultView.getComputedStyle(win).height, 10);
+
+        document.documentElement.addEventListener("mousemove", doDrag, false);
+        document.documentElement.addEventListener("mouseup", stopDrag, false);
+    });
+
+    function doDrag(e) {
+        const newWidth = Math.max(300, startWidth + e.clientX - startX);
+        const newHeight = Math.max(200, startHeight + e.clientY - startY);
+
+        win.style.width = newWidth + "px";
+        win.style.height = newHeight + "px";
+    }
+
+    function stopDrag() {
+        document.documentElement.removeEventListener("mousemove", doDrag, false);
+        document.documentElement.removeEventListener("mouseup", stopDrag, false);
+    }
+    }
+
+    // 示例：为所有含 .window 的元素添加右下角拖动逻辑
+    window.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll(".window").forEach(win => {
+        let resizer = win.querySelector(".window-resize-corner");
+        if (!resizer) {
+        resizer = document.createElement("div");
+        resizer.className = "window-resize-corner";
+        Object.assign(resizer.style, {
+            position: "absolute",
+            width: "20px",
+            height: "20px",
+            right: "0",
+            bottom: "0",
+            cursor: "nwse-resize",
+            zIndex: "1000"
+        });
+        win.appendChild(resizer);
+        }
+        initWindowResize(win, resizer);
+    });
+    });
 
     function initResize(e, win, dir) {
         e.preventDefault();
@@ -780,10 +843,12 @@ function updateTaskbarActive(id, isActive) {
                 win.style.top = startT + (startH - newH) + "px";
             }
         }
+        
 
         function stopDrag() {
             document.removeEventListener("mousemove", doDrag);
             document.removeEventListener("mouseup", stopDrag);
+            restoreIframes(); // ✅ 拖动结束，恢复 iframe
         }
 
         document.addEventListener("mousemove", doDrag);

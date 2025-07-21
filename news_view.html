@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>新闻详情</title>
+  <link rel="stylesheet" href="assets/css/news.css" />
+  <script src="assets/js/news_view.js" defer></script>
+</head>
+<body>
+  <div class="news-wrapper">
+    <div class="explorer">
+      <div class="sidebar">
+        <ul class="tree">
+          <li>📁 全部</li>
+          <li>📁 公司新闻</li>
+          <li>📁 行业动态</li>
+          <li>📁 通知公告</li>
+        </ul>
+      </div>
+      <div class="main">
+        <a href="news.html" style="display:inline-block;margin-bottom:20px;">← 返回新闻列表</a>
+
+        <h1 id="news-title" class="text-2xl font-bold mb-4">加载中...</h1>
+        <div id="news-meta" class="text-gray-500 mb-6"></div>
+        <div id="news-content" style="line-height: 1.8;"></div>
+
+        <div style="margin-top: 40px; border-top: 1px solid #ccc; padding-top: 20px;">
+          <div id="prev-news" style="margin-bottom:10px;"></div>
+          <div id="next-news"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

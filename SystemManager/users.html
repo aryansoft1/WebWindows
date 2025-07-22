@@ -60,14 +60,51 @@
     </table>
   </div>
 
-  <!-- 模拟的用户表单弹窗 -->
-  <div id="userFormModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
-      <h2 class="text-lg font-semibold mb-4">添加用户</h2>
-      <!-- 这里可以放表单内容 -->
-      <button onclick="closeUserForm()" class="mt-4 bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded">取消</button>
-    </div>
+<!-- 模拟的用户表单弹窗 -->
+<div id="userFormModal" data-mode="add" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+    <h2 id="userFormTitle" class="text-lg font-semibold mb-4">添加用户</h2>
+    <form id="user-add-form" class="space-y-4" onsubmit="submitUserForm(event)">
+      <div>
+        <label class="block text-sm font-medium mb-1">昵称</label>
+        <input type="text" name="nickname" class="w-full border rounded px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">登录名</label>
+        <input type="text" name="username" class="w-full border rounded px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">密码</label>
+        <input type="password" name="password" class="w-full border rounded px-3 py-2" required>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">所属数据中心</label>
+        <select name="datacenter" class="w-full border rounded px-3 py-2" required>
+          <option value="A">节点A（上海）</option>
+          <option value="B">节点B（东京）</option>
+          <option value="C">节点C（香港）</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">角色</label>
+        <select name="role" class="w-full border rounded px-3 py-2">
+          <option value="user">普通用户</option>
+          <option value="admin">管理员</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">头像</label>
+        <input type="file" name="avatar" accept="image/*" class="w-full">
+        <img id="avatar-preview" src="" alt="头像预览" class="mt-2 w-16 h-16 rounded-full object-cover hidden">
+      </div>
+      <div class="flex justify-end gap-3">
+        <button type="button" onclick="closeUserForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded">取消</button>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1 rounded">保存</button>
+      </div>
+    </form>
   </div>
+</div>
+
 
   <script>
     function openUserForm() {
@@ -78,8 +115,30 @@
     }
 
     function editUser(username) {
-      alert("编辑用户: " + username);
+      const modal = document.getElementById("userFormModal");
+      modal.dataset.mode = "edit";
+      document.getElementById("userFormTitle").textContent = "编辑用户";
+
+      const mockData = {
+        alice: { nickname: "Alice Zhang", username: "alice", datacenter: "A", role: "user" },
+        bob: { nickname: "Bob Li", username: "bob", datacenter: "B", role: "user" },
+        carol: { nickname: "Carol Wang", username: "carol", datacenter: "C", role: "admin" }
+      };
+
+      const user = mockData[username];
+      if (!user) return alert("未找到用户信息");
+
+      const form = document.getElementById("user-add-form");
+      form.nickname.value = user.nickname;
+      form.username.value = user.username;
+      form.username.readOnly = true;
+      form.password.value = "";
+      form.datacenter.value = user.datacenter;
+      form.role.value = user.role;
+
+      openUserForm();
     }
+
 
     function deleteUser(username) {
       if (confirm("确定要删除用户：" + username + " 吗？")) {

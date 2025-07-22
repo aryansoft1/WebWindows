@@ -1,58 +1,83 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
   <title>数据中心管理</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/global.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
 </head>
-<body class="bg-gray-100 text-sm text-gray-800">
-  <div class="p-6">
-    <h1 class="text-2xl font-bold mb-4">🗄️ 数据中心管理</h1>
-    <p class="text-gray-600 mb-6">用于配置各个 WebWindows 存储服务器接口，决定每位用户的资料数据来源。</p>
-
+<body class="bg-gray-100 p-6 text-sm">
+  <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
     <div class="flex justify-between items-center mb-4">
-      <div></div>
-      <button class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">➕ 添加数据中心</button>
+      <h1 class="text-xl font-bold">数据中心管理</h1>
+      <button onclick="openDataCenterForm()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">➕ 新建数据中心</button>
     </div>
 
-    <table class="w-full table-auto bg-white shadow rounded">
-      <thead class="bg-gray-100 text-left">
+    <table class="w-full table-auto border">
+      <thead class="bg-gray-100">
         <tr>
-          <th class="p-3">编号</th>
-          <th class="p-3">名称</th>
-          <th class="p-3">接口地址</th>
-          <th class="p-3">状态</th>
-          <th class="p-3">备注</th>
-          <th class="p-3">操作</th>
+          <th class="p-2 border">名称</th>
+          <th class="p-2 border">接口地址</th>
+          <th class="p-2 border">状态</th>
+          <th class="p-2 border">操作</th>
         </tr>
       </thead>
-      <tbody>
-        <tr class="border-t">
-          <td class="p-3 font-mono">DC001</td>
-          <td class="p-3">东京主站</td>
-          <td class="p-3 text-blue-600 truncate">https://data1.example.com/api/</td>
-          <td class="p-3 text-green-600 font-bold">在线</td>
-          <td class="p-3 text-gray-500">默认分配给亚洲用户</td>
-          <td class="p-3 space-x-2">
-            <button class="text-blue-600 hover:underline">测试</button>
-            <button class="text-gray-600 hover:underline">编辑</button>
-            <button class="text-red-600 hover:underline">删除</button>
+      <tbody id="dataCenterTableBody">
+        <tr>
+          <td class="p-2 border">节点A（上海）</td>
+          <td class="p-2 border">https://api.node-a.example.com</td>
+          <td class="p-2 border text-green-600">正常</td>
+          <td class="p-2 border">
+            <button class="text-blue-600 hover:underline mr-2" onclick="editDataCenter('节点A（上海）')">编辑</button>
+            <button class="text-red-600 hover:underline" onclick="deleteDataCenter('节点A（上海）')">删除</button>
           </td>
         </tr>
-        <tr class="border-t">
-          <td class="p-3 font-mono">DC002</td>
-          <td class="p-3">旧金山节点</td>
-          <td class="p-3 text-blue-600 truncate">https://us-west.example.com/api/</td>
-          <td class="p-3 text-red-600 font-bold">离线</td>
-          <td class="p-3 text-gray-500">测试中</td>
-          <td class="p-3 space-x-2">
-            <button class="text-blue-600 hover:underline">测试</button>
-            <button class="text-gray-600 hover:underline">编辑</button>
-            <button class="text-red-600 hover:underline">删除</button>
+        <tr>
+          <td class="p-2 border">节点B（东京）</td>
+          <td class="p-2 border">https://api.node-b.example.com</td>
+          <td class="p-2 border text-green-600">正常</td>
+          <td class="p-2 border">
+            <button class="text-blue-600 hover:underline mr-2" onclick="editDataCenter('节点B（东京）')">编辑</button>
+            <button class="text-red-600 hover:underline" onclick="deleteDataCenter('节点B（东京）')">删除</button>
+          </td>
+        </tr>
+        <tr>
+          <td class="p-2 border">节点C（香港）</td>
+          <td class="p-2 border">https://api.node-c.example.com</td>
+          <td class="p-2 border text-yellow-600">维护中</td>
+          <td class="p-2 border">
+            <button class="text-blue-600 hover:underline mr-2" onclick="editDataCenter('节点C（香港）')">编辑</button>
+            <button class="text-red-600 hover:underline" onclick="deleteDataCenter('节点C（香港）')">删除</button>
           </td>
         </tr>
       </tbody>
     </table>
   </div>
+
+  <!-- 数据中心表单弹窗 -->
+  <div id="dataCenterModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded shadow w-full max-w-md">
+      <h2 class="text-lg font-bold mb-4">添加/编辑数据中心</h2>
+      <form id="dataCenterForm">
+        <label class="block mb-2">名称</label>
+        <input type="text" id="centerName" class="w-full border rounded px-3 py-1 mb-3" required />
+
+        <label class="block mb-2">接口地址</label>
+        <input type="url" id="centerURL" class="w-full border rounded px-3 py-1 mb-3" required />
+
+        <button type="button" onclick="checkEndpoint()" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">检测接口有效性</button>
+
+        <div class="flex justify-end gap-2 mt-6">
+          <button type="button" onclick="closeDataCenterForm()" class="px-4 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded">取消</button>
+          <button type="submit" class="px-4 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/datacenter.js"></script>
 </body>
 </html>

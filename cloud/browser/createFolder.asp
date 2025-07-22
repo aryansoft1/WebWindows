@@ -1,46 +1,48 @@
-<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
 
-Dim basePath, path, name, fso, fullPath, rootPath
-basePath = Server.MapPath("/cloud/file/admin")
+Dim fs, baseDir, fullPath, path, name, username
+Set fs = Server.CreateObject("Scripting.FileSystemObject")
+
+' 获取登录用户
+username = Server.URLDecode(Request.Cookies("webwindows_user"))
+If IsEmpty(username) Then
+  Response.Write "{""success"":false,""message"":""未登录或会话超时""}"
+  Response.End
+End If
+
 path = Request("path")
-name = Request("name")
-
-Set fso = Server.CreateObject("Scripting.FileSystemObject")
-
-' 确保 path 使用正斜杠
+If path = "" Then path = ""
 path = Replace(path, "\", "/")
+If Left(path, 1) = "/" Then path = Mid(path, 2)
 
-' 自动补斜杠，拼接完整路径
-If path = "" Then
-    fullPath = basePath
-Else
-    If Left(path, 1) <> "/" Then path = "/" & path
-    fullPath = Server.MapPath("/cloud/file/admin" & path)
+name = Trim(Request("name"))
+If name = "" Then
+  Response.Write "{""success"":false,""message"":""文件夹名称不能为空""}"
+  Response.End
 End If
 
-' 防止越权访问
-rootPath = Server.MapPath("/cloud/file/admin")
-If InStr(fullPath, rootPath) <> 1 Then
-    Response.Write "{""success"":false,""message"":""路径非法""}"
-    Response.End
+baseDir = Server.MapPath("cloud/file/" & username & "/")
+fullPath = baseDir
+If path <> "" Then
+  fullPath = baseDir & path & "\"
 End If
 
-' 创建文件夹
-If fso.FolderExists(fullPath & "\" & name) Then
-    Response.Write "{""success"":false,""message"":""文件夹已存在""}"
-Else
-    On Error Resume Next
-    fso.CreateFolder(fullPath & "\" & name)
-    If Err.Number = 0 Then
-        Response.Write "{""success"":true}"
-    Else
-        Response.Write "{""success"":false,""message"":""创建失败: " & Err.Description & """}"
-    End If
-    On Error GoTo 0
+' 检查越权访问
+If InStr(fullPath, baseDir) <> 1 Then
+  Response.Write "{""success"":false,""message"":""非法路径访问""}"
+  Response.End
 End If
 
-Set fso = Nothing
+Dim newFolderPath
+newFolderPath = fullPath & name
+
+If fs.FolderExists(newFolderPath) Then
+  Response.Write "{""success"":false,""message"":""文件夹已存在""}"
+  Response.End
+End If
+
+fs.CreateFolder(newFolderPath)
+Response.Write "{""success"":true}"
 %>

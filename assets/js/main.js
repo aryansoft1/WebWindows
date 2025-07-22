@@ -303,17 +303,21 @@ function toggleMaximizeWindow(id) {
 
 window.onload = function () {
     const popup = document.getElementById('user-popup');
-    if (sessionStorage.getItem('username') != '' && sessionStorage.getItem('username') != null) {
+    if (sessionStorage.getItem('webwindows_user_nickname') != '' && sessionStorage.getItem('webwindows_user_nickname') != null) {
     popup.innerHTML = `
-        <div class="text-sm text-center mb-2 text-gray-700">欢迎你：${sessionStorage.getItem('username')}</div>
+        <div class="text-sm text-center mb-2 text-gray-700">欢迎你：${sessionStorage.getItem('webwindows_user_nickname')}</div>
         <div class="text-sm text-center mb-2 text-gray-700">角色：普通用户</div>
         <button onclick="logout()" class="...">注销</button>
     `;
     } else {
-    popup.innerHTML = ''; // 或 hidden
+    popup.style.display = 'none'; // 或 hidden
     }
     document.getElementById('login-username').addEventListener('click', () => {
-            const username = sessionStorage.getItem('username');
+            const username = sessionStorage.getItem('webwindows_user');
+            
+            const menu = document.getElementById("power-menu");
+            menu.style.display = "none"
+
             if (username != null && username!='') {
                 showUserMenu(); // 显示用户菜单
             } else {
@@ -824,6 +828,7 @@ function restoreIframes() {
 
     function initResize(e, win, dir) {
         e.preventDefault();
+        disableIframes();
         const startX = e.clientX, startY = e.clientY;
         const startW = parseInt(window.getComputedStyle(win).width, 10);
         const startH = parseInt(window.getComputedStyle(win).height, 10);
@@ -875,7 +880,7 @@ function togglePowerMenu() {
     const powerBtn = document.querySelector(".power-btn");
 
     if (!powerBtn || !menu) return;
-
+    document.getElementById('user-popup').style.display = 'none';
     const rect = powerBtn.getBoundingClientRect();
 
     if (menu.style.display !== "block") {
@@ -1178,14 +1183,16 @@ window.addEventListener("contextmenu", function (e) {
     e.preventDefault();
 });
 function initUserStatus() {
+  console.log("initUserStatus")
   const nameEl = document.getElementById('login-username');
   const avatarEl = document.getElementById('login-avatar');
   const statusDot = document.getElementById('login-status');
 
-  const username = sessionStorage.getItem('username');
-
+  const username = sessionStorage.getItem('webwindows_user');
+  const nickname = sessionStorage.getItem('webwindows_user_nickname');
+  
   if (username != '' && username != null) {
-    nameEl.textContent = username;
+    nameEl.textContent = nickname; 
     avatarEl.src = "https://cdn-icons-png.flaticon.com/512/747/747376.png";
     statusDot.style.backgroundColor = '#44cc44';
     
@@ -1212,7 +1219,7 @@ function toggleUserPopup(e) {
 }
 
 // 登录成功后绑定点击事件
-const userArea = document.getElementById('start-menu-login');
+const userArea = document.getElementById('login-username');
 if (userArea) {
   userArea.addEventListener('click', toggleUserPopup);
 }
@@ -1220,16 +1227,31 @@ if (userArea) {
 // 点击其他区域自动关闭
 document.addEventListener('click', function (e) {
   const popup = document.getElementById('user-popup');
-  if (!popup.contains(e.target) && !document.getElementById('start-menu-login').contains(e.target)) {
+  if (!popup.contains(e.target) && !document.getElementById('login-username').contains(e.target)) {
     popup.style.display = 'none';
   }
 });
 
 
 function logout() {
-  sessionStorage.removeItem('username');
+  sessionStorage.removeItem('webwindows_user');
+  sessionStorage.removeItem('webwindows_user_nickname');
   document.getElementById("user-popup").style.display = "none";
+  deleteCookie("webwindows_user");
+  deleteCookie("webwindows_user_nickname");
   initUserStatus();
+}
+function deleteCookie(name) {
+  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
 
 
+function removeTaskbarIcon(winId) {
+  const icon = document.querySelector(`.taskbar-app[data-id="${winId}"]`);
+  if (icon) {
+    icon.remove();
+    console.log("已移除任务栏图标：", winId);
+  } else {
+    console.warn("未找到图标：", winId);
+  }
+}

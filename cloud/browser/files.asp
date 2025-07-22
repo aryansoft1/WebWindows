@@ -6,7 +6,54 @@ Dim fso, basePath, relativePath, fullPath, folder, files, subfolders
 Dim sortBy, viewMode
 Set fso = Server.CreateObject("Scripting.FileSystemObject")
 
-basePath = Server.MapPath("../file/admin")
+' 默认路径（未传参数时）
+' 获取当前用户名
+username = Request.Cookies("webwindows_user")
+If IsEmpty(username) Or username = "" Then
+%><html>
+  <body>
+<script LANGUAGE="javascript">
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.background = "rgba(0, 0, 0, 0.6)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "9999";
+
+  const messageBox = document.createElement("div");
+  messageBox.style.background = "#fff";
+  messageBox.style.padding = "24px 36px";
+  messageBox.style.borderRadius = "12px";
+  messageBox.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
+  messageBox.style.fontSize = "16px";
+  messageBox.style.fontWeight = "bold";
+  messageBox.textContent = "请先登录";
+
+  overlay.appendChild(messageBox);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    const win = window.frameElement?.closest('.window');
+    console.log(win)
+    if (win) {
+      const winId = 'win-explorer';
+            // ✅ 在移除之前，通知父页面先删除任务栏图标
+          if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
+            window.parent.removeTaskbarIcon(winId);
+          }
+      win.remove();
+    }
+  }, 1200);
+  </script>
+  </body>
+  </html>
+<%
+  Response.End
+End If
+
+basePath = Server.MapPath("../file/" & username)
 relativePath = Request.QueryString("path")
 relativePath = Replace(relativePath, "/", "\") ' 转换为 Windows 路径
 
@@ -38,7 +85,7 @@ If viewMode = "" Then viewMode = "large"
     <link rel="stylesheet" href="contextmenu.css">
     <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
 </head>
-<body>
+<body onload="initFileManager()">
 <div class="wrapper" style="display: flex;">
     <h2>📁 WebWindows 云资料</h2>
 <div class="toolbar">

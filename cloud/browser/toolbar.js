@@ -76,12 +76,19 @@ function loadFolders(path = "", parentUL = document.getElementById("folder-tree"
   fetch(`getFolders.asp?path=${encodeURIComponent(path)}&recursive=true`)
     .then(res => res.json())
     .then(folders => {
+      if (!Array.isArray(folders)) {
+        console.error("目录接口返回异常：", folders);
+        showLoginOverlayAndClose(folders?.error || "目录加载失败");
+        return;
+      }
+
       folders.forEach(folder => {
-        renderFolderRecursive(folder, parentUL); // ✅ 只调用一次，统一入口
+        renderFolderRecursive(folder, parentUL);
       });
 
       if (callback) callback();
     });
+
 }
 
 function renderFolderRecursive(folder, parentUL) {
@@ -199,7 +206,7 @@ function closeNewFolderModal() {
 function submitNewFolder() {
   const folderName = document.getElementById("newFolderName").value.trim();
   if (!folderName) {
-    alert("请输入文件夹名称！");
+    showMessageBox("请输入文件夹名称！");
     return;
   }
 
@@ -224,11 +231,11 @@ function submitNewFolder() {
         loadFiles(currentPath);
       }
       else {
-              alert("创建失败：" + result.message);
+              showMessageBox("创建失败：" + result.message);
             }
     })
     .catch(err => {
-      alert("网络错误：" + err.message);
+      showMessageBox("网络错误：" + err.message);
     });
 }
 
@@ -265,14 +272,14 @@ function expandToCurrentPath(currentPath) {
 function openSelected() {
   const selected = document.querySelector('.file-item.selected');
   if (!selected) {
-    alert("未选中文件或文件夹！");
+    showMessageBox("未选中文件或文件夹！");
     return;
   }
 
   const isFolder = selected.dataset.isFolder === "true";
   const path = selected.dataset.path;
   if (!path) {
-    alert("路径无效！");
+    showMessageBox("路径无效！");
     return;
   }
 
@@ -285,4 +292,118 @@ function openSelected() {
     // 是文件，可选择弹出或预览
     alert("这是文件，尚未实现打开方式。");
   }
+}
+// assets/js/files-init.js
+
+function initFileManager() {
+  const userJson = sessionStorage.getItem("webwindows_user");
+  if (!userJson) {
+    showLoginOverlayAndClose("请先登录");
+    setTimeout(() => {
+      const win = window.frameElement?.closest('.window');
+      if (win) win.remove();
+    }, 1000);
+    return;
+  }
+
+  try {
+    const user = JSON.parse(userJson);
+    const username = user.username || "unknown";
+    window.rootPath = `/cloud/file/${username}/`;
+  } catch (e) {
+    console.error("用户信息解析失败", e);
+    showLoginOverlayAndClose("用户信息异常，请重新登录");
+    setTimeout(() => {
+      const win = window.frameElement?.closest('.window');
+       // ✅ 在移除之前，通知父页面先删除任务栏图标
+      if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
+          window.parent.removeTaskbarIcon(winId);
+      }
+      if (win) win.remove();
+    }, 1000);
+    return;
+  }
+
+  document.body.style.display = "block"; // 显示页面内容
+  if (typeof initFileExplorer === 'function') {
+    initFileExplorer(window.rootPath);   // 你原有的初始化文件列表函数
+  } else {
+    console.warn("未定义 initFileExplorer()");
+  }
+}
+function showLoginOverlayAndClose(text) {
+  document.body.innerHTML = "";
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.background = "rgba(0, 0, 0, 0.6)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "9999";
+
+  const messageBox = document.createElement("div");
+  messageBox.style.background = "#fff";
+  messageBox.style.padding = "24px 36px";
+  messageBox.style.borderRadius = "12px";
+  messageBox.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
+  messageBox.style.fontSize = "16px";
+  messageBox.style.fontWeight = "bold";
+  messageBox.textContent = text;
+
+  overlay.appendChild(messageBox);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    const win = window.frameElement?.closest('.window');
+    console.log(win)
+    if (win) {
+      const winId = 'win-explorer';
+            // ✅ 在移除之前，通知父页面先删除任务栏图标
+          if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
+            window.parent.removeTaskbarIcon(winId);
+          }
+      win.remove();
+    }
+  }, 1200);
+}
+function showMessageBox(text) {
+  const overlay = document.createElement("div");
+  overlay.style.position = "fixed";
+  overlay.style.inset = "0";
+  overlay.style.background = "rgba(0, 0, 0, 0.5)";
+  overlay.style.display = "flex";
+  overlay.style.alignItems = "center";
+  overlay.style.justifyContent = "center";
+  overlay.style.zIndex = "9999";
+
+  const box = document.createElement("div");
+  box.style.background = "#fff";
+  box.style.padding = "24px 36px";
+  box.style.borderRadius = "12px";
+  box.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
+  box.style.fontSize = "16px";
+  box.style.fontWeight = "bold";
+  box.style.textAlign = "center";
+
+  const msg = document.createElement("div");
+  msg.textContent = text || "提示";
+  msg.style.marginBottom = "20px";
+
+  const button = document.createElement("button");
+  button.textContent = "确定";
+  button.style.background = "#2563eb";
+  button.style.color = "#fff";
+  button.style.border = "none";
+  button.style.padding = "8px 20px";
+  button.style.borderRadius = "6px";
+  button.style.cursor = "pointer";
+  button.addEventListener("click", () => {
+    overlay.remove(); // 只关闭，无回调
+  });
+
+  box.appendChild(msg);
+  box.appendChild(button);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
 }

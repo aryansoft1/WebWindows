@@ -301,6 +301,9 @@ function initFileManager() {
     showLoginOverlayAndClose("请先登录");
     setTimeout(() => {
       const win = window.frameElement?.closest('.window');
+      if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
+          window.parent.removeTaskbarIcon("win-explorer");
+      }
       if (win) win.remove();
     }, 1000);
     return;
@@ -317,7 +320,7 @@ function initFileManager() {
       const win = window.frameElement?.closest('.window');
        // ✅ 在移除之前，通知父页面先删除任务栏图标
       if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
-          window.parent.removeTaskbarIcon(winId);
+          window.parent.removeTaskbarIcon("win-explorer");
       }
       if (win) win.remove();
     }, 1000);

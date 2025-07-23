@@ -118,7 +118,7 @@ If viewMode = "" Then viewMode = "large"
             Dim folderPath
             folderPath = relativePath & "\" & sf.Name
 
-            Response.Write "<div title='" & sf.Name & "' class='file-item folder' data-path='" & folderPath & "' data-is-folder='true'>"
+            Response.Write "<div onclick=""location.href='files.asp?path=" & folderPath & "'"" title='" & sf.Name & "' class='file-item folder' data-path='" & folderPath & "' data-is-folder='true'>"
             Response.Write "    <img src='https://cdn-icons-png.flaticon.com/128/716/716784.png'>"
             Response.Write "    <div class='file-name'>" & sf.Name & "</div>"
             Response.Write "</div>"

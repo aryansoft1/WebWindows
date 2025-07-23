@@ -328,12 +328,8 @@ function initFileManager() {
   }
 
   document.body.style.display = "block"; // 显示页面内容
-  if (typeof initFileExplorer === 'function') {
-    initFileExplorer(window.rootPath);   // 你原有的初始化文件列表函数
-  } else {
-    console.warn("未定义 initFileExplorer()");
-  }
 }
+
 function showLoginOverlayAndClose(text) {
   document.body.innerHTML = "";
   const overlay = document.createElement("div");

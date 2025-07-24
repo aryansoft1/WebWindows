@@ -99,14 +99,16 @@ If viewMode = "" Then viewMode = "large"
     <button class="icon-btn" onclick="setView('large')"><i data-lucide="layout-grid">大图标</i></button>
   </div>
     <div class="toolbar-right">
-    <label for="sortSelect">排序：</label>
-    <select id="sortSelect" onchange="sortFiles(this.value)">
-        <option value="name">名称</option>
-        <option value="time">时间</option>
-        <option value="size">大小</option>
-    </select>
+    <div id="disk-info" style="margin: 10px 0 5px 12px; font-size: 13px; color: #444;">
+    <span id="disk-text">已用 13.91 GB / 总共 1229.00 GB (1.1%)</span>
+    <div style="background: #bdb9b9; height: 12px; width: 240px; border-radius: 3px; margin-top: 4px;">
+        <div id="disk-bar" style="background: #4f9cfa; height: 12px; width: 1.1%; border-radius: 3px;"></div>
+    </div>
+    </div>
     </div>
 </div>
+<!-- toolbar -->
+
   <div class="main">
   <div id="sidebar">
     <ul id="folder-tree"></ul>

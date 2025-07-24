@@ -329,7 +329,31 @@ function initFileManager() {
 
   document.body.style.display = "block"; // 显示页面内容
 }
+function formatSize(size) {
+  if (size >= 1024) {
+     return (size / 1024).toFixed(2) + ' GB';
+  } else {
+    return size.toFixed(2) + ' MB';
+  }
+} 
 
+function updateDiskInfo() {
+  fetch("/inc/sysinfo.asp")
+    .then(response => response.json())
+    .then(data => {
+      const used = parseFloat(data.diskUsed);
+      const total = parseFloat(data.diskTotal);
+      const percent = ((used / total) * 100).toFixed(1);
+
+      const info = `已用 ${formatSize(used)} / 总共 ${formatSize(total)} (${percent}%)`;
+      document.getElementById("disk-text").textContent = info;
+      document.getElementById("disk-bar").style.width = percent + "%";
+
+    })
+}
+document.addEventListener("DOMContentLoaded", function () {
+  updateDiskInfo();
+});
 function showLoginOverlayAndClose(text) {
   document.body.innerHTML = "";
   const overlay = document.createElement("div");

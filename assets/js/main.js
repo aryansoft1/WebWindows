@@ -572,6 +572,28 @@ function padTitleBarTouch(win, titleBar) {
     });
 
 }
+function clearAspSessionCookies() {
+  document.cookie.split(';').forEach(cookie => {
+    const name = cookie.trim().split('=')[0];
+    if (name.startsWith('ASPSESSIONID')) {
+      document.cookie = name + '=;expires=' + new Date(0).toUTCString() + ';path=/';
+    }
+  });
+}
+
+function closeWindow(id) {
+  const win = document.getElementById('win-' + id);
+  if (!win) return;
+
+  // 检查是否有 iframe 且加载 asp 页面
+  const iframe = win.querySelector('iframe');
+  if (iframe && iframe.src && iframe.src.toLowerCase().endsWith('.asp')) {
+    clearAspSessionCookies(); // ✅ 仅此处清除
+  }
+
+  win.remove();
+  removeTaskbarIcon(id);
+}
 
 function openCloudWindow() {
     if (document.getElementById("win-yunmishu_cloud") || document.getElementById("win-yunmishu_cloud")) {
@@ -594,7 +616,7 @@ function openCloudWindow() {
                                                                <div class="buttons">
                                                                  <div class="button minimize" title="最小化">_</div>
                                                                  <div class="button maximize" title="缩放" onclick="toggleMaximizeWindow('win-yunmishu_cloud')">⬜</div>
-                                                                 <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_cloud').remove()">✕</div>
+                                                                 <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_cloud').remove();closeWindow('${win.id}');">✕</div>
                                                                </div>`
 
     padTitleBarTouch(win, titleBar);
@@ -650,7 +672,7 @@ function openWindow(id, title, url, iconUrl, useIframe = false, type = '', width
                                                                                   <div class="buttons">
                                                                                     <div class="button minimize" title="最小化">_</div>
                                                                                     <div class="button maximize" title="缩放">⬜</div>
-                                                                                    <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_japan').remove()">✕</div>
+                                                                                    <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_japan').remove();closeWindow('${id}');">✕</div>
                                                                                   </div>
 `;
 
@@ -696,7 +718,7 @@ function openWindow(id, title, url, iconUrl, useIframe = false, type = '', width
                                                                                             <div class="buttons">
                                                                                               <div class="button minimize" title="最小化">_</div>
                                                                                               <div class="button maximize" title="缩放">⬜</div>
-                                                                                              <div class="button close" title="关闭" onclick="document.getElementById('win-${id}').remove()">✕</div>
+                                                                                              <div class="button close" title="关闭" onclick="document.getElementById('win-${id}').remove();closeWindow('${id}');">✕</div>
                                                                                             </div>`;
     //平板适配
     padTitleBarTouch(win, titleBar);

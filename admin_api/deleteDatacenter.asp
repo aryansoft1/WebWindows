@@ -1,9 +1,11 @@
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<!--#include file="../inc/conn.asp"-->
 <%
 Response.ContentType = "application/json"
-<!--#include file="../inc/conn.asp"-->
 
 Dim id
-id = CLng(Request("id"))
+id = 0
+If IsNumeric(Request("id")) Then id = CLng(Request("id"))
 
 If id = 0 Then
   Response.Write("{""success"":false,""error"":""缺少ID""}")

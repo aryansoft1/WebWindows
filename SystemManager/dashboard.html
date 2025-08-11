@@ -5,6 +5,9 @@
   <title>仪表盘 - WebWindows 管理系统</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/js/dashboard.js"></script>
+
 </head>
 <body class="bg-gray-100 text-gray-800 p-6">
   <div class="max-w-7xl mx-auto">
@@ -14,7 +17,7 @@
       <!-- 卡片1：用户数量 -->
       <div class="bg-white shadow rounded-xl p-5">
         <h2 class="text-xl font-semibold mb-2">注册用户</h2>
-        <p class="text-3xl font-bold text-blue-600">--</p>
+         <p id="kpi-users" class="text-3xl font-bold text-blue-600">--</p>
       </div>
 
       <!-- 卡片2：上传资料总数 -->
@@ -28,6 +31,36 @@
         <h2 class="text-xl font-semibold mb-2">待回复咨询</h2>
         <p class="text-3xl font-bold text-red-600">--</p>
       </div>
+
+    <!-- 卡片：数据中心状态 -->
+    <div class="bg-white shadow rounded-xl p-5">
+      <h2 class="text-xl font-semibold mb-3">数据中心状态</h2>
+      <div class="space-y-3 text-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="check-circle" class="text-green-600 w-4 h-4"></i>
+            <span class="text-gray-700">启用中</span>
+          </div>
+          <span id="dc-running" class="font-semibold text-green-600">--</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="wrench" class="text-yellow-600 w-4 h-4"></i>
+            <span class="text-gray-700">维护中</span>
+          </div>
+          <span id="dc-maintenance" class="font-semibold text-yellow-600">--</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="help-circle" class="text-gray-500 w-4 h-4"></i>
+            <span class="text-gray-700">待处理</span>
+          </div>
+          <span id="dc-unknown" class="font-semibold text-gray-500">--</span>
+        </div>
+      </div>
+    </div>
+
+
     </div>
 
     <div class="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">

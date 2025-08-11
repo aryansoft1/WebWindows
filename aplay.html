@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>APlay · 无部署媒体聚合</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.475.0/dist/umd/lucide.min.js" defer></script>
+
+<!-- ===== APlay 图标（SVG + favicon，供开始菜单/PWA 图标导出） ===== -->
+<!-- 1) 头部 favicon（直接使用 data:svg） -->
+<link rel="icon" type="image/svg+xml"
+href="data:image/svg+xml;utf8,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'>
+  <defs>
+    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0' stop-color='%232563eb'/>
+      <stop offset='1' stop-color='%237c3aed'/>
+    </linearGradient>
+  </defs>
+  <rect width='512' height='512' rx='112' fill='url(%23g)'/>
+  <!-- A 的两斜边 -->
+  <path d='M170 360 L256 160 L342 360 Z' fill='white' opacity='0.96'/>
+  <!-- A 中的播放三角（负形态：用同色覆盖营造中空感） -->
+  <polygon points='256,230 305,256 256,282' fill='%232563eb' opacity='0.95'/>
+</svg>"/>
+
+<style>
+  html,body{height:100%}
+  .nice-scroll::-webkit-scrollbar{width:8px;height:8px}
+  .nice-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:999px}
+  .nice-scroll::-webkit-scrollbar-track{background:transparent}
+  .nav-active{background:#eff6ff;color:#1d4ed8}
+  .text-clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .no-select{user-select:none;-webkit-user-drag:none}
+  .shield{position:absolute;inset:0;z-index:10;background:transparent}
+  .tab-active{background:#eef2ff;border-color:#c7d2fe;color:#1d4ed8}
+</style>
+</head>
+<body class="h-full bg-gray-50 text-gray-800 no-select">
+<!-- 可复制保存的 APlay SVG（导出开始菜单/应用图标用） -->
+<svg id="aplay-svg-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="hidden">
+  <defs>
+    <linearGradient id="aplayGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#aplayGrad)"/>
+  <path d="M170 360 L256 160 L342 360 Z" fill="#fff" opacity="0.96"/>
+  <polygon points="256,230 305,256 256,282" fill="#2563eb" opacity="0.95"/>
+</svg>
+
+<div class="h-full flex flex-col">
+  <!-- Header -->
+  <header class="h-14 shrink-0 bg-white border-b border-gray-100 shadow-sm px-4 flex items-center justify-between">
+    <div class="flex items-center gap-3 min-w-0">
+      <!-- 用 SVG 做页头图标 -->
+      <svg viewBox="0 0 512 512" class="w-8 h-8 rounded-xl">
+        <defs>
+          <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#7c3aed"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" rx="112" fill="url(#g2)"/>
+        <path d="M170 360 L256 160 L342 360 Z" fill="#fff" opacity="0.96"/>
+        <polygon points="256,230 305,256 256,282" fill="#2563eb" opacity="0.95"/>
+      </svg>
+      <div class="text-lg font-semibold">APlay</div>
+      <div id="subtitle" class="text-gray-400">· Home</div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="btn-open-url" class="h-9 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 flex items-center gap-2" title="打开 URL（后续与云资源结合）">
+        <i data-lucide="link-2" class="w-4 h-4"></i><span class="hidden sm:inline">打开 URL</span>
+      </button>
+      <label class="flex items-center gap-2 h-9 px-3 rounded-xl bg-white border border-gray-200" title="显示海外平台源（YouTube 等）">
+        <input id="switch-overseas" type="checkbox" class="accent-blue-600">
+        <span class="text-sm">海外源</span>
+      </label>
+    </div>
+  </header>
+
+  <!-- Main -->
+  <main class="flex-1 min-h-0 flex">
+    <!-- Left Nav -->
+    <aside class="w-64 shrink-0 bg-white border-r border-gray-100 p-3 overflow-y-auto nice-scroll">
+      <div class="px-2 text-xs uppercase tracking-wider text-gray-400 mb-2">导航</div>
+      <nav id="nav" class="space-y-1">
+        <button data-route="home"  class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl nav-active"><i data-lucide="home" class="w-4 h-4"></i><span>首页</span></button>
+        <button data-route="music" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50"><i data-lucide="music" class="w-4 h-4"></i><span>音乐</span></button>
+        <button data-route="video" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50"><i data-lucide="clapperboard" class="w-4 h-4"></i><span>视频</span></button>
+        <button data-route="tv"    class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50"><i data-lucide="tv" class="w-4 h-4"></i><span>TV</span></button>
+        <button data-route="radio" class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50"><i data-lucide="radio" class="w-4 h-4"></i><span>电台</span></button>
+        <button data-route="fav"   class="nav-btn w-full flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-gray-50"><i data-lucide="heart" class="w-4 h-4"></i><span>收藏</span></button>
+      </nav>
+    </aside>
+
+    <!-- Views -->
+    <section class="flex-1 min-w-0 p-5 overflow-y-auto nice-scroll">
+      <!-- Home -->
+      <div id="view-home" class="space-y-6">
+        <div>
+          <h2 class="text-base font-semibold mb-2">选择你的频道</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <a href="#/music" class="rounded-2xl border border-gray-200 bg-white hover:shadow-sm p-4 flex items-center gap-3">
+              <i data-lucide="music" class="w-5 h-5 text-emerald-600"></i>
+              <div><div class="font-medium">音乐</div><div class="text-xs text-gray-500">榜单（预览）/ 无版权整曲</div></div>
+            </a>
+            <a href="#/video" class="rounded-2xl border border-gray-200 bg-white hover:shadow-sm p-4 flex items-center gap-3">
+              <i data-lucide="clapperboard" class="w-5 h-5 text-indigo-600"></i>
+              <div><div class="font-medium">视频</div><div class="text-xs text-gray-500">B站热门/分区 + YouTube（海外开关）</div></div>
+            </a>
+            <a href="#/tv" class="rounded-2xl border border-gray-200 bg-white hover:shadow-sm p-4 flex items-center gap-3">
+              <i data-lucide="tv" class="w-5 h-5 text-blue-600"></i>
+              <div><div class="font-medium">TV</div><div class="text-xs text-gray-500">直播/点播 · 内联控制</div></div>
+            </a>
+            <a href="#/radio" class="rounded-2xl border border-gray-200 bg-white hover:shadow-sm p-4 flex items-center gap-3">
+              <i data-lucide="radio" class="w-5 h-5 text-amber-600"></i>
+              <div><div class="font-medium">电台</div><div class="text-xs text-gray-500">全球直链流</div></div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Music -->
+      <div id="view-music" class="hidden space-y-6">
+        <div class="flex items-center gap-2">
+          <button id="tab-rss" class="h-9 px-3 rounded-xl border border-gray-200 tab-active">榜单（预览）</button>
+          <button id="tab-pd"  class="h-9 px-3 rounded-xl border border-gray-200">无版权（整曲）</button>
+        </div>
+
+        <!-- 榜单（iTunes 旧 RSS + 预览） -->
+        <div id="music-rss" class="space-y-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold">热门榜单</h2>
+            <div class="flex items-center gap-2">
+              <button id="btn-apple-legal" class="h-8 px-3 rounded-lg border border-gray-200 text-sm">来源说明</button>
+              <button id="btn-rss-refresh" class="h-8 px-3 rounded-lg border border-gray-200 text-sm">刷新</button>
+              <button id="btn-play-any" class="h-8 px-3 rounded-lg bg-blue-600 text-white text-sm">随便听一首（预览）</button>
+            </div>
+          </div>
+          <div id="apple-legal" class="hidden text-xs text-gray-500 -mt-3">
+            榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。
+          </div>
+
+          <div id="rss-cats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+
+          <div>
+            <div class="text-sm text-gray-500 mb-2" id="rss-title">—</div>
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-500">
+                  <tr>
+                    <th class="text-left font-medium px-4 py-2 w-12">#</th>
+                    <th class="text-left font-medium px-4 py-2">标题 / 艺术家</th>
+                    <th class="text-left font-medium px-4 py-2">艺术家</th>
+                    <th class="text-left font-medium px-4 py-2">专辑</th>
+                    <th class="text-right font-medium px-4 py-2 w-28">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="rss-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- 无版权整曲 -->
+        <div id="music-pd" class="hidden space-y-5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-semibold">无版权 · 整曲</h2>
+            <div class="text-xs text-gray-500">示例数据，后期换成你的直链或自建源</div>
+          </div>
+          <div id="pd-cats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"></div>
+          <div>
+            <div class="text-sm text-gray-500 mb-2" id="pd-title">—</div>
+            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-gray-500">
+                  <tr>
+                    <th class="text-left font-medium px-4 py-2 w-12">#</th>
+                    <th class="text-left font-medium px-4 py-2">标题</th>
+                    <th class="text-left font-medium px-4 py-2">艺术家</th>
+                    <th class="text-left font-medium px-4 py-2">授权</th>
+                    <th class="text-right font-medium px-4 py-2 w-28">播放</th>
+                  </tr>
+                </thead>
+                <tbody id="pd-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Video -->
+      <div id="view-video" class="hidden space-y-6">
+        <div class="flex items-center justify-between"><h2 class="text-base font-semibold">为你推荐 · 视频</h2></div>
+        <div class="flex items-center justify-between">
+          <div id="video-cats" class="flex flex-wrap gap-2"></div>
+          <div id="video-source-tip" class="text-xs text-gray-500"></div>
+        </div>
+        <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm text-gray-500" id="video-now">未选择视频</h3>
+            <div class="flex items-center gap-2">
+              <button id="video-btn-play" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放/暂停</span></button>
+              <button id="video-btn-mute" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="volume-x" class="w-4 h-4"></i><span class="ml-1">静音</span></button>
+              <button id="video-btn-full" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="maximize" class="w-4 h-4"></i><span class="ml-1">全屏</span></button>
+              <button id="video-btn-exit" class="h-9 px-3 rounded-xl bg-blue-600 text-white"><i data-lucide="x" class="w-4 h-4"></i><span class="ml-1">退出</span></button>
+            </div>
+          </div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 bg-black relative">
+            <video id="video-player" class="w-full h-[56vh] bg-black hidden" playsinline></video>
+            <iframe id="video-iframe" class="w-full h-[56vh] hidden" frameborder="0"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
+              allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            <div id="video-shield" class="shield hidden"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TV -->
+      <div id="view-tv" class="hidden space-y-6">
+        <div class="flex items-center justify-between"><h2 class="text-base font-semibold">TV · 官方 / 直链</h2></div>
+        <div id="tv-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm text-gray-500" id="tv-now">未选择频道</h3>
+            <div class="flex items-center gap-2">
+              <button id="tv-btn-play" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放/暂停</span></button>
+              <button id="tv-btn-mute" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="volume-x" class="w-4 h-4"></i><span class="ml-1">静音</span></button>
+              <button id="tv-btn-full" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="maximize" class="w-4 h-4"></i><span class="ml-1">全屏</span></button>
+              <button id="tv-btn-exit" class="h-9 px-3 rounded-xl bg-blue-600 text-white"><i data-lucide="x" class="w-4 h-4"></i><span class="ml-1">退出</span></button>
+            </div>
+          </div>
+          <div class="rounded-xl overflow-hidden border border-gray-200 bg-black relative">
+            <video id="tv-player" class="w-full h-[56vh] bg-black hidden" playsinline></video>
+            <iframe id="tv-iframe" class="w-full h-[56vh] hidden" frameborder="0"
+              sandbox="allow-scripts allow-same-origin allow-presentation"
+              allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+            <div id="tv-shield" class="shield hidden"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radio -->
+      <div id="view-radio" class="hidden space-y-6">
+        <div class="flex items-center justify-between"><h2 class="text-base font-semibold">全球电台</h2></div>
+        <div id="radio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+      </div>
+
+      <!-- Fav -->
+      <div id="view-fav" class="hidden text-sm text-gray-500">收藏夹为空（示例）</div>
+    </section>
+  </main>
+
+  <!-- Global Audio Bar -->
+  <footer id="audio-footer" class="h-20 shrink-0 bg-white border-t border-gray-100 px-4">
+    <div class="h-full grid grid-cols-[auto_1fr_auto] items-center gap-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div id="now-cover" class="w-12 h-12 rounded-lg bg-gray-200"></div>
+        <div class="min-w-0">
+          <div id="now-title" class="text-sm font-medium text-clip">未选择内容</div>
+          <div id="now-sub" class="text-xs text-gray-500 text-clip">—</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2">
+          <button id="btn-prev" class="w-9 h-9 rounded-full border border-gray-200 grid place-items-center hover:bg-gray-50"><i data-lucide="skip-back" class="w-4 h-4"></i></button>
+          <button id="btn-play" class="w-11 h-11 rounded-full bg-blue-600 text-white grid place-items-center hover:bg-blue-700"><i data-lucide="play" class="w-5 h-5"></i></button>
+          <button id="btn-next" class="w-9 h-9 rounded-full border border-gray-200 grid place-items-center hover:bg-gray-50"><i data-lucide="skip-forward" class="w-4 h-4"></i></button>
+        </div>
+        <div class="flex items-center gap-3 w-[44vw] max-w-[720px]">
+          <div id="now-time" class="w-12 text-right text-xs text-gray-400">00:00</div>
+          <div class="flex-1 h-1.5 rounded-full bg-gray-100"><div id="now-progress" class="h-full w-0 rounded-full bg-blue-500"></div></div>
+          <div id="now-dur" class="w-12 text-xs text-gray-400">00:00</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <i data-lucide="volume-2" class="w-4 h-4 text-gray-500"></i>
+        <div class="w-24 h-1.5 rounded-full bg-gray-100 mr-3"><div class="h-full w-2/3 rounded-full bg-gray-300"></div></div>
+      </div>
+    </div>
+    <audio id="audio" class="hidden"></audio>
+  </footer>
+</div>
+
+<script>
+/* ===== 小工具 ===== */
+const ROUTES=['home','music','video','tv','radio','fav'];
+const $=s=>document.querySelector(s);
+function refreshIcons(){ if(window.lucide?.createIcons) window.lucide.createIcons(); }
+function fmtTime(s){ if(!isFinite(s)) return '00:00'; const m=Math.floor(s/60),x=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
+
+/* ===== 全局状态（海外源） ===== */
+const state = { showOverseas: JSON.parse(localStorage.getItem('aplay.overseas') || 'false') };
+function bindGlobalToggles(){
+  const o = $('#switch-overseas');
+  if (!o) return;
+  o.checked = !!state.showOverseas;
+  o.addEventListener('change', ()=>{
+    state.showOverseas = o.checked;
+    localStorage.setItem('aplay.overseas', JSON.stringify(state.showOverseas));
+    videoInit();
+  });
+}
+
+/* ===== 路由（视频/TV 隐藏音频栏） ===== */
+function setRoute(route){
+  if(!ROUTES.includes(route)) route='home';
+  document.querySelectorAll('#nav .nav-btn').forEach(b=>b.classList.toggle('nav-active', b.dataset.route===route));
+  ROUTES.forEach(r=>document.getElementById('view-'+r)?.classList.add('hidden'));
+  document.getElementById('view-'+route)?.classList.remove('hidden');
+  const map={home:'· Home', music:'· Music', video:'· Video', tv:'· TV', radio:'· Radio', fav:'· Favorites'};
+  $('#subtitle').textContent=map[route]||'· Home';
+  const isAV=(route==='video'||route==='tv');
+  if(isAV){ enterAVMode(); pauseAudio(); } else { exitAVMode(true); stopInlinePlayers(); }
+  refreshIcons();
+}
+function initRouter(){
+  document.querySelectorAll('#nav .nav-btn').forEach(btn=>btn.addEventListener('click',()=>location.hash='#/'+btn.dataset.route));
+  window.addEventListener('hashchange',()=>{ const r=(location.hash.replace('#/','')||'').split('?')[0]||'home'; setRoute(r); });
+  const r=(location.hash.replace('#/','')||'').split('?')[0]||'home'; setRoute(r);
+}
+
+/* ===== Apple 榜单（旧 iTunes RSS，CN→TW→HK→SG 兜底；只缓存非空） ===== */
+const APPLE_RSS_FEEDS = [
+  { label: '中国金曲', code: 'cn' },
+  { label: '英文歌曲', code: 'us' },
+  { label: '日本音乐', code: 'jp' }
+];
+let CURRENT_FEED = APPLE_RSS_FEEDS[0];
+let RSS_LIST = [];
+
+// 通用 CORS JSON 拉取：直连 → r.jina.ai → allorigins
+async function fetchJSONCORS(url) {
+  const toJSON = async (r) => {
+    const ct = r.headers.get('content-type') || '';
+    if (ct.includes('application/json')) return await r.json();
+    const t = await r.text(); try{ return JSON.parse(t); }catch{ throw new Error('non-JSON'); }
+  };
+  try { const r = await fetch(url,{cache:'no-store'}); if (r.ok) return await toJSON(r); } catch {}
+  try { const r = await fetch('https://r.jina.ai/http://' + url.replace(/^https?:\/\//,'')); if (r.ok) return await toJSON(r); } catch {}
+  try { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)); if (r.ok) return await toJSON(r); } catch {}
+  throw new Error('CORS blocked');
+}
+// iTunes Search 取预览
+async function fetchPreviewUrlBySearch(title, artist, country='cn') {
+  const q = encodeURIComponent(`${title} ${artist}`.trim());
+  const url = `https://itunes.apple.com/search?term=${q}&entity=song&limit=1&country=${country}`;
+  try { const r=await fetch(url); if(!r.ok) return ''; const j=await r.json(); return j.results?.[0]?.previewUrl || ''; }
+  catch { return ''; }
+}
+// 解析 iTunes RSS
+function parseItunes(data){
+  if (!data?.feed?.entry) return [];
+  return (data.feed.entry||[]).map(e=>{
+    const title  = e['im:name']?.label || e.title?.label || '—';
+    const artist = e['im:artist']?.label || '—';
+    const album  = e['im:collection']?.name?.label || '—';
+    const imgs   = e['im:image'] || [];
+    const cover  = imgs.length ? imgs[imgs.length-1]?.label : '';
+    const id     = e.id?.attributes?.['im:id'] || e.id?.label || '';
+    return { id, title, artist, album, cover };
+  });
+}
+
+async function mountMusicRSS(){
+  const wrap = $('#rss-cats'); wrap.innerHTML='';
+  APPLE_RSS_FEEDS.forEach(feed=>{
+    const card=document.createElement('div');
+    card.className='rounded-2xl border border-gray-200 bg-white hover:shadow-sm cursor-pointer group p-4';
+    card.dataset.code=feed.code; card.dataset.label=feed.label;
+    card.innerHTML=`<div class="flex items-center gap-3">
+      <i data-lucide="headphones" class="w-5 h-5 text-emerald-700"></i>
+      <div class="font-medium">${feed.label}</div>
+    </div>`;
+    wrap.appendChild(card);
+  });
+  await renderSongsFromRss(CURRENT_FEED);
+  setTimeout(()=>{
+    refreshIcons();
+    wrap.querySelectorAll('[data-code]').forEach(el=>{
+      el.addEventListener('click', async ()=>{
+        CURRENT_FEED = { code: el.dataset.code, label: el.dataset.label };
+        await renderSongsFromRss(CURRENT_FEED);
+      });
+    });
+    $('#btn-apple-legal')?.addEventListener('click', ()=>$('#apple-legal').classList.toggle('hidden'));
+    $('#btn-rss-refresh')?.addEventListener('click', async ()=>{
+      localStorage.removeItem(`aplay.apple.${CURRENT_FEED.code}`);
+      await renderSongsFromRss(CURRENT_FEED);
+    });
+    $('#btn-play-any')?.addEventListener('click', async ()=>{
+      for (let i=0;i<RSS_LIST.length;i++){
+        const t = RSS_LIST[i];
+        let url = t.previewUrl || await fetchPreviewUrlBySearch(t.title, t.artist, CURRENT_FEED.code);
+        if (url) { t.previewUrl=url; playAudio(url, {title:t.title, sub:t.artist||''}); break; }
+      }
+    });
+  });
+}
+
+async function renderSongsFromRss(feed){
+  const titleEl = $('#rss-title'); const tbody=$('#rss-table');
+  titleEl.textContent = `${feed.label} · 热门歌曲（真实榜单）`;
+  tbody.innerHTML = `<tr class="border-t"><td colspan="5" class="px-4 py-6 text-gray-500">正在加载…</td></tr>`;
+
+  const cacheKey = `aplay.apple.${feed.code}`;
+  const ttl = 6 * 60 * 60 * 1000; // 6h
+  const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+  if (cached && (Date.now()-cached.t) < ttl && (cached.items||[]).length){
+    RSS_LIST = cached.items; return renderRssTable(cached.items);
+  }
+
+  const order = (feed.code === 'cn') ? ['cn','tw','hk','sg'] : [feed.code];
+  let items = [], used = '';
+  for (const cc of order){
+    try{
+      const url = `https://itunes.apple.com/${cc}/rss/topsongs/limit=100/explicit=true/json`;
+      const data = await fetchJSONCORS(url);
+      items = parseItunes(data);
+      if (items.length){ used = cc; break; }
+    }catch(e){}
+  }
+  if (items.length){
+    localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), items, cc: used }));
+  }
+  RSS_LIST = items;
+  return renderRssTable(items);
+}
+
+function renderRssTable(items){
+  const tbody=$('#rss-table'); tbody.innerHTML='';
+  if(!items.length){
+    tbody.innerHTML = `<tr class="border-t"><td colspan="5" class="px-4 py-6 text-center text-gray-500">暂无数据（可稍后再试）</td></tr>`;
+    return;
+  }
+  items.forEach((s,idx)=>{
+    const tr=document.createElement('tr'); tr.className='border-t hover:bg-gray-50';
+    tr.innerHTML=`
+      <td class="px-4 py-2">${idx+1}</td>
+      <td class="px-4 py-2">
+        <div class="flex items-center gap-3">
+          <img src="${s.cover||''}" class="w-8 h-8 rounded object-cover" alt=""/>
+          <div class="min-w-0">
+            <div class="text-clip">${s.title}</div>
+            <div class="text-xs text-gray-500 text-clip">${s.artist||'—'}</div>
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-2 text-gray-600">${s.artist||'—'}</td>
+      <td class="px-4 py-2 text-gray-600">${s.album||'—'}</td>
+      <td class="px-4 py-2 text-right">
+        <button class="btn-preview h-8 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm" data-idx="${idx}">预览</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  setTimeout(()=>{
+    refreshIcons();
+    document.querySelectorAll('.btn-preview').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const i=+btn.dataset.idx||0, t=RSS_LIST[i]; if(!t) return;
+        if(!t.previewUrl){
+          btn.disabled=true; btn.textContent='获取中…';
+          t.previewUrl = await fetchPreviewUrlBySearch(t.title, t.artist, CURRENT_FEED.code);
+          btn.disabled=false; btn.textContent = t.previewUrl ? '预览' : '不可预览';
+        }
+        if(t.previewUrl){ playAudio(t.previewUrl, {title:t.title, sub:t.artist||''}); }
+      });
+    });
+  });
+}
+
+/* ===== 无版权整曲（示例） ===== */
+const PD_CATALOG = {
+  '无版权 · 轻音乐': [
+    {id:'fpd_carefree', title:'Carefree Day', artist:'FreePD', license:'CC0/PD', src:'https://freepd.com/music/Carefree%20Day.mp3'},
+    {id:'fpd_happy',    title:'Happy Place',  artist:'FreePD', license:'CC0/PD', src:'https://freepd.com/music/Happy%20Place.mp3'}
+  ],
+  '无版权 · 电子': [
+    {id:'helix_1', title:'Helix One', artist:'SoundHelix', license:'Free', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
+    {id:'helix_2', title:'Helix Two', artist:'SoundHelix', license:'Free', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'}
+  ],
+  '无版权 · 古典': [
+    {id:'helix_3', title:'Helix Three', artist:'SoundHelix', license:'Free', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'}
+  ]
+};
+const PD_CATS = Object.keys(PD_CATALOG);
+let PD_CURRENT_CAT = PD_CATS[0];
+let PD_LIST = [];
+function mountMusicPD(){
+  const wrap = $('#pd-cats'); wrap.innerHTML='';
+  PD_CATS.forEach(cat=>{
+    const card=document.createElement('div');
+    card.className='rounded-2xl border border-gray-200 bg-white hover:shadow-sm cursor-pointer group p-4';
+    card.dataset.cat=cat;
+    card.innerHTML=`<div class="flex items-center gap-3">
+      <i data-lucide="headphones" class="w-5 h-5 text-emerald-700"></i>
+      <div class="font-medium">${cat}</div>
+    </div>`;
+    wrap.appendChild(card);
+  });
+  PD_CURRENT_CAT = PD_CATS[0];
+  renderPDTable(PD_CURRENT_CAT);
+  setTimeout(()=>{
+    refreshIcons();
+    wrap.querySelectorAll('[data-cat]').forEach(el=>el.addEventListener('click', ()=>{ PD_CURRENT_CAT=el.dataset.cat; renderPDTable(PD_CURRENT_CAT); }));
+  });
+}
+function renderPDTable(cat){
+  const titleEl=$('#pd-title'); const tbody=$('#pd-table');
+  titleEl.textContent = cat + ' · 全量列表';
+  const list = (PD_CATALOG[cat]||[]); PD_LIST = list.slice();
+  tbody.innerHTML='';
+  if(!list.length){
+    tbody.innerHTML=`<tr class="border-t"><td colspan="5" class="px-4 py-6 text-center text-gray-500">暂无曲目</td></tr>`;
+    return;
+  }
+  list.forEach((s,idx)=>{
+    const tr=document.createElement('tr'); tr.className='border-t hover:bg-gray-50';
+    tr.innerHTML=`
+      <td class="px-4 py-2">${idx+1}</td>
+      <td class="px-4 py-2">${s.title}</td>
+      <td class="px-4 py-2 text-gray-600">${s.artist||'—'}</td>
+      <td class="px-4 py-2 text-gray-600">${s.license||'—'}</td>
+      <td class="px-4 py-2 text-right">
+        <button class="btn-pdplay h-8 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm" data-idx="${idx}">播放</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  setTimeout(()=>{
+    refreshIcons();
+    document.querySelectorAll('.btn-pdplay').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const i=+btn.dataset.idx||0; const t=PD_LIST[i]; if(!t) return;
+        playAudio(t.src, {title:t.title, sub:t.artist||''});
+      });
+    });
+  });
+}
+function bindMusicTabs(){
+  const tabRSS=$('#tab-rss'), tabPD=$('#tab-pd');
+  const rss=$('#music-rss'), pd=$('#music-pd');
+  tabRSS.addEventListener('click',()=>{ tabRSS.classList.add('tab-active'); tabPD.classList.remove('tab-active'); rss.classList.remove('hidden'); pd.classList.add('hidden'); });
+  tabPD.addEventListener('click',()=>{ tabPD.classList.add('tab-active'); tabRSS.classList.remove('tab-active'); pd.classList.remove('hidden'); rss.classList.add('hidden'); });
+}
+
+/* ===== 视频：B站 + YouTube（受海外开关控制） ===== */
+const VIDEO_CATS = [
+  { id:'bili-pop',  name:'B站·全站热门', feeds:[{kind:'bili_pop'}] },
+  { id:'bili-music',name:'B站·音乐',      feeds:[{kind:'bili_partion', tid:3}] },
+  { id:'bili-tech', name:'B站·科技',      feeds:[{kind:'bili_partion', tid:188}] },
+  { id:'yt-music',  name:'YouTube·Music',  overseas:true, feeds:[{kind:'yt_channel', id:'UC-9-kyTW8ZkZNDHQJ6FgpwQ'}] },
+  { id:'yt-tech',   name:'YouTube·科技',   overseas:true, feeds:[{kind:'yt_channel', id:'UCXuqSBlHAE6Xw-yeJA0Tunw'}] },
+  { id:'yt-lofi',   name:'YouTube·Lo-Fi',  overseas:true, feeds:[{kind:'yt_channel', id:'UCSJ4gkVC6NrvII8umztf0Ow'}] }
+];
+let videoCurrentCatId = localStorage.getItem('aplay.video.cat') || '';
+function feedUrl(feed){
+  if (feed.kind === 'bili_pop')     return `https://rsshub.app/bilibili/popular/all`;
+  if (feed.kind === 'bili_partion') return `https://rsshub.app/bilibili/partion/${encodeURIComponent(feed.tid)}`;
+  if (feed.kind === 'bili_user')    return `https://rsshub.app/bilibili/user/video/${encodeURIComponent(feed.uid)}`;
+  if (feed.kind === 'bilibili_fav') return `https://rsshub.app/bilibili/fav/${encodeURIComponent(feed.uid)}/${encodeURIComponent(feed.fid)}`;
+  if (feed.kind === 'yt_channel')   return `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(feed.id)}`;
+  if (feed.kind === 'yt_playlist')  return `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(feed.id)}`;
+  return '';
+}
+async function fetchXMLCORS(url){
+  const toXML = async r => new DOMParser().parseFromString(await r.text(),'text/xml');
+  try { const r=await fetch(url,{cache:'no-store'}); if(r.ok) return await toXML(r); } catch {}
+  try { const r=await fetch('https://r.jina.ai/http://' + url.replace(/^https?:\/\//,'')); if(r.ok) return await toXML(r); } catch {}
+  try { const r=await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)); if(r.ok) return await toXML(r); } catch {}
+  throw new Error('fetchXMLCORS failed: '+url);
+}
+function parseItems(doc, feed){
+  const out=[];
+  if (feed.kind.startsWith('bili')){
+    doc.querySelectorAll('item').forEach(it=>{
+      const title = it.querySelector('title')?.textContent?.trim() || 'B站';
+      const link  = it.querySelector('link')?.textContent || '';
+      const bv = (link.match(/BV\w+/) || [])[0];
+      if (bv) out.push({ title, type:'embed', url:`https://player.bilibili.com/player.html?bvid=${bv}&high_quality=1&danmaku=0&autoplay=1` });
+    });
+  } else {
+    doc.querySelectorAll('entry').forEach(e=>{
+      const vid = e.querySelector('yt\\:videoId, videoId')?.textContent?.trim();
+      const title = e.querySelector('title')?.textContent?.trim() || 'YouTube';
+      if (vid) out.push({ title, type:'embed', url:`https://www.youtube.com/embed/${vid}?autoplay=1` });
+    });
+  }
+  return out;
+}
+const VIDEO_CACHE = new Map(); const VIDEO_TTL = 10*60*1000;
+async function loadFeed(feed){
+  const url=feedUrl(feed); if(!url) return [];
+  const hit=VIDEO_CACHE.get(url); const now=Date.now();
+  if(hit && (now-hit.time)<VIDEO_TTL) return hit.items;
+  const doc=await fetchXMLCORS(url); const items=parseItems(doc,feed);
+  VIDEO_CACHE.set(url,{time:now,items}); return items;
+}
+function videoMakeChips(){
+  const bar=$('#video-cats'); const tip=$('#video-source-tip'); bar.innerHTML='';
+  const cats=VIDEO_CATS.filter(c=>!c.overseas || state.showOverseas);
+  tip.textContent = state.showOverseas ? '已启用海外源（YouTube）' : '海外源关闭，仅显示 B 站';
+  if (!videoCurrentCatId || !cats.some(c=>c.id===videoCurrentCatId)){
+    videoCurrentCatId = cats[0]?.id || '';
+    localStorage.setItem('aplay.video.cat', videoCurrentCatId);
+  }
+  cats.forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='px-3 h-9 rounded-xl border text-sm '+(c.id===videoCurrentCatId?'bg-indigo-50 border-indigo-200 text-indigo-700':'border-gray-200');
+    btn.textContent=c.name;
+    btn.addEventListener('click',()=>{
+      videoCurrentCatId=c.id; localStorage.setItem('aplay.video.cat', videoCurrentCatId);
+      document.querySelectorAll('#video-cats button').forEach(b=>{ b.classList.remove('bg-indigo-50','border-indigo-200','text-indigo-700'); b.classList.add('border-gray-200'); });
+      btn.classList.add('bg-indigo-50','border-indigo-200','text-indigo-700');
+      renderVideoCat(c.id);
+    });
+    bar.appendChild(btn);
+  });
+}
+const VIDEO_CACHE2 = new Map(); const VIDEO_TTL2 = 8*60*1000;
+async function renderVideoCat(catId){
+  const grid=$('#video-grid'); grid.innerHTML='<div class="text-sm text-gray-500 px-2">正在加载…</div>';
+  const cat=VIDEO_CATS.find(c=>c.id===catId); if(!cat){ grid.innerHTML='<div class="text-sm text-gray-500 px-2">分类不存在</div>'; return; }
+  if(cat.overseas && !state.showOverseas){ grid.innerHTML='<div class="text-sm text-gray-500 px-2">海外源未开启</div>'; return; }
+  const key=`cat:${catId}:${state.showOverseas}`; const hit=VIDEO_CACHE2.get(key); const now=Date.now();
+  if(hit && (now-hit.time)<VIDEO_TTL2){ return renderVideoCards(hit.items); }
+  try{
+    const all=[]; for(const f of (cat.feeds||[])){ const items=await loadFeed(f); all.push(...items); }
+    const uniq=Array.from(new Map(all.map(x=>[x.url,x])).values()).slice(0,24);
+    VIDEO_CACHE2.set(key,{time:now,items:uniq}); renderVideoCards(uniq);
+  }catch(e){ console.error(e); grid.innerHTML='<div class="text-sm text-red-500 px-2">加载失败：可能被 CORS/网络限制</div>'; }
+}
+function renderVideoCards(list){
+  const grid=$('#video-grid'); grid.innerHTML='';
+  if(!list.length){ grid.innerHTML='<div class="text-sm text-gray-500 px-2">暂无数据或被源限制</div>'; return; }
+  list.forEach((v,i)=>{
+    const card=document.createElement('div');
+    card.className='rounded-2xl border border-gray-200 bg-white overflow-hidden hover:shadow-sm';
+    card.innerHTML=`
+      <div class="h-32 bg-gradient-to-tr from-indigo-100 to-indigo-50 grid place-items-center">
+        <i data-lucide="clapperboard" class="w-6 h-6 text-indigo-700"></i>
+      </div>
+      <div class="p-4 space-y-2">
+        <div class="font-medium text-clip">${v.title}</div>
+        <div class="flex items-center justify-end">
+          <button class="btn-video h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-idx="${i}">
+            <i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放</span>
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  setTimeout(()=>{
+    refreshIcons();
+    document.querySelectorAll('.btn-video').forEach(btn=>{
+      btn.addEventListener('click',()=>{ const idx=+btn.dataset.idx; const v=list[idx]; enterAVMode(); playVideoEntry(v); });
+    });
+  });
+}
+function videoInit(){ videoMakeChips(); if(videoCurrentCatId) renderVideoCat(videoCurrentCatId); }
+
+/* ===== TV / Radio 示例 ===== */
+const TV_DB=[
+  {title:'Bili 合辑频道',         type:'embed', url:'https://player.bilibili.com/player.html?bvid=BV1xx411c7mD&high_quality=1&danmaku=0&autoplay=1'},
+  {title:'Elephants Dream（MP4）', type:'file',  url:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'}
+];
+const RADIO_DB=[
+  {title:'Radio Paradise', desc:'MP3 192kbps', url:'https://stream.radioparadise.com/mp3-192'},
+  {title:'SomaFM Groove Salad', desc:'MP3 128kbps', url:'https://ice1.somafm.com/groovesalad-128-mp3'}
+];
+function mountTV(){
+  const grid=$('#tv-grid'); grid.innerHTML='';
+  TV_DB.forEach((v,i)=>{
+    const card=document.createElement('div');
+    card.className='rounded-2xl border border-gray-200 bg-white overflow-hidden hover:shadow-sm';
+    card.innerHTML=`
+      <div class="h-28 bg-gradient-to-tr from-blue-100 to-blue-50 grid place-items-center">
+        <div class="text-blue-700 font-semibold">${v.title}</div>
+      </div>
+      <div class="p-4">
+        <div class="flex items-center justify-end">
+          <button class="btn-tv h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-idx="${i}">
+            <i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放</span>
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  setTimeout(()=>{
+    refreshIcons();
+    document.querySelectorAll('.btn-tv').forEach(btn=>btn.addEventListener('click',()=>{ enterAVMode(); playTVEntry(TV_DB[+btn.dataset.idx]); }));
+  });
+}
+function mountRadio(){
+  const grid=$('#radio-grid'); grid.innerHTML='';
+  RADIO_DB.forEach(r=>{
+    const card=document.createElement('div');
+    card.className='rounded-2xl border border-gray-200 bg-white overflow-hidden hover:shadow-sm';
+    card.innerHTML=`
+      <div class="h-28 bg-gradient-to-tr from-amber-100 to-amber-50 grid place-items-center">
+        <i data-lucide="radio" class="w-6 h-6 text-amber-700"></i>
+      </div>
+      <div class="p-4 space-y-2">
+        <div class="font-medium">${r.title}</div>
+        <div class="text-sm text-gray-600">${r.desc||''}</div>
+        <div class="flex items-center justify-end">
+          <button class="btn-radio h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-url="${encodeURIComponent(r.url)}">
+            <i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放</span>
+          </button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  setTimeout(()=>{
+    refreshIcons();
+    document.querySelectorAll('.btn-radio').forEach(btn=>btn.addEventListener('click',()=>{ const url=decodeURIComponent(btn.dataset.url); playAudio(url,{title:'电台',sub:''}); }));
+  });
+}
+
+/* ===== 视频/TV 播放控制（屏蔽右键/点击穿透） ===== */
+function playVideoEntry(entry){
+  const v=$('#video-player'), f=$('#video-iframe'), shield=$('#video-shield');
+  $('#video-now').textContent='正在播放：'+(entry?.title||'视频');
+  pauseAudio();
+  const container=v.parentElement; container.oncontextmenu=e=>{e.preventDefault();return false;};
+  if(entry.type==='file'){
+    f.classList.add('hidden'); f.src='';
+    v.classList.remove('hidden'); v.removeAttribute('controls');
+    v.src=entry.url; v.muted=false; v.play().catch(()=>{});
+    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
+  }else{
+    v.classList.add('hidden'); v.pause(); v.removeAttribute('src'); v.load?.();
+    f.classList.remove('hidden'); f.src=entry.url;
+    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
+  }
+}
+function videoControlsBind(){
+  const v=$('#video-player'), f=$('#video-iframe');
+  $('#video-btn-play').addEventListener('click',()=>{ if(!v.classList.contains('hidden')){ if(v.paused) v.play(); else v.pause(); } else { if(!f.classList.contains('hidden')){ const u=f.src; if(u){ f.src=''; setTimeout(()=>f.src=u,0);} } }});
+  $('#video-btn-mute').addEventListener('click',()=>{ if(!v.classList.contains('hidden')) v.muted=!v.muted; });
+  $('#video-btn-full').addEventListener('click',()=>{ const wrap=$('#video-iframe').classList.contains('hidden')? $('#video-player').parentElement : $('#video-iframe').parentElement; wrap.requestFullscreen?.(); });
+  $('#video-btn-exit').addEventListener('click',()=>{ stopInlinePlayers(); exitAVMode(true); $('#video-now').textContent='未选择视频'; });
+}
+function playTVEntry(entry){
+  const v=$('#tv-player'), f=$('#tv-iframe'), shield=$('#tv-shield');
+  $('#tv-now').textContent='正在播放：'+(entry?.title||'频道');
+  pauseAudio();
+  const container=v.parentElement; container.oncontextmenu=e=>{e.preventDefault();return false;};
+  if(entry.type==='file'){
+    f.classList.add('hidden'); f.src='';
+    v.classList.remove('hidden'); v.removeAttribute('controls');
+    v.src=entry.url; v.muted=false; v.play().catch(()=>{});
+    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
+  }else{
+    v.classList.add('hidden'); v.pause(); v.removeAttribute('src'); v.load?.();
+    f.classList.remove('hidden'); f.src=entry.url;
+    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
+  }
+}
+function tvControlsBind(){
+  const v=$('#tv-player'), f=$('#tv-iframe');
+  $('#tv-btn-play').addEventListener('click',()=>{ if(!v.classList.contains('hidden')){ if(v.paused) v.play(); else v.pause(); } else { if(!f.classList.contains('hidden')){ const u=f.src; if(u){ f.src=''; setTimeout(()=>f.src=u,0);} } }});
+  $('#tv-btn-mute').addEventListener('click',()=>{ if(!v.classList.contains('hidden')) v.muted=!v.muted; });
+  $('#tv-btn-full').addEventListener('click',()=>{ const wrap=$('#tv-iframe').classList.contains('hidden')? $('#tv-player').parentElement : $('#tv-iframe').parentElement; wrap.requestFullscreen?.(); });
+  $('#tv-btn-exit').addEventListener('click',()=>{ stopInlinePlayers(); exitAVMode(true); $('#tv-now').textContent='未选择频道'; });
+}
+
+/* ===== 全局 Audio 栏 ===== */
+function playAudio(url, meta){
+  const audio=$('#audio'); audio.src=url; audio.play().catch(()=>{});
+  $('#now-title').textContent=meta.title||'—';
+  $('#now-sub').textContent=meta.sub||'—';
+  $('#btn-play').innerHTML='<i data-lucide="pause" class="w-5 h-5"></i>'; refreshIcons();
+}
+function pauseAudio(){ const a=$('#audio'); if(!a.paused) a.pause(); }
+function bindAudioBar(){
+  const audio=$('#audio'), playBtn=$('#btn-play');
+  playBtn.addEventListener('click', ()=>{
+    if(!audio.src) return;
+    if(audio.paused){ audio.play(); playBtn.innerHTML='<i data-lucide="pause" class="w-5 h-5"></i>'; }
+    else { audio.pause(); playBtn.innerHTML='<i data-lucide="play" class="w-5 h-5"></i>'; }
+    refreshIcons();
+  });
+  audio.addEventListener('loadedmetadata', ()=> $('#now-dur').textContent = fmtTime(audio.duration));
+  audio.addEventListener('timeupdate', ()=>{
+    $('#now-time').textContent = fmtTime(audio.currentTime);
+    const pct=Math.min(100,(audio.currentTime/(audio.duration||1))*100);
+    $('#now-progress').style.width=pct+'%';
+  });
+}
+
+/* ===== AV 模式显示/恢复 ===== */
+function enterAVMode(){ $('#audio-footer').classList.add('hidden'); }
+function exitAVMode(resume){ if(resume) $('#audio-footer').classList.remove('hidden'); }
+function stopInlinePlayers(){
+  ['video','tv'].forEach(kind=>{
+    const v=$(`#${kind}-player`), f=$(`#${kind}-iframe`), shield=$(`#${kind}-shield`);
+    if(v){ v.pause(); v.removeAttribute('src'); v.load?.(); v.classList.add('hidden'); }
+    if(f){ f.src=''; f.classList.add('hidden'); }
+    if(shield) shield.classList.add('hidden');
+    const now=$(`#${kind}-now`); if(now) now.textContent = kind==='video'?'未选择视频':'未选择频道';
+  });
+}
+
+/* ===== 其它 ===== */
+$('#btn-open-url')?.addEventListener('click', ()=>{ alert('“打开 URL”将于后期与云资源结合，一键用 APlay 打开你的音/视频直链。'); });
+document.addEventListener('contextmenu', (e)=>{
+  if(e.target.closest('#video-player')||e.target.closest('#video-iframe')||e.target.closest('#tv-player')||e.target.closest('#tv-iframe')) e.preventDefault();
+});
+
+/* ===== 启动 ===== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  refreshIcons();
+  bindGlobalToggles();
+  initRouter();
+
+  // Music
+  bindMusicTabs();
+  mountMusicRSS();
+  mountMusicPD();
+
+  // Video / TV / Radio
+  videoControlsBind();
+  tvControlsBind();
+  videoInit();
+  mountTV();
+  mountRadio();
+
+  // Audio bar
+  bindAudioBar();
+});
+</script>
+</body>
+</html>

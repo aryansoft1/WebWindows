@@ -1,0 +1,36 @@
+<!doctype html>
+<html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeskTalk 在线/聊天 测试</title>
+<body>
+<h2>DeskTalk 在线/聊天 测试</h2>
+<p>在地址栏加 <code>?u=alice</code> 或 <code>?u=bob</code> 指定用户；两个浏览器/设备分别用不同用户。</p>
+<button id="hb">心跳</button> <button id="loop">轮询</button>
+<pre id="out"></pre>
+
+<script>
+const API = '/api/';
+const U   = new URLSearchParams(location.search).get('u') || '';   // ← 读取 ?u=
+function q(url){ const sep = url.includes('?') ? '&' : '?'; return url + (U ? sep + 'u=' + encodeURIComponent(U) : ''); } // ← 拼请求
+function log(t){ out.textContent = new Date().toLocaleTimeString()+': '+t+'\n'+out.textContent }
+
+async function hb(){
+  const r = await fetch(q(API+'dt_presence_mem.asp'), {credentials:'include'});            // ← 带上 ?u=
+  log('presence ' + await r.text());
+}
+
+let tm = null;
+async function poll(){
+  const r = await fetch(q(API+'dt_fetch_links.asp'), {credentials:'include'});             // ← 带上 ?u=
+  log('fetch ' + await r.text());
+}
+
+hb.onclick = hb;
+loop.onclick = ()=>{
+  if (tm) { clearInterval(tm); tm = null; loop.textContent='轮询'; }
+  else    { poll(); tm = setInterval(poll, 2500); loop.textContent='停止'; }
+};
+</script>
+</body>
+</html>

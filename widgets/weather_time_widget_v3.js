@@ -47,14 +47,6 @@ document.addEventListener("DOMContentLoaded", () => {
         widget.style.display = "none";
     });
 
-    // 更新时间
-    const updateTime = () => {
-        const now = new Date();
-        timeEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
-    updateTime();
-    setInterval(updateTime, 60000);
-
     // 获取天气数据（无需 key）
     fetch("https://wttr.in/?format=j1")
         .then(res => res.json())

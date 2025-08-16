@@ -8,13 +8,22 @@
     <link href="assets/icons/logo_large.png" rel="icon" />
     <link href="widgets/weather_time_widget.css" rel="stylesheet" />
     <link href="assets/css/context_menu.css" rel="stylesheet" />
-    <script defer="" src="widgets/weather_time_widget_v3.js"></script>
+    <link rel="stylesheet" href="assets/css/desktalk.css">
     <link href="assets/css/main.css" rel="stylesheet" />
+    <!-- Markdown 解析 + 安全清洗 + 代码高亮（CDN） -->
+    <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet"/>
+    <script defer="" src="widgets/weather_time_widget_v3.js"></script>
     <script defer="True" src="assets/js/main.js"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
 </head>
 <body onload="makeDesktopIconsDraggable();enterFullscreen();initUserStatus();">
+<header>
+
     <div class="desktop">
+        
         <div class="power-menu" id="power-menu" style="display:none">
             <div class="power-item" onclick="document.getElementById('power-menu').style.display = 'none'">
                 <span class="emoji">
@@ -109,6 +118,11 @@
         <div class="start-button" onclick="toggleStartMenu()">
             <img alt="开始" src="assets/icons/logo_large.png" />
         </div>
+        <div class="tb-btn" id="btn-desktalk" title="DeskTalk 面板（打开/收起）">
+  <img src="assets/icons/desktalk.png" width="40px" height="40px">
+  <span class="badge" id="dt-badge" hidden>1</span>
+</div>
+
     </div>
     <!-- Weather & Time Widget -->
     <div class="weather-widget" id="weatherTimeWidget">
@@ -129,11 +143,6 @@
                 <div id="weather-desc">
                     Loading...
                 </div>
-            </div>
-        </div>
-        <div class="time-info">
-            <div id="local-time">
-                --:--
             </div>
         </div>
     </div>
@@ -255,6 +264,106 @@
             </li>
         </ul>
     </div>
+    <button aria-controls="presence-sheet" aria-expanded="false" class="btn primary" id="fab" title="DeskTalk 面板">DeskTalk</button>
+<div aria-hidden="true" id="overlay-mask"></div>
+<div aria-modal="false" id="profile-pop" role="dialog"></div>
+<section aria-label="DeskTalk 侧面板" aria-modal="true" id="presence-sheet" role="dialog">
+<header>
+<div class="left">
+<div class="me-pill" id="me-pill" title="点击修改昵称">
+<span class="av" id="me-pill-av"></span>
+<span class="name" id="me-pill-name">—</span>
+</div>
+</div>
+<div class="right">
+<label class="switch" title="不打扰（仅徽标）">
+<input checked="" id="dnd-toggle" type="checkbox"/><span style="margin-left:6px">不打扰</span>
+</label>
+<button aria-label="关闭" class="btn" id="presence-close">关闭</button>
+</div>
+</header>
+<div class="inner" id="sheet-inner">
+<!-- Tabs 移到内容区顶部（可横向滚动，sticky） -->
+<div aria-label="面板导航" class="tabs-bar" role="tablist">
+<button class="btn" data-tab="reco" id="tab-btn-reco">推荐好友</button>
+<button class="btn" data-tab="friends" id="tab-btn-friends">我的好友</button>
+<button class="btn" data-tab="ai" id="tab-btn-ai">小讯</button>
+<button class="btn" data-tab="settings" id="tab-btn-settings">设置</button>
+</div>
+<div aria-labelledby="tab-btn-reco" id="tab-reco" role="region">
+<div class="toolbar">
+<input id="reco-q" placeholder="搜索 WebWindows 用户…" type="text"/>
+<label class="chk"><input id="reco-online" type="checkbox"/>只看在线</label>
+</div>
+<div id="reco-list"></div>
+</div>
+<div aria-labelledby="tab-btn-friends" id="tab-friends" role="region" style="display:none">
+<div class="toolbar">
+<input id="friends-q" placeholder="搜索我的好友…" type="text"/>
+<label class="chk"><input id="friends-online" type="checkbox"/>只看在线</label>
+</div>
+<div id="friends-list"></div>
+</div>
+<div aria-labelledby="tab-btn-ai" id="tab-ai" role="region" style="display:none">
+<div class="muted" style="margin:4px 2px 10px">有什么想对我说：</div>
+<div id="ai-body" style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto;border:1px dashed var(--border);border-radius:12px;padding:10px"></div>
+<div style="display:flex;gap:8px;margin-top:10px">
+<input id="ai-input" placeholder="问我任何问题…（Enter 发送）" style="flex:1;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg)"/>
+<button class="btn primary" id="ai-send">发送</button>
+</div>
+</div>
+<div aria-labelledby="tab-btn-settings" id="tab-settings" role="region" style="display:none">
+<div class="muted" style="margin:2px 2px 10px">隐私偏好仅在本机保存；“不被推荐”需后端同配。</div>
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+<label for="pref-name" style="white-space:nowrap">我的昵称</label>
+<input id="pref-name" style="flex:1;border:1px solid var(--border);border-radius:10px;padding:6px 4px;background:var(--surface);color:var(--fg)"/>
+<button class="btn" id="pref-name-save">保存</button>
+</div>
+<label class="switch"><input id="pref-hide-reco" type="checkbox"><span style="margin-left:6px">关闭推荐列表</span></input></label>
+<div style="height:8px"></div>
+<label class="switch"><input id="pref-undiscoverable" type="checkbox"><span style="margin-left:6px">不被推荐（隐藏我的账号）</span></input></label>
+<div class="muted" id="privacy-hint" style="margin-top:10px;font-size:13px"></div>
+</div>
+</div>
+</section>
+<!-- 昵称弹窗（简版） -->
+<div aria-label="设置昵称" aria-modal="true" id="profile-modal" role="dialog" style="display:none;position:fixed;inset:0;background:rgba(224, 219, 219, 0.28);align-items:center;justify-content:center;z-index:2147483610">
+<div class="panel" style="width:min(92vw,360px);background:#FFF;border:1px solid #ccc;border-radius:16px;box-shadow:0 18px 46px rgba(0,0,0,.22);padding:14px">
+<div style="font-weight:700">设置你的昵称</div>
+<div class="row" style="display:flex;gap:10px;align-items:center;margin:8px 0">
+<span class="swatch" id="modal-color" style="width:28px;height:28px;border-radius:50%;border:1px #ccc;cursor:pointer"></span>
+<input id="modal-name" placeholder="比如：阿强 / 小李 / Luna" style="flex:1;border:1px solid #ccc;border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg)"/>
+<button class="btn" id="modal-rand">换颜色</button>
+</div>
+<div class="foot" style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
+<button class="btn" id="modal-cancel">取消</button>
+<button class="btn primary" id="modal-save">保存</button>
+</div>
+<div class="muted" style="margin-top:6px">可在“设置”里随时修改；是否被推荐由“隐私偏好”决定。</div>
+</div>
+</div>
+<section aria-label="DeskTalk 对话" aria-modal="false" id="chat" role="dialog">
+<header>
+<div class="av"><span class="dot"></span></div>
+<div>
+<div class="name" id="chat-name">— <button class="btn" id="chat-add" style="height:24px;padding:0 8px;margin-left:6px">加好友</button></div>
+<div class="muted" id="chat-status">离线</div>
+</div>
+<div class="actions">
+<button class="icon-btn" id="btn-voice" title="语音通话">🎤</button>
+<button class="icon-btn" id="btn-video" title="视频通话">🎥</button>
+<button class="icon-btn" id="btn-file" title="发送文件">📎</button>
+<!-- <button class="btn" id="chat-min">最小化</button> -->
+<button class="btn" id="chat-close">X</button>
+</div>
+</header>
+<div class="body" id="chat-body"></div>
+<div class="input">
+<textarea id="chat-input" placeholder="输入消息…（Ctrl/⌘+Enter 发送）"></textarea>
+<button class="btn primary send" id="chat-send">发送</button>
+</div>
+</section>
+    <script src="assets/js/desktalk.js"></script>
     <script src="assets/js/tw.js"></script>
 </body>
 </html>

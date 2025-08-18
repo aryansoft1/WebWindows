@@ -140,10 +140,15 @@ function ensureProfile(){
     me = { id:'guest_'+uuid, name:'访客-'+Math.random().toString(16).slice(2,6).toUpperCase(), color:randColor() };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(me));
   }
-  return { me: me, first: first };
+  return { me: me, first: false };
 }
 function getProfile(){ return JSON.parse(localStorage.getItem(PROFILE_KEY)||'null') }
-function setProfile(p){ localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); updateMeUI() }
+// 在 setProfile(p) 的末尾补这一句
+function setProfile(p){
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+  updateMeUI();
+  try{ refreshMeId(); }catch(_){}
+}
 function updateMeUI(){
   var me=getProfile(); if(!me) return;
   var pillName=$('#me-pill-name'), pillAv=$('#me-pill-av');
@@ -234,6 +239,10 @@ function bootstrapProfile(){
 
 /* ===== 用户池（虚拟） ===== */
 var people = [];
+// 顶部增加
+let PRESENCE = [];                 // 仅保存服务器 presence 的权威列表
+const NAME_CACHE = new Map();      // id -> name，供显示名复用
+
 
 /* ===== 偏好 & 好友 ===== */
 var PREF_KEY='ww_prefs'; var prefs=Object.assign({hide_reco:false,undiscoverable:false}, JSON.parse(localStorage.getItem(PREF_KEY)||'{}'));
@@ -416,14 +425,35 @@ function closePanel(){
 if(fab)  fab.onclick  = function(){ openPanel(prefs.hide_reco?'friends':'reco') };
 if(xBtn) xBtn.onclick = function(){ closePanel() };
 
-document.addEventListener('click',function(e){
-  var path = (typeof e.composedPath === 'function') ? e.composedPath() : null;
-  var outsideSheet = sheet && !sheet.contains(e.target) && e.target!==$('#btn-desktalk') && e.target!==fab;
-  var insideChat = chat && ( (path ? path.indexOf(chat) >= 0 : chat.contains(e.target)) || (e.target.closest && !!e.target.closest('#chat')) );
-  var outsideChat = chat && !insideChat;
-  if(sheet&&sheet.classList.contains('show')&&outsideSheet) closePanel();
-  if(chat&&chat.classList.contains('show')&&outsideChat)  closeChat(true);
-},true);
+// 统一点击行为：
+// - 点击聊天窗口：不隐藏右侧面板，不关闭聊天窗
+// - 点击其它区域：若右侧面板打开 → 隐藏面板；聊天窗不受影响
+document.addEventListener('click', function(e){
+  const target   = e.target;
+  const path     = (typeof e.composedPath === 'function') ? e.composedPath() : null;
+
+  // 任务栏按钮（白名单）
+  const btn      = document.querySelector('#btn-desktalk');
+  const isTaskbar = !!(btn && (target === btn || (target.closest && target.closest('#btn-desktalk'))));
+
+  // 是否在右侧面板内
+  const inSheet  = !!(sheet && (sheet.contains(target) || (target.closest && target.closest('#presence-sheet'))));
+  // 是否在聊天窗内
+  const inChat   = !!(chat  && ((path ? path.indexOf(chat) >= 0 : chat.contains(target)) ||
+                                 (target.closest && target.closest('#chat'))));
+
+  // —— 只要点击在“非面板区域”，且不是任务栏按钮、且不在聊天窗里 → 关闭面板
+  if (sheet && sheet.classList.contains('show') && !inSheet && !isTaskbar && !inChat) {
+    closePanel();
+  }
+
+  // —— 不再因为“点空白区域”关闭聊天窗（聊天窗只靠自身按钮关闭）
+  //     如需“点遮罩关闭聊天窗”，可改为：
+  // const maskEl = document.getElementById('overlay-mask');
+  // const onMask = !!(maskEl && (target === maskEl));
+  // if (chat && chat.classList.contains('show') && onMask) closeChat(true);
+}, true);
+
 if(scroller) scroller.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
 
 var dndToggle=$('#dnd-toggle'); var DND=true;
@@ -563,7 +593,11 @@ function ensureTimeHeader(ts){
     lastTimeHeaderKey = key;
   }
 }
-
+function meSlug(){
+  const me = (typeof getProfile === 'function' ? getProfile() : null) || {};
+  // 优先用稳定 ID，退回昵称/展示名
+  return slugId(me.id || me.name || meName());
+}
 
 /* === 与后端保持一致的 ID 清洗 === */
 function safeId(s){
@@ -632,6 +666,43 @@ function setCaps(){
   if(chatAdd) chatAdd.hidden = f;
 }
 function attempt(label,fn){ if(!currentPeer) return; if(!(typeof isFriend==='function' && isFriend(currentPeer.id))) return Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('请先加「'+currentPeer.name+'」为好友以使用'+label,'warn'); fn() }
+async function resolveConvIdFor(peer){
+  const meId   = meSlug();                          // 稳定ID
+  const meNameSlug = slugId(meName());              // 旧昵称slug
+  const peerId = slugId(peer.id || peer.name || '');
+  const peerNameSlug = slugId(peer.name || '');
+
+  const convNew = makeConvId(meId, peerId);         // 新：id-id
+  const convOld1 = makeConvId(meNameSlug, peerId);  // 旧：name-id
+  const convOld2 = makeConvId(meNameSlug, peerNameSlug); // 旧：name-name
+
+  const mapKey = `conv.map.${meId}.${peerId}`;
+  const cached = localStorage.getItem(mapKey);
+  if (cached) return cached;
+
+  // 逐个探测旧桶是否有消息（limit=1）
+  for (const cid of [convOld1, convOld2]){
+    if (await hasMessages(cid)) {
+      localStorage.setItem(mapKey, cid);
+      return cid;  // 旧桶有历史 ⇒ 继续沿用旧桶
+    }
+  }
+  // 都没有 ⇒ 用新桶
+  localStorage.setItem(mapKey, convNew);
+  return convNew;
+}
+
+async function hasMessages(cid){
+  const r = await fetch(urlGet(cid, 0, 1), {credentials:'omit', cache:'no-store'});
+  if (!r.ok) return false;
+  let j=null; try{ j = await r.json(); }catch(e){}
+  return j && Array.isArray(j.messages) && j.messages.length>0;
+}
+// 刷新“我方标识”（用于判断 me/peer）
+function refreshMeId(){
+  API_ME = meSlug();   // meSlug() 你已有：优先 me.id，回退昵称
+}
+
 if(btnVoice) btnVoice.onclick=function(){ attempt('语音通话',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）开始语音','info') }) };
 if(btnVideo) btnVideo.onclick=function(){ attempt('视频通话',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）开始视频','info') }) };
 if(btnFile)  btnFile.onclick=function(){ attempt('发送文件',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）发送文件','info') }) };
@@ -640,60 +711,96 @@ if(chatAdd) chatAdd.onclick=function(){ if(currentPeer && typeof friendSet!=='un
 /* === 会话状态 === */
 var API_ME='', API_PEER='', CONV_ID='', lastTs=0, pollTimer=null;
 
-/* === 打开会话：定位 ID + 拉历史 + 开轮询 === */
-function openChat(p,rect){
-  currentPeer=p;clearPeerUnread(p.id);
- if(rect) lastAnchor=rect;
+async function openChat(p, rect){
+  try{
+    // 1) 记录当前会话对象 & 清未读
+    currentPeer = p || currentPeer || {};
+    if (p && p.id && typeof clearPeerUnread === 'function') clearPeerUnread(p.id);
+    if (rect) lastAnchor = rect;
 
-  var mine = meName(); var peer = peerNameFrom(p);
-  API_ME   = slugId(mine);
-  API_PEER = slugId(peer);
-  CONV_ID  = makeConvId(API_ME, API_PEER);
-  //CONV_ID  = API_ME;
-  if(chatName && chatName.firstChild) chatName.firstChild.textContent = (p&&p.name? p.name : peer)+' ';
-  if(chatStatus) chatStatus.textContent=(p&&p.status)==='online'?'在线':'离开';
-  if(chat){ chat.querySelector('.av').style.background=(p&&p.color)||'#93c5fd'; chat.querySelector('.dot').style.background=statusDot && statusDot(p&&p.status||'idle') || '#9ca3af' }
+    // 2) 刷新“我方标识”（仅用于 me/peer 判定）
+    if (typeof refreshMeId === 'function') refreshMeId();
 
-  if(rect && chat){
-    var tail=6; var est=chat.offsetHeight||360; var width=Math.min(420,Math.max(300,window.innerWidth*0.32));
-    var x=Math.max(12,rect.right-width); var y=rect.top-est-tail; if(y<12) y=rect.bottom+tail;
-    chat.style.left=x+'px'; chat.style.top=y+'px'; chat.style.bottom='auto'; chat.style.right='auto';
-  }
-  else if (chat){
-  // 没有锚点，默认居中；若有历史位置，优先用历史
-  var savedL = localStorage.getItem('dt.chat.left');
-  var savedT = localStorage.getItem('dt.chat.top');
-  if (savedL && savedT){
-    chat.style.inset = '';
-    chat.style.left  = savedL;
-    chat.style.top   = savedT;
-    chat.style.right = 'auto';
-    chat.style.bottom= 'auto';
-  }else{
-    // 首次/无历史：居中一次
-    setTimeout(() => { if (window.DT_centerChat) DT_centerChat(); }, 0);
-  }
-}
-  if(chat){ chat.classList.add('show'); if(chatInput) chatInput.focus(); $('#overlay-mask') && ($('#overlay-mask').style.display='block') }
-  wireChatControls();            // 打开后再绑一遍，确保按钮可用
-  if (window.DT_bindChatDrag) DT_bindChatDrag();
-  setTimeout(() => { if (window.DT_forceCenter) DT_forceCenter(); }, 0);
-  setCaps();
-  setConvPtr(CONV_ID, lastTs || 0);
-  if(chatBody) chatBody.innerHTML='';
-  // —— 打开会话后：清理该会话未读 —— 
-  (function resetUnreadForPeer(){
-    var cid = CONV_ID; // makeConvId(API_ME, API_PEER) 已经算过
-    if(UNREAD[cid]){
-      TOTAL_UNREAD = Math.max(0, TOTAL_UNREAD - UNREAD[cid]);
-      UNREAD[cid] = 0;
+    // 3) 统一“旧规则”的会话ID（保证历史立刻可见）
+    API_PEER   = slugId(peerNameFrom(currentPeer));
+    const MY_LEGACY = slugId(meName());              // 我方昵称 slug（旧规则）
+    CONV_ID    = makeConvId(MY_LEGACY, API_PEER);    // 只保留这一种，不再混用 resolveConvIdFor 的结果
+
+    // 4) 头部 UI
+    const peerText = currentPeer?.name || peerNameFrom(currentPeer) || '';
+    if (chatName){
+      if (chatName.firstChild && chatName.firstChild.nodeType === Node.TEXT_NODE) {
+        chatName.firstChild.nodeValue = peerText + ' ';
+      } else {
+        chatName.textContent = peerText;
+      }
     }
-    setBadge(TOTAL_UNREAD);
-    if(TOTAL_UNREAD === 0) stopTitleFlash();
-  })();
-  lastTs=0;
-  lastTimeHeaderKey = null;   // ← 这里重置时间分割线状态
-  fetchHistory().then(startPolling);
+    if (chatStatus){
+      const st = (currentPeer && currentPeer.status) || 'idle';
+      chatStatus.textContent = (st === 'online') ? '在线' : '离开';
+    }
+    if (chat){
+      const av  = chat.querySelector('.av');
+      const dot = chat.querySelector('.dot');
+      if (av)  av.style.background  = (currentPeer && currentPeer.color) || '#93c5fd';
+      if (dot) dot.style.background = (typeof statusDot === 'function' ? statusDot((currentPeer && currentPeer.status) || 'idle') : '#9ca3af');
+    }
+
+    // 5) 定位：优先锚点；否则用历史位置；都没有则居中
+    if (rect && chat){
+      var tail=6, est=chat.offsetHeight||360, width=Math.min(420,Math.max(300,window.innerWidth*0.32));
+      var x=Math.max(12,rect.right-width); var y=rect.top-est-tail; if(y<12) y=rect.bottom+tail;
+      chat.style.left=x+'px'; chat.style.top=y+'px';
+      chat.style.bottom='auto'; chat.style.right='auto'; chat.style.inset='';
+    } else if (chat){
+      var savedL = localStorage.getItem('dt.chat.left');
+      var savedT = localStorage.getItem('dt.chat.top');
+      if (savedL && savedT){
+        chat.style.inset=''; chat.style.left=savedL; chat.style.top=savedT;
+        chat.style.right='auto'; chat.style.bottom='auto';
+      } else {
+        setTimeout(()=>{ if (window.DT_centerChat) DT_centerChat(); }, 0);
+      }
+    }
+
+    // 6) 展示/聚焦/遮罩 + 重新绑定按钮与拖拽
+    if (chat){
+      chat.classList.add('show');
+      if (chatInput) chatInput.focus();
+      var mask = document.getElementById('overlay-mask');
+      if (mask) mask.style.display = 'block';
+    }
+    if (typeof wireChatControls === 'function') wireChatControls();
+    if (window.DT_bindChatDrag) DT_bindChatDrag();
+    setTimeout(()=>{ if (window.DT_forceCenter) DT_forceCenter(); }, 0);
+    if (typeof setCaps === 'function') setCaps();
+
+    // 7) 复位本地指针与去重缓存（关键：解决“再打开无消息”）
+    if (typeof setConvPtr === 'function') setConvPtr(CONV_ID, 0);
+    if (chatBody) chatBody.innerHTML = '';
+    if (renderedIds && renderedIds.clear) renderedIds.clear();
+    if (seenKeys    && seenKeys.clear)    seenKeys.clear();
+    if (Array.isArray(recentlySent))      recentlySent.length = 0;
+    lastTs = 0;
+    lastTimeHeaderKey = null;
+
+    // 8) 清该会话未读（角标/标题）
+    (function resetUnreadForPeer(){
+      if (typeof UNREAD !== 'undefined' && UNREAD && UNREAD[CONV_ID]) {
+        TOTAL_UNREAD = Math.max(0, TOTAL_UNREAD - UNREAD[CONV_ID]);
+        UNREAD[CONV_ID] = 0;
+      }
+      if (typeof setBadge === 'function') setBadge(TOTAL_UNREAD);
+      if (TOTAL_UNREAD === 0 && typeof stopTitleFlash === 'function') stopTitleFlash();
+    })();
+
+    // 9) 拉历史并开始轮询
+    await fetchHistory();
+    startPolling();
+
+  }catch(err){
+    console.error('openChat error:', err);
+  }
 }
 
 /* === 关闭会话 === */
@@ -723,9 +830,19 @@ function startPolling(){
 }
 
 /* === 拉取 & 追加 === */
-function fromServerToRole(fromId){
-   return (slugId(fromId) === API_ME) ? 'me' : 'peer';
- }
+function fromServerToRole(fromId, m){
+  var f = slugId(fromId||'');
+  if (f === API_ME) return 'me';
+
+  // 兜底：如果后端把 from 写错了，但 to 指向当前会话对方
+  // 且 from 不是对方，则把它视为我方，避免我方气泡变灰
+  try{
+    if (m && slugId(m.to||'') === API_PEER && f !== API_PEER) return 'me';
+  }catch(_){}
+
+  return 'peer';
+}
+
 function parseTsSec(m){
   // 优先 ISO，退回数字；同时兼容毫秒/秒
   if (m && m.ts_iso){
@@ -861,7 +978,7 @@ function bump(ts){
 }
 async function fetchHistory(){
   try{
-    var r = await fetch(urlGet(CONV_ID, 0, 50), { credentials:'include' });
+    var r = await fetch(urlGet(CONV_ID, 0, 50), { credentials:'omit', cache:'no-store' });
     var j = await r.json();
     if(j && j.ok && Array.isArray(j.messages)){ appendServerMsgs(j.messages) }
   }catch(e){}
@@ -875,7 +992,7 @@ async function fetchNew(){
 
   try{
     const r = await fetch(url, {
-      credentials:'include',
+      credentials:'omit',
       cache:'no-store'        // 禁缓存
     });
     const j = await r.json();
@@ -917,7 +1034,7 @@ async function sendCurrent(){
   recentlySent.push({ body: v, ts: nowSec });
   if (recentlySent.length > 10) recentlySent.shift();
   try{
-    const res = await fetch(urlSend(API_ME, CONV_ID, API_PEER, v), { credentials:'include' });
+    const res = await fetch(urlSend(API_ME, CONV_ID, API_PEER, v), { credentials:'omit' });
     // 若服务端返回了 key，把文件名加入已渲染集合，避免稍后再次渲染
     res && res.json && res.json().then(function(j){
       if (j && j.key) {
@@ -1161,6 +1278,8 @@ bootstrapProfile();   // ← 先与登录状态对齐（会覆盖本地名为登
 updateMeUI();
 renderAll(); 
 applyPrefs();
+refreshMeId();  // 档案就绪后立即刷新
+
 // 档案准备好再触发一次心跳，避免首包是 guest
 if (typeof __hb === 'function') { __hb(); }
 
@@ -1185,7 +1304,7 @@ function upsertPresence(id, name, ts){
   var p = people.find(function(x){ return x.id===id });
   if(!p){
     // 新用户加入列表顶端
-    p = { id:id, name: (name||id), color:'#7dd3fc', status: online?'online':'idle', last:last };
+    p = { id:id, name:(name||id), color:'#7dd3fc', status: online?'online':'idle', last:last, _ts: tsSec };
     people.unshift(p);
   }else{
     p.name = name || p.name;
@@ -1193,51 +1312,58 @@ function upsertPresence(id, name, ts){
     p.last = last;
   }
 }
+// 替换 desktalk.js 的 fetchPresenceList
 async function fetchPresenceList(){
   try{
-    // 自己的名字（你已有 meName()）
-    var mine = (typeof meName === 'function') ? meName() : '';
-    var url  = '/api/dt_presence_mem.asp?list=1&skipSelf=1'
-             + (mine ? '&u=' + encodeURIComponent(mine) : '');
-
-    const r = await fetch(url, {
-      credentials: 'omit',
-      cache: 'no-store',
-      headers: { 'Accept': 'application/json' }
+    // 1) 防缓存：cache:no-store + 时间戳参数
+    var me  = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
+    var url = '/api/dt_presence_mem.asp?list=1&_=' + Date.now();
+    var r = await fetch(url, {
+      credentials: 'omit',     // 你现在的服务端允许 omit 也行，但 include 更不易被代理公用缓存复用
+      cache: 'no-store'
     });
 
-    const t = await r.text();
-    let j = null; try{ j = JSON.parse(t) }catch(_){}
-    if (!j) return;
+    var t = await r.text(); var j = null;
+    try{ j = JSON.parse(t) }catch(_){ /* 不是 JSON 直接忽略 */ }
+    if(!j) return;
 
-    const arr = j.users || j.list || j.online || [];
-    const now = Math.floor(Date.now()/1000);
-    const seen = new Set();
+    var arr = j.users || j.list || j.online || [];
+    var now = Math.floor(Date.now()/1000);
 
-    if (Array.isArray(arr)){
-      arr.forEach(function(it){
-        if (typeof it === 'string'){
-          upsertPresence(it, it, now);
-          seen.add(slugId(it));
-        } else {
-          const id   = it.u || it.id || it.name;
-          const name = it.name || id;
-          const ts   = it.ts || now;
-          upsertPresence(id, name, ts);
-          seen.add(slugId(id));
-        }
-      });
+    // 2) 先更新本次返回的用户
+    if(Array.isArray(arr)){
+       // 只记录权威 presence 列表
+        PRESENCE = [];
+        // 关键：每次基于服务端 presence 全量重建 people
+        people = [];
 
-      // ★ 关键：按返回结果“收缩” people，仅保留本次出现的 + 好友
-      people = (people || []).filter(function(p){
-        return seen.has(p.id) || isFriend(p.id);
-      });
-
-      renderAll();
-      if (typeof seedInboxTs === 'function') seedInboxTs();
+        arr.forEach(function(it){
+            if(typeof it==='string'){ upsertPresence(it, it, now) }
+            else{
+            // 优先 ts，没有则按 secs 推回去
+            var ts = (typeof it.ts==='number' && it.ts>0) ? it.ts
+                    : (typeof it.secs==='number' ? (now - it.secs) : now);
+            upsertPresence(it.u||it.id||it.name, it.name||(it.u||it.id), ts);
+            }
+        });
+        renderAll();          // 用 presence 渲染“推荐好友”
     }
+    // 3) 对 people 做一次“衰减”同步（即便这次没返回，也根据时间把在线 -> 闲置）
+    //   online 定义：60 秒内视为在线（与你原逻辑一致）
+    var nowSec = now;
+    for (var i=0; i<people.length; i++){
+      var p = people[i];
+      var tsSec = (typeof p._ts === 'number' ? p._ts : nowSec); // upsertPresence 里你可以顺手把 ts 存到 p._ts
+      var online = (nowSec - tsSec < 60);
+      p.status = online ? 'online' : 'idle';
+      p.last   = online ? '在线'  : Math.max(1, Math.round((nowSec - tsSec)/60)) + ' 分钟前';
+    }
+
+    renderAll();  // 刷 UI
+    if (typeof seedInboxTs === 'function') seedInboxTs();
   }catch(e){}
 }
+
 
 // 统一把消息里的 UTC -> Date（按浏览器能理解的 ISO）
 function msgDate(m){
@@ -1388,7 +1514,7 @@ function clearUnreadFor(id){
     flashListAvatar(id, false);
 }
 // === 我自己的 slug（用于拼会话ID） ===
-var ME_SLUG = slugId(meName());
+var ME_SLUG = meSlug();
 
 // === 每个会话的“已看到的最后时间戳” ===
 var CONV_TS = {};      // key: convId -> last seen ts (秒)
@@ -1452,8 +1578,9 @@ function inboxTick(){
 function startInboxWatch(){
   if (inboxTimer) { clearInterval(inboxTimer); inboxTimer = null; }
   ME_SLUG = slugId(meName());
+  ME_SLUG = meSlug();
   seedInboxTs().then(function(){
-    inboxTimer = setInterval(inboxTick, 4000); // 每 4 秒扫描一次
+    scheduleInbox(); // 每 4 秒扫描一次
   });
 }
 
@@ -1563,6 +1690,41 @@ function showIsland(peer, text){
     el.dispatchEvent(new Event('input', { bubbles: true }));
   }
 })();
+// === 统一调度（追加在文件末尾即可） ===
+pollTimer = null;         // 会话轮询（fetchNew）
+inboxTimer = null;        // 收件箱轻轮询（inboxTick）
+const INBOX_FAST = 8000;      // 打开聊天窗时
+const INBOX_SLOW = 15000;     // 关闭聊天窗/页面后台时
+let inboxDelay = INBOX_SLOW;
+
+function scheduleInbox(next){
+  if (inboxTimer) clearTimeout(inboxTimer);
+  inboxTimer = setTimeout(inboxTick, next ?? inboxDelay);
+}
+
+function setInboxActive(active){
+  inboxDelay = active ? INBOX_FAST : INBOX_SLOW;
+  scheduleInbox();
+}
+
+// 覆盖原有 start/stop（重定义：放在末尾会覆盖前面的同名函数）
+function startPolling(){
+  stopPolling();
+  pollTimer = setInterval(fetchNew, 2500);  // 打开聊天窗时才轮询会话
+  setInboxActive(true);                     // 收件箱加速
+}
+function stopPolling(){
+  if (pollTimer) clearInterval(pollTimer);
+  pollTimer = null;
+  setInboxActive(false);                    // 收件箱降速
+}
+
+// 页面可见性自适应（省电）
+document.addEventListener('visibilitychange', ()=>{
+  const active = !document.hidden && !!document.querySelector('#chat.show');
+  setInboxActive(active);
+});
+
 
 document.addEventListener('DOMContentLoaded', function(){
   if (document.getElementById('chat')) {

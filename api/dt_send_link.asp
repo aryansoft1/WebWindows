@@ -144,13 +144,17 @@ If Not fso.FolderExists(base & "\chat\inbox") Then fso.CreateFolder(base & "\cha
 If Not fso.FolderExists(inboxDir) Then fso.CreateFolder(inboxDir)
 
 Dim ts, fname, fpath
+Dim senderU : senderU = Request("u")            ' ← 前端传来的稳定“我方ID”
+If Len(senderU)=0 Then senderU = convId         ' ← 兜底：老版本仍可写，但尽量不要触发
+
 ts = NowTs()
 Randomize
 fname = CStr(ts) & "-" & CStr(Int(Rnd()*1000000)) & ".json"
 fpath = chatDir & "\" & fname
 
 Dim one
-one = "{""id"":""" & fname & """,""ts"":" & ts & ",""ts_iso"":""" & IsoUtcFromTs(ts) & """,""from"":""" & JsonEsc(convId) & """,""to"":""" & JsonEsc(toUser) & """,""type"":""text"",""body"":""" & JsonEsc(body) & """}"
+one = "{""id"":""" & fname & """,""ts"":" & ts & ",""ts_iso"":""" & IsoUtcFromTs(ts) & """,""from"":""" & _
+      JsonEsc(senderU) & """,""to"":""" & JsonEsc(toUser) & """,""type"":""text"",""body"":""" & JsonEsc(body) & """}"
 
 Dim wroteUtf8, eNo, eDesc, wroteUnicode
 wroteUtf8   = SaveUtf8NoBom(fpath, one, eNo, eDesc)

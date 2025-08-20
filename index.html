@@ -288,8 +288,82 @@
 <button class="btn" data-tab="reco" id="tab-btn-reco">推荐好友</button>
 <button class="btn" data-tab="friends" id="tab-btn-friends">我的好友</button>
 <button class="btn" data-tab="ai" id="tab-btn-ai">小讯</button>
-<button class="btn" data-tab="settings" id="tab-btn-settings">设置</button>
+<button class="btn" data-tab="mailbox" id="tab-btn-mailbox">讯筒</button>
 </div>
+<!-- 新增的讯筒内容 -->
+<div id="tab-mailbox" style="width:300px;font-family:Arial,sans-serif;">
+  <!-- 功能按钮列表 -->
+  <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+    <li>
+      <button class="tab-btn" data-tab="manage" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <span>📮</span>
+        <span>讯筒管理</span>
+      </button>
+    </li>
+    <li>
+      <button class="tab-btn" data-tab="inbox" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <span>📥</span>
+        <span>打开邮筒</span>
+      </button>
+    </li>
+    <li>
+      <button class="tab-btn" data-tab="sent" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <span>📤</span>
+        <span>邮送记录</span>
+      </button>
+    </li>
+    <li>
+      <button class="tab-btn" data-tab="compose" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <span>✉️</span>
+        <span>写信</span>
+      </button>
+    </li>
+    <li>
+      <button class="tab-btn" data-tab="trash" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <span>🗑️</span>
+        <span>废纸篓</span>
+      </button>
+    </li>
+  </ul>
+
+  <!-- 内容区 -->
+  <div style="margin-top:8px;border:1px solid #ccc;padding:8px;min-height:150px;background:#fff;">
+    <div class="tab-content" data-content="manage">
+      <h4>📮 讯筒管理</h4>
+      <p>这里可以展示讯筒管理信息，如新增、删除、编辑讯筒。</p>
+    </div>
+
+    <div class="tab-content" data-content="inbox" style="display:none;">
+      <h4>📥 邮筒内容</h4>
+      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">张三 - 项目进度更新 <span style="float:right;color:#888;font-size:12px;">10:30</span></div>
+      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer; background:#f0f8ff;">李四 - 会议纪要 <span style="float:right;color:#888;font-size:12px;">09:15</span></div>
+      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">王五 - 请查收附件 <span style="float:right;color:#888;font-size:12px;">昨天</span></div>
+    </div>
+
+    <div class="tab-content" data-content="sent" style="display:none;">
+      <h4>📤 邮送记录</h4>
+      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">你发送给张三 - 回复项目计划 <span style="float:right;color:#888;font-size:12px;">08:45</span></div>
+      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">你发送给李四 - 会议安排 <span style="float:right;color:#888;font-size:12px;">昨天</span></div>
+    </div>
+
+    <div class="tab-content" data-content="compose" style="display:none;">
+      <h4>✉️ 写信</h4>
+      <form style="display:flex;flex-direction:column;gap:4px;">
+        <input type="text" placeholder="收件人" style="padding:4px;border:1px solid #ccc;">
+        <input type="text" placeholder="主题" style="padding:4px;border:1px solid #ccc;">
+        <textarea placeholder="邮件内容" rows="4" style="padding:4px;border:1px solid #ccc;"></textarea>
+        <button type="submit" style="padding:4px;background:#007bff;color:#fff;border:none;cursor:pointer;">发送</button>
+      </form>
+    </div>
+
+    <div class="tab-content" data-content="trash" style="display:none;">
+      <h4>🗑️ 废纸篓</h4>
+      <div>已删除邮件1</div>
+      <div>已删除邮件2</div>
+    </div>
+  </div>
+</div>
+
 <div aria-labelledby="tab-btn-reco" id="tab-reco" role="region">
 <div class="toolbar">
 <input id="reco-q" placeholder="搜索 WebWindows 用户…" type="text"/>
@@ -312,18 +386,28 @@
 <button class="btn primary" id="ai-send">发送</button>
 </div>
 </div>
-<div aria-labelledby="tab-btn-settings" id="tab-settings" role="region" style="display:none">
-<div class="muted" style="margin:2px 2px 10px">隐私偏好仅在本机保存；“不被推荐”需后端同配。</div>
-<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-<label for="pref-name" style="white-space:nowrap">我的昵称</label>
-<input id="pref-name" style="flex:1;border:1px solid var(--border);border-radius:10px;padding:6px 4px;background:var(--surface);color:var(--fg)"/>
-<button class="btn" id="pref-name-save">保存</button>
+<!-- 设置 Bottom Sheet -->
+<div id="settings-sheet">
+  <header style="display:flex;justify-content:space-between;align-items:center;">
+    <h3 style="margin:0;font-size:16px;">⚙ 设置</h3>
+    <button onclick="closeSettingsSheet()" style="border:none;background:none;font-size:18px;cursor:pointer;">✕</button>
+  </header>
+  <div style="padding:10px">
+    <!-- 你原本的 tab-settings 内容挪到这里 -->
+    <label class="switch">
+      <input id="pref-hide-reco" type="checkbox">
+      <span style="margin-left:6px">关闭推荐列表</span>
+    </label>
+    <div style="height:8px"></div>
+    <label class="switch">
+      <input id="pref-undiscoverable" type="checkbox">
+      <span style="margin-left:6px">不被推荐（隐藏我的账号）</span>
+    </label>
+  </div>
 </div>
-<label class="switch"><input id="pref-hide-reco" type="checkbox"><span style="margin-left:6px">关闭推荐列表</span></input></label>
-<div style="height:8px"></div>
-<label class="switch"><input id="pref-undiscoverable" type="checkbox"><span style="margin-left:6px">不被推荐（隐藏我的账号）</span></input></label>
-<div class="muted" id="privacy-hint" style="margin-top:10px;font-size:13px"></div>
 </div>
+<div id="desktalk-footer">
+  <button class="btn" id="tab-btn-settings" onclick="openSettingsSheet()">⚙ 设置</button>
 </div>
 </section>
 <!-- 昵称弹窗（简版） -->
@@ -363,6 +447,11 @@
 <button class="btn primary send" id="chat-send">发送</button>
 </div>
 </section>
+<!--#灵动岛消息-->
+<div aria-atomic="true" aria-live="polite" id="ww-island" role="status" style="display:none">
+<span class="mini"></span>
+<span class="txt"></span>
+</div>
     <script src="assets/js/desktalk.js"></script>
     <script src="assets/js/tw.js"></script>
 </body>

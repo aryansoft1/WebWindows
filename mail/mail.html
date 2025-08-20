@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebWindows · 邮件中心</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+  <link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet" />
+  
+  <style>
+    /* ===== 自定义样式（轻量） ===== */
+    :root {
+      --sidebar-w: 280px;    /* 左栏宽 */
+      --reader-w: 560px;     /* 右栏宽 */
+      --split-w: 4px;        /* 分隔条宽 */
+    }
+    html, body { height: 100%; }
+    body { background: #0f172a0a; }
+
+    /* 三栏栅格布局 */
+    #layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) var(--split-w) 1fr var(--split-w) var(--reader-w);
+      grid-template-rows: 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .splitter {
+      cursor: col-resize;
+      background: linear-gradient(180deg, transparent, #00000010, transparent);
+    }
+    .splitter:hover { background: #00000018; }
+
+    /* 滚动条优化 */
+    .nice-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+    .nice-scroll::-webkit-scrollbar-thumb { background: #00000026; border-radius: 999px; }
+    .nice-scroll:hover::-webkit-scrollbar-thumb { background: #0000003b; }
+
+    /* 列表行状态 */
+    .mail-row:hover { background: rgba(59,130,246,0.07); }
+    .mail-row[data-unread="true"] .subject { font-weight: 700; }
+
+    /* 徽章标签 */
+    .tag { font-size: 11px; line-height: 1; padding: 4px 6px; border-radius: 999px; }
+
+    /* 写信抽屉 */
+    .compose-panel { transform: translateY(100%); transition: transform .25s ease; }
+    .compose-panel.open { transform: translateY(0); }
+
+    /* 顶部工具栏固定阴影 */
+    .sticky-shadow { box-shadow: 0 1px 0 rgba(0,0,0,0.06); }
+
+    /* 深色模式（跟随系统） */
+    @media (prefers-color-scheme: dark) {
+      body { background: #0b1020; }
+      .splitter { background: linear-gradient(180deg, transparent, #ffffff10, transparent); }
+      .splitter:hover { background: #ffffff24; }
+    }
+  </style>
+</head>
+<body class="text-slate-800 dark:text-slate-200">
+  <!-- 头部：标题 + 全局操作（可选放到系统标题栏内，保留嵌入版） -->
+  <header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-b border-slate-200/60 dark:border-slate-700/60 sticky-shadow">
+    <div class="max-w-full mx-auto px-4 py-2 flex items-center gap-2">
+      <i data-lucide="mail" class="w-5 h-5 text-blue-500"></i>
+      <h1 class="text-lg font-semibold">邮件中心</h1>
+
+      <!-- 账户切换 -->
+      <div class="ml-4">
+        <label class="sr-only">邮箱账户</label>
+        <select id="accountSelect" class="px-3 py-1.5 border rounded-lg bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-sm">
+          <option value="1">📧 you@gmail.com</option>
+          <option value="2">🏢 you@company.com</option>
+        </select>
+      </div>
+
+      <div class="ml-auto flex items-center gap-2">
+        <button id="btnCompose" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm">
+          <i data-lucide="pen-square" class="w-4 h-4"></i><span>写邮件</span>
+        </button>
+        <button id="btnRefresh" class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm">
+          <i data-lucide="refresh-ccw" class="w-4 h-4"></i><span>刷新</span>
+        </button>
+        <button id="btnSettings" class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主体三栏布局 -->
+  <main id="layout">
+    <!-- 左栏：账户 & 文件夹/标签 -->
+    <aside id="sidebar" class="h-[calc(100vh-48px)] bg-white/70 dark:bg-slate-900/50 border-r border-slate-200 dark:border-slate-800 overflow-hidden">
+      <div class="h-full flex flex-col">
+        <!-- 搜索（全局或文件夹） -->
+        <div class="p-3">
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2">
+            <i data-lucide="search" class="w-4 h-4 opacity-70"></i>
+            <input id="searchAll" placeholder="搜索邮件（支持 from:/to:/subject:/has:attachment）" class="w-full bg-transparent outline-none text-sm" />
+          </div>
+        </div>
+
+        <!-- 文件夹列表 -->
+        <div class="px-2 overflow-y-auto nice-scroll">
+          <div class="px-1 py-2 text-[12px] uppercase tracking-wider text-slate-500">文件夹</div>
+          <nav class="space-y-1" id="folderList">
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 group" data-folder="inbox">
+              <i data-lucide="inbox" class="w-4 h-4 opacity-70 group-hover:opacity-100"></i>
+              <span class="flex-1">收件箱</span>
+              <span class="text-xs text-white bg-blue-600 rounded-full px-2 py-0.5">18</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" data-folder="starred">
+              <i data-lucide="star" class="w-4 h-4"></i><span class="flex-1">星标</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" data-folder="sent">
+              <i data-lucide="send" class="w-4 h-4"></i><span class="flex-1">已发送</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" data-folder="drafts">
+              <i data-lucide="file-text" class="w-4 h-4"></i><span class="flex-1">草稿</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" data-folder="archive">
+              <i data-lucide="archive" class="w-4 h-4"></i><span class="flex-1">归档</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" data-folder="spam">
+              <i data-lucide="shield-alert" class="w-4 h-4"></i><span class="flex-1">垃圾邮件</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" data-folder="trash">
+              <i data-lucide="trash-2" class="w-4 h-4"></i><span class="flex-1">回收站</span>
+            </a>
+          </nav>
+
+          <div class="px-1 py-3 text-[12px] uppercase tracking-wider text-slate-500">标签</div>
+          <div id="labelList" class="space-y-1 pb-6">
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span><span class="flex-1">重要</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span><span class="flex-1">项目 · WebWindows</span>
+            </a>
+            <a href="#" class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span><span class="flex-1">待办</span>
+            </a>
+            <button class="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500">
+              <i data-lucide="plus" class="w-4 h-4"></i><span>新建标签</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 底部：存储/连接账户（可选） -->
+        <div class="mt-auto p-3 border-t border-slate-200 dark:border-slate-800">
+          <div class="text-xs text-slate-500 mb-2">连接新的邮箱账户</div>
+          <div class="flex gap-2">
+            <button class="flex-1 px-3 py-1.5 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">Gmail</button>
+            <button class="flex-1 px-3 py-1.5 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">Outlook</button>
+            <button class="flex-1 px-3 py-1.5 rounded-lg text-xs bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700">IMAP</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 分隔条（左） -->
+    <div id="splitLeft" class="splitter"></div>
+
+    <!-- 中栏：会话列表 -->
+    <section id="listPane" class="h-[calc(100vh-48px)] bg-white/60 dark:bg-slate-900/40 overflow-hidden">
+      <div class="h-full flex flex-col">
+        <!-- 列表工具条 -->
+        <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+          <input type="checkbox" id="checkAll" class="size-4 rounded border-slate-300 dark:border-slate-600" />
+          <button class="px-2 py-1 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="mail-open" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="archive" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg text-sm hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          <div class="ml-2">
+            <div class="inline-flex items-center gap-2 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+              <i data-lucide="filter" class="w-4 h-4"></i>
+              <select class="bg-transparent text-sm">
+                <option>全部</option>
+                <option>未读</option>
+                <option>星标</option>
+                <option>有附件</option>
+              </select>
+            </div>
+          </div>
+          <div class="ml-auto flex items-center gap-2">
+            <span class="text-xs text-slate-500">排序：</span>
+            <select class="bg-transparent text-sm border rounded-lg px-2 py-1 border-slate-300 dark:border-slate-700">
+              <option value="date_desc">时间（新→旧）</option>
+              <option value="date_asc">时间（旧→新）</option>
+              <option value="from">发件人</option>
+              <option value="size">大小</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 搜索条（列表内） -->
+        <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-800">
+          <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-xl px-3 py-2">
+            <i data-lucide="search" class="w-4 h-4 opacity-70"></i>
+            <input id="searchFolder" placeholder="在当前文件夹内搜索（支持 from:/to:/subject:/has:/before:/after:）" class="w-full bg-transparent outline-none text-sm" />
+          </div>
+          <!-- 查询 chips 示例 -->
+          <div class="mt-2 flex flex-wrap gap-2 text-xs">
+            <span class="px-2 py-1 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200">is:unread</span>
+            <span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">has:attachment</span>
+            <span class="px-2 py-1 rounded-full bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">after:2025-08-01</span>
+          </div>
+        </div>
+
+        <!-- 会话列表内容 -->
+        <div id="threadList" class="flex-1 overflow-y-auto nice-scroll divide-y divide-slate-100 dark:divide-slate-800">
+          <!-- 示例行（真实数据后端渲染或前端模板填充） -->
+          <div class="mail-row px-3 py-3 grid grid-cols-[auto_auto_1fr_auto] items-center gap-3" data-unread="true" data-thread-id="t1">
+            <input type="checkbox" class="size-4 rounded border-slate-300 dark:border-slate-600" />
+            <button class="group" title="星标"><i data-lucide="star" class="w-4 h-4 text-amber-500 opacity-70 group-hover:opacity-100"></i></button>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="truncate font-medium">Google</span>
+                <span class="tag bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200">通知</span>
+                <span class="tag bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">项目</span>
+              </div>
+              <div class="truncate subject text-[15px]">[安全提示] 新设备登录到你的 Google 帐号</div>
+              <div class="truncate text-sm text-slate-500">我们检测到一个来自 Tokyo, JP 的新登录...</div>
+            </div>
+            <div class="text-right text-xs text-slate-500">
+              <div>08:40</div>
+              <div class="flex items-center gap-1 justify-end mt-1">
+                <i data-lucide="paperclip" class="w-3.5 h-3.5 opacity-60"></i>
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mail-row px-3 py-3 grid grid-cols-[auto_auto_1fr_auto] items-center gap-3" data-unread="false" data-thread-id="t2">
+            <input type="checkbox" class="size-4 rounded border-slate-300 dark:border-slate-600" />
+            <button class="group" title="星标"><i data-lucide="star-off" class="w-4 h-4 opacity-40 group-hover:opacity-70"></i></button>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="truncate">GitHub</span>
+                <span class="tag bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">提醒</span>
+              </div>
+              <div class="truncate subject">[issue] Fix: DeskTalk ts 格式统一</div>
+              <div class="truncate text-sm text-slate-500">PR #1234 已合并至 main，感谢贡献！</div>
+            </div>
+            <div class="text-right text-xs text-slate-500">
+              <div>昨天</div>
+              <div class="flex items-center gap-1 justify-end mt-1">
+                <i data-lucide="message-square" class="w-3.5 h-3.5 opacity-60" title="3 封会话"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- 更多行…… -->
+        </div>
+      </div>
+    </section>
+
+    <!-- 分隔条（右） -->
+    <div id="splitRight" class="splitter"></div>
+
+    <!-- 右栏：阅读窗 / 线程视图 -->
+    <aside id="readerPane" class="h-[calc(100vh-48px)] bg-white dark:bg-slate-950 overflow-hidden border-l border-slate-200 dark:border-slate-800">
+      <div class="h-full flex flex-col">
+        <!-- 标题与操作 -->
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-800">
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-semibold truncate">[安全提示] 新设备登录到你的 Google 帐号</h2>
+            <span class="ml-auto"></span>
+            <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="标记未读"><i data-lucide="mail" class="w-4 h-4"></i></button>
+            <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="移动"><i data-lucide="folder" class="w-4 h-4"></i></button>
+            <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="删除"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="更多"><i data-lucide="more-horizontal" class="w-4 h-4"></i></button>
+          </div>
+          <div class="mt-2 text-xs text-slate-500">来自 <b>Google</b> &lt;no-reply@google.com&gt; · 今天 08:40 · 收件人：you@gmail.com</div>
+        </div>
+
+        <!-- 线程消息列表（示例） -->
+        <div id="messageThread" class="flex-1 overflow-y-auto nice-scroll">
+          <!-- 单条邮件 -->
+          <article class="px-6 py-5 border-b border-slate-100 dark:border-slate-800">
+            <header class="flex items-center gap-3">
+              <img src="https://unavatar.io/google" class="w-8 h-8 rounded-full" alt="avatar" />
+              <div class="min-w-0">
+                <div class="text-sm"><b>Google 安全团队</b> <span class="text-slate-500">&lt;no-reply@google.com&gt;</span></div>
+                <div class="text-xs text-slate-500">08:40 · 来自 Tokyo, JP · 至：you@gmail.com</div>
+              </div>
+              <div class="ml-auto flex items-center gap-1">
+                <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="回复"><i data-lucide="reply" class="w-4 h-4"></i></button>
+                <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="回复全部"><i data-lucide="reply-all" class="w-4 h-4"></i></button>
+                <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="转发"><i data-lucide="forward" class="w-4 h-4"></i></button>
+              </div>
+            </header>
+            <div class="prose prose-slate max-w-none dark:prose-invert mt-4 text-[15px]">
+              <p>我们检测到你的帐户在新设备上登录。如非本人操作，请访问安全中心。</p>
+              <p><a href="#">查看登录活动</a>（出于安全，默认不加载外链图片）</p>
+            </div>
+            <!-- 附件列表（示例） -->
+            <div class="mt-4 flex flex-wrap gap-2">
+              <a class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm" href="#">
+                <i data-lucide="paperclip" class="w-4 h-4"></i> security-report.pdf <span class="text-xs text-slate-500">(1.2 MB)</span>
+              </a>
+            </div>
+          </article>
+
+          <!-- 另一条邮件（折叠预留） -->
+          <details class="px-6 py-5 border-b border-slate-100 dark:border-slate-800" open>
+            <summary class="cursor-pointer list-none flex items-center gap-2 text-sm">
+              <i data-lucide="chevron-down" class="w-4 h-4"></i>
+              <span>显示先前 2 封消息</span>
+            </summary>
+            <div class="mt-4 text-sm text-slate-500">（此处展示历史消息……）</div>
+          </details>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 写信抽屉（底部上推） -->
+  <section id="compose" class="compose-panel fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 shadow-2xl">
+    <div class="max-w-6xl mx-auto p-4">
+      <div class="flex items-center gap-2">
+        <h3 class="text-base font-semibold">新邮件</h3>
+        <span id="draftStatus" class="ml-2 text-xs text-slate-500">草稿已保存 · 10:21</span>
+        <button id="btnCloseCompose" class="ml-auto px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <div class="mt-3 space-y-2">
+        <!-- 收件人（后续可替换为 chips/自动补全） -->
+        <div class="flex items-start gap-3">
+          <label class="w-16 text-right pt-2 text-sm text-slate-500">收件人</label>
+          <input id="to" class="flex-1 bg-slate-100 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm" placeholder="多个地址用逗号分隔" />
+          <button id="toggleCc" class="px-2 py-1 text-xs rounded-lg bg-slate-100 dark:bg-slate-800">抄送/密送</button>
+        </div>
+        <div id="ccBcc" class="hidden space-y-2">
+          <div class="flex items-start gap-3">
+            <label class="w-16 text-right pt-2 text-sm text-slate-500">抄送</label>
+            <input id="cc" class="flex-1 bg-slate-100 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm" />
+          </div>
+          <div class="flex items-start gap-3">
+            <label class="w-16 text-right pt-2 text-sm text-slate-500">密送</label>
+            <input id="bcc" class="flex-1 bg-slate-100 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <div class="flex items-start gap-3">
+          <label class="w-16 text-right pt-2 text-sm text-slate-500">主题</label>
+          <input id="subject" class="flex-1 bg-slate-100 dark:bg-slate-900 rounded-lg px-3 py-2 text-sm" placeholder="关于…" />
+        </div>
+
+        <!-- 工具条 -->
+        <div class="flex items-center gap-2 mt-2 px-1">
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="加粗"><i data-lucide="bold" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="斜体"><i data-lucide="italic" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="下划线"><i data-lucide="underline" class="w-4 h-4"></i></button>
+          <span class="mx-1 w-px h-5 bg-slate-300 dark:bg-slate-700"></span>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="项目符号"><i data-lucide="list" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="编号"><i data-lucide="list-ordered" class="w-4 h-4"></i></button>
+          <span class="mx-1 w-px h-5 bg-slate-300 dark:bg-slate-700"></span>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="插入链接"><i data-lucide="link" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="插入图片"><i data-lucide="image" class="w-4 h-4"></i></button>
+          <button class="px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800" title="添加附件"><i data-lucide="paperclip" class="w-4 h-4"></i></button>
+          <div class="ml-auto flex items-center gap-2">
+            <button id="btnSaveDraft" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm">保存草稿</button>
+            <button id="btnSend" class="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm">发送</button>
+          </div>
+        </div>
+
+        <!-- 编辑区域（简化：contenteditable，可替换为更强编辑器） -->
+        <div id="editor" class="mt-3 min-h-[220px] bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4" contenteditable="true">
+          <p>你好，</p>
+          <p>这是一封从 WebWindows 邮件中心编写的测试邮件。</p>
+          <p class="text-slate-500">—</p>
+        </div>
+
+        <!-- 附件区（示例） -->
+        <div class="mt-3 flex flex-wrap gap-2">
+          <button class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm">
+            <i data-lucide="upload" class="w-4 h-4"></i> 从本地添加
+          </button>
+          <button class="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-sm">
+            <i data-lucide="folder-open" class="w-4 h-4"></i> 从云资料选择
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 轻量脚本（仅 UI 行为占位。数据对接时替换为真实逻辑） -->
+  <script>
+    // 激活 Lucide 图标
+    function renderIcons(){ if (window.lucide) lucide.createIcons(); }
+    renderIcons();
+
+    // 侧栏/阅读窗分隔条：拖拽调整宽度
+    (function setupSplitters(){
+      const root = document.documentElement;
+      function drag(e, side){
+        const startX = e.clientX;
+        const startSidebar = parseInt(getComputedStyle(root).getPropertyValue('--sidebar-w'));
+        const startReader  = parseInt(getComputedStyle(root).getPropertyValue('--reader-w'));
+        function onMove(ev){
+          const dx = ev.clientX - startX;
+          if(side==='left'){
+            const w = Math.max(200, Math.min(480, startSidebar + dx));
+            root.style.setProperty('--sidebar-w', w + 'px');
+          } else if(side==='right'){
+            const w = Math.max(380, Math.min(860, startReader - dx));
+            root.style.setProperty('--reader-w', w + 'px');
+          }
+        }
+        function onUp(){ window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); }
+        window.addEventListener('mousemove', onMove); window.addEventListener('mouseup', onUp);
+      }
+      document.getElementById('splitLeft').addEventListener('mousedown', (e)=>drag(e,'left'));
+      document.getElementById('splitRight').addEventListener('mousedown', (e)=>drag(e,'right'));
+    })();
+
+    // 写信抽屉开关
+    const compose = document.getElementById('compose');
+    document.getElementById('btnCompose').addEventListener('click', ()=>{ compose.classList.add('open'); });
+    document.getElementById('btnCloseCompose').addEventListener('click', ()=>{ compose.classList.remove('open'); });
+
+    // 抄送/密送切换
+    document.getElementById('toggleCc').addEventListener('click', ()=>{
+      const box = document.getElementById('ccBcc');
+      box.classList.toggle('hidden');
+    });
+
+    // 列表点击→激活示例（未来替换成加载 message 接口）
+    document.getElementById('threadList').addEventListener('click', (e)=>{
+      const row = e.target.closest('.mail-row');
+      if(!row) return;
+      document.querySelectorAll('.mail-row').forEach(el=>el.classList.remove('bg-blue-50','dark:bg-blue-900/20'));
+      row.classList.add('bg-blue-50','dark:bg-blue-900/20');
+      // 这里可触发 GET /mail_api/message?id=...
+    });
+
+    // 刷新按钮占位
+    document.getElementById('btnRefresh').addEventListener('click', ()=>{
+      // TODO: 调用 /mail_api/sync/pull
+      console.log('刷新邮件…');
+    });
+
+    // 初次渲染后再更新一次图标，确保动态节点也有图标
+    setTimeout(renderIcons, 50);
+  </script>
+</body>
+</html>

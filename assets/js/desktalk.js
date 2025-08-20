@@ -387,20 +387,20 @@ function renderFriends(){
 function renderAll(){ renderReco(); renderFriends(); reapplyUnreadFlash(); }
 /* ===== 面板/Tab/不打扰 ===== */
 var fab=$('#fab'), sheet=$('#presence-sheet'), xBtn=$('#presence-close'), mask=$('#overlay-mask');
-var tabBtnReco=$('#tab-btn-reco'), tabBtnFriends=$('#tab-btn-friends'), tabBtnAI=$('#tab-btn-ai'), tabBtnSettings=$('#tab-btn-settings');
+var tabBtnReco=$('#tab-btn-reco'), tabBtnFriends=$('#tab-btn-friends'), tabBtnAI=$('#tab-btn-ai'), tabBtnSettings=$('#tab-btn-settings');tabBtnMailbox=$('#tab-btn-mailbox');
 
 var activeTab='reco';
 function switchTab(t){
   activeTab = t;
-  var a=$('#tab-reco'), b=$('#tab-friends'), c=$('#tab-ai'), d=$('#tab-settings');
+  var a=$('#tab-reco'), b=$('#tab-friends'), c=$('#tab-ai'), d=$('#tab-mailbox');
   if(a) a.style.display = (t==='reco') ? 'block' : 'none';
   if(b) b.style.display = (t==='friends') ? 'block' : 'none';
   if(c) c.style.display = (t==='ai') ? 'block' : 'none';
-  if(d) d.style.display = (t==='settings') ? 'block' : 'none';
+  if(d) d.style.display = (t==='mailbox') ? 'block' : 'none';
 
-  var btns=[tabBtnReco,tabBtnFriends,tabBtnAI,tabBtnSettings];
+  var btns=[tabBtnReco,tabBtnFriends,tabBtnAI,tabBtnMailbox];
   for(var i=0;i<btns.length;i++){ if(btns[i]) btns[i].classList.remove('primary') }
-  var map={reco:tabBtnReco,friends:tabBtnFriends,ai:tabBtnAI,settings:tabBtnSettings};
+  var map={reco:tabBtnReco,friends:tabBtnFriends,ai:tabBtnAI,mailbox:tabBtnMailbox};
   var act=map[t]; if(act) act.classList.add('primary');
 
   vReco.onScroll(true); vFriends.onScroll(true);
@@ -408,7 +408,7 @@ function switchTab(t){
 if(tabBtnReco)    tabBtnReco.onclick    = function(){ switchTab('reco') };
 if(tabBtnFriends) tabBtnFriends.onclick = function(){ switchTab('friends') };
 if(tabBtnAI)      tabBtnAI.onclick      = function(){ switchTab('ai') };
-if(tabBtnSettings)tabBtnSettings.onclick= function(){ switchTab('settings') };
+if(tabBtnMailbox)tabBtnMailbox.onclick= function(){ switchTab('mailbox') };
 
 function openPanel(tab){
   tab = tab || 'reco';
@@ -1731,3 +1731,35 @@ document.addEventListener('DOMContentLoaded', function(){
     DT_makeChatDrag();   // 恢复历史位置或居中，并绑定拖动
   }
 });
+function openSettingsSheet(){
+  const sheet = document.getElementById("settings-sheet");
+  sheet.style.display = "block";
+  requestAnimationFrame(() => {
+    sheet.style.transform = "translateY(0)";
+  });
+}
+
+function closeSettingsSheet(){
+  const sheet = document.getElementById("settings-sheet");
+  sheet.style.transform = "translateY(100%)";
+  setTimeout(() => sheet.style.display = "none", 300);
+}
+ const buttons = document.querySelectorAll('#tab-mailbox .tab-btn');
+  const contents = document.querySelectorAll('#tab-mailbox .tab-content');
+
+  function clearActive() {
+    buttons.forEach(btn => btn.style.background = '#f0f8ff');
+  }
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-tab');
+      // 切换内容
+      contents.forEach(c => {
+        c.style.display = c.getAttribute('data-content') === target ? 'block' : 'none';
+      });
+      // 高亮当前按钮
+      clearActive();
+      btn.style.background = '#d0ebff';
+    });
+  });

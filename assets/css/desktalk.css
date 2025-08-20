@@ -61,7 +61,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 
 /* 侧面板（玻璃） */
 #presence-sheet{
-  position:fixed;top:180px;right:0;bottom:0;width:min(86vw,var(--panel-w));
+  position:fixed;top:180px;right:0;bottom:40px;width:min(86vw,var(--panel-w));
   background:var(--glass-surface);
   backdrop-filter:saturate(120%) blur(var(--glass-blur)); -webkit-backdrop-filter:saturate(120%) blur(var(--glass-blur));
   border-left:1px solid var(--glass-border); box-shadow:var(--glass-shadow);
@@ -431,3 +431,42 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   background: transparent; cursor: pointer;
 }
 .emoji-item:hover { background: rgba(0,0,0,.08); }
+#desktalk-footer {
+  position: absolute;   /* 绝对定位 */
+  bottom: 0;            /* 紧贴容器底部 */
+  left: 0;
+  right: 0;
+  height: 50px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+.tab-content {
+  display: none;         /* 默认隐藏 */
+  padding: 8px;          /* 内边距 */
+  border: 1px solid #ccc; /* 边框 */
+  background-color: #fff; /* 背景色 */
+  min-height: 150px;      /* 最小高度 */
+  box-sizing: border-box; /* 包含内边距在内 */
+}
+.tab-content.active {
+  display: block;        /* 激活时显示 */
+}
+#settings-sheet{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  display: none;
+  background:#fff;
+  border-radius:16px 16px 0 0;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.2);
+  padding:16px;
+  z-index:2147483647;
+  max-height:70vh;
+  overflow:auto;
+  transform:translateY(100%);
+  transition:transform 0.3s ease;
+}

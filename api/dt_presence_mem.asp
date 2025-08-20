@@ -1,4 +1,5 @@
-<%@LANGUAGE="VBScript" CODEPAGE="65001"%><%
+<%@LANGUAGE="VBScript" CODEPAGE="65001" EnableSessionState=False %>
+<%
 Option Explicit
 Response.CodePage = 65001
 Response.Charset = "utf-8"
@@ -93,7 +94,7 @@ End Sub
 Function ListPresence()
   Dim meId : meId = ""
   On Error Resume Next
-  meId = Trim(CStr(Session("username")))
+  meId = Request("u")
   On Error GoTo 0
 
   Dim s, parts, i, rec, nowS, first, onlineCnt, json
@@ -170,7 +171,6 @@ End If
 
 If Len(u)>0 And LCase(u)<>"guest" Then
   On Error Resume Next
-  Session("username") = u
   Call Touch(u, nm)
   If Err.Number<>0 Then
     ' heartbeat never 500

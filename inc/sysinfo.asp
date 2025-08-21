@@ -1,4 +1,4 @@
-<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001" EnableSessionState=False%>
 <%
 Option Explicit
 Response.ContentType = "application/json"

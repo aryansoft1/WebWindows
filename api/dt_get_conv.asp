@@ -1,8 +1,7 @@
-<%@ LANGUAGE="VBScript" %>
+<%@ LANGUAGE="VBScript" EnableSessionState=False %>
 <%
 ' ===== 必须最前：统一 UTF-8 =====
 Response.CodePage = 65001
-Session.CodePage  = 65001
 Response.Charset  = "utf-8"
 Response.ContentType = "application/json; charset=utf-8"
 Response.Buffer = True

@@ -1051,7 +1051,6 @@ if(chatInput) chatInput.addEventListener('keydown',function(e){ if((e.ctrlKey||e
 try{
   var __hb = function(){
     var me = (typeof getProfile === 'function') ? getProfile() : null;
-    console.log(me);
     if(!me) return;
     // 仅用稳定 ID 识别用户；昵称仅作展示（可选）
     fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(me.name), 

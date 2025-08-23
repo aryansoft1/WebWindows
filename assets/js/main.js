@@ -1,5 +1,74 @@
-
 document.addEventListener("DOMContentLoaded", () => {
+    /**VUE加载--天气 */
+    (function () {
+        // 1) 诊断：看看全局导出的库对象叫什么
+        const lib =
+        window['weather-widget'] ||
+        window.weatherWidget ||
+        window.WeatherWidget ||
+        null;
+        console.log('[weather-widget] detected lib =', lib);
+
+        if (!lib) {
+        console.error('[weather-widget] 未找到 UMD 全局变量。确认 --name 与这里匹配，并检查 dist-widget/weather-widget.umd.min.js 是否加载成功。');
+        return;
+        }
+
+        // Vue 3 全局在 window.Vue（CDN 引入），Vue 2 也是 window.Vue（构造函数不同）
+        const V = window.Vue;
+        if (!V) {
+        console.error('[weather-widget] 未检测到 window.Vue（请确保已引入 https://unpkg.com/vue 的 CDN）。');
+        return;
+        }
+
+        // 2) 判断是 Vue 3 还是 Vue 2
+        const isVue3 = !!V.createApp;
+
+        // 3) 兼容组件导出 / 插件导出
+        const CompOrPlugin = lib.default || lib;
+        const isPlugin = CompOrPlugin && typeof CompOrPlugin.install === 'function';
+
+        if (isVue3) {
+        // ---- Vue 3 注册 ----
+        const app = V.createApp({});
+
+        if (isPlugin) {
+            app.use(CompOrPlugin);
+            console.log('[weather-widget] 已作为 Vue3 插件 use()');
+        } else {
+            // 组件对象：用 kebab 名称注册（与模板里的 <weather-time-widget> 对应）
+            app.component('weather-time-widget', CompOrPlugin);
+            console.log('[weather-widget] 已作为 Vue3 组件 component()');
+        }
+
+        const mountTarget = document.querySelector('#app-root') || document.body;
+        app.mount(mountTarget);
+        console.log('[weather-widget] Vue3 app mounted on', mountTarget);
+
+        } else {
+        // ---- Vue 2 注册 ----
+        if (isPlugin) {
+            V.use(CompOrPlugin);
+            console.log('[weather-widget] 已作为 Vue2 插件 use()');
+        } else if (CompOrPlugin && CompOrPlugin.name) {
+            V.component(CompOrPlugin.name, CompOrPlugin);
+            // 同时确保我们模板用的标签名也可用：
+            V.component('weather-time-widget', CompOrPlugin);
+            console.log('[weather-widget] 已作为 Vue2 组件 component()');
+        } else {
+            console.error('[weather-widget] 未识别的导出（既不是插件也不是组件对象）。');
+        }
+
+        new V({
+            el: document.querySelector('#app-root') || document.body
+        });
+        console.log('[weather-widget] Vue2 app mounted');
+        }
+    })();
+
+    /** 窗口 */
+    try { window.WindowManagerWidget && window.WindowManagerWidget.unmount && window.WindowManagerWidget.unmount() } catch(e){}
+    try { WindowManagerWidget.mount('#desktop-vue-root'); } catch (e) { console.error(e); }
     // ✅ 判断是否已经加载过，若已加载过则不再显示启动动画
     if (sessionStorage.getItem("booted") === "yes") {
         const root = document.getElementById("desktop-root");
@@ -270,37 +339,6 @@ function toggleCalendar() {
 }
 
 
-function toggleMaximizeWindow(id) {
-    const win = document.getElementById(id);
-    if (!win) return;
-    const maximizeBtn = win.querySelector(".btn-maximize");
-
-    if (win.dataset.maximized === "true") {
-        // restore
-        win.style.top = win.dataset.prevTop;
-        win.style.left = win.dataset.prevLeft;
-        win.style.width = win.dataset.prevWidth;
-        win.style.height = win.style.prevHeight;
-        win.dataset.maximized = "false";
-        if (maximizeBtn) maximizeBtn.innerHTML = "🗖";
-    } else {
-        // maximize
-        win.dataset.prevTop = win.style.top;
-        win.dataset.prevLeft = win.style.left;
-        win.dataset.prevWidth = win.style.width;
-        win.dataset.prevHeight = win.style.height;
-        win.style.top = "0";
-        win.style.left = "0";
-        win.style.width = "100%";
-        win.style.height = "calc(100vh - 46px)";
-        win.style.zIndex = "1000";
-        win.dataset.maximized = "true";
-        if (maximizeBtn) maximizeBtn.innerHTML = "🗗";
-    }
-}
-
-
-
 window.onload = function () {
     const popup = document.getElementById('user-popup');
     if (sessionStorage.getItem('webwindows_user_nickname') != '' && sessionStorage.getItem('webwindows_user_nickname') != null) {
@@ -321,7 +359,7 @@ window.onload = function () {
             if (username != null && username!='') {
                 showUserMenu(); // 显示用户菜单
             } else {
-                openWindow('login', '登录', 'login.html', 'https://cdn-icons-png.flaticon.com/512/747/747376.png', true, 'login-type');
+                window.openWindow('login', '登录', 'login.html', 'https://cdn-icons-png.flaticon.com/512/747/747376.png', true, 'login-type');
                 document.getElementById('start-menu').style.display = 'none';
             }
     });
@@ -466,7 +504,7 @@ document.querySelectorAll('.icon-tile').forEach(tile => {
         const icon = tile.querySelector('img')?.src || '';
         const href = tile.dataset.href || tile.getAttribute('data-href') || '';
         if (href) {
-            openWindow(id, title, href, icon);
+            window.openWindow(id, title, href, icon);
         }
     });
 });
@@ -486,12 +524,12 @@ document.querySelectorAll('.icon').forEach(icon => {
             return;
         }
 
-        const match = onclickAttr.match(/openWindow\([^,]+,[^,]+,\s*['"]([^'"]+)['"]/);
+        const match = onclickAttr.match(/window.openWindow\([^,]+,[^,]+,\s*['"]([^'"]+)['"]/);
         if (match) {
             href = match[1];
         }
 
-        openWindow(id, title, href, iconUrl);
+        window.openWindow(id, title, href, iconUrl);
 
     });
 });
@@ -581,20 +619,6 @@ function clearAspSessionCookies() {
   });
 }
 
-function closeWindow(id) {
-  const win = document.getElementById('win-' + id);
-  if (!win) return;
-
-  // 检查是否有 iframe 且加载 asp 页面
-  const iframe = win.querySelector('iframe');
-  if (iframe && iframe.src && iframe.src.toLowerCase().endsWith('.asp')) {
-    clearAspSessionCookies(); // ✅ 仅此处清除
-  }
-
-  win.remove();
-  removeTaskbarIcon(id);
-}
-
 function openCloudWindow() {
     if (document.getElementById("win-yunmishu_cloud") || document.getElementById("win-yunmishu_cloud")) {
         return;
@@ -646,120 +670,6 @@ function openCloudWindow() {
     win.style.zIndex = "1001";
     createTaskbarIcon("yunmishu_cloud", "云秘书对日外贸评测中心", 'assets/icons/cloud_secretary.png')
     updateTaskbarActive(win.id, true);
-}
-function openWindow(id, title, url, iconUrl, useIframe = false, type = '', width = '700px', height = '400px') {
-    //云秘书逻辑
-    if (id == "yunmishu_root") {
-        if (document.getElementById("win-yunmishu_root")) {
-            return;
-        }
-        const win = document.createElement("div");
-        const content = document.createElement("div");
-        const titleBar = document.createElement("div");
-        win.className = type ? `window ${type}` : 'window';
-        win.id = "win-yunmishu_root";
-        win.style.position = "absolute";
-        win.style.top = "120px";
-        win.style.left = "120px";
-        win.style.width = width;
-        win.style.height = height;
-        win.style.zIndex = "1001";
-        if (!useIframe) {
-            titleBar.className = "window-header";
-            titleBar.innerHTML = `
-                                                                                  <img class="window-icon" src="${iconUrl}" />
-                                                                                  <div class="title">${title}</div>
-                                                                                  <div class="buttons">
-                                                                                    <div class="button minimize" title="最小化">_</div>
-                                                                                    <div class="button maximize" title="缩放">⬜</div>
-                                                                                    <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_japan').remove();closeWindow('${id}');">✕</div>
-                                                                                  </div>
-`;
-
-            content.style.height = "calc(100% - 36px)";
-            content.style.overflow = "auto";
-            content.innerHTML = `
-                                                                                  <div class="folder-view" style="padding:1rem">
-                                                                                    <div class="icon-tile" onclick="
-                                                                          openCloudWindow();setTimeout(() => {
-                                                                        const win = document.getElementById('win-yunmishu_cloud');
-                                                                        if (win) win.style.zIndex = 2000;  // ✅ 强制前置
-                                                                      }, 80);">
-                                                                                      <img src='assets/icons/cloud_secretary.png' />
-                                                                                      <span>云秘书对日外贸评测中心</span>
-                                                                                    </div>
-                                                                                  </div>
-
-                                                                                  `;
-            padTitleBarTouch(win, titleBar);
-            win.appendChild(titleBar);
-        }
-        win.appendChild(content);
-        document.body.appendChild(win);
-        bindWindowBehavior(win);
-        createTaskbarIcon(id, title, iconUrl);
-
-        return;
-    }
-    if (document.getElementById('win-' + id)) return;
-    const win = document.createElement('div');
-    win.className = type ? `window ${type}` : 'window';
-    win.id = 'win-' + id;
-    win.style.position = 'absolute';
-    win.style.top = '120px';
-    win.style.left = '180px';
-    win.style.width = width;
-    win.style.height = height;
-    win.style.zIndex = '1001';
-    const titleBar = document.createElement('div');
-    titleBar.className = 'window-header';
-    titleBar.innerHTML = `
-                                                                                            <div class="title"><img class="window-icon" src="${iconUrl}"> ${title}</div>
-                                                                                            <div class="buttons">
-                                                                                              <div class="button minimize" title="最小化">_</div>
-                                                                                              <div class="button maximize" title="缩放">⬜</div>
-                                                                                              <div class="button close" title="关闭" onclick="document.getElementById('win-${id}').remove();closeWindow('${id}');">✕</div>
-                                                                                            </div>`;
-    //平板适配
-    padTitleBarTouch(win, titleBar);
-
-    const content = document.createElement('div');
-    content.style.height = 'calc(100% - 30px)';
-    content.style.overflow = 'auto';
-    if (useIframe) {
-        const iframe = document.createElement("iframe");
-        iframe.src = url;
-        iframe.style.width = "100%";
-        iframe.style.height = "100%";
-        iframe.style.border = "none";
-        iframe.style.borderRadius = "8px";
-        content.style.overflow = '';
-        content.innerHTML = "";
-        content.appendChild(iframe);
-
-        // ✅ 屏蔽 iframe 自身右键菜单
-        content.onload = () => {
-            try {
-                iframe.addEventListener("contextmenu", e => e.preventDefault());
-            } catch (e) {
-                // 跨域则忽略
-                console.log(e);
-
-            }
-        }
-    } else {
-        fetch(url)
-            .then(resp => resp.text())
-            .then(html => content.innerHTML = html)
-            .catch(() => content.innerHTML = '<p style="padding:1rem">加载失败：' + url + '</p>');
-    }
-
-    win.appendChild(titleBar);
-    win.appendChild(content);
-    document.body.appendChild(win);
-    updateTaskbarActive(id, true);
-    bindWindowBehavior(win);
-    createTaskbarIcon(id, title, iconUrl);
 }
 
 
@@ -920,7 +830,12 @@ function togglePowerMenu() {
         menu.style.display = "none";
     }
 }
-
+/**
+ * VUE不可，云资源使用
+ */
+function RemoveExplorer(){
+    document.querySelector(`.taskbar-app[data-id="win-explorer"]`).remove();
+}
 
 function toggleStartMenu() {
     const menu = document.getElementById("start-menu");
@@ -983,58 +898,6 @@ function showWindowContextMenu(e, winId) {
 
     menu.style.left = left + "px";
     menu.style.top = top + "px";
-}
-
-function minimizeTargetWindow() {
-    if (!currentContextTarget) return;
-
-    currentContextTarget.style.display = "none";
-
-    // ✅ 设置 taskbar 图标为非激活状态
-    const winId = currentContextTarget.id;
-    const taskIcon = document.querySelector(`.taskbar-app[data-id='${winId}']`);
-    if (taskIcon) taskIcon.classList.remove("active");
-    hideWindowContextMenu();
-    updateTaskbarActive(winId.replace("win-", ""), false);
-}
-
-function maximizeTargetWindow() {
-    if (!currentContextTarget) return;
-    const winId = currentContextTarget.id;
-    // ✅ 切换最大化状态
-    currentContextTarget.classList.toggle("maximized");
-
-    // 可选：让窗口靠顶居中
-    if (currentContextTarget.classList.contains("maximized")) {
-        currentContextTarget.style.top = "0";
-        currentContextTarget.style.left = "0";
-        currentContextTarget.style.width = "100%";
-        currentContextTarget.style.height = "calc(100vh - 46px)";
-    } else {
-        // 恢复默认大小
-        currentContextTarget.style.width = "800px";
-        currentContextTarget.style.height = "600px";
-        currentContextTarget.style.left = "calc(50% - 400px)";
-        currentContextTarget.style.top = "80px";
-    }
-    currentContextTarget.style.display = "block";
-    hideWindowContextMenu();
-    updateTaskbarActive(winId.replace("win-", ""), true);
-}
-
-function closeTargetWindow() {
-    if (!currentContextTarget) return;
-
-    currentContextTarget.remove();
-
-    // ✅ 同步删除任务栏图标
-    const winId = currentContextTarget.id;
-    const taskIcon = document.querySelector(`.taskbar-app[data-id='${winId}']`);
-    if (taskIcon) taskIcon.remove();
-
-    currentContextTarget = null;
-
-    hideWindowContextMenu();
 }
 
 function hideWindowContextMenu() {
@@ -1265,15 +1128,4 @@ function logout() {
 }
 function deleteCookie(name) {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-}
-
-
-function removeTaskbarIcon(winId) {
-  const icon = document.querySelector(`.taskbar-app[data-id="${winId}"]`);
-  if (icon) {
-    icon.remove();
-    console.log("已移除任务栏图标：", winId);
-  } else {
-    console.warn("未找到图标：", winId);
-  }
 }

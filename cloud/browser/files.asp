@@ -40,8 +40,8 @@ If IsEmpty(username) Or username = "" Then
     if (win) {
       const winId = 'win-explorer';
             // ✅ 在移除之前，通知父页面先删除任务栏图标
-          if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
-            window.parent.removeTaskbarIcon(winId);
+          if (window.parent && typeof window.parent.RemoveExplorer === 'function') {
+            window.parent.RemoveExplorer(winId);
           }
       win.remove();
     }

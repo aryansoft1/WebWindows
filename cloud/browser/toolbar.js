@@ -293,6 +293,7 @@ function openSelected() {
     alert("这是文件，尚未实现打开方式。");
   }
 }
+
 // assets/js/files-init.js
 
 function initFileManager() {
@@ -300,11 +301,19 @@ function initFileManager() {
   if (!userJson) {
     showLoginOverlayAndClose("请先登录");
     setTimeout(() => {
-      const win = window.frameElement?.closest('.window');
-      if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
-          window.parent.removeTaskbarIcon("win-explorer");
+      // 取当前窗口 id（优先从包裹它的 .window 元素上拿）
+      const winEl = window.frameElement?.closest('.window');
+      const rawId = winEl?.id?.replace(/^win-/, '') || 'explorer';
+      console.log(window.top.document.querySelector(`.taskbar-app[data-id="win-explorer"]`))
+      
+      // ✅ 正确的函数类型判断
+      if (typeof window.parent?.closeWindow === 'function') {
+        window.parent.closeWindow(rawId);                // 让顶层负责关闭：会同步移除任务栏图标
+        return;
       }
-      if (win) win.remove();
+      parent.document.top.RemoveExplorer();
+      // 兜底：如果还没挂上全局 API（极端时序），至少先把 DOM 移除，避免留空窗
+      if (winEl) winEl.remove();
     }, 1000);
     return;
   }
@@ -312,6 +321,7 @@ function initFileManager() {
   try {
     const user = JSON.parse(userJson);
     const username = user.username || "unknown";
+    updateDiskInfo();
     window.rootPath = `/cloud/file/${username}/`;
   } catch (e) {
     console.error("用户信息解析失败", e);
@@ -351,9 +361,6 @@ function updateDiskInfo() {
 
     })
 }
-document.addEventListener("DOMContentLoaded", function () {
-  updateDiskInfo();
-});
 function showLoginOverlayAndClose(text) {
   document.body.innerHTML = "";
   const overlay = document.createElement("div");

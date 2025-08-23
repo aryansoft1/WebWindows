@@ -6,13 +6,17 @@
         成都亚原软件有限公司-首页
     </title>
     <link href="assets/icons/logo_large.png" rel="icon" />
-    <link href="widgets/weather_time_widget.css" rel="stylesheet" />
+    <link href="dist-widget/weather-widget.css" rel="stylesheet" />
+    <link href="dist-window/window-manager-widget.css" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css">
     <link href="assets/css/context_menu.css" rel="stylesheet" />
     <link rel="stylesheet" href="assets/css/desktalk.css">
-    <link href="assets/css/main.css" rel="stylesheet" />
     <!-- Markdown 解析 + 安全清洗 + 代码高亮（CDN） -->
     <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet"/>
-    <script defer="" src="widgets/weather_time_widget_v3.js"></script>
+    <!-- 引入预编译后的 WeatherTimeWidget 组件 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="dist-widget/weather-widget.umd.min.js"></script>
+    <script src="dist-window/window-manager-widget.js"></script>
     <script defer="True" src="assets/js/main.js"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
@@ -58,49 +62,49 @@
                 </span>
             </div>
         </div>
-        <div class="icon" id="web" onclick="openWindow('web', '网站建设', 'web.html', 'assets/icons/web.png')">
+        <div class="icon" id="web" onclick="window.openWindow('web', '网站建设', 'web.html', 'assets/icons/web.png')">
             <img src="assets/icons/web.png" />
             <label>
                 网站建设
             </label>
         </div>
-        <div class="icon" id="cloud" onclick="openWindow('cloud', '云服务', 'cloud.html', 'assets/icons/cloud.png')">
+        <div class="icon" id="cloud" onclick="window.openWindow('cloud', '云服务', 'cloud.html', 'assets/icons/cloud.png')">
             <img src="assets/icons/cloud.png" />
             <label>
                 云服务
             </label>
         </div>
-        <div class="icon" id="yunmishu" onclick="openWindow('yunmishu_root', '云秘书', '', 'assets/icons/cloud_secretary.png')">
+        <div class="icon" id="yunmishu" onclick="window.openWindow('yunmishu_root', '云秘书', '', 'assets/icons/cloud_secretary.png')">
             <img src="assets/icons/cloud_secretary.png" />
             <label>
                 云秘书
             </label>
         </div>
-        <div class="icon" id="software" onclick="openWindow('software', '软件开发', 'software.html', 'assets/icons/code.png')">
+        <div class="icon" id="software" onclick="window.openWindow('software', '软件开发', 'software.html', 'assets/icons/code.png')">
             <img src="assets/icons/code.png" />
             <label>
                 软件开发
             </label>
         </div>
-        <div class="icon" id="japan" onclick="openWindow('japan', '对日外包', 'japan.html', 'assets/icons/japan.png')">
+        <div class="icon" id="japan" onclick="window.openWindow('japan', '对日外包', 'japan.html', 'assets/icons/japan.png')">
             <img src="assets/icons/japan.png" />
             <label>
                 对日外包
             </label>
         </div>
-        <div class="icon" id="news" onclick="openWindow('news', '新闻中心', 'news.html', 'assets/icons/news.png', true ,'', '820px')">
+        <div class="icon" id="news" onclick="window.openWindow('news', '新闻中心', 'news.html', 'assets/icons/news.png', true ,'', '820px')">
             <img src="assets/icons/news.png" />
             <label>
                 新闻中心
             </label>
         </div>
-        <div class="icon" id="contact" onclick="openWindow('contact', '联系我们', 'contact.html', 'assets/icons/contact.png')">
+        <div class="icon" id="contact" onclick="window.openWindow('contact', '联系我们', 'contact.html', 'assets/icons/contact.png')">
             <img src="assets/icons/contact.png" />
             <label>
                 联系我们
             </label>
         </div>
-        <div class="icon no-auto" id="sheeteditor" onclick="openWindow('SheetEditor', 'Worker SheetEditor' , 'worker_SheetCreater.html', 'assets/icons/sheeteditor.png', true)">
+        <div class="icon no-auto" id="sheeteditor" onclick="window.openWindow('SheetEditor', 'Worker SheetEditor' , 'worker_SheetCreater.html', 'assets/icons/sheeteditor.png', true)">
             <img src="assets/icons/sheeteditor.png" />
             <label>Sheet Editor</label>
         </div>
@@ -125,27 +129,9 @@
 
     </div>
     <!-- Weather & Time Widget -->
-    <div class="weather-widget" id="weatherTimeWidget">
-        <div class="weather-header">
-            <span id="weather-location">
-                加载中...
-            </span>
-            <button id="closeWeatherBtn">
-                ✕
-            </button>
-        </div>
-        <div class="weather-info">
-            <img alt="Weather" id="weather-icon" src="https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg" />
-            <div>
-                <div id="weather-temp">
-                    --°C
-                </div>
-                <div id="weather-desc">
-                    Loading...
-                </div>
-            </div>
-        </div>
-    </div>
+   <div id="app-root">
+    <weather-time-widget></weather-time-widget>
+</div>
     <!-- 页脚版权信息 -->
     <div id="desktop-footer">
     </div>
@@ -186,7 +172,7 @@
   <span id="login-status" style="width: 8px; height: 8px; background: #cc8800; border-radius: 50%; display: inline-block; margin-left: 6px;"></span>
 </div>
     <button class="power-btn"  onclick="togglePowerMenu();" style="background: none; border: none; font-size: 16px; cursor: pointer;">
-      ⏻
+      <img src="https://cdn.jsdelivr.net/npm/@tabler/icons@2.47.0/icons/power.svg">
     </button>
   </div>
 <div id="user-popup" class="absolute bottom-14 left-3 bg-white shadow-xl border rounded-md w-40 p-2 hidden z-50">
@@ -197,47 +183,47 @@
 </div>
 
         <ul>
-            <li onclick="openWindow('explorer','云资料', 'cloud/browser/files.asp', 'assets/icons/explorer.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('explorer','云资料', 'cloud/browser/files.asp', 'assets/icons/explorer.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
                 <img alt="云资料" src="assets/icons/explorer.png" />
                 <span>
                     云资料
                 </span>
             </li>
-            <li onclick="openWindow('aplay','傲映(APlay)', 'aplay.html', 'assets/icons/aplay.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('aplay','傲映(APlay)', 'aplay.html', 'assets/icons/aplay.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
                 <img src="assets/icons/aplay.png">
                 <span>傲映(APlay)</span>
             </li>
-            <li onclick="openWindow('sysinfo', '系统信息', 'sysinfo.html', 'assets/icons/sysinfo.png', true, '', '700px', '705px');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('sysinfo', '系统信息', 'sysinfo.html', 'assets/icons/sysinfo.png', true, '', '700px', '705px');document.getElementById('start-menu').style.display='none'">
                 <img alt="系统信息" src="assets/icons/sysinfo.png" />
                 <span>
                     系统信息
                 </span>
             </li>
-            <li onclick="openWindow('yunmishu_root', '云秘书', '', 'assets/icons/cloud_secretary.png');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('yunmishu_root', '云秘书', '', 'assets/icons/cloud_secretary.png');document.getElementById('start-menu').style.display='none'">
                 <img alt="云秘书" src="assets/icons/cloud_secretary.png" />
                 <span>
                     云秘书
                 </span>
             </li>
-            <li onclick="openWindow('edge', '浏览器', 'edge.html', 'assets/icons/edge.png');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('edge', '浏览器', 'edge.html', 'assets/icons/edge.png');document.getElementById('start-menu').style.display='none'">
                 <img alt="浏览器" src="assets/icons/edge.png" />
                 <span>
                     浏览器
                 </span>
             </li>
-            <li onclick="openWindow('mail', '邮件', 'mail.html', 'assets/icons/mail.png');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('mail', '邮件', 'mail.html', 'assets/icons/mail.png');document.getElementById('start-menu').style.display='none'">
                 <img alt="邮件" src="assets/icons/mail.png" />
                 <span>
                     邮件
                 </span>
             </li>
-            <li onclick="openWindow('calendar', '日历', 'calendar.html', 'assets/icons/calendar.png');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('calendar', '日历', 'calendar.html', 'assets/icons/calendar.png');document.getElementById('start-menu').style.display='none'">
                 <img alt="日历" src="assets/icons/calendar.png" />
                 <span>
                     日历
                 </span>
             </li>
-            <li onclick="openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png',true);document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png',true);document.getElementById('start-menu').style.display='none'">
                 <img alt="设置" src="assets/icons/settings.png" />
                 <span>
                     设置
@@ -452,6 +438,9 @@
 <span class="mini"></span>
 <span class="txt"></span>
 </div>
+<!-- 窗口VUE挂载 -->
+<!-- 容器 -->
+<div id="desktop-vue-root"></div>
     <script src="assets/js/desktalk.js"></script>
     <script src="assets/js/tw.js"></script>
 </body>

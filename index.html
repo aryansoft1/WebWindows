@@ -17,6 +17,7 @@
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="dist-widget/weather-widget.umd.min.js"></script>
     <script src="dist-window/window-manager-widget.js"></script>
+    <script src="/dist-menus/desktop-menus.global.js"></script>
     <script defer="True" src="assets/js/main.js"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
@@ -135,7 +136,16 @@
     <!-- 页脚版权信息 -->
     <div id="desktop-footer">
     </div>
-    <script src="widgets/context_menu.js"></script>
+    <!-- 右键菜单 -->
+     <div id="menus-root"></div>
+    <template>
+    <div class="ww-desktop">
+        <div class="ww-wallpaper"></div>
+        <WindowManager />
+        <Taskbar />
+    </div>
+    </template>
+
     <div id="calendar-popup">
         <header>
             <button id="prev-month">

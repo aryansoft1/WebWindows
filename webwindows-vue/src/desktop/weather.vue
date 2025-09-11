@@ -41,6 +41,8 @@ export default {
       refreshTimer: null,
       isVisible: true,
       hasDragged: false,
+      offsetLat: -0.0000095, // 纠偏：纬度增量（+向北，-向南），单位：度
+      offsetLon: 0.0000215, // 纠偏：经度增量（+向东，-向西），单位：度
     };
   },
   computed:{
@@ -196,7 +198,7 @@ async fetchWeather(lat, lon) {
     this.weatherDesc = desc;
     this.weatherIcon = iconUrl;
 
-    // 二次地名标准化（保留你的逻辑）
+    // 二次地名标准化（保留你的逻辑） 
     try {
       const response = await fetch(`/api/geonames.asp?city=${encodeURIComponent(areaName)}&lang=${this.lang}`);
       if (!response.ok) throw new Error(`HTTP状态码: ${response.status}`);
@@ -286,8 +288,11 @@ async fetchWeather(lat, lon) {
     loadWeather() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => this.fetchWeather(pos.coords.latitude, pos.coords.longitude),
-          () => this.fetchWeather(0, 0)
+         (pos) => {
+          const lat = pos.coords.latitude  + (this.offsetLat || 0);
+          const lon = pos.coords.longitude + (this.offsetLon || 0);
+          this.fetchWeather(lat, lon);
+        },
         );
       } else {
         this.fetchWeather(0, 0);

@@ -98,7 +98,7 @@ if (typeof window !== 'undefined') {
 
 ;// external {"commonjs":"vue","commonjs2":"vue","root":"Vue"}
 const external_commonjs_vue_commonjs2_vue_root_Vue_namespaceObject = require("vue");
-;// ./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./webwindows-vue/src/components/weather.vue?vue&type=template&id=c8ebc556&scoped=true
+;// ./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./webwindows-vue/src/desktop/weather.vue?vue&type=template&id=632e4216&scoped=true
 
 
 const _hoisted_1 = { class: "weather-header" }
@@ -147,9 +147,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     ])
   ], 36))
 }
-;// ./webwindows-vue/src/components/weather.vue?vue&type=template&id=c8ebc556&scoped=true
+;// ./webwindows-vue/src/desktop/weather.vue?vue&type=template&id=632e4216&scoped=true
 
-;// ./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./webwindows-vue/src/components/weather.vue?vue&type=script&lang=js
+;// ./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./webwindows-vue/src/desktop/weather.vue?vue&type=script&lang=js
 
 /* harmony default export */ const weathervue_type_script_lang_js = ({
   name: "WeatherTimeWidget",
@@ -167,6 +167,8 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       refreshTimer: null,
       isVisible: true,
       hasDragged: false,
+      offsetLat: -0.0000095, // 纠偏：纬度增量（+向北，-向南），单位：度
+      offsetLon: 0.0000215, // 纠偏：经度增量（+向东，-向西），单位：度
     };
   },
   computed:{
@@ -322,7 +324,7 @@ async fetchWeather(lat, lon) {
     this.weatherDesc = desc;
     this.weatherIcon = iconUrl;
 
-    // 二次地名标准化（保留你的逻辑）
+    // 二次地名标准化（保留你的逻辑） 
     try {
       const response = await fetch(`/api/geonames.asp?city=${encodeURIComponent(areaName)}&lang=${this.lang}`);
       if (!response.ok) throw new Error(`HTTP状态码: ${response.status}`);
@@ -412,8 +414,11 @@ async fetchWeather(lat, lon) {
     loadWeather() {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          (pos) => this.fetchWeather(pos.coords.latitude, pos.coords.longitude),
-          () => this.fetchWeather(0, 0)
+         (pos) => {
+          const lat = pos.coords.latitude  + (this.offsetLat || 0);
+          const lon = pos.coords.longitude + (this.offsetLon || 0);
+          this.fetchWeather(lat, lon);
+        },
         );
       } else {
         this.fetchWeather(0, 0);
@@ -490,16 +495,16 @@ async fetchWeather(lat, lon) {
   },
 });
 
-;// ./webwindows-vue/src/components/weather.vue?vue&type=script&lang=js
+;// ./webwindows-vue/src/desktop/weather.vue?vue&type=script&lang=js
  
-;// ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-12.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./webwindows-vue/src/components/weather.vue?vue&type=style&index=0&id=c8ebc556&scoped=true&lang=css
+;// ./node_modules/mini-css-extract-plugin/dist/loader.js??clonedRuleSet-12.use[0]!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-12.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-12.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./webwindows-vue/src/desktop/weather.vue?vue&type=style&index=0&id=632e4216&scoped=true&lang=css
 // extracted by mini-css-extract-plugin
 
-;// ./webwindows-vue/src/components/weather.vue?vue&type=style&index=0&id=c8ebc556&scoped=true&lang=css
+;// ./webwindows-vue/src/desktop/weather.vue?vue&type=style&index=0&id=632e4216&scoped=true&lang=css
 
 // EXTERNAL MODULE: ./node_modules/vue-loader/dist/exportHelper.js
 var exportHelper = __webpack_require__(262);
-;// ./webwindows-vue/src/components/weather.vue
+;// ./webwindows-vue/src/desktop/weather.vue
 
 
 
@@ -507,7 +512,7 @@ var exportHelper = __webpack_require__(262);
 ;
 
 
-const __exports__ = /*#__PURE__*/(0,exportHelper/* default */.A)(weathervue_type_script_lang_js, [['render',render],['__scopeId',"data-v-c8ebc556"]])
+const __exports__ = /*#__PURE__*/(0,exportHelper/* default */.A)(weathervue_type_script_lang_js, [['render',render],['__scopeId',"data-v-632e4216"]])
 
 /* harmony default export */ const weather = (__exports__);
 ;// ./node_modules/@vue/cli-service/lib/commands/build/entry-lib.js

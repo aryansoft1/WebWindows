@@ -1129,3 +1129,8 @@ function logout() {
 function deleteCookie(name) {
   document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 }
+
+window.addEventListener('DOMContentLoaded', function () {
+    // 可不传容器，内部会 teleport 到 body；需要可传选择器：DesktopMenusWidget.mount('#menus-root')
+    DesktopMenusWidget.mount('#menus-root');
+});

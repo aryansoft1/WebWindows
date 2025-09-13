@@ -1,23 +1,27 @@
-// vite.config.js
+// vite.weather.config.js
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [vue()],
   build: {
+    outDir: 'dist-weather',
     lib: {
-      // 入口就是你的组件 SFC
-      entry: 'src/desktop/WeatherTimeWidget.vue',
-      name: 'WeatherTimeWidget',                  // IIFE 全局变量名：window.WeatherTimeWidget
-      formats: ['iife', 'es'],                    // 导出两种格式
-      fileName: (format) => format === 'iife' ? 'weather-widget.global' : 'weather-widget.es'
+      entry: resolve(__dirname, 'src/desktop/weather.vue'),
+      name: 'WeatherTimeWidget',
+      formats: ['umd','iife'],                 // 需要哪种就保留哪种
+      fileName: (format) => format === 'umd'
+        ? 'weather-widget.umd.js'             // ← 显式写 .js
+        : 'weather-widget.global.js',         // ← 显式写 .js
+      cssFileName: 'weather-widget'           // 避免 Vite7 的 CSS 命名报错
     },
     rollupOptions: {
-      // 不把 Vue 打包进去（更小），用全局 CDN 方式提供 Vue
       external: ['vue'],
-      output: {
-        globals: { vue: 'Vue' }                   // IIFE 版里，window.Vue 会被当作 vue 依赖
-      }
+      output: { globals: { vue: 'Vue' } }
     }
   }
 })

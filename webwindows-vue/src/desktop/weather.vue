@@ -247,6 +247,14 @@ async fetchWeather(lat, lon) {
     const mapped = this.mapWeatherCode ? this.mapWeatherCode(cur.weathercode) : { descEn: "Unknown", iconUrl: "https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg" };
     const descText = this.pickLocalizedDesc ? this.pickLocalizedDesc(mapped, this.lang) : (mapped.descZh || mapped.descEn);
 
+    const wwo = Number(cond.weatherCode);
+    if (Number.isFinite(wwo)) {
+      const m = this.mapWeatherCode(wwo);
+      desc    = this.pickLocalizedDesc(m, this.lang) || desc;  // 统一本地化
+      iconUrl = m.iconUrl || iconUrl;                          // 统一图标
+    }
+
+
     let areaName = "未知地点";
     if (omGeo?.results?.length) {
       const g = omGeo.results[0];
@@ -352,7 +360,30 @@ async fetchWeather(lat, lon) {
         95: o("Thunderstorm", "雷雨", "雷雨", ICON.THUNDER),
         96: o("Thunderstorm with slight hail", "雷雨伴小冰雹", "雷雨(小粒の雹)", ICON.THUNDER),
         99: o("Thunderstorm with heavy hail", "雷雨伴强冰雹", "雷雨(強い雹)", ICON.THUNDER),
+        
       };
+      // === WWO / wttr 别名（把 wttr 的 code 归并进来） ===
+      MAP[113] = o("Clear",                          "晴朗",     "快晴",            ICON.SUN);
+      MAP[116] = o("Partly cloudy",                  "多云",     "くもり時々晴れ",    ICON.PARTLY);
+      MAP[122] = o("Overcast",                       "阴天",     "くもり",            ICON.CLOUD);
+      MAP[143] = o("Mist",                           "薄雾",     "もや/霧",          ICON.FOG);
+
+      MAP[176] = o("Patchy rain nearby",             "中阵雨",   "にわか雨",          ICON.RAIN);     // ≈ WMO 81
+      MAP[263] = o("Patchy light drizzle",           "小毛毛雨", "弱い霧雨",          ICON.DRIZZLE);  // ≈ 51
+      MAP[266] = o("Light drizzle",                  "小毛毛雨", "弱い霧雨",          ICON.DRIZZLE);  // ≈ 51
+      MAP[296] = o("Light rain",                     "小雨",     "弱い雨",            ICON.RAIN);     // ≈ 61
+      MAP[299] = o("Moderate rain at times",         "中雨",     "並の雨",            ICON.RAIN);     // ≈ 63
+      MAP[302] = o("Moderate rain",                  "中雨",     "並の雨",            ICON.RAIN);     // ≈ 63
+      MAP[305] = o("Heavy rain at times",            "大雨",     "強い雨",            ICON.RAIN);     // ≈ 65
+      MAP[308] = o("Heavy rain",                     "大雨",     "強い雨",            ICON.RAIN);     // ≈ 65
+
+      MAP[353] = o("Light rain shower",              "小阵雨",   "弱いにわか雨",      ICON.RAIN);     // ≈ 80
+      MAP[356] = o("Moderate or heavy rain shower",  "强阵雨",   "激しいにわか雨",    ICON.RAIN);     // ≈ 82
+      MAP[359] = o("Torrential rain shower",         "暴雨",     "非常に激しい雨",    ICON.RAIN);     // 归强阵雨
+
+      MAP[386] = o("Patchy light rain with thunder", "雷阵雨",   "雷雨(弱い)",        ICON.THUNDER);  // ≈ 95
+      MAP[389] = o("Heavy rain with thunderstorm",   "强雷阵雨", "激しい雷雨",        ICON.THUNDER);  // ≈ 95/96
+      // （可按需要继续加其他 WWO 码）
 
       return MAP[code] || o("Unknown", "未知", "不明", ICON.CLOUD);
     },

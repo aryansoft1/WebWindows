@@ -102,4 +102,5 @@ onBeforeUnmount(() => {
 .context-menu-item { padding: 10px 20px; cursor: pointer; }
 .context-menu-item:hover { background: rgba(0,120,212,.1); font-weight: 500; }
 .context-menu-separator { height:1px; margin:4px 10px; background: rgba(0,0,0,.1); border:none; }
+#window-context-menu.show { display: block !important; }
 </style>

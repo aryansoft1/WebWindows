@@ -11,20 +11,21 @@
     <link rel="stylesheet" href="assets/css/main.css">
     <link href="assets/css/context_menu.css" rel="stylesheet" />
     <link rel="stylesheet" href="assets/css/desktalk.css">
+    <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20250913-3">
     <!-- Markdown 解析 + 安全清洗 + 代码高亮（CDN） -->
     <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet"/>
     <!-- 引入预编译后的 WeatherTimeWidget 组件 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <script src="dist-widget/weather-widget.umd.min.js"></script>
-    <script src="dist-window/window-manager-widget.js"></script>
-    <script src="/dist-menus/desktop-menus.global.js"></script>
+    <script src="dist-weather/weather-widget.umd.js?v=20250913-3"></script>
+    <script defer src="dist-window/window-manager-widget.js"></script>
+    <script defer src="/dist-menus/desktop-menus.global.js"></script>
     <script defer="True" src="assets/js/main.js"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
     <script src="https://cdn.staticfile.org/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
-<body onload="makeDesktopIconsDraggable();enterFullscreen();initUserStatus();">
+<body>
 <header>
 
     <div class="desktop">
@@ -112,7 +113,7 @@
 
     </div>
     <div class="taskbar">
-        <div id="taskbar-datetime" onclick="toggleCalendar()">
+        <div id="taskbar-datetime">
             <div id="clock-time">
                 --:--
             </div>
@@ -133,9 +134,6 @@
    <div id="app-root">
     <weather-time-widget></weather-time-widget>
 </div>
-    <!-- 页脚版权信息 -->
-    <div id="desktop-footer">
-    </div>
     <!-- 右键菜单 -->
      <div id="menus-root"></div>
     <template>
@@ -176,12 +174,12 @@
     <!-- Win11 中文开始菜单 -->
     <div id="start-menu">
         <div id="start-menu-login" style="cursor:default; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
-    <div style="display: flex; align-items: center;">
+    <div style="display: flex; align-items: center;" id="login-area">
   <img id="login-avatar" src="assets/icons/149071.png" alt="avatar" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 8px;">
   <span id="login-username">线下用户</span>
   <span id="login-status" style="width: 8px; height: 8px; background: #cc8800; border-radius: 50%; display: inline-block; margin-left: 6px;"></span>
 </div>
-    <button class="power-btn"  onclick="togglePowerMenu();" style="background: none; border: none; font-size: 16px; cursor: pointer;">
+    <button class="power-btn"  id="power-button" style="background: none; border: none; font-size: 16px; cursor: pointer;">
       <img src="https://cdn.jsdelivr.net/npm/@tabler/icons@2.47.0/icons/power.svg">
     </button>
   </div>
@@ -248,17 +246,11 @@
         </ul>
     </div>
     <div class="context-menu" id="window-context-menu" style="display:none; position:absolute; z-index:2147483648">
-        <ul>
-            <li onclick="minimizeTargetWindow();">
-                最小化
-            </li>
-            <li onclick="maximizeTargetWindow()">
-                缩放
-            </li>
-            <li onclick="closeTargetWindow()">
-                关闭
-            </li>
-        </ul>
+       <ul>
+            <li onclick="minimizeTargetWindow(document.querySelector('.window.active')?.id?.replace('win-',''))">最小化</li>
+            <li onclick="maximizeTargetWindow(document.querySelector('.window.active')?.id?.replace('win-',''))">缩放</li>
+            <li onclick="closeTargetWindow(document.querySelector('.window.active')?.id?.replace('win-',''))">关闭</li>
+       </ul>
     </div>
     <button aria-controls="presence-sheet" aria-expanded="false" class="btn primary" id="fab" title="DeskTalk 面板">DeskTalk</button>
 <div aria-hidden="true" id="overlay-mask"></div>
@@ -450,7 +442,7 @@
 </div>
 <!-- 窗口VUE挂载 -->
 <!-- 容器 -->
-<div id="desktop-vue-root"></div>
+<div id="window-root"></div>
     <script src="assets/js/desktalk.js"></script>
     <script src="assets/js/tw.js"></script>
 </body>

@@ -11,4 +11,5 @@
 
 <script setup lang="ts">
 import DesktopContextMenus from './DesktopContextMenus.vue'  // ✅ 同目录相对导入
+onMounted(() => { bindLegacyWindowBehaviors() })
 </script>

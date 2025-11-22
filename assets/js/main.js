@@ -1,155 +1,125 @@
-document.addEventListener("DOMContentLoaded", () => {
-    /**VUE加载--天气 */
-    (function () {
-        // 1) 诊断：看看全局导出的库对象叫什么
-        const lib =
-        window['weather-widget'] ||
-        window.weatherWidget ||
-        window.WeatherWidget ||
-        null;
-        console.log('[weather-widget] detected lib =', lib);
+// main.js —— 仅负责把预编译的 IIFE/UMD 小部件挂载到页面
+// 依赖：index.html 里已引入
+//  1) vue.global.prod.js
+//  2) dist-desktop/desktop-menus.global.js  或  desktop-menus.umd.js（二选一）
+//  3) dist-weather/weather-widget.global.js 或  weather-widget.umd.js（二选一）
 
-        if (!lib) {
-        console.error('[weather-widget] 未找到 UMD 全局变量。确认 --name 与这里匹配，并检查 dist-widget/weather-widget.umd.min.js 是否加载成功。');
-        return;
-        }
+(function () {
+  function ensureEl(id) {
+    var el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = id;
+      document.body.appendChild(el);
+    }
+    return el;
+  }
 
-        // Vue 3 全局在 window.Vue（CDN 引入），Vue 2 也是 window.Vue（构造函数不同）
-        const V = window.Vue;
-        if (!V) {
-        console.error('[weather-widget] 未检测到 window.Vue（请确保已引入 https://unpkg.com/vue 的 CDN）。');
-        return;
-        }
+  function mountDesktopMenus() {
+    if (!window.DesktopMenusWidget || !window.Vue) {
+      console.warn('[DesktopMenusWidget] 未加载到全局，跳过挂载');
+      return;
+    }
+    // 避免二次挂载
+    if (document.getElementById('ww-desktop-menus-root')?.__mounted) return;
 
-        // 2) 判断是 Vue 3 还是 Vue 2
-        const isVue3 = !!V.createApp;
+    var root = ensureEl('ww-desktop-menus-root');
 
-        // 3) 兼容组件导出 / 插件导出
-        const CompOrPlugin = lib.default || lib;
-        const isPlugin = CompOrPlugin && typeof CompOrPlugin.install === 'function';
+    try {
+      // 可按需把旧逻辑里的动作桥接过来
+      window.DesktopMenusWidget.mount(root, {
+        ignoreSelectors: ['.window .buttons', '.taskbar', '#start-menu'],
+        // 右键菜单点选回调（示例）
+        onCommand(cmd) {
+          switch (cmd) {
+            case 'refresh':
+              if (window.refreshDesktop) window.refreshDesktop();
+              break;
+            case 'settings':
+              if (window.openWindow)
+                window.openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png', true);
+              break;
+            // 其它命令根据你菜单项继续补
+          }
+        },
+      });
+      root.__mounted = true;
+    } catch (e) {
+      console.error('[DesktopMenusWidget] 挂载失败：', e);
+    }
+  }
 
-        if (isVue3) {
-        // ---- Vue 3 注册 ----
-        const app = V.createApp({});
-
-        if (isPlugin) {
-            app.use(CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue3 插件 use()');
-        } else {
-            // 组件对象：用 kebab 名称注册（与模板里的 <weather-time-widget> 对应）
-            app.component('weather-time-widget', CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue3 组件 component()');
-        }
-
-        const mountTarget = document.querySelector('#app-root') || document.body;
-        app.mount(mountTarget);
-        console.log('[weather-widget] Vue3 app mounted on', mountTarget);
-
-        } else {
-        // ---- Vue 2 注册 ----
-        if (isPlugin) {
-            V.use(CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue2 插件 use()');
-        } else if (CompOrPlugin && CompOrPlugin.name) {
-            V.component(CompOrPlugin.name, CompOrPlugin);
-            // 同时确保我们模板用的标签名也可用：
-            V.component('weather-time-widget', CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue2 组件 component()');
-        } else {
-            console.error('[weather-widget] 未识别的导出（既不是插件也不是组件对象）。');
-        }
-
-        new V({
-            el: document.querySelector('#app-root') || document.body
-        });
-        console.log('[weather-widget] Vue2 app mounted');
-        }
-    })();
-
-    /** 窗口 */
-    try { window.WindowManagerWidget && window.WindowManagerWidget.unmount && window.WindowManagerWidget.unmount() } catch(e){}
-    try { WindowManagerWidget.mount('#desktop-vue-root'); } catch (e) { console.error(e); }
-    // ✅ 判断是否已经加载过，若已加载过则不再显示启动动画
-    if (sessionStorage.getItem("booted") === "yes") {
-        const root = document.getElementById("desktop-root");
-        if (root) root.style.opacity = "1";
-        // 不执行动画加载逻辑
+  function mountWeather() {
+    const Vue = window.Vue;
+    const mod = window.WeatherTimeWidget; // 来自 weather-widget.umd.js 或 .global.js
+    if (!Vue || !mod) {
+        console.warn('[WeatherTimeWidget] 未加载到全局，或 Vue 未就绪，跳过挂载');
         return;
     }
-    sessionStorage.setItem("booted", "yes"); // 标记已加载
-    const loader = document.createElement('div');
-    loader.id = 'boot-loader';
-    loader.style.cssText = `
-                    position: fixed;
-                    inset: 0;
-                    background: linear-gradient(to bottom right, #004BA0, #042A57);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 999999;
-                    font-family: 'Segoe UI', sans-serif;
-                    color: white;
-                `;
-    loader.innerHTML = `
-                    <img src="assets/icons/ARYANSOFT-logo1-01.gif" style="width: 120px; height: 120px; margin-bottom: 20px;">
-                    <div style="font-size: 15px; opacity: 0.85;">正在启动WebWindows...</div>
-                    <div style="
-                      width: 44px;
-                      height: 44px;
-                      border: 4px solid rgba(255, 255, 255, 0.2);
-                      border-top: 4px solid white;
-                      border-radius: 50%;
-                      animation: spin 1s linear infinite;
-                      margin-top: 14px;
-                    "></div>
-                    <style>
-                      @keyframes spin { to { transform: rotate(360deg); } }
-                    </style>
-                `;
-    document.body.appendChild(loader);
-
-    // 动画延迟后淡出 boot-loader，桌面淡入
-    setTimeout(() => {
-        loader.style.transition = "opacity 0.5s ease";
-        loader.style.opacity = "0";
-        setTimeout(() => {
-            loader.remove();
-            const root = document.getElementById("desktop-root");
-            if (root) {
-                root.style.opacity = "1"; // 淡入桌面
-            }
-        }, 500);
-    }, 1800);
-});
-
-
-document.querySelectorAll('.taskbar-app').forEach(el => {
-    el.style.backgroundColor = 'rgba(255,255,255,0.1)';
-});
-
-
-function updateClock() {
-    const elTime = document.getElementById('clock-time');
-    const elDate = document.getElementById('clock-date');
-    const now = new Date();
-
-    if (elTime) {
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        elTime.textContent = `${hh}:${mm}`;
+    // 兼容 UMD/IIFE 两种导出：可能是组件，也可能是 {default: 组件}
+    const Comp = mod.default || mod;
+    if (!Comp) {
+        console.error('[WeatherTimeWidget] 未找到组件导出：', mod);
+        return;
     }
 
-    if (elDate) {
-        const yyyy = now.getFullYear();
-        const mo = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        elDate.textContent = `${yyyy}/${mo}/${dd}`;
+    const root = ensureEl('ww-weather-root');
+    if (root.__app) return; // 避免重复挂载
+
+    try {
+        const app = Vue.createApp(Comp, /* props 可传这里 */ {});
+        app.mount(root);
+        root.__app = app;
+        root.__mounted = true;
+    } catch (e) {
+        console.error('[WeatherTimeWidget] 挂载失败：', e);
     }
 }
-setInterval(updateClock, 1000);
-updateClock();
-async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
+
+  document.addEventListener('DOMContentLoaded', function () {
+    mountDesktopMenus();         // 再挂桌面/窗口右键菜单（Vue 版）
+    mountWeather();              // 再挂天气部件（Vue 版）
+  });
+})();
+
+// 在文档就绪后，等一帧再调用（保证前面的 defer 脚本已执行）
+document.addEventListener('DOMContentLoaded', () => {
+   updateTaskbarClock(true);
+  requestAnimationFrame(() => {
+    // 1) 用户状态初始化：优先用 Vue 暴露的，再退回到全局同名
+    (function initUser() {
+      const call = window.WW?.ui?.initUserStatus || window.initUserStatus;
+      if (typeof call === 'function') call();
+    })();
+
+    // 2) 桌面图标拖拽：如果旧函数存在就调用一次
+    if (typeof window.makeDesktopIconsDraggable === 'function') {
+      window.makeDesktopIconsDraggable();
+    }
+
+    // 3) 全屏：只触发你已有的实现（如果存在）
+    // if (typeof window.enterFullscreen === 'function') {
+    //   window.enterFullscreen();
+    // }
+
+    // -------------------------------------
+    // 4) 动态绑定 用户菜单
+    // -------------------------------------
+    const userArea = document.getElementById('login-area');
+    // 注意：使用 window.toggleUserPopup 引用被 Vue 导出的函数
+    if (userArea && window.toggleUserPopup) { 
+        userArea.addEventListener('click', window.toggleUserPopup);
+    }
+
+    // -------------------------------------
+    // 5) 动态绑定 电源按钮
+    // -------------------------------------
+    const powerBtn = document.getElementById('power-button'); // 假设 ID
+    if (powerBtn && window.togglePowerMenu) {
+        powerBtn.addEventListener('click', window.togglePowerMenu);
+    }
+  });
+  async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
     const cnHolidayMap = await getChinaHolidayMap(year); // 来自 timor.tech API
     const localHolidayMap = await getLocalHolidayMap(year, userCountryCode); // Nager.Date
 
@@ -330,807 +300,47 @@ document.addEventListener('click', function (e) {
     }
 });
 
+  /**
+ * 任务栏时钟功能
+ * @param {boolean} initialRun - 是否是首次运行（用于启动定时器）
+ */
+function updateTaskbarClock(initialRun = false) {
+    const timeEl = document.getElementById('clock-time');
+    const dateEl = document.getElementById('clock-date');
 
-function toggleCalendar() {
-    const calendar = document.getElementById('calendar');
-    if (calendar) {
-        calendar.style.display = (calendar.style.display === 'block') ? 'none' : 'block';
-    }
-}
-
-
-window.onload = function () {
-    const popup = document.getElementById('user-popup');
-    if (sessionStorage.getItem('webwindows_user_nickname') != '' && sessionStorage.getItem('webwindows_user_nickname') != null) {
-    popup.innerHTML = `
-        <div class="text-sm text-center mb-2 text-gray-700">欢迎你：${sessionStorage.getItem('webwindows_user_nickname')}</div>
-        <div class="text-sm text-center mb-2 text-gray-700">角色：普通用户</div>
-        <button onclick="logout()" class="...">注销</button>
-    `;
-    } else {
-    popup.style.display = 'none'; // 或 hidden
-    }
-    document.getElementById('login-username').addEventListener('click', () => {
-            const username = sessionStorage.getItem('webwindows_user');
-            
-            const menu = document.getElementById("power-menu");
-            menu.style.display = "none"
-
-            if (username != null && username!='') {
-                showUserMenu(); // 显示用户菜单
-            } else {
-                window.openWindow('login', '登录', 'login.html', 'https://cdn-icons-png.flaticon.com/512/747/747376.png', true, 'login-type');
-                document.getElementById('start-menu').style.display = 'none';
-            }
-    });
-    document.querySelectorAll('.window').forEach(win => {
-        const header = win.querySelector('.window-header');
-        if (!header) return;
-
-        let isDragging = false, offsetX = 0, offsetY = 0;
-        let isMaximized = false;
-        let prev = {};
-
-        header.addEventListener('mousedown', e => {
-            isDragging = true;
-            win.addEventListener('click', e => {
-                hideWindowContextMenu();
-            });
-            offsetX = e.clientX - win.offsetLeft;
-            offsetY = e.clientY - win.offsetTop;
-            win.style.zIndex = 9998; // bring to front
-        });
-
-        document.addEventListener('mousemove', e => {
-            if (!isDragging) return;
-            let x = e.clientX - offsetX;
-            let y = e.clientY - offsetY;
-            hideWindowContextMenu();
-            const snap = 20;
-            const maxW = window.innerWidth - win.offsetWidth;
-            const maxH = window.innerHeight - win.offsetHeight;
-            if (Math.abs(x) < snap) x = 0;
-            if (Math.abs(x - maxW) < snap) x = maxW;
-            if (Math.abs(y) < snap) y = 0;
-            if (Math.abs(y - maxH) < snap) y = maxH;
-
-            win.style.left = x + 'px';
-            win.style.top = y + 'px';
-        });
-
-        document.addEventListener('mouseup', () => isDragging = false);
-
-        header.addEventListener('dblclick', () => {
-            if (!isMaximized) {
-                prev = {
-                    top: win.style.top,
-                    left: win.style.left,
-                    width: win.style.width,
-                    height: win.style.height
-                };
-                win.style.top = '0';
-                win.style.left = '0';
-                win.style.width = '100vw';
-                win.style.height = 'calc(100vh - 46px)';
-            } else {
-                win.style.top = prev.top;
-                win.style.left = prev.left;
-                win.style.width = prev.width;
-                win.style.height = prev.height;
-            }
-            isMaximized = !isMaximized;
-        });
-    });
-    initUserStatus();
-};
-
-
-function bindWindowBehavior(win) {
-    const header = win.querySelector('.window-header');
-    const minimizeBtn = header?.querySelector('.button.minimize');
-    const maximizeBtn = header?.querySelector('.button.maximize');
-    const closeBtn = header?.querySelector('.button.close');
-
-    let isDragging = false, offsetX = 0, offsetY = 0;
-    let isMaximized = false;
-    let prev = {};
-
-    header?.addEventListener('mousedown', e => {
-        isDragging = true;
-        offsetX = e.clientX - win.offsetLeft;
-        offsetY = e.clientY - win.offsetTop;
-        win.style.zIndex = 9998;
-    });
-
-    document.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        let x = e.clientX - offsetX;
-        let y = e.clientY - offsetY;
-        const snap = 20;
-        const maxW = window.innerWidth - win.offsetWidth;
-        const maxH = window.innerHeight - win.offsetHeight;
-        if (Math.abs(x) < snap) x = 0;
-        if (Math.abs(x - maxW) < snap) x = maxW;
-        if (Math.abs(y) < snap) y = 0;
-        if (Math.abs(y - maxH) < snap) y = maxH;
-        win.style.left = x + 'px';
-        win.style.top = y + 'px';
-    });
-
-    document.addEventListener('mouseup', () => isDragging = false);
-    header?.addEventListener('dblclick', () => toggleMaximize());
-    maximizeBtn?.addEventListener('click', () => toggleMaximize());
-    minimizeBtn?.addEventListener('click', () => {
-        win.style.display = 'none';
-        updateTaskbarActive(win.id.replace('win-', ''), false);
-        updateTaskbarActive(win.id, false);
-    });
-    closeBtn?.addEventListener('click', () => {
-        win.remove();
-        updateTaskbarActive(win.id.replace('win-', ''), false);
-        const icon = document.querySelector('.taskbar-app[data-id="' + win.id + '"]');
-        icon?.remove();
-    });
-
-    function toggleMaximize() {
-        if (!isMaximized) {
-            prev = {
-                top: win.style.top,
-                left: win.style.left,
-                width: win.style.width,
-                height: win.style.height
-            };
-            win.style.top = '0';
-            win.style.left = '0';
-            win.style.width = '100vw';
-            win.style.height = 'calc(100vh - 46px)';
-        } else {
-            win.style.top = prev.top;
-            win.style.left = prev.left;
-            win.style.width = prev.width;
-            win.style.height = prev.height;
-        }
-        isMaximized = !isMaximized;
-    }
-}
-
-
-
-
-document.querySelectorAll('.icon-tile').forEach(tile => {
-    tile.addEventListener('click', () => {
-        const id = tile.dataset.id || tile.id || Math.random().toString(36).substring(2, 8);
-        const title = tile.querySelector('label')?.innerText || '窗口';
-        const icon = tile.querySelector('img')?.src || '';
-        const href = tile.dataset.href || tile.getAttribute('data-href') || '';
-        if (href) {
-            window.openWindow(id, title, href, icon);
-        }
-    });
-});
-
-
-document.querySelectorAll('.icon').forEach(icon => {
-    if (icon.classList.contains('no-auto')) return; 
-    icon.addEventListener('click', () => {
-        const id = icon.id || Math.random().toString(36).slice(2, 8);
-        const title = icon.querySelector('label')?.innerText || '窗口';
-        const iconUrl = icon.querySelector('img')?.getAttribute('src') || 'assets/icons/default.png';
-        const onclickAttr = icon.getAttribute('onclick') || '';
-        let href = '';
-
-        // 云秘书特殊处理
-        if (id == "yunmishu") {
-            return;
-        }
-
-        const match = onclickAttr.match(/window.openWindow\([^,]+,[^,]+,\s*['"]([^'"]+)['"]/);
-        if (match) {
-            href = match[1];
-        }
-
-        window.openWindow(id, title, href, iconUrl);
-
-    });
-});
-
-
-function createTaskbarIcon(id, title, iconUrl) {
-    const existing = document.querySelector('.taskbar-app[data-id="win-' + id + '"]');
-    if (existing) return;
-    const taskbar = document.querySelector('.taskbar');
-    const icon = document.createElement('div');
-    icon.className = 'taskbar-app';
-    icon.dataset.id = 'win-' + id;
-    icon.title = title;
-    icon.style.display = 'flex';
-    icon.style.alignItems = 'center';
-    icon.style.gap = '6px';
-    icon.style.marginLeft = '6px';
-    icon.style.padding = '4px 8px';
-    icon.style.borderRadius = '6px';
-    icon.style.cursor = 'pointer';
-    icon.style.background = 'rgba(255,255,255,0.15)';
-    icon.style.color = 'white';
-    icon.style.fontSize = '12px';
-    icon.addEventListener("contextmenu", function (e) {
-        showWindowContextMenu(e, 'win-' + id);
-    });
-    document.addEventListener("click", () => {
-        document.getElementById("window-context-menu").style.display = "none";
-    });
-    const img = document.createElement('img');
-    img.src = iconUrl;
-    img.style.width = '18px';
-    img.style.height = '18px';
-    img.style.borderRadius = '4px';
-
-    const text = document.createElement('span');
-    text.textContent = title;
-
-    icon.appendChild(img);
-    icon.appendChild(text);
-    taskbar.appendChild(icon);
-    updateTaskbarActive(id, true);
-
-    icon.addEventListener('click', () => {
-        const win = document.getElementById('win-' + id);
-        if (win) {
-            const isVisible = win.style.display !== 'none';
-            win.style.display = isVisible ? 'none' : 'block';
-            updateTaskbarActive(id, !isVisible);
-            if (!isVisible) win.style.zIndex = 9998;
-        }
-    });
-}
-
-//平板窗体移动支持
-function padTitleBarTouch(win, titleBar) {
-    titleBar.addEventListener("touchstart", (e) => {
-        const win = e.target.closest(".window");
-        const touch = e.touches[0];
-        const offsetX = touch.clientX - win.offsetLeft;
-        const offsetY = touch.clientY - win.offsetTop;
-
-        function onTouchMove(e) {
-            const touch = e.touches[0];
-            win.style.left = `${touch.clientX - offsetX}px`;
-            win.style.top = `${touch.clientY - offsetY}px`;
-            e.preventDefault(); // 🔑 关键：阻止滚动，启用拖动
-        }
-
-        function onTouchEnd() {
-            document.removeEventListener("touchmove", onTouchMove);
-            document.removeEventListener("touchend", onTouchEnd);
-        }
-
-        // ⚠️ 添加 passive: false 以允许 preventDefault 生效
-        document.addEventListener("touchmove", onTouchMove, { passive: false });
-        document.addEventListener("touchend", onTouchEnd);
-    });
-
-}
-function clearAspSessionCookies() {
-  document.cookie.split(';').forEach(cookie => {
-    const name = cookie.trim().split('=')[0];
-    if (name.startsWith('ASPSESSIONID')) {
-      document.cookie = name + '=;expires=' + new Date(0).toUTCString() + ';path=/';
-    }
-  });
-}
-
-function openCloudWindow() {
-    if (document.getElementById("win-yunmishu_cloud") || document.getElementById("win-yunmishu_cloud")) {
+    if (!timeEl || !dateEl) {
+        // 元素不存在，停止运行
+        console.warn('任务栏时钟元素未找到，跳过更新。');
         return;
     }
-    const win = document.createElement("div");
-    const content = document.createElement("iframe");
-    const titleBar = document.createElement("div");
-    win.className = "window";
-    win.id = "win-yunmishu_cloud";
-    win.style.position = "absolute";
-    win.style.top = "120px";
-    win.style.left = "120px";
-    win.style.width = "600px";
-    win.style.height = "400px"
-    titleBar.className = "window-header";
-    titleBar.innerHTML = `
-                                                               <img class="window-icon" src='assets/icons/cloud_secretary.png' />
-                                                               <div class="title">云秘书对日外贸评测中心</div>
-                                                               <div class="buttons">
-                                                                 <div class="button minimize" title="最小化">_</div>
-                                                                 <div class="button maximize" title="缩放" onclick="toggleMaximizeWindow('win-yunmishu_cloud')">⬜</div>
-                                                                 <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_cloud').remove();closeWindow('${win.id}');">✕</div>
-                                                               </div>`
 
-    padTitleBarTouch(win, titleBar);
-
-    content.src = 'https://www.aryansoft.cn/jpshop/';
-    content.style.width = "100%";
-    content.style.height = 'calc(100vh - 46px)';
-    content.style.border = "none";
-
-    // ✅ 屏蔽 iframe 自身右键菜单
-    content.onload = () => {
-        try {
-            content.contentWindow.document.addEventListener("contextmenu", e => e.preventDefault());
-        } catch (e) {
-            // 跨域则忽略
-            console.log(e);
-        }
-    };
-    win.appendChild(titleBar);
-    win.appendChild(content);
-    document.body.appendChild(win);
-
-    setTimeout(() => bindWindowBehavior(win), 0);
-    setTimeout(() => {
-        toggleMaximizeWindow(win.id);
-    }, 50);
-    win.style.zIndex = "1001";
-    createTaskbarIcon("yunmishu_cloud", "云秘书对日外贸评测中心", 'assets/icons/cloud_secretary.png')
-    updateTaskbarActive(win.id, true);
-}
-
-
-function updateTaskbarActive(id, isActive) {
-    const icon = document.querySelector('.taskbar-app[data-id="win-' + id + '"]');
-    if (icon) {
-        icon.style.backgroundColor = isActive ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)';
-        icon.style.border = isActive ? '1px solid rgba(255,255,255,0.6)' : 'none';
-    }
-}
-
-function disableIframes() {
-  document.querySelectorAll("iframe").forEach(iframe => {
-    iframe.dataset.prevPointer = iframe.style.pointerEvents;
-    iframe.style.pointerEvents = "none";
-  });
-}
-
-function restoreIframes() {
-  document.querySelectorAll("iframe").forEach(iframe => {
-    iframe.style.pointerEvents = iframe.dataset.prevPointer || "";
-  });
-}
-
-(function () {
-    const directions = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
-    const attachResizers = (win) => {
-        if (win.dataset.resizable === "true") return;
-        directions.forEach(dir => {
-            const el = document.createElement("div");
-            el.className = "resizer " + dir;
-            win.appendChild(el);
-            el.addEventListener("mousedown", e => initResize(e, win, dir));
-        });
-        win.dataset.resizable = "true";
-    };
-    // main.js 更新版本：使用专用边角拖动机制进行窗口缩放（避免 iframe 卡顿）
-
-    function initWindowResize(win, cornerEl) {
-    let startX, startY, startWidth, startHeight;
-
-    cornerEl.addEventListener("mousedown", function (e) {
-        e.preventDefault();
-        startX = e.clientX;
-        startY = e.clientY;
-        startWidth = parseInt(document.defaultView.getComputedStyle(win).width, 10);
-        startHeight = parseInt(document.defaultView.getComputedStyle(win).height, 10);
-
-        document.documentElement.addEventListener("mousemove", doDrag, false);
-        document.documentElement.addEventListener("mouseup", stopDrag, false);
-    });
-
-    function doDrag(e) {
-        const newWidth = Math.max(300, startWidth + e.clientX - startX);
-        const newHeight = Math.max(200, startHeight + e.clientY - startY);
-
-        win.style.width = newWidth + "px";
-        win.style.height = newHeight + "px";
-    }
-
-    function stopDrag() {
-        document.documentElement.removeEventListener("mousemove", doDrag, false);
-        document.documentElement.removeEventListener("mouseup", stopDrag, false);
-    }
-    }
-
-    // 示例：为所有含 .window 的元素添加右下角拖动逻辑
-    window.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".window").forEach(win => {
-        let resizer = win.querySelector(".window-resize-corner");
-        if (!resizer) {
-        resizer = document.createElement("div");
-        resizer.className = "window-resize-corner";
-        Object.assign(resizer.style, {
-            position: "absolute",
-            width: "20px",
-            height: "20px",
-            right: "0",
-            bottom: "0",
-            cursor: "nwse-resize",
-            zIndex: "1000"
-        });
-        win.appendChild(resizer);
-        }
-        initWindowResize(win, resizer);
-    });
-    });
-
-    function initResize(e, win, dir) {
-        e.preventDefault();
-        disableIframes();
-        const startX = e.clientX, startY = e.clientY;
-        const startW = parseInt(window.getComputedStyle(win).width, 10);
-        const startH = parseInt(window.getComputedStyle(win).height, 10);
-        const startL = win.offsetLeft, startT = win.offsetTop;
-
-        function doDrag(e) {
-            if (dir.includes("e")) win.style.width = Math.max(300, startW + e.clientX - startX) + "px";
-            if (dir.includes("s")) win.style.height = Math.max(200, startH + e.clientY - startY) + "px";
-            if (dir.includes("w")) {
-                const newW = Math.max(300, startW - (e.clientX - startX));
-                win.style.width = newW + "px";
-                win.style.left = startL + (startW - newW) + "px";
-            }
-            if (dir.includes("n")) {
-                const newH = Math.max(200, startH - (e.clientY - startY));
-                win.style.height = newH + "px";
-                win.style.top = startT + (startH - newH) + "px";
-            }
-        }
-        
-
-        function stopDrag() {
-            document.removeEventListener("mousemove", doDrag);
-            document.removeEventListener("mouseup", stopDrag);
-            restoreIframes(); // ✅ 拖动结束，恢复 iframe
-        }
-
-        document.addEventListener("mousemove", doDrag);
-        document.addEventListener("mouseup", stopDrag);
-    }
-
-    // 初始执行
-    document.querySelectorAll('.window').forEach(attachResizers);
-
-    // 动态观察后续添加的 .window
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(m => {
-            m.addedNodes.forEach(node => {
-                if (node.classList && node.classList.contains("window")) {
-                    attachResizers(node);
-                }
-            });
-        });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-})();
-function togglePowerMenu() {
-    const menu = document.getElementById("power-menu");
-    const powerBtn = document.querySelector(".power-btn");
-
-    if (!powerBtn || !menu) return;
-    document.getElementById('user-popup').style.display = 'none';
-    const rect = powerBtn.getBoundingClientRect();
-
-    if (menu.style.display !== "block") {
-        menu.style.display = "block";
-        requestAnimationFrame(() => {
-            const menuHeight = menu.offsetHeight;
-            const menuWidth = menu.offsetWidth;
-            const centerX = rect.left + rect.width / 2 - menuWidth / 2;
-            const maxLeft = window.innerWidth - menuWidth - 10;
-
-            menu.style.left = `${Math.min(centerX, maxLeft)}px`;
-            menu.style.top = `${rect.top - menuHeight - 5}px`;
-        });
-    } else {
-        menu.style.display = "none";
-    }
-}
-/**
- * VUE不可，云资源使用
- */
-function RemoveExplorer(){
-    document.querySelector(`.taskbar-app[data-id="win-explorer"]`).remove();
-}
-
-function toggleStartMenu() {
-    const menu = document.getElementById("start-menu");
-    if (menu) {
-        menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
-    }
-}
-
-
-function bindStartMenuAutoHide(attempt = 0) {
-    const startMenu = document.getElementById("start-menu");
-    const startButton = document.querySelector(".start-button");
-    const powerMenu = document.getElementById("power-menu");
-    if (startMenu && startButton) {
-        document.addEventListener("click", function (e) {
-            if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
-                startMenu.style.display = "none";
-            }
-            if (!powerMenu.contains(e.target) && !e.target.closest(".power-btn")) {
-                powerMenu.style.display = "none";
-            }
-        });
-    } else if (attempt < 60) { // 最多尝试约 1 秒（60 帧）
-        requestAnimationFrame(() => bindStartMenuAutoHide(attempt + 1));
-    } else {
-        console.warn("start-menu 或 start-button 元素未找到，未绑定点击关闭逻辑");
-    }
-
-}
-bindStartMenuAutoHide();
-
-//任务栏右键菜单
-let currentContextTarget = null;
-
-function showWindowContextMenu(e, winId) {
-    e.preventDefault();
-
-    const menu = document.getElementById("window-context-menu");
-    currentContextTarget = document.getElementById(winId);
-    menu.style.display = "block";  // 必须先显示，才能正确获取尺寸
-
-    // 动态获取菜单宽高
-    const menuWidth = menu.offsetWidth;
-    const menuHeight = menu.offsetHeight;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    let left = e.pageX;
-    let top = e.pageY;
-
-    // 如果超出右边界
-    if (left + menuWidth > viewportWidth) {
-        left = viewportWidth - menuWidth - 8;
-    }
-
-    // 如果超出底部边界
-    if (top + menuHeight > viewportHeight) {
-        top = viewportHeight - menuHeight - 8;
-    }
-
-    menu.style.left = left + "px";
-    menu.style.top = top + "px";
-}
-
-function hideWindowContextMenu() {
-    document.getElementById("window-context-menu").style.display = "none";
-}
-function refreshDesktop() {
-    const desktop = document.querySelector(".desktop");
-
-    // 示例：重载图标内容（可以自定义你的图标加载逻辑）
-    // 先保存原始HTML结构
-    const iconsHTML = desktop.querySelector(".desktop-icons")?.innerHTML;
-
-    if (iconsHTML) {
-        // 模拟重载：清空再重新插入图标HTML
-        const iconContainer = desktop.querySelector(".desktop-icons");
-        iconContainer.innerHTML = "";
-        setTimeout(() => {
-            iconContainer.innerHTML = iconsHTML;
-        }, 100);  // 轻微延迟模拟刷新
-    }
-
-    // 可选：重新加载背景图
-    const bg = document.querySelector(".desktop-background");
-    if (bg && bg.tagName === "IMG") {
-        const src = bg.src;
-        bg.src = "";   // 清空
-        setTimeout(() => {
-            bg.src = src;  // 恢复原图
-        }, 50);
-    }
-
-    // 可选：播放一个“刷新动效”
-    desktop.classList.add("desktop-flash");
-    setTimeout(() => desktop.classList.remove("desktop-flash"), 300);
-}
-// 全局点击关闭右键菜单
-document.addEventListener("click", hideWindowContextMenu);
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    setupLanguageControl();  // ⬅️ 自动执行简繁切换（根据 localStorage.lang）
-});
-
-//关机
-function shutdownSystem() {
-    // 1. 移除所有事件监听器（推荐先解绑自定义的）
-    sessionStorage.removeItem('booted');
-    const clone = document.body.cloneNode(false); // 深度为 false，仅保留结构
-    document.body.parentNode.replaceChild(clone, document.body);
-
-    // 2. 清除所有定时器（setInterval / setTimeout）
-    let id = window.setTimeout(() => { }, 0);
-    while (id--) window.clearTimeout(id);
-    id = window.setInterval(() => { }, 0);
-    while (id--) window.clearInterval(id);
-    document.body.innerHTML = "";
-    // 3. 清除本地存储缓存（可选）
-    localStorage.clear();  // 若希望下次启动是干净的可以启用
-
-    // 4. 清除页面内容只保留黑屏动画
-    const shutdownOverlay = document.createElement("div");
-    shutdownOverlay.style.position = "fixed";
-    shutdownOverlay.style.top = 0;
-    shutdownOverlay.style.left = 0;
-    shutdownOverlay.style.width = "100vw";
-    shutdownOverlay.style.height = "100vh";
-    shutdownOverlay.style.backgroundColor = "black";
-    shutdownOverlay.style.color = "white";
-    shutdownOverlay.style.display = "flex";
-    shutdownOverlay.style.flexDirection = "column";
-    shutdownOverlay.style.justifyContent = "center";
-    shutdownOverlay.style.alignItems = "center";
-    shutdownOverlay.style.fontSize = "24px";
-    shutdownOverlay.style.zIndex = "99999";
-    shutdownOverlay.innerHTML = `
-    <div style="margin-bottom: 20px;">WebWindows 正在关机...</div>
-    <div class="loader"></div>
-`;
-
-    document.body.appendChild(shutdownOverlay);
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-            for (let registration of registrations) {
-                registration.unregister(); // 清除 PWA 缓存行为
-            }
-        });
-    }
-    // 5. 1.5秒后显示结束语，并“挂起”页面
-    setTimeout(() => {
-        shutdownOverlay.innerHTML = "<div>您已安全退出 WebWindows</div>";
-        // 将 document 内容全部置空，降低内存占用
-        document.body.innerHTML = "";
-        document.body.appendChild(shutdownOverlay);
-    }, 1500);
-
-    // 6. （可选）尝试关闭窗口
-    window.open('', '_self', '');
-    window.close();
-
-    // Android端末自动关闭
-    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
-        Capacitor.Plugins.App.exitApp();
-    }
-}
-function makeDesktopIconsDraggable() {
-    const icons = document.querySelectorAll('.desktop .icon');
-    icons.forEach(icon => {
-        icon.draggable = true;
-
-        icon.addEventListener('dragstart', e => {
-            e.dataTransfer.setData("text/plain", icon.id);
-            icon.classList.add('dragging');
-        });
-
-        icon.addEventListener('dragend', () => {
-            icon.classList.remove('dragging');
-        });
-    });
-
-    const desktop = document.querySelector('.desktop');
-    desktop.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
-
-    desktop.addEventListener('drop', e => {
-        e.preventDefault();
-        const id = e.dataTransfer.getData("text/plain");
-        const icon = document.getElementById(id);
-        if (icon) {
-            // 将图标移动到 drop 位置的“最近网格”
-            const gridX = Math.floor(e.offsetX / 116) * 116;
-            const gridY = Math.floor(e.offsetY / 116) * 116;
-            icon.style.position = 'absolute';
-            icon.style.left = gridX + 'px';
-            icon.style.top = gridY + 'px';
-            icon.style.zIndex = Date.now();
-        }
-    });
-}
-function enterFullscreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen(); // Safari
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen(); // IE11
-    }
-}
-function setWallpaperByPath(path) {
-    document.body.style.backgroundImage = `url('${path}')`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundPosition = 'center center';
-    document.body.style.backgroundAttachment = 'fixed';
-}
-document.addEventListener("DOMContentLoaded", () => {
-    // 其他已有代码...
-
-    // ✅ 加载保存的壁纸路径
-    const savedWallpaper = localStorage.getItem("selectedWallpaper");
-    if (savedWallpaper) {
-        setWallpaperByPath(savedWallpaper);
-    }
-});
-window.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-});
-function initUserStatus() {
-  console.log("initUserStatus")
-  const nameEl = document.getElementById('login-username');
-  const avatarEl = document.getElementById('login-avatar');
-  const statusDot = document.getElementById('login-status');
-
-  const username = sessionStorage.getItem('webwindows_user');
-  const nickname = sessionStorage.getItem('webwindows_user_nickname');
-  
-  if (username != '' && username != null) {
-    nameEl.textContent = nickname; 
-    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/747/747376.png";
-    statusDot.style.backgroundColor = '#44cc44';
+    const now = new Date();
     
-  } else {
-    nameEl.textContent = '线下用户';
-    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    statusDot.style.backgroundColor = '#cc8800';
-  }
-  document.getElementById("user-popup").style.display = "none";
+    // 格式化时间 (例如：12:45)
+    const timeString = now.toLocaleTimeString('zh-CN', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: false // 使用 24 小时制
+    });
+    
+    // 格式化日期 (例如：2025/11/23)
+    const dateString = now.toLocaleDateString('zh-CN', { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
+    }).replace(/\//g, '/'); // 确保格式化输出为 YYYY/MM/DD
+
+    timeEl.textContent = timeString;
+    dateEl.textContent = dateString;
+
+    // 首次运行时，设置定时器每秒更新
+    if (initialRun) {
+        // 使用 setTimeout + 递归，保证时间在秒数变化时准确同步
+        const delay = 1000 - (now.getMilliseconds() % 1000);
+        setTimeout(() => {
+            updateTaskbarClock(false); // 第一次调用后，不再设置为 initialRun
+            setInterval(updateTaskbarClock, 1000); // 启动每秒更新
+        }, delay);
+    }
 }
-function showUserMenu() {
-  const menu = document.getElementById("user-popup");
-  const btn = document.getElementById("login-username");
-
-  if (!menu || !btn) return;
-
-  menu.classList.add('show');
-}
-
-function toggleUserPopup(e) {
-  e.stopPropagation(); // 防止冒泡关闭
-  const popup = document.getElementById('user-popup');
-  popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
-}
-
-// 登录成功后绑定点击事件
-const userArea = document.getElementById('login-username');
-if (userArea) {
-  userArea.addEventListener('click', toggleUserPopup);
-}
-
-// 点击其他区域自动关闭
-document.addEventListener('click', function (e) {
-  const popup = document.getElementById('user-popup');
-  if (!popup.contains(e.target) && !document.getElementById('login-username').contains(e.target)) {
-    popup.style.display = 'none';
-  }
-});
-
-
-function logout() {
-  sessionStorage.removeItem('webwindows_user');
-  sessionStorage.removeItem('webwindows_user_nickname');
-  document.getElementById("user-popup").style.display = "none";
-  deleteCookie("webwindows_user");
-  deleteCookie("webwindows_user_nickname");
-  initUserStatus();
-}
-function deleteCookie(name) {
-  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-}
-
-window.addEventListener('DOMContentLoaded', function () {
-    // 可不传容器，内部会 teleport 到 body；需要可传选择器：DesktopMenusWidget.mount('#menus-root')
-    DesktopMenusWidget.mount('#menus-root');
 });

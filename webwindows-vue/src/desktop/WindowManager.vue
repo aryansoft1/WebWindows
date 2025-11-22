@@ -1,11 +1,11 @@
 <template>
   <!-- 空容器：不改变现有 DOM，只负责在 mounted 时挂上旧的行为 -->
-  <div class="wm-bridge" style="display:none"></div>
+  <div class="wm-bridge" style="display:none"> <Taskbar /> </div>
 </template>
 
 <script setup>
 import { onMounted, onBeforeUnmount } from 'vue'
-
+import Taskbar from './Taskbar.vue' 
 // === 平行搬运的“旧行为绑定” ===
 // 说明：这段里只“查找现有 .window”，然后按你 main.js 的旧逻辑给它们加事件。
 // 选择器/类名/按钮名保持不变；你可以把 main.js 里的对应代码块原封不动粘进来。
@@ -78,8 +78,42 @@ function bindLegacyWindowBehaviors() {
     // header.addEventListener('contextmenu', (e)=>{ ... showWindowContextMenu(e, win.id) ... })
   })
 }
+function makeDesktopIconsDraggable() {
+    const icons = document.querySelectorAll('.desktop .icon');
+    icons.forEach(icon => {
+        icon.draggable = true;
 
-onMounted(() => { bindLegacyWindowBehaviors() })
+        icon.addEventListener('dragstart', e => {
+            e.dataTransfer.setData("text/plain", icon.id);
+            icon.classList.add('dragging');
+        });
+
+        icon.addEventListener('dragend', () => {
+            icon.classList.remove('dragging');
+        });
+    });
+
+    const desktop = document.querySelector('.desktop');
+    desktop.addEventListener('dragover', e => {
+        e.preventDefault();
+    });
+
+    desktop.addEventListener('drop', e => {
+        e.preventDefault();
+        const id = e.dataTransfer.getData("text/plain");
+        const icon = document.getElementById(id);
+        if (icon) {
+            // 将图标移动到 drop 位置的“最近网格”
+            const gridX = Math.floor(e.offsetX / 116) * 116;
+            const gridY = Math.floor(e.offsetY / 116) * 116;
+            icon.style.position = 'absolute';
+            icon.style.left = gridX + 'px';
+            icon.style.top = gridY + 'px';
+            icon.style.zIndex = Date.now();
+        }
+    });
+}
+onMounted(() => { bindLegacyWindowBehaviors(), makeDesktopIconsDraggable() })
 onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 */ })
 </script>
 <style>
@@ -206,6 +240,9 @@ onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 *
   -ms-user-select: none;
 }
 
+.window-iframe{
+  height: calc(100% - 30px); overflow: auto; background: rgb(255, 255, 255);
+}
 
 .window-header img.window-icon {
   width: 16px;

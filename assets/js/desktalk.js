@@ -1144,12 +1144,11 @@ function saveReadPtr(){ localStorage.setItem(READPTR_KEY, JSON.stringify(READ_PT
 function getConvPtr(convId){ return Number(READ_PTR[convId] || 0) || 0; }
 function setConvPtr(convId, sec){ READ_PTR[convId] = Math.max(getConvPtr(convId), Number(sec)||0); saveReadPtr(); }
 
-/* ===== AI（示例） ===== */
+/* ===== AI（BigModel OpenAI 兼容接口） ===== */
 var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
-  // === AI 接入配置（chatproxy.asp / OpenAI兼容） ===
-  var AI_API_URL = '/cloud/desktalk/chatproxy.asp'; // 若不在同级目录，请改成实际路径，如 '/api/chatproxy.asp'
-  var AI_MODEL   = 'hunyuan-lite'; // 请替换为你的可用模型名
-  var aiHistory  = [{ role:'user', content:'你是“WebWindows·小讯”，回答简洁清晰，可用中文，支持少量 Markdown。公司名是成都亚原软件有限公司。小讯是桌讯的插件，桌讯是WebWindows插件，WebWindows是中国的Web操作系统'}];
+  var AI_API_URL = '/cloud/desktalk/chatproxy.asp';
+  var AI_MODEL   = 'glm-4.7-flash';
+  var aiHistory  = [{ role:'system', content:'你是“WebWindows·小讯”，回答简洁清晰，可用中文，支持少量 Markdown。公司名是成都亚原软件有限公司。小讯是桌讯的插件，桌讯是 WebWindows 插件，WebWindows 是中国的 Web 操作系统。'}];
 
   function extractAIText(data){
     try{

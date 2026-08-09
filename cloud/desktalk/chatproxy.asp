@@ -1,13 +1,15 @@
 <%@LANGUAGE="VBScript" CODEPAGE="65001"%>
 <%
 Option Explicit
+Dim DeskTalkBigModelApiKey : DeskTalkBigModelApiKey = ""
+%>
+<!--#include file="chatproxy.config.asp"-->
+<%
 Response.Charset = "utf-8"
 Response.ContentType = "application/json; charset=utf-8"
 
 Const API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
 Const API_MODEL = "glm-4.7-flash"
-Const API_KEY_ENV = "BIGMODEL_API_KEY"
-Const API_KEY_FILE = "/App_Data/bigmodel.env"
 Const MAX_REQUEST_BYTES = 1048576
 
 If Request.ServerVariables("REQUEST_METHOD") <> "POST" Then
@@ -17,7 +19,7 @@ If Request.ServerVariables("REQUEST_METHOD") <> "POST" Then
   Response.End
 End If
 
-Dim apiKey : apiKey = GetServerSecret(API_KEY_ENV)
+Dim apiKey : apiKey = Trim(DeskTalkBigModelApiKey & "")
 If Len(apiKey) = 0 Then
   Response.Status = "503 Service Unavailable"
   Response.Write "{""error"":{""message"":""AI service is not configured.""}}"
@@ -84,61 +86,6 @@ Function ForceModel(json, model)
   Else
     ForceModel = json
   End If
-End Function
-
-Function GetServerSecret(name)
-  On Error Resume Next
-  Dim value : value = Request.ServerVariables(name)
-  If Len(value) = 0 Then
-    Dim shell : Set shell = Server.CreateObject("WScript.Shell")
-    If Err.Number = 0 Then value = shell.Environment("PROCESS")(name)
-    Set shell = Nothing
-  End If
-  Err.Clear
-  If Len(value) = 0 Then
-    value = ReadSecretFile(Server.MapPath(API_KEY_FILE), name)
-  End If
-  On Error GoTo 0
-  GetServerSecret = Trim(value & "")
-End Function
-
-Function ReadSecretFile(path, name)
-  On Error Resume Next
-  ReadSecretFile = ""
-
-  Dim fso : Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  If Err.Number <> 0 Or Not fso.FileExists(path) Then
-    Err.Clear
-    Set fso = Nothing
-    Exit Function
-  End If
-
-  Dim file : Set file = fso.OpenTextFile(path, 1, False, -2)
-  If Err.Number <> 0 Then
-    Err.Clear
-    Set fso = Nothing
-    Exit Function
-  End If
-
-  Dim line, separator, keyName
-  Do Until file.AtEndOfStream
-    line = Trim(file.ReadLine)
-    If Len(line) > 0 And Left(line, 1) <> "#" Then
-      separator = InStr(1, line, "=", vbBinaryCompare)
-      If separator > 1 Then
-        keyName = Trim(Left(line, separator - 1))
-        If UCase(keyName) = UCase(name) Then
-          ReadSecretFile = Trim(Mid(line, separator + 1))
-          Exit Do
-        End If
-      End If
-    End If
-  Loop
-
-  file.Close
-  Set file = Nothing
-  Set fso = Nothing
-  Err.Clear
 End Function
 
 Sub FailProxy()

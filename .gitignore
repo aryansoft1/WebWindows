@@ -5,6 +5,5 @@ dist-weather/
 .env
 .env.*
 !.env.example
-App_Data/bigmodel.env
-App_Data/bigmodel.env.*
-!App_Data/bigmodel.env.example
+cloud/desktalk/chatproxy.config.asp
+!cloud/desktalk/chatproxy.config.example.asp

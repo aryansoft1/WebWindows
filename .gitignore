@@ -5,6 +5,6 @@ dist-weather/
 .env
 .env.*
 !.env.example
-cloud/desktalk/bigmodel.env
-cloud/desktalk/bigmodel.env.*
-!cloud/desktalk/bigmodel.env.example
+App_Data/bigmodel.env
+App_Data/bigmodel.env.*
+!App_Data/bigmodel.env.example

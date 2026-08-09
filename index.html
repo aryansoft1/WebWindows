@@ -2,67 +2,83 @@
 <html lang="zh">
 <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>
         成都亚原软件有限公司-首页
     </title>
     <link href="assets/icons/logo_large.png" rel="icon" />
     <link href="dist-widget/weather-widget.css" rel="stylesheet" />
-    <link href="dist-window/window-manager-widget.css" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/main.css">
-    <link href="assets/css/context_menu.css" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/desktalk.css">
+    <link href="dist-window/window-manager-widget.css?v=20260802-mobile-language-1" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260809-snapshot-1">
+    <link href="assets/css/context_menu.css?v=20260802-device-1" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/desktalk.css?v=20260802-locale-2">
     <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20250913-3">
     <!-- Markdown 解析 + 安全清洗 + 代码高亮（CDN） -->
     <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet"/>
     <!-- 引入预编译后的 WeatherTimeWidget 组件 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="assets/js/contextmenu-guard.js?v=20260726-3"></script>
+    <script src="assets/js/webwindows-message.js?v=20260729-1"></script>
+    <script src="assets/js/locale-region.js?v=20260802-1"></script>
+    <script defer src="assets/js/system-session.js?v=20260802-7"></script>
+    <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
+    <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
+    <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/vendor/html2canvas.min.js?v=1.4.1"></script>
+    <script defer src="assets/js/taskbar-experience.js?v=20260809-snapshot-1"></script>
     <script src="dist-weather/weather-widget.umd.js?v=20250913-3"></script>
-    <script defer src="dist-window/window-manager-widget.js"></script>
-    <script defer src="/dist-menus/desktop-menus.global.js"></script>
-    <script defer="True" src="assets/js/main.js"></script>
+    <script defer src="dist-window/window-manager-widget.js?v=20260809-device-storage-1"></script>
+    <script defer src="assets/js/app-registry.js?v=20260729-6"></script>
+    <script defer src="assets/js/function-sync.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/start-menu-functions.js?v=20260728-1"></script>
+    <script defer src="assets/js/desktop-functions.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/cloud-file-dialog.js?v=20260729-1"></script>
+    <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/resource-open.js?v=20260728-3"></script>
+    <script defer src="/dist-menus/desktop-menus.global.js?v=20260729-mobile-2"></script>
+    <script defer="True" src="assets/js/main.js?v=20260809-device-state-1"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-    <script src="https://cdn.staticfile.org/highlight.js/11.9.0/highlight.min.js"></script>
 </head>
 <body>
 <header>
 
     <div class="desktop">
-        
-        <div class="power-menu" id="power-menu" style="display:none">
-            <div class="power-item" onclick="document.getElementById('power-menu').style.display = 'none'">
+
+        <div class="power-menu" id="power-menu" style="display:none" aria-label="WebWindows 会话与设备操作">
+            <button class="power-item" type="button" data-device-operation="lock">
                 <span class="emoji">
                     🔒
                 </span>
                 <span>
-                    锁定
+                    锁定 WebWindows
                 </span>
-            </div>
-            <div class="power-item" onclick="document.getElementById('power-menu').style.display = 'none'">
+            </button>
+            <button class="power-item" type="button" data-device-operation="sleep">
                 <span class="emoji">
                     🌙
                 </span>
                 <span>
-                    休眠
+                    休眠 WebWindows 会话
                 </span>
-            </div>
-            <div class="power-item" onclick="shutdownSystem()">
+            </button>
+            <button class="power-item" type="button" data-device-operation="shutdown">
                 <span class="emoji">
                     ⏻
                 </span>
                 <span>
-                    关闭
+                    关闭 WebWindows 会话
                 </span>
-            </div>
-            <div class="power-item" onclick="sessionStorage.removeItem('booted'); location.reload()">
+            </button>
+            <button class="power-item" type="button" data-device-operation="restart">
                 <span class="emoji">
                     🔄
                 </span>
                 <span>
-                    重新启动
+                    重新启动 WebWindows
                 </span>
-            </div>
+            </button>
         </div>
         <div class="icon" id="web" onclick="window.openWindow('web', '网站建设', 'web.html', 'assets/icons/web.png')">
             <img src="assets/icons/web.png" />
@@ -94,7 +110,7 @@
                 对日外包
             </label>
         </div>
-        <div class="icon" id="news" onclick="window.openWindow('news', '新闻中心', 'news.html', 'assets/icons/news.png', true ,'', '820px')">
+        <div class="icon" id="news" data-function-id="com.aryansoft.webwindows.news" onclick="window.WebWindows.apps.launch('com.aryansoft.webwindows.news')">
             <img src="assets/icons/news.png" />
             <label>
                 新闻中心
@@ -106,9 +122,17 @@
                 联系我们
             </label>
         </div>
-        <div class="icon no-auto" id="sheeteditor" onclick="window.openWindow('SheetEditor', 'Worker SheetEditor' , 'worker_SheetCreater.html', 'assets/icons/sheeteditor.png', true)">
+        <div class="icon no-auto" id="sheeteditor" data-function-id="com.aryansoft.webwindows.sheet" onclick="window.WebWindows.apps.launch('com.aryansoft.webwindows.sheet')">
             <img src="assets/icons/sheeteditor.png" />
             <label>Sheet Editor</label>
+        </div>
+        <div class="icon no-auto" id="writeeditor" data-function-id="com.aryansoft.webwindows.write" onclick="window.WebWindows.apps.launch('com.aryansoft.webwindows.write')">
+            <img src="assets/icons/writeeditor.svg" />
+            <label>Write Editor</label>
+        </div>
+        <div class="icon no-auto" id="slideeditor" data-function-id="com.aryansoft.webwindows.slide" onclick="window.WebWindows.apps.launch('com.aryansoft.webwindows.slide')">
+            <img src="assets/icons/slideeditor.svg" />
+            <label>Slide Editor</label>
         </div>
 
     </div>
@@ -125,15 +149,33 @@
             <img alt="开始" src="assets/icons/logo_large.png" />
         </div>
         <div class="tb-btn" id="btn-desktalk" title="DeskTalk 面板（打开/收起）">
-  <img src="assets/icons/desktalk.png" width="40px" height="40px">
-  <span class="badge" id="dt-badge" hidden>1</span>
-</div>
-
+            <img src="assets/icons/desktalk.png" width="40px" height="40px">
+            <span class="badge" id="dt-badge" hidden>1</span>
+        </div>
+        <button type="button" id="task-view-button" class="task-view-button" title="任务视图" aria-label="任务视图">▦</button>
+        <div class="taskbar-right">
+            <button type="button" id="ww-ethernet-indicator" class="connectivity-indicator ethernet-indicator" title="有线网络" aria-label="有线网络" hidden>
+                <span class="ethernet-screen"></span>
+                <span class="ethernet-cable"></span>
+            </button>
+            <button type="button" id="ww-wifi-indicator" class="connectivity-indicator wifi-indicator" title="Wi-Fi" aria-label="Wi-Fi" hidden>
+                <span class="wifi-wave wave-1"></span>
+                <span class="wifi-wave wave-2"></span>
+                <span class="wifi-wave wave-3"></span>
+                <span class="wifi-dot"></span>
+            </button>
+            <button type="button" id="ww-cellular-indicator" class="connectivity-indicator cellular-indicator" title="移动网络" aria-label="移动网络" hidden>
+                <span></span><span></span><span></span><span></span>
+            </button>
+            <button type="button" id="ww-battery-indicator" class="battery-indicator" title="电池状态" aria-label="电池状态" hidden>
+                <span class="battery-indicator__body"><span class="battery-indicator__level"></span></span>
+                <span class="battery-indicator__tip"></span>
+            </button>
+            <div id="volume-btn" title="声音大小控制">
+                🔊
+            </div>
+        </div>
     </div>
-    <!-- Weather & Time Widget -->
-   <div id="app-root">
-    <weather-time-widget></weather-time-widget>
-</div>
     <!-- 右键菜单 -->
      <div id="menus-root"></div>
     <template>
@@ -184,20 +226,21 @@
     </button>
   </div>
 <div id="user-popup" class="absolute bottom-14 left-3 bg-white shadow-xl border rounded-md w-40 p-2 hidden z-50">
-  <div class="text-sm text-center mb-2 text-gray-700">admin</div>
+  <div id="user-popup-name" class="text-sm text-center mb-2 text-gray-700">未登录</div>
   <button onclick="logout()" class="w-full text-red-600 hover:text-white hover:bg-red-500 py-1 rounded">
     注销
   </button>
 </div>
 
-        <ul>
+        <div id="start-menu-functions" hidden aria-label="WebWindows 功能菜单"></div>
+        <ul id="start-menu-static-fallback" aria-label="功能菜单（兼容模式）">
             <li onclick="window.openWindow('explorer','云资料', 'cloud/browser/files.asp', 'assets/icons/explorer.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
                 <img alt="云资料" src="assets/icons/explorer.png" />
                 <span>
                     云资料
                 </span>
             </li>
-            <li onclick="window.openWindow('aplay','傲映(APlay)', 'aplay.html', 'assets/icons/aplay.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('aplay','傲映(APlay)', 'aplay.html?v=20260729-mobile-1', 'assets/icons/aplay.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
                 <img src="assets/icons/aplay.png">
                 <span>傲映(APlay)</span>
             </li>
@@ -213,28 +256,40 @@
                     云秘书
                 </span>
             </li>
-            <li onclick="window.openWindow('edge', '浏览器', 'edge.html', 'assets/icons/edge.png');document.getElementById('start-menu').style.display='none'">
-                <img alt="浏览器" src="assets/icons/edge.png" />
+            <li onclick="window.openWindow('edge', 'Dreama', 'dreama.html', 'assets/icons/dreama.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
+                <img alt="浏览器" src="assets/icons/dreama.png" />
                 <span>
-                    浏览器
+                    Dreama
                 </span>
             </li>
-            <li onclick="window.openWindow('mail', '邮件', 'mail.html', 'assets/icons/mail.png');document.getElementById('start-menu').style.display='none'">
-                <img alt="邮件" src="assets/icons/mail.png" />
+            <li onclick="document.getElementById('start-menu').style.display='none';window.openDeskTalkMailbox?.()">
+                <img alt="讯筒" src="assets/icons/mailbox.png?v=20260727-1" />
                 <span>
-                    邮件
+                    讯筒
                 </span>
             </li>
-            <li onclick="window.openWindow('calendar', '日历', 'calendar.html', 'assets/icons/calendar.png');document.getElementById('start-menu').style.display='none'">
-                <img alt="日历" src="assets/icons/calendar.png" />
+            <li onclick="openAbout();document.getElementById('start-menu').style.display='none'">
+                <img alt="认识我" src="assets/icons/logo.png" />
                 <span>
-                    日历
+                    认识我
                 </span>
             </li>
-            <li onclick="window.openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png',true);document.getElementById('start-menu').style.display='none'">
+            <li onclick="openGuide();document.getElementById('start-menu').style.display='none'">
+                <img alt="使用向导" src="assets/icons/guide.svg" />
+                <span>
+                    使用向导
+                </span>
+            </li>
+            <li onclick="window.WebWindows.apps.launch('webwindows.system.settings');document.getElementById('start-menu').style.display='none'">
                 <img alt="设置" src="assets/icons/settings.png" />
                 <span>
                     设置
+                </span>
+            </li>
+            <li onclick="window.openWindow('function-center', '功能中心', 'function-center.html?v=20260729-mobile-3', 'assets/icons/function-center.svg', true, '', '980px', '700px');document.getElementById('start-menu').style.display='none'">
+                <img alt="功能中心" src="assets/icons/function-center.svg" />
+                <span>
+                    功能中心
                 </span>
             </li>
             <li class="power-btn" >
@@ -247,9 +302,9 @@
     </div>
     <div class="context-menu" id="window-context-menu" style="display:none; position:absolute; z-index:2147483648">
        <ul>
-            <li onclick="minimizeTargetWindow(document.querySelector('.window.active')?.id?.replace('win-',''))">最小化</li>
-            <li onclick="maximizeTargetWindow(document.querySelector('.window.active')?.id?.replace('win-',''))">缩放</li>
-            <li onclick="closeTargetWindow(document.querySelector('.window.active')?.id?.replace('win-',''))">关闭</li>
+            <li onclick="minimizeTargetWindow(document.getElementById('window-context-menu').dataset.winId || document.querySelector('.window.active')?.id?.replace('win-',''))">最小化</li>
+            <li onclick="maximizeTargetWindow(document.getElementById('window-context-menu').dataset.winId || document.querySelector('.window.active')?.id?.replace('win-',''))">缩放</li>
+            <li onclick="closeTargetWindow(document.getElementById('window-context-menu').dataset.winId || document.querySelector('.window.active')?.id?.replace('win-',''))">关闭</li>
        </ul>
     </div>
     <button aria-controls="presence-sheet" aria-expanded="false" class="btn primary" id="fab" title="DeskTalk 面板">DeskTalk</button>
@@ -276,15 +331,14 @@
 <button class="btn" data-tab="reco" id="tab-btn-reco">📝推荐</button>
 <button class="btn" data-tab="friends" id="tab-btn-friends">👨‍👨‍👦好友</button>
 <button class="btn" data-tab="ai" id="tab-btn-ai">📨小讯</button>
-<button class="btn" data-tab="mailbox" id="tab-btn-mailbox">📮讯筒</button>
+<button class="btn" data-tab="mailbox" id="tab-btn-mailbox"><img class="mailbox-icon-inline" src="assets/icons/mailbox.png?v=20260727-1" alt="" aria-hidden="true">讯筒</button>
 </div>
-<!-- 新增的讯筒内容 -->
+<!-- 讯筒：桌讯内置的本地邮送中心 -->
 <div id="tab-mailbox" style="width:300px;font-family:Arial,sans-serif;">
-  <!-- 功能按钮列表 -->
   <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
     <li>
       <button class="tab-btn" data-tab="manage" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
-        <span>📮</span>
+        <span><img class="mailbox-icon-inline mailbox-icon-menu" src="assets/icons/mailbox.png?v=20260727-1" alt="" aria-hidden="true"></span>
         <span>讯筒管理</span>
       </button>
     </li>
@@ -307,6 +361,12 @@
       </button>
     </li>
     <li>
+      <button class="tab-btn" data-tab="address" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <span>⚙️</span>
+        <span>讯址设置</span>
+      </button>
+    </li>
+    <li>
       <button class="tab-btn" data-tab="trash" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
         <span>🗑️</span>
         <span>废纸篓</span>
@@ -314,40 +374,60 @@
     </li>
   </ul>
 
-  <!-- 内容区 -->
-  <div style="margin-top:8px;border:1px solid #ccc;padding:8px;min-height:150px;background:#fff;">
+  <div style="margin-top:8px;border:1px solid #ccc;padding:8px;min-height:170px;background:#fff;">
     <div class="tab-content" data-content="manage">
-      <h4>📮 讯筒管理</h4>
-      <p>这里可以展示讯筒管理信息，如新增、删除、编辑讯筒。</p>
+      <h4><img class="mailbox-icon-inline" src="assets/icons/mailbox.png?v=20260727-1" alt="" aria-hidden="true"> 讯筒管理</h4>
+      <div id="mailbox-summary" aria-live="polite"></div>
+      <p style="font-size:12px;color:#667085;line-height:1.5;margin:10px 0 0;">邮件保存在本机浏览器中。云端邮送会在同步服务接入后启用。</p>
     </div>
 
     <div class="tab-content" data-content="inbox" style="display:none;">
-      <h4>📥 邮筒内容</h4>
-      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">张三 - 项目进度更新 <span style="float:right;color:#888;font-size:12px;">10:30</span></div>
-      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer; background:#f0f8ff;">李四 - 会议纪要 <span style="float:right;color:#888;font-size:12px;">09:15</span></div>
-      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">王五 - 请查收附件 <span style="float:right;color:#888;font-size:12px;">昨天</span></div>
+      <h4>📥 邮筒内容 <button type="button" data-mail-refresh="inbox" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;cursor:pointer;">刷新</button></h4>
+      <div id="mailbox-inbox-list"></div>
     </div>
 
     <div class="tab-content" data-content="sent" style="display:none;">
-      <h4>📤 邮送记录</h4>
-      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">你发送给张三 - 回复项目计划 <span style="float:right;color:#888;font-size:12px;">08:45</span></div>
-      <div style="padding:4px 0; border-bottom:1px solid #eee; cursor:pointer;">你发送给李四 - 会议安排 <span style="float:right;color:#888;font-size:12px;">昨天</span></div>
+      <h4>📤 邮送记录 <button type="button" data-mail-refresh="sent" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;cursor:pointer;">刷新</button></h4>
+      <div id="mailbox-sent-list"></div>
     </div>
 
     <div class="tab-content" data-content="compose" style="display:none;">
       <h4>✉️ 写信</h4>
-      <form style="display:flex;flex-direction:column;gap:4px;">
-        <input type="text" placeholder="收件人" style="padding:4px;border:1px solid #ccc;">
-        <input type="text" placeholder="主题" style="padding:4px;border:1px solid #ccc;">
-        <textarea placeholder="邮件内容" rows="4" style="padding:4px;border:1px solid #ccc;"></textarea>
+      <form id="mailbox-compose-form" style="display:flex;flex-direction:column;gap:6px;">
+        <input id="mailbox-to" type="text" autocomplete="off" placeholder="收件人（桌讯用户名或邮箱）" style="padding:6px;border:1px solid #ccc;">
+        <input id="mailbox-subject" type="text" autocomplete="off" placeholder="主题" style="padding:6px;border:1px solid #ccc;">
+        <textarea id="mailbox-body" placeholder="邮件内容" rows="5" style="padding:6px;border:1px solid #ccc;resize:vertical;"></textarea>
         <button type="submit" style="padding:4px;background:#007bff;color:#fff;border:none;cursor:pointer;">发送</button>
       </form>
+      <div id="mailbox-compose-status" aria-live="polite" style="font-size:12px;margin-top:8px;"></div>
     </div>
 
     <div class="tab-content" data-content="trash" style="display:none;">
-      <h4>🗑️ 废纸篓</h4>
-      <div>已删除邮件1</div>
-      <div>已删除邮件2</div>
+      <h4>🗑️ 废纸篓 <button type="button" data-mail-refresh="trash" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;cursor:pointer;">刷新</button></h4>
+      <div id="mailbox-trash-list"></div>
+    </div>
+
+    <div class="tab-content" data-content="address" style="display:none;">
+      <h4>⚙️ 讯址设置</h4>
+      <p style="font-size:12px;color:#667085;line-height:1.5;">管理用于收发邮件的讯址。连接凭据将由讯址中心安全保存，不会保存在浏览器中。</p>
+      <div id="mailbox-address-list"></div>
+      <form id="mailbox-address-form" style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+        <select id="mailbox-address-provider" style="padding:6px;border:1px solid #ccc;"><option value="qq">QQ 邮箱</option><option value="gmail">Gmail</option></select>
+        <input id="mailbox-address-name" type="text" autocomplete="off" placeholder="显示名称，例如：我的工作讯址" style="padding:6px;border:1px solid #ccc;">
+        <input id="mailbox-address-value" type="email" autocomplete="email" placeholder="邮箱地址，例如：name@example.com" style="padding:6px;border:1px solid #ccc;">
+        <input id="mailbox-address-password" type="password" autocomplete="new-password" placeholder="邮箱授权码（仅加密保存于讯址中心）" style="padding:6px;border:1px solid #ccc;">
+        <button type="submit" style="padding:5px;background:#007bff;color:#fff;border:0;cursor:pointer;">添加讯址</button>
+      </form>
+      <div id="mailbox-address-status" aria-live="polite" style="font-size:12px;margin-top:8px;"></div>
+      <div style="border-top:1px solid #eee;margin-top:12px;padding-top:10px;">
+        <strong style="font-size:13px;">讯址中心</strong>
+        <p id="mailbox-center-status" style="font-size:12px;color:#667085;line-height:1.5;margin:5px 0 0;"></p>
+      </div>
+    </div>
+
+    <div class="tab-content" data-content="detail" style="display:none;">
+      <button id="mailbox-back" type="button" style="border:0;background:transparent;color:#1677ff;padding:0;cursor:pointer;">← 返回列表</button>
+      <div id="mailbox-detail" style="margin-top:10px;"></div>
     </div>
   </div>
 </div>
@@ -442,8 +522,129 @@
 </div>
 <!-- 窗口VUE挂载 -->
 <!-- 容器 -->
+ <!-- ================= 认识我 ================= -->
+
+<!-- ================= 弹窗 ================= -->
+<div id="about-overlay">
+  <div class="modal">
+
+    <!-- 标题 -->
+    <div class="modal-header">
+      <span>认识我 · WebWindows</span>
+      <button onclick="closeAbout()">×</button>
+    </div>
+
+    <!-- 主体 -->
+    <div class="modal-body">
+
+      <!-- 左侧 -->
+      <div class="sidebar">
+        <div class="tabAbout active" onclick="switchTabAbout(0)">我是谁</div>
+        <div class="tabAbout" onclick="switchTabAbout(1)">我能做什么</div>
+        <div class="tabAbout" onclick="switchTabAbout(2)">DeskTalk</div>
+        <div class="tabAbout" onclick="switchTabAbout(3)">云桌面</div>
+        <div class="tabAbout" onclick="switchTabAbout(4)">理念</div>
+        <div class="tabAbout" onclick="switchTabAbout(5)">我们公司</div>
+      </div>
+
+      <!-- 右侧 -->
+      <div class="content">
+
+        <!-- TAB 1 -->
+        <div class="page active">
+          <div class="center">
+            <h2>你好，我是 WebWindows</h2>
+            <p>立志成为中国第一个真正的桌面操作系统</p>
+            <p>成都亚原软件有限公司 出品</p>
+            <button onclick="switchTabAbout(1)">继续了解 →</button>
+            <button class="secondary-action" onclick="openGuide('getting-started')">打开使用向导</button>
+          </div>
+        </div>
+
+        <!-- TAB 2 -->
+        <div class="page">
+          <h2>我能做什么</h2>
+          <div class="pagecard">
+            <b>多窗口系统</b><br/>
+            像电脑一样打开和管理多个窗口
+          </div>
+          <div class="pagecard">
+            <b>云端同步</b><br/>
+            自动保存状态，换设备继续使用
+          </div>
+          <div class="pagecard">
+            <b>DeskTalk</b><br/>
+            内置交互与信息辅助能力
+          </div>
+        </div>
+
+        <!-- TAB 3 -->
+        <div class="page">
+          <h2>DeskTalk</h2>
+          <p>这是 WebWindows 的核心能力</p>
+          <p>你可以与系统交互、获取信息，甚至作为助手使用</p>
+        </div>
+
+        <!-- TAB 4 -->
+        <div class="page">
+          <h2>云桌面</h2>
+          <p>你的桌面不会消失</p>
+          <p>所有状态都会被保存</p>
+          <p>你可以在任何设备继续使用</p>
+        </div>
+
+        <!-- TAB 5（理念） -->
+        <div class="page">
+          <p>WebWindows 的出发点，并不是做一个普通的网页应用</p>
+
+          <p>在不同设备、不同系统之间，软件始终是割裂的<br>
+          但 Web，是少数可以跨越一切设备的共同标准</p>
+
+          <p>无论硬件如何变化<br>
+          无论系统如何演进<br>
+          浏览器始终存在</p>
+
+          <p>WebWindows 正是基于这一点诞生的</p>
+
+          <p>它尝试把“桌面”带到 Web 上<br>
+          让任何设备，都可以拥有统一的使用环境</p>
+
+          <p>同时，我们也希望在既有标准之外<br>
+          探索一种属于自己的系统形态</p>
+
+          <p><b>这不是一个工具，而是一种新的操作方式</b></p>
+        </div>
+
+        <div class="page">
+          <h2>我们公司</h2>
+          <p>WebWindows 由成都亚原软件有限公司持续开发。</p>
+          <p>我们关注 Web 应用、云端工作空间与跨设备使用体验。</p>
+          <button onclick="openGuide()">打开使用向导</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
 <div id="window-root"></div>
-    <script src="assets/js/desktalk.js"></script>
-    <script src="assets/js/tw.js"></script>
+<!-- WebWindows 系统浮层 -->
+<div id="ww-overlay-root">
+
+  <!-- 音量面板 -->
+  <div id="volume-panel" class="hidden">
+    <div class="panel">
+      <div class="ring" id="ring">
+        <div class="knob" id="knob"></div>
+      </div>
+      <div class="label" id="label">50%</div>
+      <input id="volume-range" class="volume-range" type="range" min="0" max="100" step="2" value="50" aria-label="WebWindows 页面音量">
+      <div class="device">声音</div>
+    </div>
+  </div>
+
+</div>
+<script src="assets/js/desktalk.js?v=20260809-ai-knowledge-1"></script>
+    <script src="assets/js/tw.js?v=20260808-device-api-1"></script>
 </body>
 </html>

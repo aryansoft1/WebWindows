@@ -413,6 +413,7 @@ if(tabBtnMailbox)tabBtnMailbox.onclick= function(){ switchTab('mailbox') };
 function openPanel(tab){
   tab = tab || 'reco';
   sheet.classList.add('show'); applyPrefs(true);
+  if (fab) fab.setAttribute('aria-expanded', 'true');
   if(tabBtnReco && tabBtnReco.style.display==='none' && tab==='reco') tab='friends';
   switchTab(tab);
   mask.style.display='block';
@@ -420,8 +421,14 @@ function openPanel(tab){
 }
 function closePanel(){
   sheet.classList.remove('show'); hideProfile();
+  if (fab) fab.setAttribute('aria-expanded', 'false');
   if(!(chat && chat.classList.contains('show'))) mask.style.display='none';
 }
+// Public desktop entry point for the Start menu's 邮件 item.  Mail lives in
+// DeskTalk's 讯筒 instead of the unfinished standalone mail prototype.
+window.openDeskTalkMailbox = function(){
+  openPanel('mailbox');
+};
 if(fab)  fab.onclick  = function(){ openPanel(prefs.hide_reco?'friends':'reco') };
 if(xBtn) xBtn.onclick = function(){ closePanel() };
 
@@ -435,6 +442,7 @@ document.addEventListener('click', function(e){
   // 任务栏按钮（白名单）
   const btn      = document.querySelector('#btn-desktalk');
   const isTaskbar = !!(btn && (target === btn || (target.closest && target.closest('#btn-desktalk'))));
+  const isFab = !!(fab && (target === fab || (target.closest && target.closest('#fab'))));
 
   // 是否在右侧面板内
   const inSheet  = !!(sheet && (sheet.contains(target) || (target.closest && target.closest('#presence-sheet'))));
@@ -443,7 +451,7 @@ document.addEventListener('click', function(e){
                                  (target.closest && target.closest('#chat'))));
 
   // —— 只要点击在“非面板区域”，且不是任务栏按钮、且不在聊天窗里 → 关闭面板
-  if (sheet && sheet.classList.contains('show') && !inSheet && !isTaskbar && !inChat) {
+  if (sheet && sheet.classList.contains('show') && !inSheet && !isTaskbar && !isFab && !inChat) {
     closePanel();
   }
 
@@ -478,7 +486,17 @@ if(chkUndisc){ chkUndisc.checked=!!prefs.undiscoverable; chkUndisc.addEventListe
 /* ===== 昵称弹窗 ===== */
 var modal=$('#profile-modal'), modalName=$('#modal-name'), modalColor=$('#modal-color');
 var btnRand=$('#modal-rand'), btnSave=$('#modal-save'), btnCancel=$('#modal-cancel'), mePill=$('#me-pill'), prefSave=$('#pref-name-save');
+function closeProfileModal(){
+  if(modal) modal.style.display='none';
+}
 if(btnRand) btnRand.onclick=function(){ modalColor.style.background = randColor() };
+if(btnCancel) btnCancel.onclick=closeProfileModal;
+if(modal) modal.addEventListener('click',function(e){
+  if(e.target===modal) closeProfileModal();
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape' && modal && modal.style.display!=='none') closeProfileModal();
+});
 // 弹窗保存：登录用户不能改“名”，但可以改“颜色”
 if(btnSave) btnSave.onclick=function(){
   var me=getProfile(); if(!me) return;
@@ -492,7 +510,7 @@ if(btnSave) btnSave.onclick=function(){
 
   setProfile(me);
   Overlay.HUD.show(allowName ? '昵称/颜色已保存' : '颜色已保存（登录账户昵称不可在此修改）', 'ok');
-  modal.style.display='none';
+  closeProfileModal();
 };
 
 // 打开弹窗：根据身份禁用名称输入框
@@ -1148,7 +1166,94 @@ function setConvPtr(convId, sec){ READ_PTR[convId] = Math.max(getConvPtr(convId)
 var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
   var AI_API_URL = '/cloud/desktalk/chatproxy.asp';
   var AI_MODEL   = 'glm-4.7-flash';
-  var aiHistory  = [{ role:'system', content:'你是“WebWindows·小讯”，回答简洁清晰，可用中文，支持少量 Markdown。公司名是成都亚原软件有限公司。小讯是桌讯的插件，桌讯是 WebWindows 插件，WebWindows 是中国的 Web 操作系统。'}];
+  var AI_RETRY_DELAYS = [2500, 6000, 12000];
+  var AI_HISTORY_LIMIT = 16;
+  var aiHistory  = [];
+  var aiRequestInFlight = false;
+
+  function buildAIRuntimeContext(){
+    var device = window.WebWindows && window.WebWindows.device;
+    var storageCapabilities = null;
+    try{ storageCapabilities = device && device.storage && device.storage.getCapabilities() }catch(_){}
+    return {
+      schemaVersion: 1,
+      webWindowsVersion: document.documentElement.getAttribute('data-webwindows-version') || null,
+      language: localStorage.getItem('lang') || document.documentElement.lang || navigator.language || 'zh',
+      environment: device && device.getAdapter ? device.getAdapter() : 'browser',
+      capabilities: {
+        deviceApi: !!device,
+        storage: !!(storageCapabilities && storageCapabilities.directoryPicker && storageCapabilities.directoryPicker.supported)
+      },
+      network: { online: navigator.onLine !== false }
+    };
+  }
+
+  function runtimeContextMessage(){
+    return {
+      role:'system',
+      content:'[WebWindows Runtime Context]\n' + JSON.stringify(buildAIRuntimeContext())
+    };
+  }
+
+  function trimAIHistory(){
+    if(aiHistory.length > AI_HISTORY_LIMIT){
+      aiHistory = aiHistory.slice(aiHistory.length - AI_HISTORY_LIMIT);
+    }
+  }
+
+  function aiDelay(ms){
+    return new Promise(function(resolve){ setTimeout(resolve, ms) });
+  }
+
+  function aiErrorCode(data){
+    return String(data && data.error && data.error.code || '');
+  }
+
+  function isRetryableAIError(status, data){
+    var code = aiErrorCode(data);
+    return status === 429 || code === '1302' || code === '1305';
+  }
+
+  function fixedAIError(status, data){
+    var code = aiErrorCode(data);
+    if(status === 429 || code === '1302' || code === '1305'){
+      return '当前免费 AI 模型访问量较大，自动重试后仍未恢复。请稍等一会儿再发送，我会保留当前对话。';
+    }
+    if(status === 401 || code === '1000' || code === '1001' || code === '1003'){
+      return '桌讯 AI 的服务凭据暂时不可用，请稍后再试。';
+    }
+    if(status >= 500){
+      return '桌讯 AI 服务暂时不可用，请稍后再试。';
+    }
+    return '这次请求未能完成，请调整问题后再试。';
+  }
+
+  function requestAI(payload, attempt){
+    return fetch(AI_API_URL, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-WebWindows-AI-Attempt': String(attempt + 1)
+      },
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      return res.text().then(function(t){
+        var data;
+        try{ data=JSON.parse(t) }catch(_){ data=t }
+        return {ok:res.ok, status:res.status, data:data};
+      });
+    }).then(function(result){
+      if(result.ok) return result.data;
+      if(isRetryableAIError(result.status, result.data) && attempt < AI_RETRY_DELAYS.length){
+        var waitMs = AI_RETRY_DELAYS[attempt];
+        if(aiSend) aiSend.textContent = '模型繁忙，' + Math.ceil(waitMs / 1000) + ' 秒后重试…';
+        return aiDelay(waitMs).then(function(){ return requestAI(payload, attempt + 1) });
+      }
+      var error = new Error(fixedAIError(result.status, result.data));
+      error.isFriendly = true;
+      throw error;
+    });
+  }
 
   function extractAIText(data){
     try{
@@ -1210,34 +1315,37 @@ if(aiInput) aiInput.addEventListener('keydown',function(e){ if(e.key==='Enter'){
 function sendAI(){
 
   var v=(aiInput&&aiInput.value||'').trim();
-  if(!v) return;
+  if(!v || aiRequestInFlight) return;
   if(aiInput) aiInput.value='';
   aiAppend('me', v);
 
   // 入队历史
   aiHistory.push({ role:'user', content:v });
+  trimAIHistory();
 
   // 发送请求
   var oldTxt = aiSend && aiSend.textContent;
+  aiRequestInFlight = true;
   if(aiSend){ aiSend.disabled=true; aiSend.textContent='思考中…'; }
-  fetch(AI_API_URL, {
-    method:'POST',
-    headers:{ 'Content-Type':'application/json' },
-    body: JSON.stringify({ model: AI_MODEL, messages: aiHistory, temperature: 0.7, stream: false })
-  }).then(function(res){
-    return res.text().then(function(t){ try{ return {ok:res.ok, data:JSON.parse(t)} }catch(_){ return {ok:res.ok, data:t} }});
-  }).then(function(res){
-    if(!res.ok){
-      var errTxt = (typeof res.data==='string') ? res.data : JSON.stringify(res.data);
-      aiAppend('ai', '错误：' + errTxt.substring(0,300));
-      return;
-    }
-    var text = extractAIText(res.data);
+  var payload = {
+    model: AI_MODEL,
+    messages: [runtimeContextMessage()].concat(aiHistory),
+    temperature: 0.6,
+    max_tokens: 1200,
+    thinking: { type:'disabled' },
+    stream: false
+  };
+  requestAI(payload, 0).then(function(data){
+    var text = extractAIText(data);
     aiAppend('ai', text);
     aiHistory.push({ role:'assistant', content:text });
+    trimAIHistory();
   }).catch(function(err){
-    aiAppend('ai', '网络或接口异常：' + (err && err.message ? err.message : err));
+    aiAppend('ai', err && err.isFriendly
+      ? err.message
+      : '网络连接暂时不可用，请检查连接后再试。');
   }).finally(function(){
+    aiRequestInFlight = false;
     if(aiSend){ aiSend.disabled=false; aiSend.textContent = oldTxt || '发送'; }
   });
 }
@@ -1383,10 +1491,19 @@ function msgDate(m){
 
 
 
-const fmtLocal = new Intl.DateTimeFormat(navigator.language || 'zh-CN', {
-  year:'numeric', month:'2-digit', day:'2-digit',
-  hour:'2-digit', minute:'2-digit', hour12:false
-});
+let fmtLocal;
+function updateDeskTalkDateFormatter() {
+  const region = window.WebWindowsLocale?.getRegion?.();
+  const locale = window.WebWindowsI18n?.getLocale?.() || navigator.language || 'zh-CN';
+  fmtLocal = new Intl.DateTimeFormat(locale, {
+    timeZone: region?.timeZone,
+    year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', hour12:false
+  });
+}
+updateDeskTalkDateFormatter();
+window.addEventListener('webwindows:language-changed', updateDeskTalkDateFormatter);
+window.addEventListener('webwindows:region-changed', updateDeskTalkDateFormatter);
 const showLocal = d => fmtLocal.format(d).replace(/\//g,'-');
 
 // 渲染（发送回填 & 刷新历史都走同一套）
@@ -1742,22 +1859,284 @@ function closeSettingsSheet(){
   sheet.style.transform = "translateY(100%)";
   setTimeout(() => sheet.style.display = "none", 300);
 }
- const buttons = document.querySelectorAll('#tab-mailbox .tab-btn');
-  const contents = document.querySelectorAll('#tab-mailbox .tab-content');
+/* ===== 讯筒 =====
+ * 邮件收发由站内的“讯址中心”完成；浏览器仅保留界面状态和本地草稿/废纸篓状态，
+ * 不保存邮箱授权码。
+ */
+(function initDeskTalkMailbox(){
+  var root = document.getElementById('tab-mailbox');
+  if (!root) return;
 
-  function clearActive() {
-    buttons.forEach(btn => btn.style.background = '#f0f8ff');
+  var STORE_KEY = 'webwindows.desktalk.mailbox.v1';
+  var ADDRESS_STORE_KEY = 'webwindows.desktalk.addresses.v1';
+  var buttons = root.querySelectorAll('.tab-btn');
+  var contents = root.querySelectorAll('.tab-content');
+  var currentFolder = 'manage';
+  var lastListFolder = 'inbox';
+  var remoteAccounts = [];
+  var remoteAccountRequestedAt = 0;
+  var remoteAccountRequest = null;
+  var remoteFolderRequestedAt = {};
+  var remoteFolderRequests = {};
+  var MAILBOX_REFRESH_COOLDOWN = 60000;
+  var MAIL_CENTER_API = '/mail-center/Api.ashx';
+  function mailCenter(action, data){
+    data = data || {}; data.action = action;
+    return fetch(MAIL_CENTER_API, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/x-www-form-urlencoded','X-WebWindows-Mail-Center':'1'}, body:new URLSearchParams(data).toString() })
+      .then(function(response){ return response.json().then(function(json){ if(!response.ok || !json.ok) throw new Error(json.error || '讯址中心请求失败'); return json; }); });
   }
 
-  buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const target = btn.getAttribute('data-tab');
-      // 切换内容
-      contents.forEach(c => {
-        c.style.display = c.getAttribute('data-content') === target ? 'block' : 'none';
-      });
-      // 高亮当前按钮
-      clearActive();
-      btn.style.background = '#d0ebff';
+  function getMessages(){
+    try {
+      var stored = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    } catch (_) { return []; }
+  }
+  function saveMessages(messages){ localStorage.setItem(STORE_KEY, JSON.stringify(messages)); }
+  function getAddresses(){
+    try {
+      var stored = JSON.parse(localStorage.getItem(ADDRESS_STORE_KEY) || '[]');
+      return Array.isArray(stored) ? stored : [];
+    } catch (_) { return []; }
+  }
+  function saveAddresses(addresses){ localStorage.setItem(ADDRESS_STORE_KEY, JSON.stringify(addresses)); }
+  function mailboxIdentity(){
+    var profile = (typeof getProfile === 'function' && getProfile()) || {};
+    return profile.name || profile.nickname || profile.username || '我';
+  }
+  function makeId(){ return 'mail-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8); }
+  function initialMessages(){
+    var messages = getMessages();
+    if (messages.length) return messages;
+    messages = [{
+      id: makeId(), folder: 'inbox', from: 'WebWindows 桌讯', to: mailboxIdentity(),
+      subject: '欢迎使用讯筒',
+      body: '讯筒已经可以在本机保存收信、写信和邮送记录。连接云同步服务后，邮件将可在设备间同步。',
+      createdAt: new Date().toISOString(), read: false
+    }];
+    saveMessages(messages);
+    return messages;
+  }
+  function formatTime(value){
+    var date = new Date(value);
+    if (isNaN(date.getTime())) return '';
+    var now = new Date();
+    if (date.toDateString() === now.toDateString()) {
+      return String(date.getHours()).padStart(2, '0') + ':' + String(date.getMinutes()).padStart(2, '0');
+    }
+    return (date.getMonth() + 1) + '/' + date.getDate();
+  }
+  function setText(element, value){ element.textContent = value || ''; return element; }
+  function makeListItem(message, folder){
+    var row = document.createElement('button');
+    row.type = 'button'; row.className = 'mailbox-message'; row.dataset.mailId = message.id;
+    row.style.cssText = 'width:100%;text-align:left;padding:8px 2px;border:0;border-bottom:1px solid #eee;background:' +
+      (message.read || folder === 'sent' ? '#fff' : '#f0f8ff') + ';cursor:pointer;font:inherit;';
+    var title = document.createElement('div');
+    title.style.cssText = 'display:flex;gap:8px;justify-content:space-between;font-weight:' + (message.read || folder === 'sent' ? '400' : '700') + ';';
+    setText(title.appendChild(document.createElement('span')), folder === 'sent' ? '至 ' + message.to : message.from);
+    var time = document.createElement('span'); time.style.cssText = 'font-size:12px;color:#888;font-weight:400;'; setText(time, formatTime(message.createdAt)); title.appendChild(time);
+    var subject = document.createElement('div'); subject.style.cssText = 'font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;'; setText(subject, message.subject || '（无主题）');
+    row.appendChild(title); row.appendChild(subject);
+    return row;
+  }
+  function emptyState(text){
+    var element = document.createElement('p'); element.style.cssText = 'color:#667085;font-size:13px;margin:10px 0;'; setText(element, text); return element;
+  }
+  function renderList(folder, containerId, emptyText){
+    var container = document.getElementById(containerId); if (!container) return;
+    container.textContent = '';
+    var messages = initialMessages().filter(function(message){ return message.folder === folder; })
+      .sort(function(a, b){ return new Date(b.createdAt) - new Date(a.createdAt); });
+    if (!messages.length) { container.appendChild(emptyState(emptyText)); return; }
+    messages.forEach(function(message){ container.appendChild(makeListItem(message, folder)); });
+  }
+  function renderSummary(){
+    var target = document.getElementById('mailbox-summary'); if (!target) return;
+    var messages = initialMessages();
+    var inbox = messages.filter(function(m){ return m.folder === 'inbox'; });
+    var unread = inbox.filter(function(m){ return !m.read; }).length;
+    var sent = messages.filter(function(m){ return m.folder === 'sent'; }).length;
+    target.textContent = '';
+    [['收件', inbox.length + ' 封' + (unread ? '，' + unread + ' 封未读' : '')], ['已发送', sent + ' 封'], ['废纸篓', messages.filter(function(m){ return m.folder === 'trash'; }).length + ' 封']]
+      .forEach(function(pair){ var line = document.createElement('p'); line.style.margin = '6px 0'; setText(line, pair[0] + '：' + pair[1]); target.appendChild(line); });
+  }
+  function renderAddresses(){
+    var list = document.getElementById('mailbox-address-list'); if (!list) return;
+    var addresses = getAddresses(); list.textContent = '';
+    if (!addresses.length) { list.appendChild(emptyState('尚未添加讯址。添加后可设为默认发件讯址。')); }
+    addresses.forEach(function(address){
+      var row = document.createElement('div'); row.style.cssText = 'padding:7px 0;border-bottom:1px solid #eee;';
+      var name = document.createElement('div'); name.style.fontWeight = '600'; setText(name, address.name || address.address); row.appendChild(name);
+      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;'; setText(value, address.address + (address.isDefault ? ' · 默认讯址' : ' · 尚未连接')); row.appendChild(value);
+      var controls = document.createElement('div'); controls.style.cssText = 'display:flex;gap:8px;margin-top:5px;';
+      if (!address.isDefault) { var setDefault = document.createElement('button'); setDefault.type = 'button'; setDefault.dataset.addressAction = 'default'; setDefault.dataset.addressId = address.id; setText(setDefault, '设为默认'); controls.appendChild(setDefault); }
+      var remove = document.createElement('button'); remove.type = 'button'; remove.dataset.addressAction = 'remove'; remove.dataset.addressId = address.id; setText(remove, '移除'); controls.appendChild(remove); row.appendChild(controls); list.appendChild(row);
     });
+    var center = document.getElementById('mailbox-center-status');
+    if (center) setText(center, addresses.length ? '已登记 ' + addresses.length + ' 个讯址；尚未连接。接入讯址中心后可安全配置 SMTP/IMAP 并执行收发。' : '尚未配置讯址。讯址中心接入后负责安全保存连接凭据、收信与邮送。');
+  }
+  function checkMailCenter(){
+    var center = document.getElementById('mailbox-center-status');
+    if (!center || center.dataset.checked === 'true') return;
+    center.dataset.checked = 'true';
+    fetch(MAIL_CENTER_API + '?action=health', { credentials: 'same-origin' })
+      .then(function(response){ if (!response.ok) throw new Error('status unavailable'); return response.json(); })
+      .then(function(status){
+        if (status.ok && status.configured) setText(center, '讯址中心就绪：MailKit ' + (status.mailKitVersion || '') + ' 已可安全连接 QQ、Gmail 等支持 TLS 的讯址。');
+        else if (status.ok) setText(center, '讯址中心已部署，但尚未完成数据库、数据表或加密密钥配置（' + (status.configurationStatus || 'unknown') + '）。');
+        else setText(center, '讯址中心正在启动，请稍后重试。');
+      })
+      .catch(function(){ setText(center, '讯址中心尚未部署或不可访问；请先完成 MailKit 部署。'); });
+  }
+  function render(){
+    renderSummary();
+    renderList('inbox', 'mailbox-inbox-list', '邮筒目前没有信件。');
+    renderList('sent', 'mailbox-sent-list', '还没有邮送记录。');
+    renderList('trash', 'mailbox-trash-list', '废纸篓是空的。');
+    renderAddresses();
+  }
+  function loadRemoteAccounts(force){
+    var now=Date.now();
+    if(!force && remoteAccountRequest) return remoteAccountRequest;
+    if(!force && remoteAccountRequestedAt && now-remoteAccountRequestedAt<MAILBOX_REFRESH_COOLDOWN) return Promise.resolve(remoteAccounts);
+    remoteAccountRequestedAt=now;
+    remoteAccountRequest=mailCenter('accounts').then(function(data){
+      remoteAccounts = data.accounts || [];
+      var local = getAddresses();
+      remoteAccounts.forEach(function(a){
+        var known=local.filter(function(x){return x.address===a.address;})[0];
+        if(known) { known.id=a.id; known.name=a.name; known.provider=a.provider; known.remote=true; }
+        else local.push({id:a.id,name:a.name,address:a.address,provider:a.provider,remote:true,isDefault:!local.length});
+      });
+      saveAddresses(local); renderAddresses(); return remoteAccounts;
+    }).catch(function(){ return []; }).finally(function(){ remoteAccountRequest=null; });
+    return remoteAccountRequest;
+  }
+  function selectedRemoteAccount(){
+    var preferred=getAddresses().filter(function(a){return a.isDefault;})[0];
+    if(preferred) {
+      var matching=remoteAccounts.filter(function(a){return a.id===preferred.id || a.address===preferred.address;})[0];
+      if(matching) return matching;
+    }
+    return remoteAccounts[0] || null;
+  }
+  function loadRemoteFolder(folder, force){
+    if(!remoteAccounts.length) {
+      return loadRemoteAccounts(force).then(function(accounts){
+        if(accounts && accounts.length) return loadRemoteFolder(folder, force);
+        var emptyId=folder==='sent'?'mailbox-sent-list':folder==='trash'?'mailbox-trash-list':'mailbox-inbox-list';
+        var emptyTarget=document.getElementById(emptyId);
+        if(emptyTarget) emptyTarget.textContent='请先以正式 WebWindows 账号登录，并在讯址设置中添加讯址。';
+      });
+    }
+    var account=selectedRemoteAccount();
+    if(!account) return;
+    var cacheKey=account.id+':'+folder, now=Date.now();
+    if(!force && remoteFolderRequests[cacheKey]) return remoteFolderRequests[cacheKey];
+    if(!force && remoteFolderRequestedAt[cacheKey] && now-remoteFolderRequestedAt[cacheKey]<MAILBOX_REFRESH_COOLDOWN) return Promise.resolve();
+    remoteFolderRequestedAt[cacheKey]=now;
+    var containerId=folder==='sent'?'mailbox-sent-list':folder==='trash'?'mailbox-trash-list':'mailbox-inbox-list';
+    var target=document.getElementById(containerId); if(target) target.textContent='正在从讯址中心读取…';
+    remoteFolderRequests[cacheKey]=mailCenter('folder',{accountId:account.id,folder:folder}).then(function(data){
+      var messages=(data.messages||[]).map(function(m){return {id:'remote:'+account.id+':'+folder+':'+m.uid,remote:true,accountId:account.id,remoteId:m.uid,uid:m.uid,folder:folder,from:m.from,to:m.to,subject:m.subject,createdAt:m.date,read:!!m.read};});
+      var local=getMessages().filter(function(m){return !m.remote || m.folder!==folder;}).concat(messages); saveMessages(local); renderList(folder,containerId,folder==='sent'?'还没有邮送记录。':folder==='trash'?'废纸篓是空的。':'邮筒目前没有信件。'); renderSummary();
+    }).catch(function(error){ if(target) target.textContent='读取失败：'+error.message; }).finally(function(){ delete remoteFolderRequests[cacheKey]; });
+    return remoteFolderRequests[cacheKey];
+  }
+  function showTab(target){
+    currentFolder = target;
+    if (target !== 'detail') lastListFolder = target;
+    contents.forEach(function(content){ content.style.display = content.getAttribute('data-content') === target ? 'block' : 'none'; });
+    buttons.forEach(function(button){ button.style.background = button.getAttribute('data-tab') === target ? '#d0ebff' : '#f0f8ff'; });
+    render();
+    if(target === 'inbox' || target === 'sent' || target === 'trash') loadRemoteFolder(target);
+  }
+  function showDetail(id){
+    var messages = initialMessages();
+    var message = messages.filter(function(item){ return item.id === id; })[0];
+    if (!message) return;
+    if (message.remote) {
+      var detailTarget = document.getElementById('mailbox-detail'); detailTarget.textContent='正在读取邮件…'; showTab('detail');
+      mailCenter('message',{accountId:message.accountId,uid:message.remoteId,folder:message.folder}).then(function(data){ detailTarget.textContent=''; [['主题',data.subject],['寄件人',data.from],['时间',new Date(data.date).toLocaleString()]].forEach(function(p){var line=document.createElement('p');line.textContent=p[0]+'：'+p[1];detailTarget.appendChild(line);});var body=document.createElement('div');body.style.whiteSpace='pre-wrap';body.textContent=data.body||'（无正文）';detailTarget.appendChild(body);var actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;margin-top:14px;';var button=document.createElement('button');button.type='button';button.dataset.mailAction=message.folder==='trash'?'restore':'trash';button.dataset.mailId=message.id;setText(button,message.folder==='trash'?'恢复':'移至废纸篓');actions.appendChild(button);detailTarget.appendChild(actions);message.read=true; saveMessages(messages); return mailCenter('mark-read',{accountId:message.accountId,uid:message.uid,folder:message.folder}); }).catch(function(e){detailTarget.textContent='读取失败：'+e.message;}); return;
+    }
+    if (message.folder === 'inbox' && !message.read) { message.read = true; saveMessages(messages); }
+    var target = document.getElementById('mailbox-detail'); if (!target) return;
+    target.textContent = '';
+    [['主题', message.subject || '（无主题）'], [message.folder === 'sent' ? '收件人' : '寄件人', message.folder === 'sent' ? message.to : message.from], ['时间', new Date(message.createdAt).toLocaleString()]]
+      .forEach(function(pair){ var line = document.createElement('p'); line.style.margin = '7px 0'; var strong = document.createElement('strong'); setText(strong, pair[0] + '：'); line.appendChild(strong); line.appendChild(document.createTextNode(pair[1] || '')); target.appendChild(line); });
+    var body = document.createElement('div'); body.style.cssText = 'white-space:pre-wrap;border-top:1px solid #eee;margin-top:10px;padding-top:10px;line-height:1.55;'; setText(body, message.body || '（无正文）'); target.appendChild(body);
+    var actions = document.createElement('div'); actions.style.cssText = 'display:flex;gap:8px;margin-top:14px;';
+    if (message.folder === 'trash') {
+      var restore = document.createElement('button'); restore.type = 'button'; restore.dataset.mailAction = 'restore'; restore.dataset.mailId = message.id; setText(restore, '恢复'); actions.appendChild(restore);
+    } else {
+      var remove = document.createElement('button'); remove.type = 'button'; remove.dataset.mailAction = 'trash'; remove.dataset.mailId = message.id; setText(remove, '移至废纸篓'); actions.appendChild(remove);
+    }
+    target.appendChild(actions);
+    showTab('detail');
+  }
+  function moveMessage(id, folder){
+    var messages = initialMessages();
+    var message = messages.filter(function(item){ return item.id === id; })[0];
+    if (!message) return;
+    if (message.remote) {
+      var targetFolder=folder==='trash'?'trash':'inbox';
+      mailCenter('move',{accountId:message.accountId,uid:message.uid,fromFolder:message.folder,toFolder:targetFolder}).then(function(){ message.folder=targetFolder; saveMessages(messages); render(); showTab(targetFolder); }).catch(function(error){ var target=document.getElementById('mailbox-detail'); if(target) target.textContent='移动失败：'+error.message; });
+      return;
+    }
+    if (folder === 'trash') { message.previousFolder = message.folder; message.folder = 'trash'; }
+    else { message.folder = message.previousFolder || 'inbox'; delete message.previousFolder; }
+    saveMessages(messages); render(); showTab(folder === 'trash' ? 'trash' : message.folder);
+  }
+
+  buttons.forEach(function(button){ button.addEventListener('click', function(){ showTab(button.getAttribute('data-tab')); }); });
+  root.addEventListener('click', function(event){
+    var addressAction = event.target.closest('[data-address-action]');
+    if (addressAction) {
+      var addresses = getAddresses();
+      if (addressAction.dataset.addressAction === 'default') { addresses.forEach(function(item){ item.isDefault = item.id === addressAction.dataset.addressId; }); saveAddresses(addresses); render(); return; }
+      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){ addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; }); saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render(); }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
+    }
+    var refresh = event.target.closest('[data-mail-refresh]');
+    if (refresh) { loadRemoteFolder(refresh.dataset.mailRefresh, true); return; }
+    var action = event.target.closest('[data-mail-action]');
+    if (action) { moveMessage(action.dataset.mailId, action.dataset.mailAction === 'restore' ? 'restore' : 'trash'); return; }
+    var row = event.target.closest('[data-mail-id]'); if (row) showDetail(row.dataset.mailId);
   });
+  var back = document.getElementById('mailbox-back'); if (back) back.addEventListener('click', function(){ showTab(lastListFolder); });
+  var form = document.getElementById('mailbox-compose-form');
+  if (form) form.addEventListener('submit', function(event){
+    event.preventDefault();
+    var to = document.getElementById('mailbox-to').value.trim();
+    var subject = document.getElementById('mailbox-subject').value.trim();
+    var body = document.getElementById('mailbox-body').value.trim();
+    var status = document.getElementById('mailbox-compose-status');
+    if (!to || !body) { status.style.color = '#b42318'; setText(status, '请填写收件人和正文。'); return; }
+    var account=selectedRemoteAccount();
+    if(!account){ status.style.color='#b42318'; setText(status,'请先在讯址设置中添加并保存讯址。'); return; }
+    status.style.color='#667085'; setText(status,'正在通过讯址中心邮送…');
+    mailCenter('send',{accountId:account.id,to:to,subject:subject,body:body}).then(function(){ var messages=initialMessages(); messages.push({id:makeId(),folder:'sent',from:account.address,to:to,subject:subject,body:body,createdAt:new Date().toISOString(),read:true});saveMessages(messages);form.reset();status.style.color='#067647';setText(status,'邮件已邮送。');render(); }).catch(function(error){status.style.color='#b42318';setText(status,'邮送失败：'+error.message);});
+  });
+  var addressForm = document.getElementById('mailbox-address-form');
+  if (addressForm) addressForm.addEventListener('submit', function(event){
+    event.preventDefault();
+    var name = document.getElementById('mailbox-address-name').value.trim();
+    var address = document.getElementById('mailbox-address-value').value.trim().toLowerCase();
+    var provider = document.getElementById('mailbox-address-provider').value;
+    var password = document.getElementById('mailbox-address-password').value;
+    var status = document.getElementById('mailbox-address-status');
+    var saved = false;
+    if (!address || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) { status.style.color = '#b42318'; setText(status, '请输入有效的邮箱地址。'); return; }
+    var addresses = getAddresses();
+    if (!password) { status.style.color = '#b42318'; setText(status, '请输入邮箱授权码。'); return; }
+    status.style.color = '#667085'; setText(status, '正在加密保存并验证收信连接…');
+    mailCenter('account-save', { provider:provider, displayName:name || address, email:address, appPassword:password })
+      .then(function(){ saved = true; return loadRemoteAccounts(); })
+      .then(function(accounts){ var account=accounts.filter(function(a){return a.address===address;})[0]; if(!account) throw new Error('讯址保存后无法读取'); return mailCenter('test-mailbox',{accountId:account.id}); })
+      .then(function(result){ addressForm.reset(); status.style.color='#067647'; setText(status,'讯址已加密保存，收信连接验证通过（当前 ' + result.messageCount + ' 封）。'); render(); })
+      .catch(function(error){ status.style.color='#b42318'; setText(status,(saved ? '讯址已保存，但连接验证失败：' : '讯址未保存：') + error.message + (saved ? '。可检查授权码与服务商 IMAP 设置后重新保存。' : '')); });
+  });
+  initialMessages(); render(); showTab('manage');
+  loadRemoteAccounts();
+  checkMailCenter();
+})();

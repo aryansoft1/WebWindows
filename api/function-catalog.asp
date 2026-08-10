@@ -209,6 +209,8 @@ If Err.Number <> 0 Then Err.Clear: fileCatalog = ""
 On Error GoTo 0
 If fileCatalog <> "" And Not ValidCatalog(fileCatalog) Then fileCatalog = ""
 If fileCatalog <> "" Then fileVersion = CatalogVersion(fileCatalog)
+Response.AddHeader "X-WebWindows-Static-Catalog", LCase(CStr(fileCatalog <> ""))
+Response.AddHeader "X-WebWindows-Static-Catalog-Version", fileVersion
 
 If tableReady Then
   catalogText = ActiveCatalog(activeVersion)

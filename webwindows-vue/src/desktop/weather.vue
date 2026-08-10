@@ -71,29 +71,36 @@ export default {
   },
   methods: {
     onMouseDown(e) {
+      if (e.button !== 0 || e.target.closest("button")) return;
+      const rect = e.currentTarget.getBoundingClientRect();
       this.isDragging = true;
-      this.dragOffset.x = e.offsetX;
-      this.dragOffset.y = e.offsetY;
+      this.hasDragged = true;
+      this.position.x = rect.left;
+      this.position.y = rect.top;
+      this.dragOffset.x = e.clientX - rect.left;
+      this.dragOffset.y = e.clientY - rect.top;
+      e.preventDefault();
     },
     onMouseMove(e) {
       if (!this.isDragging) return
-      if (!this.hasDragged) this.hasDragged = true   // ★关键：第一次移动时切到 left/top 模式
-      this.position.x = e.pageX - this.dragOffset.x
-      this.position.y = e.pageY - this.dragOffset.y
+      this.moveTo(e.clientX, e.clientY, this.dragOffset)
     },
     onMouseUp() {
       this.isDragging = false;
     },
     onTouchStart(e) {
       const touch = e.touches[0];
-      this.touchOffset.x = touch.clientX - this.position.x;
-      this.touchOffset.y = touch.clientY - this.position.y;
+      if (!touch || e.target.closest("button")) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      this.hasDragged = true;
+      this.position.x = rect.left;
+      this.position.y = rect.top;
+      this.touchOffset.x = touch.clientX - rect.left;
+      this.touchOffset.y = touch.clientY - rect.top;
 
       const onTouchMove = (e) => {
         const touch = e.touches[0];
-        this.position.x = touch.clientX - this.touchOffset.x;
-        this.position.y = touch.clientY - this.touchOffset.y;
-        if (!this.hasDragged) this.hasDragged = true
+        this.moveTo(touch.clientX, touch.clientY, this.touchOffset);
         e.preventDefault(); // 禁止默认滚动
       };
 
@@ -104,6 +111,13 @@ export default {
 
       document.addEventListener("touchmove", onTouchMove, { passive: false });
       document.addEventListener("touchend", onTouchEnd);
+    },
+    moveTo(clientX, clientY, offset) {
+      const element = this.$el;
+      const width = element?.offsetWidth || 160;
+      const height = element?.offsetHeight || 100;
+      this.position.x = Math.max(0, Math.min(window.innerWidth - width, clientX - offset.x));
+      this.position.y = Math.max(0, Math.min(window.innerHeight - height, clientY - offset.y));
     },
 
     // ========= 仅替换为 Open-Meteo 的实现，其他逻辑尽量不动 =========

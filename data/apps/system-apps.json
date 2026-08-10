@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.07.29.1",
-    "updatedAt": "2026-07-29T00:00:00+09:00"
+    "catalogVersion": "2026.08.10.2",
+    "updatedAt": "2026-08-10T15:00:00+09:00"
   },
   "apps": [
     {
@@ -314,7 +314,7 @@
       "type": "application",
       "name": "Sheet Editor",
       "icon": "assets/icons/sheeteditor.png",
-      "entry": "worker_SheetCreater.html?v=20260729-mobile-4",
+      "entry": "worker_SheetCreater.html?v=20260810-office-binary-1",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",
@@ -354,7 +354,7 @@
       "type": "application",
       "name": "Write Editor",
       "icon": "assets/icons/writeeditor.svg",
-      "entry": "worker_WriteEditor.html?v=20260729-mobile-2",
+      "entry": "worker_WriteEditor.html?v=20260810-office-binary-1",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",
@@ -393,7 +393,7 @@
       "type": "application",
       "name": "Slide Editor",
       "icon": "assets/icons/slideeditor.svg",
-      "entry": "worker_SlideEditor.html?v=20260729-mobile-2",
+      "entry": "worker_SlideEditor.html?v=20260810-office-binary-1",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",

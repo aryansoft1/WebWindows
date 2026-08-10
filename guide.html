@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>使用向导 · WebWindows</title>
+  <link rel="icon" href="assets/icons/guide.svg">
+  <link rel="stylesheet" href="assets/css/guide.css?v=20260729-1">
+  <script defer src="assets/js/guide.js?v=20260729-1"></script>
+</head>
+<body>
+  <header class="guide-header">
+    <a class="guide-brand" href="guide.html" aria-label="使用向导首页">
+      <img src="assets/icons/guide.svg" alt="">
+      <span><strong>使用向导</strong><small>WebWindows</small></span>
+    </a>
+    <label class="guide-search">
+      <span aria-hidden="true">⌕</span>
+      <input id="guideSearch" type="search" placeholder="搜索使用方法或问题" autocomplete="off">
+      <kbd>Ctrl K</kbd>
+    </label>
+    <span id="guideVersion" class="guide-version"></span>
+  </header>
+
+  <div class="guide-layout">
+    <aside id="guideSidebar" class="guide-sidebar" aria-label="使用向导目录"></aside>
+    <main id="guideMain" class="guide-main" tabindex="-1">
+      <div class="guide-loading">正在准备使用向导……</div>
+    </main>
+    <aside class="guide-status-panel">
+      <h2>功能状态</h2>
+      <p><span class="status-dot verified"></span><b>已验证</b><small>已有代码与自动化检查，仍以当前部署环境为准。</small></p>
+      <p><span class="status-dot testing"></span><b>测试中</b><small>功能存在，但兼容性或服务端仍需继续验证。</small></p>
+      <p><span class="status-dot planned"></span><b>规划中</b><small>尚未作为稳定功能提供。</small></p>
+    </aside>
+  </div>
+
+  <div id="guideSearchResults" class="guide-search-results" hidden></div>
+  <noscript>使用向导需要启用 JavaScript。</noscript>
+</body>
+</html>

@@ -1,280 +1,429 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>WebWindows Worker・SheetEditor</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/css/luckysheet.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/css/pluginsCss.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/assets/iconfont/iconfont.css" />
-  <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/plugins/js/plugin.js">
-    function restoreImages(luckysheetfile) {
-      if (!luckysheetfile.images) return;
-      for (const key in luckysheetfile.images) {
-        luckysheet.insertImage(luckysheetfile.images[key]);
-      }
-    }
-
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/luckysheet@latest/dist/luckysheet.umd.js">
-    function restoreImages(luckysheetfile) {
-      if (!luckysheetfile.images) return;
-      for (const key in luckysheetfile.images) {
-        luckysheet.insertImage(luckysheetfile.images[key]);
-      }
-    }
-
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
-    function restoreImages(luckysheetfile) {
-      if (!luckysheetfile.images) return;
-      for (const key in luckysheetfile.images) {
-        luckysheet.insertImage(luckysheetfile.images[key]);
-      }
-    }
-
-</script>
-  <script src="https://unpkg.com/luckyexcel@1.0.1/dist/luckyexcel.umd.js">
-    function restoreImages(luckysheetfile) {
-      if (!luckysheetfile.images) return;
-      for (const key in luckysheetfile.images) {
-        luckysheet.insertImage(luckysheetfile.images[key]);
-      }
-    }
-
-</script>
-<!-- 替代 chartmix.css -->
-<link rel="stylesheet" href="https://unpkg.com/@dream-num/luckysheet@2.1.13/dist/expendPlugins/chart/chartmix.css" />
-
-<!-- 替代 chartmix.umd.min.js -->
-<script src="https://unpkg.com/@dream-num/luckysheet@2.1.13/dist/expendPlugins/chart/chartmix.umd.min.js">
-    function restoreImages(luckysheetfile) {
-      if (!luckysheetfile.images) return;
-      for (const key in luckysheetfile.images) {
-        luckysheet.insertImage(luckysheetfile.images[key]);
-      }
-    }
-
-</script>
-
-
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WebWindows Sheet Editor</title>
+  <script src="assets/js/locale-region.js?v=20260802-1"></script>
+  <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/css/luckysheet.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/css/pluginsCss.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/assets/iconfont/iconfont.css">
+  <link rel="stylesheet" href="https://unpkg.com/@dream-num/luckysheet@2.1.13/dist/expendPlugins/chart/chartmix.css">
+  <script src="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/js/plugin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/luckysheet.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/luckyexcel@1.0.1/dist/luckyexcel.umd.js"></script>
+  <script src="https://unpkg.com/@dream-num/luckysheet@2.1.13/dist/expendPlugins/chart/chartmix.umd.min.js"></script>
+  <script src="assets/js/cloud-file-dialog.js?v=20260729-1"></script>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      font-family: sans-serif;
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;font-family:"Segoe UI","Microsoft YaHei",sans-serif}
+    *{box-sizing:border-box}#app{display:flex;height:100%;flex-direction:column;background:#fff}
+    #menubar{display:flex;align-items:center;gap:6px;min-height:42px;padding:0 10px;border-bottom:1px solid #d7dce2;background:#f8fafc;user-select:none}
+    .menu-wrap{position:relative}.menu-button,.toolbar-button{height:30px;padding:0 11px;border:1px solid transparent;border-radius:6px;background:transparent;color:#1f2937;cursor:pointer}
+    .menu-button:hover,.toolbar-button:hover{border-color:#cbd5e1;background:#fff}.toolbar-button.primary{border-color:#107c41;background:#107c41;color:#fff}
+    .toolbar-button:disabled{cursor:not-allowed;opacity:.5}.dropdown{display:none;position:absolute;top:34px;left:0;z-index:10020;min-width:190px;margin:0;padding:5px;list-style:none;border:1px solid #cbd5e1;border-radius:8px;background:#fff;box-shadow:0 10px 30px rgba(15,23,42,.16)}
+    .dropdown.open{display:block}.dropdown button{width:100%;padding:8px 10px;border:0;border-radius:5px;background:transparent;text-align:left;cursor:pointer}.dropdown button:hover{background:#eff6ff}
+    .spacer{flex:1}.document-name{max-width:32vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569;font-size:13px}
+    #save-status{min-width:86px;color:#64748b;font-size:12px;text-align:right}#save-status.error{color:#b91c1c}#save-status.saved{color:#107c41}
+    .read-only{padding:4px 8px;border-radius:999px;background:#fff7d6;color:#825a00;font-size:11px;font-weight:700}
+    #notice{display:none;padding:8px 12px;border-bottom:1px solid #fde68a;background:#fffbeb;color:#854d0e;font-size:12px}#notice.show{display:block}
+    #luckysheet{position:relative;flex:1;min-height:0}.luckysheet-grid-window,.luckysheet{z-index:0!important}
+    #loading{position:absolute;inset:42px 0 0;z-index:20000;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.94);color:#475569}
+    @media(max-width:820px),(max-width:1000px) and (max-height:500px){
+      #menubar{min-height:52px;gap:4px;padding:4px 8px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x}
+      .menu-button,.toolbar-button{height:44px;min-width:44px;flex:0 0 auto}
+      .document-name,#save-status{display:none}
+      .dropdown{top:46px;max-height:calc(100dvh - 60px);overflow:auto}
+      .dropdown button{min-height:44px}
+      #luckysheet-wa-editor{height:52px!important;overflow-x:auto!important;overflow-y:hidden!important;overscroll-behavior-x:contain;touch-action:pan-x;white-space:nowrap}
+      #luckysheet-wa-editor .luckysheet-toolbar-button{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important}
+      #luckysheet-wa-editor .luckysheet-toolbar-select,
+      #luckysheet-wa-editor .luckysheet-toolbar-combo-button-input{min-width:44px!important;min-height:44px!important}
+      #luckysheet_info_detail_input,
+      #luckysheet-bottom-add-row,
+      #luckysheet-bottom-add-row-input,
+      #luckysheet-bottom-bottom-top,
+      #luckysheet-copy-btn{min-width:44px!important;min-height:44px!important}
+      #loading{inset:52px 0 0}
     }
-    #menubar {
-      background: #f8f8f8;
-      border-bottom: 1px solid #ccc;
-      display: flex;
-      padding: 0 10px;
-      height: 36px;
-      align-items: center;
-      user-select: none;
-    }
-    .menu {
-  display: inline-block;
-  padding: 6px 12px;
-  cursor: pointer;
-}
-
-
-    .menu:hover .dropdown {
-      display: block;
-    }
-  .dropdown {
-    display: none;
-    position: absolute;
-    background: white;
-    border: 1px solid #ccc;
-    min-width: 120px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    z-index: 9999;
-  }
-
-    .dropdown li {
-      padding: 6px 12px;
-      cursor: pointer;
-      list-style: none;
-    }
-    .dropdown li:hover {
-      background: #eee;
-    }
-    #editDropdown, #fileDropdown {
-  display: none;
-  position: absolute;
-  background: white;
-  border: 1px solid #ccc;
-  min-width: 120px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  z-index: 9999;
-}
-
-    #luckysheet {
-      width: 100%;
-      height: calc(100% - 36px);
-    }
-.luckysheet-grid-window {
-  z-index: 0 !important;
-}
-
-.luckysheet {
-  z-index: 0 !important;
-}
   </style>
 </head>
 <body>
+<div id="app">
   <div id="menubar">
-    <div class="menu" id="fileMenu">文件 ▾</div>
-    <ul class="dropdown" id="fileDropdown">
-      <li onclick="openFile()">打开</li>
-      <li onclick="saveFile()">保存</li>
-      <li onclick="exportExcel()">导出 Excel</li>
-    </ul>
-
-    <div class="menu" id="editMenu">编辑 ▾</div>
-    <ul class="dropdown" id="editDropdown">
-      <li onclick="cutText()">剪切</li>
-      <li onclick="copyText()">复制</li>
-      <li onclick="pasteText()">粘贴</li>
-      <li onclick="undo()">撤销</li>
-      <li onclick="redo()">重做</li>
-      <li onclick="findText()">查找</li>
-    </ul>
-
-    <input type="file" id="fileInput" style="display:none" accept=".xlsx,.xls" />
+    <div class="menu-wrap">
+      <button id="file-menu" class="menu-button" type="button">文件 ▾</button>
+      <ul id="file-dropdown" class="dropdown">
+        <li><button id="open-cloud" type="button">从云资料打开</button></li>
+        <li><button id="save-cloud" type="button">保存</button></li>
+        <li><button id="save-as-cloud" type="button">另存到云资料</button></li>
+        <li><button id="export-excel" type="button">另存 XLSX 到云资料</button></li>
+      </ul>
+    </div>
+    <button id="quick-save" class="toolbar-button primary" type="button">保存</button>
+    <button id="undo" class="toolbar-button" type="button">撤销</button>
+    <button id="redo" class="toolbar-button" type="button">重做</button>
+    <span id="mode-badge" class="read-only" hidden>只读</span>
+    <span class="spacer"></span>
+    <span id="document-name" class="document-name">新工作表</span>
+    <span id="save-status">本地文档</span>
   </div>
-
+  <div id="notice"></div>
   <div id="luckysheet"></div>
+</div>
+<div id="loading">正在准备 Sheet Editor…</div>
 
-  <script>
-    window.luckyexcel = window.luckyexcel || window.LuckyExcel;
-    luckysheet.create({ container: 'luckysheet' ,lang: 'zh'});
-window.onload = function () {
-      const info = document.querySelector('.luckysheet_info_detail');
-      if (info) {
-        info.innerHTML = '<img src="assets/icons/sheeteditor.png" style="height:38px; vertical-align:middle; margin-right:6px;"> SheetEditor';
-      }
-      
+<script>
+(function(){
+  "use strict";
+  window.luckyexcel = window.luckyexcel || window.LuckyExcel;
+
+  const query = new URLSearchParams(location.search);
+  let resource = query.get("source") === "cloud" ? {
+    scope: query.get("scope") || "public",
+    nodeId: query.get("nodeId") || "local-main",
+    path: query.get("path") || "",
+    name: query.get("name") || "工作表.xlsx",
+    readUrl: query.get("readUrl") || "",
+    editorDataUrl: query.get("editorDataUrl") || "",
+    saveEndpoint: query.get("saveEndpoint") || "",
+    readOnly: query.get("readOnly") !== "0"
+  } : null;
+
+  const state = {
+    loading: true,
+    dirty: false,
+    revision: 0,
+    savedRevision: 0,
+    saveTimer: null,
+    savePromise: null,
+    sourceName: resource?.name || "新工作表.xlsx"
+  };
+  const loading = document.getElementById("loading");
+  const status = document.getElementById("save-status");
+  const notice = document.getElementById("notice");
+  const nameHost = document.getElementById("document-name");
+  let readOnly = Boolean(resource?.readOnly);
+
+  function setStatus(text, className) {
+    status.textContent = text;
+    status.className = className || "";
+  }
+
+  function showNotice(text) {
+    notice.textContent = text;
+    notice.classList.toggle("show", Boolean(text));
+  }
+
+  function sheetHooks() {
+    const changed = () => markDirty();
+    return {
+      cellUpdated: changed,
+      sheetCreateAfter: changed,
+      sheetDeleteAfter: changed,
+      sheetEditNameAfter: changed,
+      rangePasteAfter: changed,
+      rangeDeleteAfter: changed
     };
+  }
 
-    function exportExcel() {
-      const luckysheetData = luckysheet.getluckysheetfile();
-      const file = luckyexcel.buildExportExcel({ luckysheet: luckysheetData, fileName: '导出表格.xlsx' });
-      luckyexcel.exportExcel(file);
+  function createSheet(data) {
+    try { luckysheet.destroy(); } catch (_) {}
+    luckysheet.create({
+      container: "luckysheet",
+      lang: "zh",
+      data: Array.isArray(data) && data.length ? data : undefined,
+      allowEdit: !readOnly,
+      showinfobar: false,
+      hook: sheetHooks()
+    });
+  }
+
+  function markDirty() {
+    if (state.loading || readOnly) return;
+    state.dirty = true;
+    state.revision += 1;
+    setStatus("未保存");
+    clearTimeout(state.saveTimer);
+    if (resource?.saveEndpoint) state.saveTimer = setTimeout(() => saveCloud(false), 3000);
+  }
+
+  function csvSheets(text, name) {
+    const workbook = XLSX.read(text, { type: "string", raw: false });
+    return workbook.SheetNames.map((sheetName, sheetIndex) => {
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+        header: 1, raw: true, defval: ""
+      });
+      const data = [];
+      rows.forEach((row, r) => row.forEach((value, c) => {
+        if (value === "") return;
+        const isNumber = typeof value === "number";
+        data.push({ r, c, v: { v: value, m: String(value), ct: { fa: "General", t: isNumber ? "n" : "g" } } });
+      }));
+      return {
+        name: sheetName || `Sheet${sheetIndex + 1}`,
+        index: String(sheetIndex),
+        order: sheetIndex,
+        status: sheetIndex === 0 ? 1 : 0,
+        row: Math.max(rows.length + 20, 60),
+        column: Math.max(...rows.map(row => row.length), 10) + 5,
+        celldata: data,
+        config: {}
+      };
+    });
+  }
+
+  function importExcelFile(file) {
+    return new Promise((resolve, reject) => {
+      luckyexcel.transformExcelToLucky(file, (exportJson, luckyFile) => {
+        if (!exportJson?.sheets?.length) {
+          reject(new Error("无法识别此 Excel 文件。"));
+          return;
+        }
+        resolve({ sheets: exportJson.sheets, luckyFile });
+      });
+    });
+  }
+
+  async function importSource(file) {
+    const extension = file.name.split(".").pop().toLowerCase();
+    if (extension === "csv") {
+      const text = await file.text();
+      return { sheets: csvSheets(text, file.name), converted: false };
     }
+    const result = await importExcelFile(file);
+    return { sheets: result.sheets, luckyFile: result.luckyFile, converted: extension === "xls" };
+  }
 
-    function openFile() {
-      document.getElementById("fileInput").click();
-    }
+  function restoreImages(luckyFile) {
+    if (!luckyFile?.images) return;
+    Object.keys(luckyFile.images).forEach(key => {
+      try { luckysheet.insertImage(luckyFile.images[key]); } catch (_) {}
+    });
+  }
 
-   document.getElementById("fileInput").addEventListener("change", function (e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  async function loadCloud() {
+    if (!resource?.readUrl) throw new Error("云资源缺少读取地址。");
+    const response = await fetch(resource.readUrl, { credentials: "same-origin", cache: "no-store" });
+    if (!response.ok) throw new Error(`云表格读取失败（${response.status}）。`);
+    const blob = await response.blob();
+    const file = new File([blob], resource.name, { type: blob.type });
+    const imported = await importSource(file);
+    createSheet(imported.sheets);
+    restoreImages(imported.luckyFile);
+    if (imported.converted) showNotice("这是旧版 XLS 文件。保存时将创建标准 XLSX 文件。");
+  }
 
-  luckyexcel.transformExcelToLucky(file, function (exportJson, luckysheetfile) {
-    if (!exportJson.sheets || exportJson.sheets.length === 0) {
-      alert("无法识别的 Excel 文件");
+  async function saveCloud(showErrors) {
+    clearTimeout(state.saveTimer);
+    if (readOnly || !resource?.saveEndpoint || !/\.xlsx$/i.test(resource.name)) {
+      await saveAsCloud();
       return;
     }
-
-    luckysheet.destroy();
-    
-    luckysheet.destroy();
-    luckysheet.create({ container: 'luckysheet', data: exportJson.sheets ,lang: 'zh' });
-
-    // 插入图片
-    restoreImages(luckysheetfile);
-    const fileName = file.name;
-
-    
-
-    
-    document.querySelector('.luckysheet_info_detail').innerHTML =
-  `<img src="assets/icons/sheeteditor.png" style="height:38px; vertical-align:middle; margin-right:6px;">
-   SheetEditor - ${fileName}`;
-
-// 手动修复工具栏的位置
-setTimeout(() => {
-  const toolbar = document.querySelector('.luckysheet-toolbar');
-  if (toolbar) {
-    toolbar.style.top = '36px';
+    if (state.savePromise) {
+      await state.savePromise;
+      if (state.dirty) return saveCloud(showErrors);
+      return;
+    }
+    if (!state.dirty) {
+      setStatus("已保存", "saved");
+      return;
+    }
+    const savingRevision = state.revision;
+    setStatus("正在保存…");
+    const target = {
+      scope: "private",
+      path: resource.path,
+      name: resource.name,
+      writeUrl: resource.saveEndpoint,
+      overwrite: true
+    };
+    state.savePromise = WebWindows.fileDialog.write(target, workbookBlob(), { overwrite: true })
+      .then(saved => {
+        resource = { ...resource, ...saved, saveEndpoint: saved.saveEndpoint || resource.saveEndpoint };
+        state.sourceName = saved.name || state.sourceName;
+        state.savedRevision = savingRevision;
+        if (state.revision === savingRevision) state.dirty = false;
+        setStatus(state.dirty ? "有新改动" : "已保存", state.dirty ? "" : "saved");
+        showNotice(state.dirty ? "" : "已保存为标准 XLSX 文件。");
+      })
+      .catch(error => {
+        setStatus("保存失败", "error");
+        showNotice(`XLSX 保存失败：${error.message}。原文件未被覆盖。`);
+        if (showErrors) alert(error.message);
+      })
+      .finally(() => { state.savePromise = null; });
+    await state.savePromise;
   }
-}, 50); // 等待一点时间让 DOM 加载完
 
-  });
-});
-
-
-    function saveFile() {
-      const data = JSON.stringify(luckysheet.getluckysheetfile());
-      const blob = new Blob([data], { type: 'application/json' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = '工作表.json';
-      link.click();
+  async function exportExcel() {
+    try {
+      const suggestedName = state.sourceName.replace(/\.(xls|csv)$/i, ".xlsx");
+      const saved = await WebWindows.fileDialog.saveBlob({
+        title: "保存 XLSX 副本",
+        fileTypes: [{ name: "Excel 工作簿", extensions: ["xlsx"] }],
+        suggestedName: /\.xlsx$/i.test(suggestedName) ? suggestedName : `${suggestedName}.xlsx`,
+        purpose: "sheet-editor-export-xlsx"
+      }, workbookBlob());
+      if (saved) showNotice("XLSX 副本已保存到私人云资料。");
+    } catch (error) {
+      showNotice(`保存 XLSX 副本失败：${error.message}`);
     }
-
-    function findText() {
-      const text = prompt("请输入要查找的内容：");
-      if (!text) return;
-      const result = luckysheet.searchCell(text);
-      alert(`找到 ${result.length} 个匹配项`);
-    }
-
-    function undo() {
-      luckysheet.undo();
-    }
-
-    function redo() {
-      luckysheet.redo();
-    }
-      const fileMenu = document.getElementById("fileMenu");
-  const fileDropdown = document.getElementById("fileDropdown");
-
-  fileMenu.addEventListener("click", function (e) {
-    const rect = fileMenu.getBoundingClientRect();
-    fileDropdown.style.left = rect.left + "px";
-    fileDropdown.style.top = "20px";
-    fileDropdown.style.display = 
-      fileDropdown.style.display === "block" ? "none" : "block";
-  });
-
-  document.addEventListener("click", function (e) {
-    if (!fileMenu.contains(e.target) && !fileDropdown.contains(e.target)) {
-      fileDropdown.style.display = "none";
-    }
-  });
-  const editMenu = document.getElementById("editMenu");
-const editDropdown = document.getElementById("editDropdown");
-
-editMenu.addEventListener("click", function () {
-  const rect = editMenu.getBoundingClientRect();
-  editDropdown.style.left = rect.left + "px";
-  editDropdown.style.top = "20px";
-  editDropdown.style.display = 
-    editDropdown.style.display === "block" ? "none" : "block";
-});
-
-// 全局点击关闭两个菜单
-document.addEventListener("click", function (e) {
-  if (!fileMenu.contains(e.target) && !fileDropdown.contains(e.target)) {
-    fileDropdown.style.display = "none";
   }
-  if (!editMenu.contains(e.target) && !editDropdown.contains(e.target)) {
-    editDropdown.style.display = "none";
-  }
-});
 
-  
-    function restoreImages(luckysheetfile) {
-      if (!luckysheetfile.images) return;
-      for (const key in luckysheetfile.images) {
-        luckysheet.insertImage(luckysheetfile.images[key]);
+  function workbookBlob() {
+    const workbook = XLSX.utils.book_new();
+    const sheets = luckysheet.getluckysheetfile();
+    sheets.forEach((sheet, index) => {
+      const rows = Array.isArray(sheet.data) ? sheet.data.map(row =>
+        Array.isArray(row) ? row.map(cell => {
+          if (!cell) return "";
+          return cell.v ?? cell.m ?? "";
+        }) : []
+      ) : [];
+      const worksheet = XLSX.utils.aoa_to_sheet(rows);
+      if (Array.isArray(sheet.data)) {
+        sheet.data.forEach((row, rowIndex) => {
+          if (!Array.isArray(row)) return;
+          row.forEach((cell, columnIndex) => {
+            if (!cell?.f) return;
+            const address = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+            worksheet[address] = worksheet[address] || { t: "n", v: cell.v ?? 0 };
+            worksheet[address].f = String(cell.f).replace(/^=/, "");
+          });
+        });
       }
-    }
+      XLSX.utils.book_append_sheet(workbook, worksheet, String(sheet.name || `Sheet${index + 1}`).slice(0, 31));
+    });
+    const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    return new Blob([bytes], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+  }
 
+  function navigateToCloudResource(selected) {
+    const url = new URL(location.pathname, location.href);
+    const values = {
+      source: "cloud",
+      scope: selected.scope,
+      nodeId: selected.nodeId || "local-main",
+      path: selected.path,
+      name: selected.name,
+      readUrl: selected.readUrl,
+      editorDataUrl: selected.editorDataUrl || "",
+      saveEndpoint: selected.saveEndpoint || "",
+      readOnly: selected.scope === "public" ? "1" : "0"
+    };
+    Object.entries(values).forEach(([key, value]) => url.searchParams.set(key, value));
+    location.href = url.toString();
+  }
+
+  async function openCloud() {
+    const selected = await WebWindows.fileDialog.open({
+      title: "打开工作簿",
+      fileTypes: [{ name: "电子表格", extensions: ["xlsx", "xls", "csv"] }],
+      multiple: false,
+      purpose: "sheet-editor-open"
+    });
+    if (selected) navigateToCloudResource(selected);
+  }
+
+  async function saveAsCloud() {
+    try {
+      const suggestedName = state.sourceName.replace(/\.(xls|csv)$/i, ".xlsx");
+      const target = await WebWindows.fileDialog.save({
+        title: "保存工作簿",
+        fileTypes: [{ name: "Excel 工作簿", extensions: ["xlsx"] }],
+        suggestedName: /\.xlsx$/i.test(suggestedName) ? suggestedName : `${suggestedName}.xlsx`,
+        purpose: "sheet-editor-save"
+      });
+      if (!target) return;
+      setStatus("正在保存…");
+      const saved = await WebWindows.fileDialog.write(target, workbookBlob(), {
+        overwrite: target.overwrite
+      });
+      state.sourceName = saved.name;
+      state.dirty = false;
+      state.savedRevision = state.revision;
+      setStatus("已保存", "saved");
+      navigateToCloudResource(saved);
+    } catch (error) {
+      setStatus("保存失败", "error");
+      showNotice(error.message);
+    }
+  }
+
+  async function openLocal(file) {
+    state.loading = true;
+    loading.style.display = "flex";
+    try {
+      const imported = await importSource(file);
+      state.sourceName = file.name;
+      nameHost.textContent = file.name;
+      createSheet(imported.sheets);
+      restoreImages(imported.luckyFile);
+      state.dirty = false;
+      state.revision = 0;
+      setStatus("本地文档");
+      showNotice(imported.converted ? "旧版 XLS 将在导出时升级为 XLSX。" : "");
+    } catch (error) {
+      alert(error.message);
+    } finally {
+      state.loading = false;
+      loading.style.display = "none";
+    }
+  }
+
+  async function initialize() {
+    nameHost.textContent = state.sourceName;
+    document.getElementById("mode-badge").hidden = !readOnly;
+    document.getElementById("quick-save").textContent =
+      readOnly || !resource?.saveEndpoint ? "保存到云资料" : "保存";
+    document.getElementById("save-cloud").textContent =
+      readOnly || !resource?.saveEndpoint ? "保存到云资料" : "保存";
+    try {
+      if (resource) {
+        await loadCloud();
+        setStatus(readOnly ? "只读" : (state.dirty ? "正在保存…" : "已保存"), readOnly ? "" : "saved");
+        if (readOnly) showNotice("公共区域文件以只读方式打开。编辑不会写回原文件，可导出 XLSX 后上传到私人文件夹。");
+      } else {
+        createSheet();
+        setStatus("本地文档");
+      }
+    } catch (error) {
+      createSheet();
+      setStatus("打开失败", "error");
+      showNotice(error.message);
+    } finally {
+      state.loading = false;
+      loading.style.display = "none";
+    }
+  }
+
+  const menu = document.getElementById("file-dropdown");
+  document.getElementById("file-menu").addEventListener("click", event => {
+    event.stopPropagation();
+    menu.classList.toggle("open");
+  });
+  document.addEventListener("click", event => {
+    if (!event.target.closest(".menu-wrap")) menu.classList.remove("open");
+  });
+  document.getElementById("open-cloud").addEventListener("click", openCloud);
+  document.getElementById("quick-save").addEventListener("click", () => saveCloud(true));
+  document.getElementById("save-cloud").addEventListener("click", () => saveCloud(true));
+  document.getElementById("save-as-cloud").addEventListener("click", saveAsCloud);
+  document.getElementById("export-excel").addEventListener("click", exportExcel);
+  document.getElementById("undo").addEventListener("click", () => { luckysheet.undo(); markDirty(); });
+  document.getElementById("redo").addEventListener("click", () => { luckysheet.redo(); markDirty(); });
+  window.addEventListener("beforeunload", event => {
+    if (!state.dirty || readOnly) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
+
+  initialize();
+})();
 </script>
 </body>
 </html>

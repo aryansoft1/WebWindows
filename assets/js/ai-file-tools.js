@@ -82,10 +82,10 @@
     while (cache.size > 100) cache.delete(cache.keys().next().value);
   }
 
-  function buildCriteria(args) {
+  async function buildCriteria(args) {
     const files = global.WebWindows?.files;
-    if (!files?.search || !files?.parseQuery) throw new Error("统一文件搜索暂时不可用。");
-    const parsed = files.parseQuery(args.query);
+    if (!files?.search || !files?.parseQueryAsync) throw new Error("统一文件搜索暂时不可用。");
+    const parsed = await files.parseQueryAsync(args.query, { allowAI: false });
     const criteria = Object.assign({}, parsed);
     for (const key of ["nameContains", "extensions", "mimeTypes", "sources", "createdFrom", "createdTo", "modifiedFrom", "modifiedTo", "uploadedFrom", "uploadedTo", "sort", "order"]) {
       if (args[key] !== undefined) criteria[key] = args[key];
@@ -104,7 +104,7 @@
 
   async function searchFiles(args) {
     cleanupCache();
-    const criteria = buildCriteria(args);
+    const criteria = await buildCriteria(args);
     const payload = await global.WebWindows.files.search(criteria);
     const results = (payload.results || []).slice(0, SEARCH_LIMIT).map(safeResult);
     const deviceRequested = criteria.sources.includes("device");

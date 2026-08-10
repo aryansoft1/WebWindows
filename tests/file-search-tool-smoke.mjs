@@ -15,6 +15,7 @@ const windowObject = {
   WebWindows: {
     files: {
       parseQuery(query) { return { query, text: query, sources: ["private", "public", "device"] }; },
+      async parseQueryAsync(query) { return this.parseQuery(query); },
       async search(criteria) {
         searchCalls.push(criteria);
         return { ok: true, results: searchResults, searchedSources: criteria.sources, warnings: [] };

@@ -12,6 +12,7 @@ Const SEARCH_MAX_DEPTH = 16
 
 Dim queryText, exactName, extensionFilter, mimeFilter, folderFilter, sourceFilter
 Dim createdFrom, createdTo, modifiedFrom, modifiedTo, uploadedFrom, uploadedTo
+Dim sizeMin, sizeMax
 Dim resultLimit, sortField, sortOrder, scannedCount, resultCount, requestLanguage
 Dim resultJson(), resultScore(), resultName(), resultSortValue(), resultSource()
 
@@ -28,6 +29,8 @@ modifiedFrom = EpochParameter("modifiedFrom")
 modifiedTo = EpochParameter("modifiedTo")
 uploadedFrom = EpochParameter("uploadedFrom")
 uploadedTo = EpochParameter("uploadedTo")
+sizeMin = EpochParameter("sizeMin")
+sizeMax = EpochParameter("sizeMax")
 resultLimit = IntegerParameter("limit", 200, 1, SEARCH_MAX_RESULTS)
 sortField = LCase(Trim(CStr(Request.QueryString("sort"))))
 If sortField <> "name" And sortField <> "createdat" And sortField <> "modifiedat" And _
@@ -74,7 +77,7 @@ SortResults
 Dim outputCount, outputIndex, output
 outputCount = resultCount
 If outputCount > resultLimit Then outputCount = resultLimit
-output = "{""ok"":true,""version"":""1.0"",""results"":["
+output = "{""ok"":true,""version"":""2.0"",""results"":["
 For outputIndex = 0 To outputCount - 1
   If outputIndex > 0 Then output = output & ","
   output = output & resultJson(outputIndex)
@@ -127,6 +130,8 @@ Sub ConsiderFile(ByVal file, ByVal relativeFolder, ByVal sourceName, ByVal nodeI
   If Not EpochMatches(createdEpoch, createdFrom, createdTo) Then Exit Sub
   If Not EpochMatches(modifiedEpoch, modifiedFrom, modifiedTo) Then Exit Sub
   If Not EpochMatches(uploadedEpoch, uploadedFrom, uploadedTo) Then Exit Sub
+  If sizeMin > 0 And CDbl(file.Size) < sizeMin Then Exit Sub
+  If sizeMax > 0 And CDbl(file.Size) > sizeMax Then Exit Sub
 
   displayName = CloudDisplayFileName(fileName, requestLanguage)
   score = BestFileNameScore(fileName, queryText, reason)
@@ -141,6 +146,7 @@ Sub ConsiderFile(ByVal file, ByVal relativeFolder, ByVal sourceName, ByVal nodeI
   If createdFrom > 0 Or createdTo > 0 Then score = score + 5: AddReason reasons, "createdAt"
   If modifiedFrom > 0 Or modifiedTo > 0 Then score = score + 5: AddReason reasons, "modifiedAt"
   If uploadedFrom > 0 Or uploadedTo > 0 Then score = score + 5: AddReason reasons, "uploadedAt"
+  If sizeMin > 0 Or sizeMax > 0 Then score = score + 5: AddReason reasons, "size"
   If score > 100 Then score = 100
   pathValue = fileName
   If relativeFolder <> "" Then pathValue = relativeFolder & "/" & fileName
@@ -151,9 +157,12 @@ End Sub
 Sub AddResult(ByVal sourceName, ByVal nodeId, ByVal fileName, ByVal displayName, ByVal pathValue, ByVal folderPath, ByVal extension, _
               ByVal mimeType, ByVal size, ByVal createdEpoch, ByVal modifiedEpoch, ByVal uploadedEpoch, ByVal score, ByVal reasons)
   If resultCount >= SEARCH_MAX_RESULTS Then Exit Sub
-  Dim readUrl, reasonJson, sortValue
+  Dim readUrl, reasonJson, sortValue, writableFields
+  writableFields = ""
   If sourceName = "private" Then
     readUrl = "private-resource.asp?op=content&path=" & Server.URLEncode(pathValue)
+    writableFields = ",""editorDataUrl"":""" & CloudJson("private-resource.asp?op=editor-data&path=" & Server.URLEncode(pathValue)) & _
+      """,""saveEndpoint"":""private-resource.asp"",""writeUrl"":""private-resource.asp"""
   Else
     readUrl = "openResource.asp?path=" & Server.URLEncode(pathValue) & "&raw=1"
   End If
@@ -165,7 +174,7 @@ Sub AddResult(ByVal sourceName, ByVal nodeId, ByVal fileName, ByVal displayName,
     """,""mimeType"":""" & CloudJson(mimeType) & """,""size"":" & CStr(size) & _
     ",""createdAt"":""" & EpochLocalIso(createdEpoch) & """,""modifiedAt"":""" & EpochLocalIso(modifiedEpoch) & _
     """,""uploadedAt"":""" & EpochLocalIso(uploadedEpoch) & """,""readUrl"":""" & CloudJson(readUrl) & _
-    """,""relevanceScore"":" & CStr(score) & ",""matchReasons"":[" & reasonJson & "]}"
+    """,""relevanceScore"":" & CStr(score) & ",""matchReasons"":[" & reasonJson & "]" & writableFields & "}"
   resultScore(resultCount) = score
   resultName(resultCount) = LCase(fileName)
   resultSource(resultCount) = sourceName
@@ -253,6 +262,8 @@ Function MimeForExtension(ByVal extension)
     Case "csv": MimeForExtension = "text/csv"
     Case "docx": MimeForExtension = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     Case "doc": MimeForExtension = "application/msword"
+    Case "odt": MimeForExtension = "application/vnd.oasis.opendocument.text"
+    Case "rtf": MimeForExtension = "application/rtf"
     Case "pptx": MimeForExtension = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     Case "ppt": MimeForExtension = "application/vnd.ms-powerpoint"
     Case "pdf": MimeForExtension = "application/pdf"
@@ -261,6 +272,11 @@ Function MimeForExtension(ByVal extension)
     Case "jpg", "jpeg": MimeForExtension = "image/jpeg"
     Case "gif": MimeForExtension = "image/gif"
     Case "webp": MimeForExtension = "image/webp"
+    Case "svg": MimeForExtension = "image/svg+xml"
+    Case "mp4": MimeForExtension = "video/mp4"
+    Case "webm": MimeForExtension = "video/webm"
+    Case "mov": MimeForExtension = "video/quicktime"
+    Case "m4v": MimeForExtension = "video/x-m4v"
     Case "json": MimeForExtension = "application/json"
     Case "md": MimeForExtension = "text/markdown"
     Case "txt": MimeForExtension = "text/plain"

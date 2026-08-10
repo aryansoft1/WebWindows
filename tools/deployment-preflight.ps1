@@ -41,15 +41,19 @@ try {
   if (-not $production.integrity -and -not $AllowLegacyProductionManifest) {
     throw "Production manifest has no integrity data. Use -AllowLegacyProductionManifest only for the one-time migration after making a backup."
   }
-  if ($manifest.previousReleaseVersion -and [string]$production.releaseVersion -ne [string]$manifest.previousReleaseVersion) {
-    throw "Production release changed since this branch was prepared: expected $($manifest.previousReleaseVersion), found $($production.releaseVersion)."
+  $productionVersion = [string]$production.releaseVersion
+  $expectedPrevious = [string]$manifest.previousReleaseVersion
+  $expectedCurrent = [string]$manifest.releaseVersion
+  if ($expectedPrevious -and $productionVersion -ne $expectedPrevious -and $productionVersion -ne $expectedCurrent) {
+    throw "Production release changed since this branch was prepared: expected $expectedPrevious or $expectedCurrent, found $productionVersion."
   }
 
   Write-Output "preflight_ok=true"
   Write-Output "branch=$branch"
   Write-Output "commit=$localHead"
   Write-Output "release=$($manifest.releaseVersion)"
-  Write-Output "production_release=$($production.releaseVersion)"
+  Write-Output "production_release=$productionVersion"
+  Write-Output ("already_deployed=" + ($productionVersion -eq $expectedCurrent).ToString().ToLowerInvariant())
   Write-Output "files=$($manifest.requiredFiles.Count)"
 }
 finally {

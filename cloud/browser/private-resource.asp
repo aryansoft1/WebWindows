@@ -4,6 +4,7 @@ Option Explicit
 Response.Buffer = True
 Response.CodePage = 65001
 Response.Charset = "utf-8"
+Response.AddHeader "X-WebWindows-Private-Resource-Version", "2026.08.10.3"
 
 Const MAX_PRIVATE_FILE_BYTES = 15728640
 Const MAX_CHUNK_BYTES = 131072

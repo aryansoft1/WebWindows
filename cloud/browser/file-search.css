@@ -1,4 +1,12 @@
 .file-search-box{display:flex;align-items:center;gap:6px;min-width:min(330px,34vw)}
+.file-list[hidden],.files[hidden],.file-search-view[hidden]{display:none!important}
+.file-search-view{width:100%;min-width:0;align-content:start;grid-auto-rows:max-content;overflow:auto}
+.main>.file-search-view{flex:1 1 auto}
+.file-search-state,.file-search-understanding,.file-search-loading,.file-search-empty{grid-column:1/-1}
+.file-search-state{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:14px 16px;border-bottom:1px solid #e2e8f0}
+.file-search-state h2{min-width:0;margin:0;font-size:18px}.file-search-state>span{flex:none;color:#64748b}
+.file-search-query{max-width:min(100%,32rem);border:0;background:transparent;color:inherit;font:inherit;pointer-events:none}
+.file-search-view.large .file-search-result{width:100%;height:auto;min-height:132px;margin:0}
 .file-search-box input{width:100%;min-width:120px;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#1f2937;font:inherit}
 .file-search-box button,.file-search-close{padding:8px 11px;border:1px solid #9eb9dc;border-radius:8px;background:#eff6ff;color:#1d4ed8;font:inherit;cursor:pointer}
 .file-search-panel{position:fixed;z-index:120;top:88px;right:18px;width:min(620px,calc(100vw - 36px));max-height:calc(100vh - 110px);overflow:hidden;border:1px solid #cbd5e1;border-radius:14px;background:#fff;box-shadow:0 18px 60px rgba(15,23,42,.24)}

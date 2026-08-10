@@ -3,6 +3,7 @@
 Option Explicit
 Response.CodePage = 65001
 Response.Charset = "utf-8"
+Response.AddHeader "X-WebWindows-Private-Files-Version", "2026.08.10.3"
 
 Dim webWindowsUserId, webWindowsUsername, webWindowsCookieUsername, loggedIn
 webWindowsUserId = Trim(CStr(Session("webwindows_user_id")))
@@ -191,10 +192,10 @@ End If
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
-  <script defer src="../../assets/js/file-query-parser.js?v=20260810-query-v2-1"></script>
-  <script defer src="../../assets/js/file-search.js?v=20260810-query-v2-1"></script>
-  <script defer src="search-ui.js?v=20260810-query-v2-1"></script>
-  <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-1">
+  <script defer src="../../assets/js/file-query-parser.js?v=20260810-query-v2-2"></script>
+  <script defer src="../../assets/js/file-search.js?v=20260810-query-v2-2"></script>
+  <script defer src="search-ui.js?v=20260810-query-v2-2"></script>
+  <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-2">
   <style>
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}
@@ -222,6 +223,7 @@ End If
   </style>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
+      data-private-files-version="2026.08.10.3"
       data-path="<%=Html(relativePath)%>" data-mode="<% If pickerMode Then Response.Write "picker" %>"
       data-picker-purpose="<%=Html(pickerPurpose)%>"
       data-picker-title="<%=Html(pickerTitle)%>"

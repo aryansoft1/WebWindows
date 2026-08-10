@@ -50,6 +50,8 @@ const cases = [
   ["名字里有WebWindows的文件", [], null],
   ["上周的Word", ["docx","doc"], null],
   ["最近修改的文件", [], null],
+  ["最新的md文件", ["md"], null],
+  ["所有图片文件", ["png","jpg","jpeg","gif","webp","svg"], null],
   ["WebWindows", [], "WebWindows"],
   ["一个完全不存在的文件名", [], "一个完全不存在的文件名"]
 ];
@@ -62,6 +64,8 @@ assert.equal(parser.parse("名字里有WebWindows的文件", { now }).nameContai
 assert.equal(parser.parse("7月3日存的Excel", { now }).uploadedFrom.startsWith("2026-07-03"), true);
 assert.equal(parser.parse("7月3日修改的PDF", { now }).modifiedFrom.startsWith("2026-07-03"), true);
 assert.equal(parser.parse("最近修改的文件", { now }).sort, "modifiedAt");
+assert.equal(parser.parse("最新的md文件", { now }).sort, "modifiedAt");
+assert.deepEqual(Array.from(parser.parse("最新的md文件", { now }).understanding), ["Markdown / MD", "最新"]);
 assert.equal(parser.parse("最近打开的文件", { now }).ast.unsupported.includes("openedAt"), true);
 assert.deepEqual(Array.from(parser.parse("文档", { now }).extensions), ["docx","doc","odt","rtf","pdf","md","txt"]);
 assert.deepEqual(Array.from(parser.parse("Word文件", { now }).extensions), ["docx","doc"]);
@@ -72,6 +76,10 @@ assert.equal(aiCalls, 0, "deterministic queries must not call GLM");
 assert.deepEqual(Array.from(mdResult.results, item => item.name), ["README.md", "WebWindows Guide.md"]);
 assert.equal(mdResult.criteria.text, undefined);
 assert.deepEqual(Array.from(mdResult.criteria.understanding), ["Markdown / MD"]);
+
+const latestMdResult = await files.search("最新的md文件", { now, allowAI:true, sources:["public"] });
+assert.equal(aiCalls, 0, "latest type queries must remain deterministic");
+assert.deepEqual(Array.from(latestMdResult.results, item => item.name), ["WebWindows Guide.md", "README.md"]);
 
 const excelResult = await files.search("7月3日存的Excel", { now, sources:["public"] });
 assert.deepEqual(Array.from(excelResult.results, item => item.name), ["7月3日统计.xlsx"]);

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.10.2",
-  "catalogVersion": "2026.08.10.2",
-  "generatedAt": "2026-08-10T15:00:00+09:00",
+  "releaseVersion": "2026.08.10.3",
+  "catalogVersion": "2026.08.10.3",
+  "generatedAt": "2026-08-10T05:36:42.110Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -68,5 +68,256 @@
     "dist-weather/weather-widget.umd.js",
     "dist-weather/weather-widget.global.js",
     "dist-weather/weather-widget.css"
-  ]
+  ],
+  "previousReleaseVersion": "2026.08.10.2",
+  "integrity": {
+    "index.html": {
+      "sha256": "449e8932f2cd2df395a7dab93dd732a3470746d0d3a8610ee3b013550599ee33",
+      "size": 33515
+    },
+    "api/function-catalog.asp": {
+      "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
+      "size": 8808
+    },
+    "data/apps/system-apps.json": {
+      "sha256": "7e13582d66b72f1e32c209ea950290a592eb07f28044b67b818c9a1530e78a4d",
+      "size": 12331
+    },
+    "assets/js/app-registry.js": {
+      "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
+      "size": 20725
+    },
+    "assets/js/tw.js": {
+      "sha256": "a8a7dd27a97b148436e0df17781eda99959fc5bba44d7eb944b157f51947ea1e",
+      "size": 49459
+    },
+    "assets/js/file-query-parser.js": {
+      "sha256": "25f78ecca77d326487996d36ad92410cf23efc279c5f178e2e4117359d3ada7c",
+      "size": 19877
+    },
+    "assets/js/file-search.js": {
+      "sha256": "9ac136837262a5f6f853e4c7572132663be8bc5e9b48277a6fc544d9f9ed6a52",
+      "size": 11226
+    },
+    "assets/js/ai-file-tools.js": {
+      "sha256": "618ab09e7e257e7a4c196adc9b02577c06034cccc91358ca3ad67ffd105c6df0",
+      "size": 9622
+    },
+    "assets/js/cloud-file-dialog.js": {
+      "sha256": "8277c8376452f4a8651aadaa532cbd89d4d99f8c115d6d6428be7b9aa146b0d8",
+      "size": 9734
+    },
+    "assets/js/resource-open.js": {
+      "sha256": "abccf1434cbecd0d30da6b564e00efc67d350db9c87a4b15112f8c95f53d6e03",
+      "size": 4827
+    },
+    "assets/js/function-center.js": {
+      "sha256": "756e39f1696bf274eb4da8d4177278a9bda76e10549d9e485e8360142cc03a1e",
+      "size": 11213
+    },
+    "assets/js/guide.js": {
+      "sha256": "b8abaac57ab48020cd2e12d412dbd2771f9f94d2a51b8fb58caeb42782107261",
+      "size": 5260
+    },
+    "assets/css/function-center.css": {
+      "sha256": "65f0c322b418508c26a4622620fa17afe0aaf51ac1226bcbd6f5c0bff92ac224",
+      "size": 7867
+    },
+    "assets/css/guide.css": {
+      "sha256": "d026b79ec80c1dc2a42fdb10bda03ebbc4fdb126af91ea5e901dad95684a3897",
+      "size": 5128
+    },
+    "assets/icons/function-center.svg": {
+      "sha256": "c4cf40ec6713946d6f1c33eb76956d1a9bcc53342645e6002569ee002c1463f7",
+      "size": 681
+    },
+    "assets/icons/guide.svg": {
+      "sha256": "3f0463dfcea3d5d1e91606cf1be8b34ad3b29fd0ff991500367a6404ea6c1902",
+      "size": 830
+    },
+    "assets/icons/writeeditor.svg": {
+      "sha256": "8bf60739be17231b65c04a2c8f6211ddd252b2ed8be117522e6d32462c871b60",
+      "size": 601
+    },
+    "assets/icons/slideeditor.svg": {
+      "sha256": "79780be31281bb322e395a224b7ccb69eb50f9163e537d1e15d9a795865f1ac7",
+      "size": 649
+    },
+    "assets/icons/dreama.png": {
+      "sha256": "1cffabb03b68302e76cea53a160424b760aaf0449e16024c969937022d8a3cd9",
+      "size": 1528564
+    },
+    "assets/icons/mailbox.png": {
+      "sha256": "adffb3d78060bdd1fbfa804c0c1cb68fb8909ceb7a70a64103e90534b7fbe467",
+      "size": 40156
+    },
+    "function-center.html": {
+      "sha256": "3646291af754f5998f1ac21062530b204f8bb2cbaa9b1e3a9af443eb25304fb2",
+      "size": 3000
+    },
+    "guide.html": {
+      "sha256": "8ddbb3f08b55128ebd3cbcdf57b53617e013cec37b2916391aa942d2c0c84dbe",
+      "size": 1849
+    },
+    "dreama.html": {
+      "sha256": "19c2b438ef6c77f0481e0d559c68380e8d0d3c0e404f44393b138992b9e420b1",
+      "size": 5614
+    },
+    "worker_SheetCreater.html": {
+      "sha256": "a9bfa810f0c457add9fa03723064965f53c15f44f989fdea5200337456ec86e3",
+      "size": 18511
+    },
+    "worker_WriteEditor.html": {
+      "sha256": "b8a9e8ad459c66faad123d1298474653b4f8321831d2b2f928c9d5b2722127ac",
+      "size": 27286
+    },
+    "worker_SlideEditor.html": {
+      "sha256": "1e8c7e1b032eaf395aa6e57f2042fbf8aec21355f44aff871a1b7c88bce64024",
+      "size": 17101
+    },
+    "cloud/browser/files.asp": {
+      "sha256": "59a5afdba6db56cba1f158c482d37e940728151ff70b66b8eb2dc4d42fb31354",
+      "size": 22441
+    },
+    "cloud/browser/private-files.asp": {
+      "sha256": "c0db84dbf4317f9d4aee758f8647ef87a5b6e1827c9ce846156e8bde78c5e1e0",
+      "size": 34809
+    },
+    "cloud/browser/private-resource.asp": {
+      "sha256": "78c1de5e55ba68ed3a565c7067f9833eb799154da9757232df0f481961f4c8c3",
+      "size": 20309
+    },
+    "cloud/browser/search.asp": {
+      "sha256": "31e1ca25c4f7f6161083db6356baa9f67ceb414b5fcead255469f9fdde22c19d",
+      "size": 17718
+    },
+    "cloud/browser/search-ui.js": {
+      "sha256": "197e80f5fc6fd209693e213a685d62526cb3ca2d737b19bf3a58d8e8a1ad314f",
+      "size": 10483
+    },
+    "cloud/browser/file-search.css": {
+      "sha256": "36ba52d4f55cda6fd083d8c4c57061605366c9a0bc5e33bcd25c3d345b94d345",
+      "size": 2884
+    },
+    "cloud/browser/FILE_DIALOG_API.md": {
+      "sha256": "4add76270d4d1c9dc132a5e618878f3410b769dc131c788b49fea2aab56ea702",
+      "size": 2156
+    },
+    "cloud/browser/FILE_SEARCH_QUERY_V2.md": {
+      "sha256": "99095a0f8d361d0739ae6f49b3c5a6e9bd5f0f77f589448780f7a670cd85b72f",
+      "size": 2076
+    },
+    "cloud/browser/assets/archive.svg": {
+      "sha256": "9e68283690360fe1b6b197fcb8e8db7e6f62eaddc2fd43b43d6c678e68dc78a8",
+      "size": 395
+    },
+    "cloud/browser/assets/back.svg": {
+      "sha256": "957d7270d440760e159128d5a9a09c77eb43cf5f3f0fb5865c2fe2f33745ba13",
+      "size": 192
+    },
+    "cloud/browser/assets/cloud.svg": {
+      "sha256": "b03c5283fc9314610b1572e15d04eeb65d87381db8beaf9954cc8bbcea683f41",
+      "size": 255
+    },
+    "cloud/browser/assets/compact.svg": {
+      "sha256": "376fa41b9bafb32232be2016019bace6ef55d7bd9ac119e208d89226f568ed1f",
+      "size": 178
+    },
+    "cloud/browser/assets/copy.svg": {
+      "sha256": "72c0d045d9a7b826d9d1491086f9ed0ead0f990cb560c601c2a45cb31e5ee907",
+      "size": 236
+    },
+    "cloud/browser/assets/download.svg": {
+      "sha256": "32fe38f0e1d322d9eb5b5a9ac825360472352f2e737196915ea4ce298d1706b5",
+      "size": 220
+    },
+    "cloud/browser/assets/eye.svg": {
+      "sha256": "bdf04e77385fb508a19ca3454983a144caad05748ba349fdaaa879507c841d24",
+      "size": 271
+    },
+    "cloud/browser/assets/file.svg": {
+      "sha256": "8b7dc305be11a7616003b83d1cafc16d7f492c2d723e6b2a3123dfe640cf7c4c",
+      "size": 283
+    },
+    "cloud/browser/assets/folder.svg": {
+      "sha256": "01172914850dd33ce809921d1de840adf2233fe812525346490ce999c7d76737",
+      "size": 261
+    },
+    "cloud/browser/assets/forward.svg": {
+      "sha256": "482430e8a720dd083e79e196c8ffdd8fd1348897f6311b7db33f9f53832e70bf",
+      "size": 191
+    },
+    "cloud/browser/assets/grid.svg": {
+      "sha256": "f4e050ab894f5b6f42967a178b8b40a76031cccb6270ae1050327fd7c33e6d23",
+      "size": 315
+    },
+    "cloud/browser/assets/home.svg": {
+      "sha256": "5779f8ee1acaba303d619c6f5ef545cb2d692795418b0c3c61dfe93087f794ae",
+      "size": 238
+    },
+    "cloud/browser/assets/image.svg": {
+      "sha256": "0b95a5ed767cc252cee41e293ec9675fd6092964e838da22008ad3811a1f2966",
+      "size": 288
+    },
+    "cloud/browser/assets/info.svg": {
+      "sha256": "8efb1143a5158269b9d969f7145db42381eb5cd716916e1f81f7e0c21efece01",
+      "size": 217
+    },
+    "cloud/browser/assets/json.svg": {
+      "sha256": "6222f21a34ed2134a7df6d35c529836ee415aec0a422294e58653c21f9d4b24c",
+      "size": 426
+    },
+    "cloud/browser/assets/list.svg": {
+      "sha256": "24b88723326278c00f63d8c046aacfc4304e3bfa3ce65f9df5bc2436895cc52e",
+      "size": 276
+    },
+    "cloud/browser/assets/markdown.svg": {
+      "sha256": "9de5685011df09d5c2afc466bf0cfe7b4ac15530690db3dee2868400901dc35c",
+      "size": 395
+    },
+    "cloud/browser/assets/open.svg": {
+      "sha256": "df429f0fd5b67c972a749b1663bb88f43f186f5cd562bf7f49f83b0431f14dd2",
+      "size": 255
+    },
+    "cloud/browser/assets/pdf.svg": {
+      "sha256": "a6721bc0515eb5b2a1cf95ddb748921b115fa2739d08ec79e70eb7fba6ec7e4c",
+      "size": 348
+    },
+    "cloud/browser/assets/presentation.svg": {
+      "sha256": "c7db17c58a2a026942ddf5ad504b3a5f704b212884b6cbae576ea438586e81f9",
+      "size": 402
+    },
+    "cloud/browser/assets/refresh.svg": {
+      "sha256": "a5d2daa4c0ca470a8086ae5bb46c6f7de3cb4a60aa29f7416c1cc9fc8fd3e045",
+      "size": 282
+    },
+    "cloud/browser/assets/sheet.svg": {
+      "sha256": "cd63de0de3550ef1c7cd4f4ab1325484fc4bd7b65d1ec67cf40976fcca879482",
+      "size": 299
+    },
+    "cloud/browser/assets/sort.svg": {
+      "sha256": "fcd92c9ef24746136d1cd81f755c52b26f2f33d77b604e73e24f39cd828a3f1f",
+      "size": 220
+    },
+    "cloud/browser/assets/up.svg": {
+      "sha256": "7e1748844ac5691dacd6ae1ab03ca1a10d2b401c3b86a5e84eac2b7e9d9c2419",
+      "size": 190
+    },
+    "cloud/browser/assets/word.svg": {
+      "sha256": "a047fc244fc352028465d230c2dc4c9de8d660a6609ce9514945e3415212b594",
+      "size": 379
+    },
+    "dist-weather/weather-widget.umd.js": {
+      "sha256": "7166ffd0baf21d37b1e66dfaaa43e0925ec84db49c1b875ec2f0223ec2b6c5e7",
+      "size": 14364
+    },
+    "dist-weather/weather-widget.global.js": {
+      "sha256": "18afc005656bbf13d06488608807d57b1f3c9752b5dcfd028f5a13324722146d",
+      "size": 14161
+    },
+    "dist-weather/weather-widget.css": {
+      "sha256": "ccfef1bd37decf80962285a11c0152136141e68698f410bfd6412072a5caa170",
+      "size": 915
+    }
+  }
 }

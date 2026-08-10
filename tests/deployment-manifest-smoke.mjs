@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,7 +19,17 @@ assert.doesNotMatch(catalogApi, /StrComp\(fileVersion, activeVersion/,
 
 for (const relative of manifest.requiredFiles) {
   await access(resolve(root, relative));
+  if (relative === "deploy/ftp-manifest.json") continue;
+  const bytes = await readFile(resolve(root, relative));
+  assert.equal(manifest.integrity?.[relative]?.sha256,
+    createHash("sha256").update(bytes).digest("hex"),
+    `deployment hash must match ${relative}`);
+  assert.equal(manifest.integrity?.[relative]?.size, bytes.length,
+    `deployment size must match ${relative}`);
 }
+assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
+  "every non-self deployment file must have exactly one integrity record");
+assert.equal(manifest.previousReleaseVersion, "2026.08.10.2");
 for (const app of catalog.apps) {
   const entry = String(app.entry || "").split("?")[0];
   if (entry && entry !== "about:blank") await access(resolve(root, entry));

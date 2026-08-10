@@ -114,7 +114,10 @@
     return results.sort((left, right) => {
       let compared = 0;
       if (sort === "name") compared = String(left.name).localeCompare(String(right.name));
-      else if (["createdAt", "modifiedAt", "uploadedAt", "size"].includes(sort)) compared = (Number(left[sort]) || 0) - (Number(right[sort]) || 0);
+      else if (["createdAt", "modifiedAt", "uploadedAt"].includes(sort)) {
+        compared = (Date.parse(left[sort]) || Number(left[sort]) || 0) - (Date.parse(right[sort]) || Number(right[sort]) || 0);
+      }
+      else if (sort === "size") compared = (Number(left.size) || 0) - (Number(right.size) || 0);
       else compared = (Number(left.relevanceScore) || 0) - (Number(right.relevanceScore) || 0);
       if (compared) return compared * direction;
       compared = (SOURCE_ORDER[left.source] ?? 9) - (SOURCE_ORDER[right.source] ?? 9);

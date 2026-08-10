@@ -155,14 +155,14 @@ itemCount = subfolders.Count + visibleFileCount
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WebWindows <%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></title>
   <link rel="stylesheet" href="styles.css?v=20260809-device-1">
-  <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-1">
+  <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-2">
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-storage-provider.js?v=20260809-storage-2"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
-  <script defer src="../../assets/js/file-query-parser.js?v=20260810-query-v2-1"></script>
-  <script defer src="../../assets/js/file-search.js?v=20260810-query-v2-1"></script>
-  <script defer src="search-ui.js?v=20260810-query-v2-1"></script>
+  <script defer src="../../assets/js/file-query-parser.js?v=20260810-query-v2-2"></script>
+  <script defer src="../../assets/js/file-search.js?v=20260810-query-v2-2"></script>
+  <script defer src="search-ui.js?v=20260810-query-v2-2"></script>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
       data-current-path="<%=CloudHtml(relativePath)%>" data-node-name="<%=CloudHtml(CLOUD_NODE_NAME)%>"

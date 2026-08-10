@@ -176,7 +176,9 @@
     if (ast.dateUploaded?.label) criteria.understanding.push(`${ast.dateUploaded.label} 保存`);
     if (criteria.nameContains) criteria.understanding.push(`名称包含 ${criteria.nameContains}`);
     if (ast.path) criteria.understanding.push(`位置 ${ast.path}`);
-    if (ast.sort === "modifiedAt" && !ast.dateModified) criteria.understanding.push("最近修改");
+    if (ast.sort === "modifiedAt" && !ast.dateModified) {
+      criteria.understanding.push(/最新(?:的)?|最新の|latest/i.test(ast.original || "") ? "最新" : "最近修改");
+    }
     if (ast.unsupported?.includes("openedAt")) criteria.understanding.push("最近打开（暂无元数据）");
     return criteria;
   }
@@ -220,6 +222,13 @@
       ast.order = "desc";
       ast.limit = 50;
       residual = residual.replace(/最近(?:修改|更新)(?:的)?|最近更新(?:的)?|recently?\s+(?:modified|updated)/ig, " ");
+      structured = true;
+    }
+    if (/最新(?:的)?|最新の|latest/i.test(original)) {
+      ast.sort = "modifiedAt";
+      ast.order = "desc";
+      ast.limit = 50;
+      residual = residual.replace(/最新(?:的)?|最新の|latest/ig, " ");
       structured = true;
     }
     if (/最近打开|recently?\s+opened|最近開いた/i.test(original)) {

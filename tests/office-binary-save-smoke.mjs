@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 const sheet = await readFile(new URL("../worker_SheetCreater.html", import.meta.url), "utf8");
 const write = await readFile(new URL("../worker_WriteEditor.html", import.meta.url), "utf8");
 const slide = await readFile(new URL("../worker_SlideEditor.html", import.meta.url), "utf8");
+const translations = await readFile(new URL("../assets/js/tw.js", import.meta.url), "utf8");
 const privateResource = await readFile(new URL("../cloud/browser/private-resource.asp", import.meta.url), "utf8");
 
 assert.doesNotMatch(sheet, /id="download-editor-data"/,
@@ -24,5 +25,7 @@ assert.match(slide, /new Blob\(\[state\.buffer\], \{[\s\S]*?application\/vnd\.op
   "Slide Save Copy must preserve a real PPTX binary payload");
 assert.match(privateResource, /AllowedCloudFile = \(InStr[\s\S]*?xlsx,xls,csv,docx,doc,pptx,ppt/,
   "Private cloud storage must accept Office binary extensions");
+assert.match(translations, /text == null \? "" : String\(text\)/,
+  "Office language application must tolerate controls without a value attribute");
 
 console.log("Office binary save smoke tests passed");

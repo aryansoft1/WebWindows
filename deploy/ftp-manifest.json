@@ -10,6 +10,7 @@
     "api/function-catalog.asp",
     "data/apps/system-apps.json",
     "assets/js/app-registry.js",
+    "assets/js/tw.js",
     "assets/js/file-query-parser.js",
     "assets/js/file-search.js",
     "assets/js/ai-file-tools.js",

@@ -20,13 +20,20 @@ $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-" + [string]$production.releaseVersion)
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
 
-function Invoke-FtpDownload([string]$relative, [string]$destination) {
+function Invoke-FtpDownload([string]$relative, [string]$destination, [switch]$AllowMissing) {
   $parent = Split-Path -Parent $destination
   if ($parent) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
   $url = "ftp://" + $ftpHost + "/wwwroot/" + $relative
   & curl.exe --silent --show-error --fail --retry 5 --retry-all-errors --retry-delay 1 `
     --output $destination --user "${ftpUser}:${ftpPassword}" $url
-  if ($LASTEXITCODE -ne 0) { throw "Unable to back up production file: $relative" }
+  if ($LASTEXITCODE -ne 0) {
+    if ($AllowMissing) {
+      if (Test-Path -LiteralPath $destination) { Remove-Item -LiteralPath $destination -Force }
+      return $false
+    }
+    throw "Unable to back up production file: $relative"
+  }
+  return $true
 }
 
 function Invoke-FtpUpload([string]$relative) {
@@ -39,15 +46,19 @@ function Invoke-FtpUpload([string]$relative) {
 
 foreach ($relative in $manifest.requiredFiles) {
   $backup = Join-Path $backupRoot ($relative -replace '/', '\')
-  Invoke-FtpDownload $relative $backup
   $productionEntry = if ($production.integrity -and $relative -ne "deploy/ftp-manifest.json") { $production.integrity.PSObject.Properties[$relative] } else { $null }
+  $downloaded = Invoke-FtpDownload $relative $backup -AllowMissing:(-not $productionEntry)
   if ($productionEntry) {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne [string]$productionEntry.Value.sha256) {
       throw "Production file changed outside the recorded release: $relative"
     }
-  } elseif ($relative -ne "deploy/ftp-manifest.json" -and -not $AllowLegacyProductionManifest) {
-    throw "Production integrity is unavailable for: $relative"
+  } elseif ($downloaded -and $relative -ne "deploy/ftp-manifest.json") {
+    $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
+    $expected = [string]$manifest.integrity.PSObject.Properties[$relative].Value.sha256
+    if ($actual -ne $expected) {
+      throw "Unrecorded production dependency differs from this release: $relative"
+    }
   }
 }
 

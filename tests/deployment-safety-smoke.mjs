@@ -12,6 +12,8 @@ assert.match(preflight, /Current branch is not synchronized/);
 assert.match(preflight, /Deployment integrity mismatch/);
 assert.match(deploy, /deploy\\backups/);
 assert.match(deploy, /Production file changed outside the recorded release/);
+assert.match(deploy, /Unrecorded production dependency differs from this release/);
+assert.match(deploy, /AllowMissing/);
 assert.match(deploy, /Post-upload verification failed/);
 assert.doesNotMatch(deploy, /yylwljj|8bdea/i, "deployment tooling must not embed credentials");
 

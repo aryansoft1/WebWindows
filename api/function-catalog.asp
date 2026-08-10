@@ -120,6 +120,38 @@ Function CatalogVersion(ByVal catalogText)
   Set expression = Nothing
 End Function
 
+Function NumericVersionParts(ByVal value)
+  Dim expression, normalized
+  Set expression = New RegExp
+  expression.Pattern = "[^0-9]+"
+  expression.Global = True
+  normalized = expression.Replace(CStr(value), ".")
+  Do While Left(normalized, 1) = ".": normalized = Mid(normalized, 2): Loop
+  Do While Right(normalized, 1) = ".": normalized = Left(normalized, Len(normalized) - 1): Loop
+  NumericVersionParts = normalized
+  Set expression = Nothing
+End Function
+
+Function VersionIsNewer(ByVal candidate, ByVal current)
+  Dim leftValue, rightValue, leftParts, rightParts, index, leftPart, rightPart, maximum
+  leftValue = NumericVersionParts(candidate)
+  rightValue = NumericVersionParts(current)
+  If leftValue = "" Then VersionIsNewer = False: Exit Function
+  If rightValue = "" Then VersionIsNewer = True: Exit Function
+  leftParts = Split(leftValue, ".")
+  rightParts = Split(rightValue, ".")
+  maximum = UBound(leftParts)
+  If UBound(rightParts) > maximum Then maximum = UBound(rightParts)
+  For index = 0 To maximum
+    leftPart = 0: rightPart = 0
+    If index <= UBound(leftParts) Then leftPart = CDbl(leftParts(index))
+    If index <= UBound(rightParts) Then rightPart = CDbl(rightParts(index))
+    If leftPart > rightPart Then VersionIsNewer = True: Exit Function
+    If leftPart < rightPart Then VersionIsNewer = False: Exit Function
+  Next
+  VersionIsNewer = False
+End Function
+
 Function ActiveCatalog(ByRef activeVersion)
   Dim rs
   ActiveCatalog = ""
@@ -191,7 +223,7 @@ If tableReady Then
 End If
 
 If fileCatalog <> "" And (catalogText = "" Or _
-   (fileVersion <> "" And StrComp(fileVersion, activeVersion, vbTextCompare) > 0)) Then
+   VersionIsNewer(fileVersion, activeVersion)) Then
   If tableReady Then
     On Error Resume Next
     conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"

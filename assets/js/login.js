@@ -57,10 +57,26 @@ function login() {
     .then(data => {
       if (data.success) {
         window.top.sessionStorage.setItem('webwindows_user', JSON.stringify(data.user));
-        window.top.sessionStorage.setItem('webwindows_user_nickname', data.user.nickname); // ✅ 新增
+        window.top.sessionStorage.setItem(
+          'webwindows_user_nickname',
+          data.user.nickname || data.user.username || ''
+        );
 
         if (window.parent && typeof window.parent.initUserStatus === 'function') {
           window.parent.initUserStatus();  
+        }
+        window.top.dispatchEvent(new CustomEvent('webwindows:login', { detail: data.user }));
+
+        const returnTarget = getSafeReturnTarget();
+        if (returnTarget) {
+          // 云资料中的登录在同一窗口返回，保留窗口和任务栏项目。
+          window.location.replace(returnTarget);
+          return;
+        }
+
+        if (window.parent && typeof window.parent.closeTargetWindow === 'function') {
+          window.parent.closeTargetWindow('login');
+          return;
         }
 
         const win = window.frameElement?.closest('.window');
@@ -85,6 +101,19 @@ function login() {
       drawCaptcha();
       console.log(e)
     });
+}
+
+function getSafeReturnTarget() {
+  const requested = new URLSearchParams(window.location.search).get('return');
+  if (!requested) return '';
+  try {
+    const target = new URL(requested, window.location.origin + '/');
+    if (target.origin !== window.location.origin) return '';
+    if (!target.pathname.startsWith('/cloud/browser/')) return '';
+    return target.pathname + target.search + target.hash;
+  } catch (_) {
+    return '';
+  }
 }
 
 // 可选：屏蔽右键

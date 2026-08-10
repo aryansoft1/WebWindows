@@ -21,6 +21,7 @@
     <script src="assets/js/webwindows-message.js?v=20260729-1"></script>
     <script src="assets/js/locale-region.js?v=20260802-1"></script>
     <script defer src="assets/js/system-session.js?v=20260802-7"></script>
+    <script defer src="assets/js/auth-session.js?v=20260810-session-truth-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
@@ -218,7 +219,7 @@
         <div id="start-menu-login" style="cursor:default; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
     <div style="display: flex; align-items: center;" id="login-area">
   <img id="login-avatar" src="assets/icons/149071.png" alt="avatar" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 8px;">
-  <span id="login-username">线下用户</span>
+  <span id="login-username">正在确认登录状态…</span>
   <span id="login-status" style="width: 8px; height: 8px; background: #cc8800; border-radius: 50%; display: inline-block; margin-left: 6px;"></span>
 </div>
     <button class="power-btn"  id="power-button" style="background: none; border: none; font-size: 16px; cursor: pointer;">
@@ -226,7 +227,7 @@
     </button>
   </div>
 <div id="user-popup" class="absolute bottom-14 left-3 bg-white shadow-xl border rounded-md w-40 p-2 hidden z-50">
-  <div id="user-popup-name" class="text-sm text-center mb-2 text-gray-700">未登录</div>
+  <div id="user-popup-name" class="text-sm text-center mb-2 text-gray-700">正在确认登录状态…</div>
   <button onclick="logout()" class="w-full text-red-600 hover:text-white hover:bg-red-500 py-1 rounded">
     注销
   </button>

@@ -1,439 +1,694 @@
-function goBack() {
-  window.history.back();
-}
+(function () {
+  "use strict";
 
-function goForward() {
-  window.history.forward();
-}
-
-function goUp() {
-  const url = new URL(window.location.href);
-  let path = url.searchParams.get("path") || "";
-
-  // 将反斜杠全部统一为正斜杠（浏览器安全）
-  path = path.replace(/\\/g, "/");
-
-  // 移除开头和结尾的斜杠
-  path = path.replace(/^\/+|\/+$/g, "");
-
-  const parts = path.split("/").filter(p => p.trim() !== "");
-
-  if (parts.length > 0) parts.pop();
-
-  const upPath = parts.join("/");
-
-  if (upPath) {
-    url.searchParams.set("path", upPath);
-  } else {
-    url.searchParams.delete("path");
-  }
-
-  window.location.href = url.toString();
-}
-
-
-
-
-function setView(viewType) {
-  const url = new URL(window.location.href);
-  // 修正：small => large, large => small
-  if (viewType === "small") {
-    url.searchParams.set("view", "large");  // 小图标按钮 实际切换到大图标视图
-  } else if (viewType === "large") {
-    url.searchParams.set("view", "small");  // 大图标按钮 实际切换到小图标视图
-  } else {
-    url.searchParams.set("view", viewType); // detail 原样处理
-  }
-  window.location.href = url.toString();
-}
-
-function sortFiles(sortBy) {
-  const url = new URL(window.location.href);
-  url.searchParams.set("sort", sortBy);
-  window.location.href = url.toString();
-}
-window.addEventListener('DOMContentLoaded', function () {
-
-  if (window.lucide && typeof lucide.createIcons === "function") {
-    lucide.createIcons();
-  } else {
-    console.warn("Lucide is not ready.");
-  }
-   const currentPath = new URL(window.location.href).searchParams.get("path") || "";
-  loadFolders("", document.getElementById("folder-tree"), () => {
-    expandToCurrentPath(currentPath);
-  });
-});
-const loadedPaths = new Set();
-
-function loadFolders(path = "", parentUL = document.getElementById("folder-tree"), callback = null) {
-  if (loadedPaths.has(path)) {
-    if (callback) callback();
-    return;
-  }
-  loadedPaths.add(path);
-
-  fetch(`getFolders.asp?path=${encodeURIComponent(path)}&recursive=true`)
-    .then(res => res.json())
-    .then(folders => {
-      if (!Array.isArray(folders)) {
-        console.error("目录接口返回异常：", folders);
-        showLoginOverlayAndClose(folders?.error || "目录加载失败");
-        return;
-      }
-
-      folders.forEach(folder => {
-        renderFolderRecursive(folder, parentUL);
-      });
-
-      if (callback) callback();
-    });
-
-}
-
-function renderFolderRecursive(folder, parentUL) {
-  const li = document.createElement("li");
-  li.className = "folder-node expanded"; // 默认展开
-  li.dataset.path = folder.path;
-  li.dataset.loaded = "true"; // 标记已加载，避免重复加载
-
-  // 使用 Lucide 图标
-  const label = document.createElement("div");
-  label.className = "folder-label";
-  const icon = document.createElement("img");
-  icon.className = "toggle-icon";
-  icon.src = "https://cdn-icons-png.flaticon.com/128/716/716784.png"; // 默认是展开图标
-  icon.width = 16; // 可调
-  icon.height = 16;
-
-  const text = document.createElement("span");
-  text.textContent = " " + folder.name;
-
-  label.appendChild(icon);
-  label.appendChild(text);
-
-  const subUL = document.createElement("ul");
-  subUL.className = "subfolders";
-
-  // 递归子文件夹
-  if (folder.children && Array.isArray(folder.children)) {
-    folder.children.forEach(child => {
-      renderFolderRecursive(child, subUL);
-    });
-  }
-
-  // 绑定点击事件：切换展开状态 + 加载文件
-  label.addEventListener("click", e => {
-    e.stopPropagation();
-    const expanded = li.classList.toggle("expanded");
-    const icon = label.querySelector(".toggle-icon");
-    icon.setAttribute("data-lucide", expanded ? "chevron-down" : "chevron-right");
-    lucide.createIcons(); // 重新渲染图标
-
-    // 高亮当前选中项
-    document.querySelectorAll(".folder-node").forEach(el => el.classList.remove("selected"));
-    li.classList.add("selected");
-
-    // 加载文件内容
-    loadFiles(folder.path.replace(/\\/g, "/"));
-  });
-
-  li.appendChild(label);
-  li.appendChild(subUL);
-  parentUL.appendChild(li);
-
-  // 初次插入后立即刷新图标
-  lucide.createIcons();
-}
-
-
-
-// ✅ 递归渲染单个目录及其子目录
-function renderFolder(folder, parentUL) {
-  const li = document.createElement("li");
-  li.className = "folder-node";
-  li.dataset.path = folder.path;
-
-  const label = document.createElement("div");
-  label.className = "folder-label";
-  label.innerHTML = `<i data-lucide="chevron-down" class="toggle-icon"></i> ${folder.name}`;
-
-  const subUL = document.createElement("ul");
-  subUL.className = "subfolders";
-  li.appendChild(subUL);
-
-  // 🌟立即展开子文件夹（递归渲染 children）
-  if (folder.children && folder.children.length > 0) {
-    folder.children.forEach(child => {
-      renderFolder(child, subUL);
-    });
-  }
-
-  // 🌟点击展开逻辑
-  label.addEventListener("click", e => {
-    e.stopPropagation();
-    li.classList.toggle("expanded");
-
-    // 切换选中状态
-    document.querySelectorAll(".folder-node").forEach(el => el.classList.remove("selected"));
-    li.classList.add("selected");
-
-    // 右侧刷新文件列表
-    loadFiles(folder.path);
-  });
-
-  li.appendChild(label);
-  parentUL.appendChild(li);
-}
-
-function loadFiles(path) {
-  if (!path) return;
-  path = path.replace(/\\/g, "/"); // 统一正斜杠
-  const url = new URL(window.location.href);
-  url.searchParams.set("path", path); // ✅ 编码路径参数
-  window.location.href = url.toString();
-}
-
-function createNewFolder() {
-  document.getElementById("newFolderName").value = "";
-  document.getElementById("newFolderModal").style.display = "block";
-}
-
-function closeNewFolderModal() {
-  document.getElementById("newFolderModal").style.display = "none";
-}
-
-function submitNewFolder() {
-  const folderName = document.getElementById("newFolderName").value.trim();
-  if (!folderName) {
-    showMessageBox("请输入文件夹名称！");
-    return;
-  }
-
-  const url = new URL("createFolder.asp", window.location.href);
-  const currentPath = new URL(window.location.href).searchParams.get("path") || "";
-  url.searchParams.set("path", currentPath);
-  url.searchParams.set("name", folderName);
-
-  fetch(url.toString(), { method: "POST" })
-    .then(res => res.json())
-    .then(result => {
-      if (result.success) {
-        closeNewFolderModal();
-        // ✅ 重新加载整个左侧目录树
-        document.getElementById("folder-tree").innerHTML = "";
-        loadedPaths.clear(); // 清除已加载缓存
-        loadFolders("", document.getElementById("folder-tree"), () => {
-          expandToCurrentPath(currentPath);
-        });
-
-        // ✅ 重新加载右侧文件区域
-        loadFiles(currentPath);
-      }
-      else {
-              showMessageBox("创建失败：" + result.message);
-            }
-    })
-    .catch(err => {
-      showMessageBox("网络错误：" + err.message);
-    });
-}
-
-function expandToCurrentPath(currentPath) {
-  const parts = currentPath.split("/").filter(p => p.trim() !== "");
-  let cumulative = "";
-
-  const expandRecursive = (index, parentUL) => {
-    if (index >= parts.length) return;
-
-    cumulative += (index === 0 ? "" : "/") + parts[index];
-    const li = parentUL.querySelector(`.folder-node[data-path="${cumulative}"]`);
-    if (!li) return;
-
-    li.classList.add("expanded");
-    li.classList.add("selected");
-
-    const subUL = li.querySelector("ul.subfolders");
-
-    if (!li.dataset.loaded) {
-      loadFolders(cumulative, subUL, () => {
-        li.dataset.loaded = "true";
-        expandRecursive(index + 1, subUL); // 继续展开下一层
-      });
-    } else {
-      expandRecursive(index + 1, subUL);
-    }
+  const currentPath = document.body.dataset.currentPath || "";
+  const pickerMode = document.body.dataset.mode === "picker";
+  const pickerPurpose = document.body.dataset.pickerPurpose || "";
+  const pickerRequestId = document.body.dataset.pickerRequestId || "";
+  const pickerMultiple = document.body.dataset.pickerMultiple === "1";
+  const pickerAction = document.body.dataset.pickerAction || "open";
+  const pickerNodeId = document.body.dataset.nodeId || "local-main";
+  const pickerSelections = new Set();
+  const directoryNames = {
+    public: { zh: "公共区域", jp: "パブリックエリア", en: "Public" },
+    welcome: { zh: "欢迎", jp: "ようこそ", en: "Welcome" },
+    documents: { zh: "官方文档", jp: "公式ドキュメント", en: "Official Documents" },
+    samples: { zh: "示例文件", jp: "サンプルファイル", en: "Sample Files" },
+    resources: { zh: "官方资源", jp: "公式リソース", en: "Official Resources" },
+    changelog: { zh: "更新日志", jp: "更新履歴", en: "Changelog" },
+    community: { zh: "社区", jp: "コミュニティ", en: "Community" },
+    icons: { zh: "图标", jp: "アイコン", en: "Icons" },
+    wallpapers: { zh: "壁纸", jp: "壁紙", en: "Wallpapers" }
   };
+  const fileNames = {
+    "welcome_to_webwindows.docx": { zh: "欢迎使用 WebWindows.docx", jp: "WebWindows へようこそ.docx", en: "Welcome_to_WebWindows.docx" },
+    "developer_guide.docx": { zh: "开发者指南.docx", jp: "開発者ガイド.docx", en: "Developer_Guide.docx" },
+    "keyboard_shortcuts.md": { zh: "键盘快捷键.md", jp: "キーボードショートカット.md", en: "Keyboard_Shortcuts.md" },
+    "user_guide.docx": { zh: "用户指南.docx", jp: "ユーザーガイド.docx", en: "User_Guide.docx" },
+    "sample_document.docx": { zh: "示例文档.docx", jp: "サンプル文書.docx", en: "Sample_Document.docx" },
+    "sample_image.png": { zh: "示例图片.png", jp: "サンプル画像.png", en: "Sample_Image.png" },
+    "sample_presentation.pptx": { zh: "示例演示文稿.pptx", jp: "サンプルプレゼンテーション.pptx", en: "Sample_Presentation.pptx" },
+    "sample_spreadsheet.xlsx": { zh: "示例表格.xlsx", jp: "サンプル表計算.xlsx", en: "Sample_Spreadsheet.xlsx" },
+    "webwindows_default_wallpaper.png": { zh: "WebWindows 默认壁纸.png", jp: "WebWindows 既定の壁紙.png", en: "WebWindows_Default_Wallpaper.png" },
+    "readme.md": { zh: "图标说明.md", jp: "アイコンについて.md", en: "README.md" },
+    "changelog.md": { zh: "更新日志.md", jp: "更新履歴.md", en: "CHANGELOG.md" },
+    "feedback_and_community.md": { zh: "反馈与社区.md", jp: "フィードバックとコミュニティ.md", en: "Feedback_and_Community.md" }
+  };
+  const uiText = {
+    nodeName: { zh: "WebWindows 主云资源节点", jp: "WebWindows メインクラウドリソース", en: "WebWindows Primary Cloud Resources" },
+    privateFiles: { zh: "我的私人文件", jp: "プライベートファイル", en: "My Private Files" },
+    publicReadOnly: { zh: "所有人可查看", jp: "全員が閲覧可能", en: "Visible to everyone" },
+    publicAreaReadOnly: { zh: "公共区域只读", jp: "パブリックエリアは読み取り専用", en: "Public area is read-only" },
+    back: { zh: "返回", jp: "戻る", en: "Back" },
+    forward: { zh: "前进", jp: "進む", en: "Forward" },
+    up: { zh: "上一级", jp: "上の階層", en: "Up" },
+    sortName: { zh: "按名称", jp: "名前順", en: "By name" },
+    sortDate: { zh: "按更新时间", jp: "更新日時順", en: "By modified date" },
+    sortSize: { zh: "按大小", jp: "サイズ順", en: "By size" },
+    listView: { zh: "列表", jp: "リスト", en: "List" },
+    compactView: { zh: "紧凑", jp: "コンパクト", en: "Compact" },
+    iconView: { zh: "图标", jp: "アイコン", en: "Icons" },
+    locations: { zh: "资料位置", jp: "場所", en: "Locations" },
+    emptyTitle: { zh: "此资料夹暂时没有资料", jp: "このフォルダーにはまだファイルがありません", en: "This folder is currently empty" },
+    emptyDescription: { zh: "公共资料由维护人员在后台统一管理。", jp: "公開資料は管理者が一元管理します。", en: "Public resources are managed centrally by administrators." },
+    nothingSelected: { zh: "尚未选择资料", jp: "ファイルが選択されていません", en: "No file selected" },
+    cancel: { zh: "取消", jp: "キャンセル", en: "Cancel" },
+    confirmSelection: { zh: "确认选择", jp: "選択を確定", en: "Confirm selection" },
+    open: { zh: "打开", jp: "開く", en: "Open" },
+    copyPath: { zh: "复制资料位置", jp: "場所をコピー", en: "Copy location" },
+    saveCopy: { zh: "保存副本到私人云资料", jp: "プライベートクラウドにコピーを保存", en: "Save a copy to private cloud" },
+    setWallpaper: { zh: "设置为桌面壁纸", jp: "デスクトップの壁紙に設定", en: "Set as desktop wallpaper" },
+    saveWallpaper: { zh: "保存到壁纸库", jp: "壁紙ライブラリに保存", en: "Save to wallpaper library" },
+    info: { zh: "资料信息", jp: "ファイル情報", en: "Information" },
+    refresh: { zh: "刷新", jp: "更新", en: "Refresh" },
+    confirm: { zh: "确定", jp: "確認", en: "OK" }
+  };
+  const normalizeLanguage = (value) => {
+    const language = String(value || "").toLowerCase();
+    if (language === "jp" || language.startsWith("ja")) return "jp";
+    if (language.startsWith("en")) return "en";
+    return "zh";
+  };
+  let currentLanguage = normalizeLanguage(
+    window.localStorage.getItem("lang") || document.body.dataset.language
+  );
+  const navigationStorageKey = `webwindows-cloud-navigation:${window.location.pathname}`;
+  const currentUrl = () => new URL(window.location.href);
 
-  const rootUL = document.getElementById("folder-tree");
-  expandRecursive(0, rootUL);
-}
-
-function openSelected() {
-  const selected = document.querySelector('.file-item.selected');
-  if (!selected) {
-    showMessageBox("未选中文件或文件夹！");
-    return;
+  function directoryDisplayName(physicalName) {
+    const names = directoryNames[String(physicalName || "").toLowerCase()];
+    return names?.[currentLanguage] || physicalName;
   }
 
-  const isFolder = selected.dataset.isFolder === "true";
-  const path = selected.dataset.path;
-  if (!path) {
-    showMessageBox("路径无效！");
-    return;
+  function fileDisplayName(physicalName) {
+    const names = fileNames[String(physicalName || "").toLowerCase()];
+    return names?.[currentLanguage] || physicalName;
   }
 
-  if (isFolder) {
-    // 是文件夹，跳转到该目录
-    const url = new URL(window.location.href);
-    url.searchParams.set("path", path.replace(/\\/g, "/"));
+  function text(key) {
+    return uiText[key]?.[currentLanguage] || uiText[key]?.zh || key;
+  }
+
+  function displayPath(path) {
+    const parts = String(path || "").split("/").filter(Boolean).map(directoryDisplayName);
+    return [directoryDisplayName("Public"), ...parts].join(" / ");
+  }
+
+  function navigateWith(updates) {
+    const url = currentUrl();
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === "") url.searchParams.delete(key);
+      else url.searchParams.set(key, value);
+    });
+    url.searchParams.set("lang", currentLanguage);
     window.location.href = url.toString();
-  } else {
-    // 是文件，可选择弹出或预览
-    alert("这是文件，尚未实现打开方式。");
   }
-}
 
-// assets/js/files-init.js
+  function readNavigationState() {
+    try {
+      const saved = JSON.parse(window.sessionStorage.getItem(navigationStorageKey));
+      if (
+        saved &&
+        Array.isArray(saved.entries) &&
+        saved.entries.length &&
+        Number.isInteger(saved.index) &&
+        saved.index >= 0 &&
+        saved.index < saved.entries.length
+      ) {
+        return saved;
+      }
+    } catch (error) {
+      // A disabled or damaged sessionStorage should not prevent folder browsing.
+    }
+    return { entries: [currentPath], index: 0 };
+  }
 
-function initFileManager() {
-  const userJson = sessionStorage.getItem("webwindows_user");
-  if (!userJson) {
-    showLoginOverlayAndClose("请先登录");
-    setTimeout(() => {
-      // 取当前窗口 id（优先从包裹它的 .window 元素上拿）
-      const winEl = window.frameElement?.closest('.window');
-      const rawId = winEl?.id?.replace(/^win-/, '') || 'explorer';
-      console.log(window.top.document.querySelector(`.taskbar-app[data-id="win-explorer"]`))
-      
-      // ✅ 正确的函数类型判断
-      if (typeof window.parent?.closeWindow === 'function') {
-        window.parent.closeWindow(rawId);                // 让顶层负责关闭：会同步移除任务栏图标
+  function writeNavigationState(state) {
+    try {
+      window.sessionStorage.setItem(navigationStorageKey, JSON.stringify(state));
+    } catch (error) {
+      // Navigation still works; only the internal back/forward stack is unavailable.
+    }
+  }
+
+  function initializeNavigationState() {
+    const state = readNavigationState();
+    if (state.entries[state.index] !== currentPath) {
+      return { entries: [currentPath], index: 0 };
+    }
+    return state;
+  }
+
+  let navigationState = initializeNavigationState();
+  writeNavigationState(navigationState);
+
+  function updateNavigationButtons() {
+    document.querySelector('[data-action="back"]').disabled = navigationState.index <= 0;
+    document.querySelector('[data-action="forward"]').disabled =
+      navigationState.index >= navigationState.entries.length - 1;
+    document.querySelector('[data-action="up"]').disabled = currentPath === "";
+  }
+
+  function navigateToResourcePath(path, recordNavigation = true) {
+    const targetPath = path || "";
+    if (targetPath === currentPath) return;
+
+    if (recordNavigation) {
+      navigationState.entries = navigationState.entries.slice(0, navigationState.index + 1);
+      navigationState.entries.push(targetPath);
+      navigationState.index = navigationState.entries.length - 1;
+    }
+    writeNavigationState(navigationState);
+    navigateWith({ path: targetPath || null });
+  }
+
+  function goBack() {
+    if (navigationState.index <= 0) return;
+    navigationState.index -= 1;
+    const targetPath = navigationState.entries[navigationState.index];
+    writeNavigationState(navigationState);
+    navigateToResourcePath(targetPath, false);
+  }
+
+  function goForward() {
+    if (navigationState.index >= navigationState.entries.length - 1) return;
+    navigationState.index += 1;
+    const targetPath = navigationState.entries[navigationState.index];
+    writeNavigationState(navigationState);
+    navigateToResourcePath(targetPath, false);
+  }
+
+  function goUp() {
+    const parts = currentPath.split("/").filter(Boolean);
+    parts.pop();
+    navigateToResourcePath(parts.join("/"));
+  }
+
+  function showMessage(text) {
+    const overlay = document.getElementById("message-box");
+    document.getElementById("message-text").textContent = text || "操作未完成";
+    overlay.hidden = false;
+    document.getElementById("message-close").focus();
+  }
+
+  function closeMessage() {
+    document.getElementById("message-box").hidden = true;
+  }
+
+  function renderBreadcrumbs() {
+    const host = document.getElementById("breadcrumbs");
+    host.innerHTML = "";
+    const root = document.createElement("button");
+    root.type = "button";
+    const rootIcon = document.createElement("img");
+    rootIcon.src = "assets/home.svg";
+    rootIcon.alt = "";
+    root.append(rootIcon, document.createTextNode(directoryDisplayName("Public")));
+    root.addEventListener("click", () => navigateToResourcePath(""));
+    host.appendChild(root);
+
+    let cumulative = "";
+    currentPath.split("/").filter(Boolean).forEach((part) => {
+      const separator = document.createElement("span");
+      separator.textContent = "›";
+      separator.setAttribute("aria-hidden", "true");
+      host.appendChild(separator);
+
+      cumulative = cumulative ? `${cumulative}/${part}` : part;
+      const targetPath = cumulative;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = directoryDisplayName(part);
+      button.addEventListener("click", () => navigateToResourcePath(targetPath));
+      host.appendChild(button);
+    });
+  }
+
+  function renderFolderNode(folder, parent) {
+    const item = document.createElement("li");
+    item.className = "folder-node";
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "folder-label";
+    button.textContent = folder.displayName || directoryDisplayName(folder.name);
+    button.addEventListener("click", () => navigateToResourcePath(folder.path));
+    item.appendChild(button);
+
+    if (Array.isArray(folder.children) && folder.children.length) {
+      const list = document.createElement("ul");
+      list.className = "subfolders";
+      folder.children.forEach((child) => renderFolderNode(child, list));
+      item.appendChild(list);
+    }
+    parent.appendChild(item);
+  }
+
+  async function loadFolderTree() {
+    const list = document.getElementById("folder-tree");
+    list.innerHTML = "";
+    try {
+      const response = await fetch(`getFolders.asp?lang=${encodeURIComponent(currentLanguage)}`, {
+        cache: "no-store"
+      });
+      const payload = await response.json();
+      if (!response.ok || !Array.isArray(payload)) {
+        throw new Error(payload?.error?.message || "资料夹列表不可用");
+      }
+      payload.forEach((folder) => renderFolderNode(folder, list));
+    } catch (error) {
+      const item = document.createElement("li");
+      item.className = "tree-error";
+      item.textContent = "资料夹列表加载失败";
+      list.appendChild(item);
+    }
+  }
+
+  function resourceWindowId(path) {
+    let hash = 0;
+    for (let i = 0; i < path.length; i += 1) hash = ((hash << 5) - hash + path.charCodeAt(i)) | 0;
+    return `public-resource-${Math.abs(hash)}`;
+  }
+
+  function openFile(item) {
+    if (pickerMode) {
+      if (item.dataset.pickerEligible === "true") {
+        selectPickerItem(item);
+      }
+      return;
+    }
+    const openMode = item.dataset.openMode || "";
+    if (openMode === "download") {
+      downloadFile(item);
+      return;
+    }
+    if (openMode !== "preview" && openMode !== "app") {
+      showMessage("此类资料暂时没有可用的预览方式，可使用右键菜单保存副本到私人云资料。");
+      return;
+    }
+
+    const resource = {
+      protocol: "webwindows-cloud-resource",
+      version: "1.0",
+      nodeId: "local-main",
+      scope: "public",
+      openMode,
+      path: item.dataset.path,
+      name: item.dataset.name,
+      url: new URL(item.dataset.resourceUrl, window.location.href).toString()
+    };
+
+    try {
+      if (window.parent && typeof window.parent.openResource === "function") {
+        window.parent.openResource(resource);
         return;
       }
-      parent.document.top.RemoveExplorer();
-      // 兜底：如果还没挂上全局 API（极端时序），至少先把 DOM 移除，避免留空窗
-      if (winEl) winEl.remove();
-    }, 1000);
-    return;
-  }
-
-  try {
-    const user = JSON.parse(userJson);
-    const username = user.username || "unknown";
-    updateDiskInfo();
-    window.rootPath = `/cloud/file/${username}/`;
-  } catch (e) {
-    console.error("用户信息解析失败", e);
-    showLoginOverlayAndClose("用户信息异常，请重新登录");
-    setTimeout(() => {
-      const win = window.frameElement?.closest('.window');
-       // ✅ 在移除之前，通知父页面先删除任务栏图标
-      if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
-          window.parent.removeTaskbarIcon("win-explorer");
-      }
-      if (win) win.remove();
-    }, 1000);
-    return;
-  }
-
-  document.body.style.display = "block"; // 显示页面内容
-}
-function formatSize(size) {
-  if (size >= 1024) {
-     return (size / 1024).toFixed(2) + ' GB';
-  } else {
-    return size.toFixed(2) + ' MB';
-  }
-} 
-
-function updateDiskInfo() {
-  fetch("/inc/sysinfo.asp")
-    .then(response => response.json())
-    .then(data => {
-      const used = parseFloat(data.diskUsed);
-      const total = parseFloat(data.diskTotal);
-      const percent = ((used / total) * 100).toFixed(1);
-
-      const info = `已用 ${formatSize(used)} / 总共 ${formatSize(total)} (${percent}%)`;
-      document.getElementById("disk-text").textContent = info;
-      document.getElementById("disk-bar").style.width = percent + "%";
-
-    })
-}
-function showLoginOverlayAndClose(text) {
-  document.body.innerHTML = "";
-  const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.background = "rgba(0, 0, 0, 0.6)";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-  overlay.style.zIndex = "9999";
-
-  const messageBox = document.createElement("div");
-  messageBox.style.background = "#fff";
-  messageBox.style.padding = "24px 36px";
-  messageBox.style.borderRadius = "12px";
-  messageBox.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
-  messageBox.style.fontSize = "16px";
-  messageBox.style.fontWeight = "bold";
-  messageBox.textContent = text;
-
-  overlay.appendChild(messageBox);
-  document.body.appendChild(overlay);
-
-  setTimeout(() => {
-    const win = window.frameElement?.closest('.window');
-    console.log(win)
-    if (win) {
-      const winId = 'win-explorer';
-            // ✅ 在移除之前，通知父页面先删除任务栏图标
-          if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
-            window.parent.removeTaskbarIcon(winId);
-          }
-      win.remove();
+    } catch (error) {
+      // Cross-node pages cannot inspect their parent; the message bridge handles them.
+      window.parent?.postMessage({ type: "webwindows-open-resource", resource }, "*");
+      return;
     }
-  }, 1200);
-}
-function showMessageBox(text) {
-  const overlay = document.createElement("div");
-  overlay.style.position = "fixed";
-  overlay.style.inset = "0";
-  overlay.style.background = "rgba(0, 0, 0, 0.5)";
-  overlay.style.display = "flex";
-  overlay.style.alignItems = "center";
-  overlay.style.justifyContent = "center";
-  overlay.style.zIndex = "9999";
+    if (window.parent && typeof window.parent.openWindow === "function") {
+      window.parent.openWindow(
+        resourceWindowId(resource.path),
+        resource.name,
+        resource.url,
+        "assets/icons/folder.png",
+        true,
+        "",
+        "860px",
+        "680px"
+      );
+      return;
+    }
 
-  const box = document.createElement("div");
-  box.style.background = "#fff";
-  box.style.padding = "24px 36px";
-  box.style.borderRadius = "12px";
-  box.style.boxShadow = "0 8px 24px rgba(0,0,0,0.2)";
-  box.style.fontSize = "16px";
-  box.style.fontWeight = "bold";
-  box.style.textAlign = "center";
+    window.location.href = resource.url;
+  }
 
-  const msg = document.createElement("div");
-  msg.textContent = text || "提示";
-  msg.style.marginBottom = "20px";
+  async function downloadFile(item) {
+    try {
+      let api = window.WebWindows?.fileDialog;
+      try {
+        api = api || window.parent?.WebWindows?.fileDialog;
+      } catch (_) {
+        // A cross-origin host cannot provide the shared cloud dialog.
+      }
+      if (!api) throw new Error("通用云文件对话框尚未加载。");
+      const readUrl = new URL(item.dataset.resourceUrl, window.location.href);
+      readUrl.searchParams.set("raw", "1");
+      const name = item.dataset.name || "资料";
+      const extension = (name.split(".").pop() || "bin").toLowerCase();
+      const resource = {
+        scope: "public",
+        path: item.dataset.path,
+        name,
+        mimeType: item.dataset.mimeType || "application/octet-stream",
+        readUrl: readUrl.href
+      };
+      const content = await api.read(resource);
+      const saved = await api.saveBlob({
+        title: "保存公共资料副本",
+        fileTypes: [{ name: "云资料", extensions: [extension] }],
+        suggestedName: name,
+        purpose: "public-cloud-save-copy"
+      }, content);
+      if (saved) showMessage("资料副本已保存到私人云资料。");
+    } catch (error) {
+      showMessage(error.message || "保存资料副本失败。");
+    }
+  }
 
-  const button = document.createElement("button");
-  button.textContent = "确定";
-  button.style.background = "#2563eb";
-  button.style.color = "#fff";
-  button.style.border = "none";
-  button.style.padding = "8px 20px";
-  button.style.borderRadius = "6px";
-  button.style.cursor = "pointer";
-  button.addEventListener("click", () => {
-    overlay.remove(); // 只关闭，无回调
+  const contextMenu = document.getElementById("resource-context-menu");
+  const contextOpen = contextMenu.querySelector('[data-context-action="open"]');
+  const contextCopyPath = contextMenu.querySelector('[data-context-action="copy-path"]');
+  const contextDownload = contextMenu.querySelector('[data-context-action="download"]');
+  const contextSetWallpaper = contextMenu.querySelector('[data-context-action="set-wallpaper"]');
+  const contextSaveWallpaper = contextMenu.querySelector('[data-context-action="save-wallpaper"]');
+  const contextInfo = contextMenu.querySelector('[data-context-action="info"]');
+  const contextSeparator = contextMenu.querySelector(".context-separator");
+  let contextTarget = null;
+
+  function closeContextMenu() {
+    contextMenu.hidden = true;
+    contextTarget = null;
+  }
+
+  function placeContextMenu(clientX, clientY) {
+    contextMenu.hidden = false;
+    contextMenu.style.left = "0";
+    contextMenu.style.top = "0";
+    const bounds = contextMenu.getBoundingClientRect();
+    const left = Math.max(8, Math.min(clientX, window.innerWidth - bounds.width - 8));
+    const top = Math.max(8, Math.min(clientY, window.innerHeight - bounds.height - 8));
+    contextMenu.style.left = `${left}px`;
+    contextMenu.style.top = `${top}px`;
+  }
+
+  function showContextMenu(event, item) {
+    event.preventDefault();
+    contextTarget = item || null;
+    const hasTarget = Boolean(contextTarget);
+    contextOpen.hidden = !hasTarget;
+    contextCopyPath.hidden = !hasTarget;
+    contextDownload.hidden = !hasTarget || contextTarget.dataset.kind !== "file";
+    const isImage = hasTarget &&
+      contextTarget.dataset.kind === "file" &&
+      String(contextTarget.dataset.mimeType || "").startsWith("image/");
+    contextSetWallpaper.hidden = !isImage;
+    contextSaveWallpaper.hidden = !isImage;
+    contextInfo.hidden = !hasTarget;
+    contextSeparator.hidden = !hasTarget;
+
+    if (hasTarget) {
+      activateItem(contextTarget);
+      const canOpen =
+        contextTarget.dataset.kind === "folder" || Boolean(contextTarget.dataset.openMode);
+      contextOpen.disabled = !canOpen;
+      contextOpen.title = canOpen ? "" : "此类资料暂时没有可用的打开方式";
+    }
+    placeContextMenu(event.clientX, event.clientY);
+    const firstAction = contextMenu.querySelector("button:not([hidden]):not(:disabled)");
+    if (firstAction) firstAction.focus({ preventScroll: true });
+  }
+
+  async function copyResourcePath(item) {
+    const value = displayPath(item.dataset.path);
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch (error) {
+      const input = document.createElement("textarea");
+      input.value = value;
+      input.setAttribute("readonly", "");
+      input.style.position = "fixed";
+      input.style.opacity = "0";
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      input.remove();
+    }
+    showMessage("资料位置已复制。");
+  }
+
+  function cloudWallpaper(item) {
+    const url = new URL(item.dataset.resourceUrl, window.location.href);
+    url.searchParams.set("raw", "1");
+    return {
+      url: url.href,
+      name: fileDisplayName(item.dataset.name || "云资料壁纸"),
+      sourcePath: item.dataset.path || ""
+    };
+  }
+
+  function saveWallpaperToLibrary(item, applyNow) {
+    const wallpaper = cloudWallpaper(item);
+    let library = [];
+    try {
+      library = JSON.parse(localStorage.getItem("webwindows.wallpaper.library.v1") || "[]");
+      if (!Array.isArray(library)) library = [];
+    } catch (_) {
+      library = [];
+    }
+    const next = library.filter((entry) => {
+      const url = typeof entry === "string" ? entry : entry?.url;
+      return url && url !== wallpaper.url;
+    });
+    next.push(wallpaper);
+    localStorage.setItem("webwindows.wallpaper.library.v1", JSON.stringify(next));
+
+    let host = window;
+    try {
+      if (window.parent && window.parent !== window) host = window.parent;
+    } catch (_) {}
+    host.postMessage?.({ type: "webwindows:wallpaper-library-changed" }, window.location.origin);
+    if (applyNow) {
+      host.localStorage?.setItem("selectedWallpaper", wallpaper.url);
+      host.setWallpaperByPath?.(wallpaper.url);
+      showMessage("已保存到壁纸库并设置为桌面壁纸。");
+    } else {
+      showMessage("已保存到设置中的壁纸库。");
+    }
+  }
+
+  function runContextAction(action) {
+    const item = contextTarget;
+    closeContextMenu();
+
+    switch (action) {
+      case "open":
+        if (!item) return;
+        if (item.dataset.kind === "folder") navigateToResourcePath(item.dataset.path);
+        else openFile(item);
+        break;
+      case "copy-path":
+        if (item) copyResourcePath(item);
+        break;
+      case "download":
+        if (item && item.dataset.kind === "file") downloadFile(item);
+        break;
+      case "set-wallpaper":
+        if (item) saveWallpaperToLibrary(item, true);
+        break;
+      case "save-wallpaper":
+        if (item) saveWallpaperToLibrary(item, false);
+        break;
+      case "info":
+        if (item) {
+          const kind = item.dataset.kind === "folder" ? "资料夹" : "资料";
+          showMessage(
+            `名称：${item.dataset.name}\n显示名称：${item.dataset.kind === "file" ? fileDisplayName(item.dataset.name) : directoryDisplayName(item.dataset.name)}\n类型：${kind}\n位置：${displayPath(item.dataset.path)}`
+          );
+        }
+        break;
+      case "root":
+        navigateToResourcePath("");
+        break;
+      case "detail-view":
+        navigateWith({ view: "detail" });
+        break;
+      case "large-view":
+        navigateWith({ view: "large" });
+        break;
+      case "refresh":
+        window.location.reload();
+        break;
+      default:
+        break;
+    }
+  }
+
+  function activateItem(item) {
+    document.querySelectorAll(".file-item.selected").forEach((node) => node.classList.remove("selected"));
+    item.classList.add("selected");
+  }
+
+  function selectPickerItem(item) {
+    if (!pickerMode || item?.dataset.pickerEligible !== "true") return;
+    if (!pickerMultiple) {
+      pickerSelections.clear();
+      document.querySelectorAll(".file-item.selected").forEach((node) => node.classList.remove("selected"));
+      pickerSelections.add(item);
+      item.classList.add("selected");
+    } else if (pickerSelections.has(item)) {
+      pickerSelections.delete(item);
+      item.classList.remove("selected");
+    } else {
+      pickerSelections.add(item);
+      item.classList.add("selected");
+    }
+    const selections = Array.from(pickerSelections);
+    document.getElementById("picker-selection-text").textContent = selections.length
+      ? (pickerMultiple
+        ? `已选择 ${selections.length} 项`
+        : `${selections[0].dataset.name} · ${Math.ceil(Number(selections[0].dataset.size || 0) / 1024)} KB`)
+      : "尚未选择资料";
+    document.getElementById("picker-confirm").disabled = selections.length === 0;
+  }
+
+  function pickerMessage(type, resources) {
+    const message = {
+      type,
+      purpose: pickerPurpose,
+      requestId: pickerRequestId,
+      action: pickerAction,
+      multiple: pickerMultiple
+    };
+    if (resources?.length) {
+      message.resource = resources[0];
+      message.resources = resources;
+    }
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage(message, window.location.origin);
+      return;
+    }
+    if (type === "webwindows:cloud-resource-picker-cancelled") window.history.back();
+  }
+
+  function confirmPickerSelection() {
+    const resources = Array.from(pickerSelections).map((selection) => {
+      const readUrl = new URL(selection.dataset.resourceUrl, window.location.href);
+      readUrl.searchParams.set("raw", "1");
+      if (readUrl.origin !== window.location.origin ||
+          !readUrl.pathname.endsWith("/cloud/browser/openResource.asp")) {
+        throw new Error("云资料读取地址无效。");
+      }
+      return {
+        name: selection.dataset.name,
+        path: selection.dataset.path,
+        nodeId: pickerNodeId,
+        scope: "public",
+        size: Number(selection.dataset.size || 0),
+        mimeType: selection.dataset.mimeType || "application/octet-stream",
+        readUrl: readUrl.href
+      };
+    });
+    if (!resources.length) return;
+    pickerMessage("webwindows:cloud-resource-selected", resources);
+  }
+
+  function applyDirectoryDisplayNames() {
+    document.querySelectorAll("[data-directory-name]").forEach((element) => {
+      element.textContent = directoryDisplayName(element.dataset.directoryName);
+    });
+    document.querySelectorAll(".file-item.folder .file-name[data-physical-name]").forEach((element) => {
+      element.textContent = directoryDisplayName(element.dataset.physicalName);
+    });
+    document.querySelectorAll(".file-item.file .file-name[data-file-physical-name]").forEach((element) => {
+      element.textContent = fileDisplayName(element.dataset.filePhysicalName);
+    });
+    document.querySelectorAll("[data-cloud-i18n]").forEach((element) => {
+      element.textContent = text(element.dataset.cloudI18n);
+    });
+    document.querySelectorAll("[data-cloud-i18n-title]").forEach((element) => {
+      const label = text(element.dataset.cloudI18nTitle);
+      element.title = label;
+      element.setAttribute("aria-label", label);
+    });
+    renderBreadcrumbs();
+  }
+
+  function applyLanguage(language) {
+    const nextLanguage = normalizeLanguage(language);
+    if (nextLanguage === currentLanguage) return;
+    currentLanguage = nextLanguage;
+    applyDirectoryDisplayNames();
+    loadFolderTree();
+  }
+
+  document.querySelector('[data-action="back"]').addEventListener("click", goBack);
+  document.querySelector('[data-action="forward"]').addEventListener("click", goForward);
+  document.querySelector('[data-action="up"]').addEventListener("click", goUp);
+  document.getElementById("public-root-button").addEventListener("click", () => navigateToResourcePath(""));
+  document.getElementById("sort-select").addEventListener("change", (event) => {
+    navigateWith({ sort: event.target.value });
   });
+  document.querySelectorAll("[data-view]").forEach((button) => {
+    button.addEventListener("click", () => navigateWith({ view: button.dataset.view }));
+  });
+  document.querySelectorAll(".file-item").forEach((item) => {
+    item.addEventListener("click", (event) => {
+      if (item.dataset.kind === "folder") {
+        activateItem(item);
+        event.preventDefault();
+        navigateToResourcePath(item.dataset.path);
+      } else if (pickerMode) {
+        if (!pickerMultiple || event.detail <= 1) selectPickerItem(item);
+      } else {
+        activateItem(item);
+      }
+    });
+    if (item.dataset.kind === "file") {
+      item.addEventListener("dblclick", () => {
+        if (pickerMode && item.dataset.pickerEligible === "true") {
+          if (!pickerMultiple) {
+            selectPickerItem(item);
+            confirmPickerSelection();
+          }
+        } else {
+          openFile(item);
+        }
+      });
+    }
+  });
+  document.addEventListener("contextmenu", (event) => {
+    if (pickerMode) {
+      event.preventDefault();
+      return;
+    }
+    const item = event.target.closest(".file-item");
+    if (item) {
+      showContextMenu(event, item);
+    } else if (event.target.closest(".main")) {
+      showContextMenu(event, null);
+    }
+  });
+  contextMenu.addEventListener("click", (event) => {
+    const action = event.target.closest("[data-context-action]");
+    if (action && !action.disabled) runContextAction(action.dataset.contextAction);
+  });
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest("#resource-context-menu")) closeContextMenu();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeContextMenu();
+  });
+  window.addEventListener("blur", closeContextMenu);
+  window.addEventListener("resize", closeContextMenu);
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "change-language") applyLanguage(event.data.lang);
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === "lang") applyLanguage(event.newValue);
+  });
+  document.addEventListener("scroll", closeContextMenu, true);
+  document.getElementById("message-close").addEventListener("click", closeMessage);
+  if (pickerMode) {
+    document.getElementById("picker-cancel").addEventListener("click", () => {
+      pickerMessage("webwindows:cloud-resource-picker-cancelled");
+    });
+    document.getElementById("picker-confirm").addEventListener("click", confirmPickerSelection);
+  }
 
-  box.appendChild(msg);
-  box.appendChild(button);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-}
+  updateNavigationButtons();
+  applyDirectoryDisplayNames();
+  loadFolderTree();
+})();

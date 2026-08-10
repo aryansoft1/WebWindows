@@ -3,7 +3,7 @@
 Option Explicit
 Response.CodePage = 65001
 Response.Charset = "utf-8"
-Response.AddHeader "X-WebWindows-Private-Files-Version", "2026.08.10.3"
+Response.AddHeader "X-WebWindows-Private-Files-Version", "2026.08.10.4"
 
 Dim webWindowsUserId, webWindowsUsername, webWindowsCookieUsername, loggedIn
 webWindowsUserId = Trim(CStr(Session("webwindows_user_id")))
@@ -125,8 +125,12 @@ End Function
 
 Dim relativePath, privateRoot, physicalPath, fso, folder, usernameFolder, normalizedUsername
 Dim pickerMode, pickerAccept, pickerPurpose, pickerTitle, pickerRequestId
-Dim pickerMultiple, pickerAction, pickerSuggestedName
+Dim pickerMultiple, pickerAction, pickerSuggestedName, viewMode, sortBy
 relativePath = ""
+viewMode = LCase(Trim(CStr(Request.QueryString("view"))))
+If viewMode <> "detail" And viewMode <> "small" Then viewMode = "large"
+sortBy = LCase(Trim(CStr(Request.QueryString("sort"))))
+If sortBy <> "date" And sortBy <> "size" Then sortBy = "name"
 pickerMode = (LCase(Trim(CStr(Request.QueryString("mode")))) = "picker")
 pickerPurpose = Trim(CStr(Request.QueryString("purpose")))
 pickerTitle = Trim(CStr(Request.QueryString("title")))
@@ -196,6 +200,7 @@ End If
   <script defer src="../../assets/js/file-search.js?v=20260810-query-v2-2"></script>
   <script defer src="search-ui.js?v=20260810-query-v2-2"></script>
   <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-2">
+  <link rel="stylesheet" href="private-files.css?v=20260810-layout-1">
   <style>
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}
@@ -223,7 +228,7 @@ End If
   </style>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
-      data-private-files-version="2026.08.10.3"
+      data-private-files-version="2026.08.10.4"
       data-path="<%=Html(relativePath)%>" data-mode="<% If pickerMode Then Response.Write "picker" %>"
       data-picker-purpose="<%=Html(pickerPurpose)%>"
       data-picker-title="<%=Html(pickerTitle)%>"
@@ -240,18 +245,23 @@ End If
     <a class="link" href="<%=Html(PublicFolderUrl(""))%>">返回公共区域</a>
   </div>
 <% Else %>
-  <header class="top">
-    <div><h1>我的私人文件</h1><div class="sub"><%=Html(Session("nickname"))%> · 仅当前账号可读写</div></div>
-    <div class="actions">
+  <div class="private-wrapper">
+  <header class="private-resource-header">
+    <div><div class="private-eyebrow">WebWindows 私人云资料</div><h1><img src="assets/cloud.svg" alt=""><span>我的私人文件</span></h1></div>
+    <div class="private-header-actions">
       <% If pickerMode Then %>
-        <% If pickerAction = "open" Then %><a class="link" href="<%=Html(PublicFolderUrl(""))%>">公共区域</a><% End If %>
+        <% If pickerAction = "open" Then %><a class="private-header-link" href="<%=Html(PublicFolderUrl(""))%>">公共区域</a><% End If %>
         <span class="picker-note"><%=Html(pickerAccept)%></span>
       <% Else %>
-      <a class="link" href="files.asp">公共区域</a><% End If %>
+      <a class="private-header-link" href="files.asp">公共区域</a><span class="private-badge"><img src="assets/eye.svg" alt="">仅当前账号可读写</span><% End If %>
     </div>
   </header>
-  <nav class="bar">
-    <a href="<%=Html(PrivateFolderUrl(""))%>">我的文件</a>
+  <nav class="private-toolbar" aria-label="私人云资料工具栏">
+    <div class="private-toolbar-left">
+      <button type="button" class="private-icon-btn" data-private-action="back" title="返回" aria-label="返回"><img src="assets/back.svg" alt=""></button>
+      <button type="button" class="private-icon-btn" data-private-action="forward" title="前进" aria-label="前进"><img src="assets/forward.svg" alt=""></button>
+      <button type="button" class="private-icon-btn" data-private-action="up" title="上一级" aria-label="上一级"<% If relativePath = "" Then Response.Write " disabled" %>><img src="assets/up.svg" alt=""></button>
+      <div class="private-breadcrumbs"><a href="<%=Html(PrivateFolderUrl(""))%>">我的文件</a>
     <%
       Dim crumbs, crumbIndex, crumbPath
       crumbs = Split(relativePath, "/")
@@ -260,12 +270,30 @@ End If
         For crumbIndex = 0 To UBound(crumbs)
           crumbPath = crumbs(crumbIndex)
           If crumbIndex > 0 Then crumbPath = JoinPrefix(crumbs, crumbIndex)
-          Response.Write " <span>›</span> <a href=""" & Html(PrivateFolderUrl(crumbPath)) & """>" & Html(crumbs(crumbIndex)) & "</a>"
+          Response.Write " <span>›</span> <a href=""" & Html(PrivateFolderUrl(crumbPath)) & """>" & Html(PrivateFolderDisplayName(crumbs(crumbIndex))) & "</a>"
         Next
       End If
     %>
+      </div>
+    </div>
+    <div class="private-toolbar-right" data-search-host>
+      <label class="private-sort"><img src="assets/sort.svg" alt=""><select id="private-sort" aria-label="排序方式"><option value="name"<% If sortBy = "name" Then Response.Write " selected" %>>按名称</option><option value="date"<% If sortBy = "date" Then Response.Write " selected" %>>按更新时间</option><option value="size"<% If sortBy = "size" Then Response.Write " selected" %>>按大小</option></select></label>
+      <button type="button" class="private-view-btn<% If viewMode = "detail" Then Response.Write " active" %>" data-private-view="detail"><img src="assets/list.svg" alt=""><span>列表</span></button>
+      <button type="button" class="private-view-btn<% If viewMode = "small" Then Response.Write " active" %>" data-private-view="small"><img src="assets/compact.svg" alt=""><span>紧凑</span></button>
+      <button type="button" class="private-view-btn<% If viewMode = "large" Then Response.Write " active" %>" data-private-view="large"><img src="assets/grid.svg" alt=""><span>图标</span></button>
+    </div>
   </nav>
-  <main class="files">
+  <main class="private-main">
+    <aside class="private-sidebar" aria-label="私人资料夹"><div class="private-sidebar-title">资料位置</div><a class="private-root-node selected" href="<%=Html(PrivateFolderUrl(""))%>"><img src="assets/home.svg" alt=""><span>我的文件</span></a><ul class="private-folder-tree">
+    <% For Each childFolder In folder.SubFolders
+         If LCase(childFolder.Name) <> "_system" Then
+           childPath = childFolder.Name
+           If relativePath <> "" Then childPath = relativePath & "/" & childFolder.Name %>
+      <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(childPath))%>"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></a></li>
+    <%   End If
+       Next %>
+    </ul></aside>
+  <section class="files private-file-list <%=viewMode%>" data-directory-content>
     <%
       Dim childFolder, childPath, fileItem, extension, filePath, visibleCount, fileClass, fileGlyph
       visibleCount = 0
@@ -275,7 +303,7 @@ End If
           childPath = childFolder.Name
           If relativePath <> "" Then childPath = relativePath & "/" & childFolder.Name
     %>
-      <button class="item folder" type="button" data-folder="<%=Html(childPath)%>" data-name="<%=Html(childFolder.Name)%>"><span class="icon">▰</span><span class="name"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></span></button>
+      <button class="item folder" type="button" data-folder="<%=Html(childPath)%>" data-name="<%=Html(childFolder.Name)%>" data-modified="<%=Html(CStr(childFolder.DateLastModified))%>"><img class="icon-image" src="assets/folder.svg" alt=""><span class="name"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></span><% If viewMode = "detail" Then %><span class="file-meta">资料夹</span><span class="file-meta"><%=Html(CStr(childFolder.DateLastModified))%></span><% End If %></button>
     <%
         End If
       Next
@@ -311,15 +339,15 @@ End If
     %>
       <button class="item <%=fileClass%>" type="button" data-file="<%=Html(filePath)%>"
               data-name="<%=Html(fileItem.Name)%>" data-size="<%=fileItem.Size%>"
-              data-mime-type="<%=Html(FileMime(extension))%>"><span class="icon"><%=fileGlyph%></span><span class="name"><%=Html(fileItem.Name)%></span></button>
+              data-modified="<%=Html(CStr(fileItem.DateLastModified))%>" data-mime-type="<%=Html(FileMime(extension))%>"><img class="icon-image" src="assets/<% Select Case extension: Case "xlsx", "xls", "csv": Response.Write "sheet.svg": Case "docx", "doc": Response.Write "word.svg": Case "pptx", "ppt": Response.Write "presentation.svg": Case "zip": Response.Write "archive.svg": Case "png", "jpg", "jpeg", "gif", "webp": Response.Write "image.svg": Case "pdf": Response.Write "pdf.svg": Case "md": Response.Write "markdown.svg": Case "json": Response.Write "json.svg": Case Else: Response.Write "file.svg": End Select %>" alt=""><span class="name"><%=Html(fileItem.Name)%></span><% If viewMode = "detail" Then %><span class="file-meta"><%=fileItem.Size%> B</span><span class="file-meta"><%=Html(CStr(fileItem.DateLastModified))%></span><% End If %></button>
     <%
         End If
       Next
       If visibleCount = 0 Then
     %>
-      <div class="empty"><h2>此文件夹为空</h2><p>可以使用右键菜单在云资料中建立文件夹。</p></div>
+      <div class="empty"><img src="assets/folder.svg" alt=""><h2>此文件夹为空</h2><p>可以使用右键菜单在云资料中建立文件夹。</p></div>
     <% End If %>
-  </main>
+  </section></main>
   <div id="status" aria-live="polite"></div>
   <% If pickerMode Then %>
   <footer class="picker-bar">
@@ -371,6 +399,30 @@ End If
       let selectedFolder = null;
       let dialogMode = "create";
       const pickerSelections = new Set();
+
+      function navigateOptions(changes) {
+        const url = new URL(location.href);
+        Object.entries(changes).forEach(([key, value]) => value ? url.searchParams.set(key, value) : url.searchParams.delete(key));
+        location.href = url.toString();
+      }
+
+      document.querySelector('[data-private-action="back"]').addEventListener("click", () => history.back());
+      document.querySelector('[data-private-action="forward"]').addEventListener("click", () => history.forward());
+      document.querySelector('[data-private-action="up"]').addEventListener("click", () => {
+        const parts = currentPath.split("/").filter(Boolean); parts.pop(); location.href = privateUrl(parts.join("/"));
+      });
+      document.getElementById("private-sort").addEventListener("change", event => {
+        const list = document.querySelector(".files");
+        const items = Array.from(list.querySelectorAll(":scope > .item"));
+        const mode = event.target.value;
+        items.sort((a, b) => {
+          if (mode === "size") return Number(b.dataset.size || 0) - Number(a.dataset.size || 0);
+          if (mode === "date") return new Date(b.dataset.modified || 0) - new Date(a.dataset.modified || 0);
+          return String(a.dataset.name || "").localeCompare(String(b.dataset.name || ""), undefined, { numeric: true, sensitivity: "base" });
+        }).forEach(item => list.appendChild(item));
+        const url = new URL(location.href); url.searchParams.set("sort", mode); history.replaceState(null, "", url);
+      });
+      document.querySelectorAll("[data-private-view]").forEach(button => button.addEventListener("click", () => navigateOptions({ view: button.dataset.privateView })));
 
       function privateUrl(path) {
         const url = new URL("private-files.asp", location.href);
@@ -657,6 +709,7 @@ End If
       document.addEventListener("contextmenu", event => event.preventDefault());
     })();
   </script>
+  </div>
 <%
 Set folder = Nothing
 Set fso = Nothing

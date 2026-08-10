@@ -1273,6 +1273,143 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
       return JSON.stringify(data);
     }catch(e){ return '解析失败：'+e.message; }
   }
+
+  function aiToolDefinitions(){
+    try{
+      return window.WebWindows && window.WebWindows.aiTools &&
+        window.WebWindows.aiTools.toOpenAITools
+        ? window.WebWindows.aiTools.toOpenAITools()
+        : [];
+    }catch(_){ return [] }
+  }
+
+  function extractAIToolCalls(data){
+    try{
+      var message = data && data.choices && data.choices[0] && data.choices[0].message;
+      return message && Array.isArray(message.tool_calls) ? message.tool_calls : [];
+    }catch(_){ return [] }
+  }
+
+  function plausibleFileSearchIntent(text){
+    return !!(window.WebWindows && window.WebWindows.aiFileTools &&
+      window.WebWindows.aiFileTools.isSearchIntent(text));
+  }
+
+  function explicitFileOpenIntent(text){
+    return !!(window.WebWindows && window.WebWindows.aiFileTools &&
+      window.WebWindows.aiFileTools.isExplicitOpenIntent(text));
+  }
+
+  function fileReasonLabel(reason){
+    var labels = {
+      fileNameExact:'文件名完全匹配', fileNamePrefix:'文件名前缀匹配',
+      fileNameContains:'文件名包含关键词', fileNameTokens:'文件名关键词匹配',
+      fileNameFuzzy:'文件名模糊匹配', fileType:'文件类型匹配', mimeType:'文件类型匹配',
+      folderPath:'位置匹配', createdAt:'创建日期匹配', modifiedAt:'修改日期匹配', uploadedAt:'保存日期匹配'
+    };
+    return labels[reason] || reason;
+  }
+
+  function formatSearchDate(value){
+    if(!value) return '';
+    var date = new Date(value);
+    return isNaN(date.getTime()) ? '' : date.toLocaleString();
+  }
+
+  function invokeOpenFile(file, context, button){
+    if(!window.WebWindows || !window.WebWindows.aiTools) return Promise.reject(new Error('文件工具暂时不可用。'));
+    if(button){ button.disabled=true; button.textContent='正在打开…'; }
+    return window.WebWindows.aiTools.invoke('openFile', {fileId:file.fileId}, context).then(function(result){
+      if(button) button.textContent='已打开';
+      return result;
+    }).catch(function(error){
+      if(button){ button.disabled=false; button.textContent='打开'; }
+      throw error;
+    });
+  }
+
+  function renderFileSearchResults(payload, userText){
+    if(!aiBody) return Promise.resolve();
+    var row=document.createElement('div');
+    row.style.display='flex'; row.style.gap='8px'; row.style.alignItems='flex-start';
+    var tag=document.createElement('div');
+    tag.textContent='小讯'; tag.style.fontWeight='700'; tag.style.minWidth='4ch';
+    var bubble=document.createElement('section');
+    bubble.className='bubble ai-file-search-results';
+    bubble.style.padding='10px'; bubble.style.border='1px solid var(--border)'; bubble.style.borderRadius='10px'; bubble.style.width='100%';
+    var heading=document.createElement('strong');
+    heading.textContent='搜索结果';
+    bubble.appendChild(heading);
+    var results=Array.isArray(payload.results)?payload.results:[];
+    var summary=document.createElement('p');
+    summary.style.margin='6px 0 8px';
+    if(!results.length) summary.textContent='没有找到符合条件的文件。';
+    else if(results.length===1) summary.textContent='找到这个文件，是否打开？';
+    else summary.textContent='找到 '+results.length+' 个候选文件，请选择：';
+    bubble.appendChild(summary);
+
+    results.forEach(function(file){
+      var card=document.createElement('div');
+      card.className='ai-file-search-result';
+      card.style.cssText='border:1px solid var(--border);border-radius:8px;padding:8px;margin-top:7px;';
+      var name=document.createElement('div');
+      name.style.fontWeight='700'; name.textContent=file.name;
+      var meta=document.createElement('div');
+      meta.style.cssText='font-size:12px;opacity:.78;margin-top:3px;word-break:break-word;';
+      meta.textContent=[String(file.type||'').toUpperCase(),file.logicalLocation,formatSearchDate(file.modifiedAt)].filter(Boolean).join(' · ');
+      var reasons=document.createElement('div');
+      reasons.style.cssText='font-size:12px;margin-top:4px;';
+      reasons.textContent=(file.matchReasons||[]).map(fileReasonLabel).join('、') || '条件匹配';
+      var open=document.createElement('button');
+      open.type='button'; open.textContent='打开'; open.style.marginTop='7px';
+      open.addEventListener('click',function(){
+        invokeOpenFile(file,{origin:'desktalk',userConfirmed:true},open).catch(function(error){
+          aiAppend('ai',error && error.message ? error.message : '文件未能打开。');
+        });
+      });
+      card.appendChild(name); card.appendChild(meta); card.appendChild(reasons); card.appendChild(open);
+      bubble.appendChild(card);
+    });
+
+    if((payload.warnings||[]).indexOf('device-unavailable')>=0){
+      var warning=document.createElement('p');
+      warning.style.cssText='font-size:12px;margin:8px 0 0;color:#9a6700;';
+      warning.textContent='“此设备”当前不可用，未生成或伪造任何本地搜索结果。';
+      bubble.appendChild(warning);
+    }
+    row.appendChild(tag); row.appendChild(bubble); aiBody.appendChild(row); aiBody.scrollTop=aiBody.scrollHeight;
+
+    var shouldOpen=payload.openIfUnique===true && explicitFileOpenIntent(userText) && payload.highConfidence===true && results.length===1;
+    if(!shouldOpen) return Promise.resolve();
+    var openButton=bubble.querySelector('button');
+    return invokeOpenFile(results[0],{
+      origin:'desktalk', explicitOpenIntent:true, highConfidence:true
+    },openButton).catch(function(error){
+      aiAppend('ai',error && error.message ? error.message : '文件未能打开。');
+    });
+  }
+
+  function handleAIToolCalls(data, userText){
+    var calls=extractAIToolCalls(data);
+    if(!calls.length) return Promise.resolve(false);
+    var call=calls.find(function(item){ return item && item.function && item.function.name==='searchFiles' });
+    if(!call || !plausibleFileSearchIntent(userText)) return Promise.resolve(false);
+    var args={};
+    try{ args=JSON.parse(call.function.arguments||'{}') }catch(_){ args={} }
+    args.query=userText;
+    if(!explicitFileOpenIntent(userText)) args.openIfUnique=false;
+    return window.WebWindows.aiTools.invoke('searchFiles',args,{origin:'desktalk'}).then(function(payload){
+      return renderFileSearchResults(payload,userText).then(function(){
+        aiHistory.push({role:'assistant',content:'[已通过 WebWindows 受控文件搜索工具显示结果；文件列表未发送给模型。]'});
+        trimAIHistory();
+        return true;
+      });
+    }).catch(function(){
+      var error=new Error('文件搜索暂时无法完成，请稍后再试或换一种说法。');
+      error.isFriendly=true;
+      throw error;
+    });
+  }
 function aiAppend(role, text){
   if(!aiBody) return;
   var row = document.createElement('div');
@@ -1335,11 +1472,31 @@ function sendAI(){
     thinking: { type:'disabled' },
     stream: false
   };
+  var availableTools=aiToolDefinitions();
+  if(availableTools.length){
+    payload.tools=availableTools;
+    payload.tool_choice='auto';
+  }
   requestAI(payload, 0).then(function(data){
-    var text = extractAIText(data);
-    aiAppend('ai', text);
-    aiHistory.push({ role:'assistant', content:text });
-    trimAIHistory();
+    return handleAIToolCalls(data,v).then(function(handled){
+      if(handled) return;
+      var calls=extractAIToolCalls(data);
+      if(calls.length){
+        var fallbackPayload=Object.assign({},payload);
+        delete fallbackPayload.tools;
+        delete fallbackPayload.tool_choice;
+        return requestAI(fallbackPayload,0).then(function(fallbackData){
+          var fallbackText=extractAIText(fallbackData);
+          aiAppend('ai',fallbackText);
+          aiHistory.push({role:'assistant',content:fallbackText});
+          trimAIHistory();
+        });
+      }
+      var text = extractAIText(data);
+      aiAppend('ai', text);
+      aiHistory.push({ role:'assistant', content:text });
+      trimAIHistory();
+    });
   }).catch(function(err){
     aiAppend('ai', err && err.isFriendly
       ? err.message

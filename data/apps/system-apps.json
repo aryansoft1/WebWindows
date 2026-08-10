@@ -1,0 +1,483 @@
+{
+  "schemaVersion": 1,
+  "repository": {
+    "id": "aryansoft-main",
+    "name": "WebWindows 功能仓库",
+    "baseUrl": "/",
+    "catalogVersion": "2026.07.29.1",
+    "updatedAt": "2026-07-29T00:00:00+09:00"
+  },
+  "apps": [
+    {
+      "id": "webwindows.system.cloud-files",
+      "legacyIds": ["explorer"],
+      "type": "system",
+      "name": "云资料",
+      "icon": "assets/icons/explorer.png",
+      "entry": "cloud/browser/files.asp",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 10,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1020px",
+        "height": "725px"
+      }
+    },
+    {
+      "id": "webwindows.system.settings",
+      "legacyIds": ["settings"],
+      "type": "system",
+      "name": "设置",
+      "icon": "assets/icons/settings.png",
+      "entry": "settings.html?v=20260729-3",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 20,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "900px",
+        "height": "640px"
+      }
+    },
+    {
+      "id": "webwindows.system.info",
+      "legacyIds": ["sysinfo"],
+      "type": "system",
+      "name": "系统信息",
+      "icon": "assets/icons/sysinfo.png",
+      "entry": "sysinfo.html",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 30,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "700px",
+        "height": "705px"
+      }
+    },
+    {
+      "id": "webwindows.system.function-center",
+      "legacyIds": ["function-center"],
+      "type": "system",
+      "name": "功能中心",
+      "description": "发现、添加、打开和管理 WebWindows 功能。",
+      "category": "system",
+      "version": "1.0.0",
+      "icon": "assets/icons/function-center.svg",
+      "entry": "function-center.html?v=20260729-mobile-3",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 25,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "980px",
+        "height": "700px"
+      }
+    },
+    {
+      "id": "webwindows.system.cloud-secretary",
+      "legacyIds": ["yunmishu_root"],
+      "type": "system",
+      "name": "云秘书",
+      "icon": "assets/icons/cloud_secretary.png",
+      "entry": "",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 40,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "native",
+        "singleton": true,
+        "width": "900px",
+        "height": "640px"
+      }
+    },
+    {
+      "id": "webwindows.system.mailbox",
+      "legacyIds": [],
+      "type": "system",
+      "name": "讯筒",
+      "icon": "assets/icons/mailbox.png?v=20260727-1",
+      "entry": "",
+      "launch": {
+        "adapter": "desktalk-mailbox"
+      },
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 50,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "shell",
+        "singleton": true,
+        "width": "0",
+        "height": "0"
+      }
+    },
+    {
+      "id": "webwindows.system.about",
+      "legacyIds": [],
+      "type": "system",
+      "name": "认识我",
+      "icon": "assets/icons/logo.png",
+      "entry": "",
+      "launch": {
+        "adapter": "about-panel"
+      },
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 60,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "shell",
+        "singleton": true,
+        "width": "0",
+        "height": "0"
+      }
+    },
+    {
+      "id": "webwindows.system.guide",
+      "legacyIds": ["guide"],
+      "type": "system",
+      "name": "使用向导",
+      "description": "查找 WebWindows 的使用方法、功能边界和故障处理说明。",
+      "category": "system",
+      "version": "1.0.0",
+      "icon": "assets/icons/guide.svg",
+      "entry": "guide.html",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 65,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1060px",
+        "height": "740px"
+      }
+    },
+    {
+      "id": "com.aryansoft.webwindows.aplay",
+      "legacyIds": ["aplay"],
+      "type": "application",
+      "name": "傲映(APlay)",
+      "icon": "assets/icons/aplay.png",
+      "entry": "aplay.html?v=20260729-mobile-1",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "user",
+        "startMenuOrder": 10,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1020px",
+        "height": "725px"
+      }
+    },
+    {
+      "id": "com.aryansoft.webwindows.dreama",
+      "legacyIds": ["edge"],
+      "type": "application",
+      "name": "Dreama",
+      "icon": "assets/icons/dreama.png",
+      "entry": "dreama.html",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "user",
+        "startMenuOrder": 20,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1020px",
+        "height": "725px"
+      }
+    },
+    {
+      "id": "com.aryansoft.webwindows.news",
+      "legacyIds": ["news"],
+      "type": "system",
+      "name": "新闻中心",
+      "icon": "assets/icons/news.png",
+      "entry": "news.html",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 70,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "820px",
+        "height": "640px"
+      }
+    },
+    {
+      "id": "com.aryansoft.webwindows.sheet",
+      "legacyIds": ["SheetEditor"],
+      "type": "application",
+      "name": "Sheet Editor",
+      "icon": "assets/icons/sheeteditor.png",
+      "entry": "worker_SheetCreater.html?v=20260729-mobile-4",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "user",
+        "startMenuOrder": 30,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "1100px",
+        "height": "760px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "cloud-sheet",
+          "extensions": [".xlsx", ".xls", ".csv"],
+          "mimeTypes": [
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel",
+            "text/csv"
+          ],
+          "priority": 100
+        }
+      ]
+    },
+    {
+      "id": "com.aryansoft.webwindows.write",
+      "legacyIds": ["WriteEditor"],
+      "type": "application",
+      "name": "Write Editor",
+      "icon": "assets/icons/writeeditor.svg",
+      "entry": "worker_WriteEditor.html?v=20260729-mobile-2",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "user",
+        "startMenuOrder": 40,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "1080px",
+        "height": "780px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "cloud-write",
+          "extensions": [".docx", ".doc"],
+          "mimeTypes": [
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword"
+          ],
+          "priority": 100
+        }
+      ]
+    },
+    {
+      "id": "com.aryansoft.webwindows.slide",
+      "legacyIds": ["SlideEditor"],
+      "type": "application",
+      "name": "Slide Editor",
+      "icon": "assets/icons/slideeditor.svg",
+      "entry": "worker_SlideEditor.html?v=20260729-mobile-2",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "user",
+        "startMenuOrder": 50,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "1100px",
+        "height": "780px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "cloud-slide",
+          "extensions": [".pptx", ".ppt"],
+          "mimeTypes": [
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.ms-powerpoint"
+          ],
+          "priority": 100
+        }
+      ]
+    },
+    {
+      "id": "webwindows.system.file-preview",
+      "legacyIds": ["resource-preview"],
+      "type": "system",
+      "name": "文件预览",
+      "icon": "assets/icons/explorer.png",
+      "entry": "about:blank",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": false,
+        "allFunctions": false,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "900px",
+        "height": "680px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "direct-url",
+          "extensions": [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".webp",
+            ".pdf",
+            ".txt",
+            ".log",
+            ".md",
+            ".json"
+          ],
+          "mimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "application/pdf",
+            "text/plain",
+            "text/markdown",
+            "application/json"
+          ],
+          "priority": 10
+        }
+      ]
+    }
+  ]
+}

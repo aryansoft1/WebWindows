@@ -1,10 +1,9 @@
 # 此设备与本地存储
 
-“此设备”表示用户明确授权给 WebWindows 的本地文件夹，不会自动扫描整台设备。
+“此设备”表示 Device Storage Provider 当前已经允许 WebWindows 读取的本地位置，不会自动扫描整台设备。
 
-普通浏览器需要支持 File System Access API。选择本地文件夹时浏览器会弹出授权窗口；授权记录可保存在当前浏览器，但浏览器仍可能再次要求确认。部分浏览器（特别是某些移动浏览器和 Firefox/Safari 版本）不支持目录选择，因此不会显示“此设备”。
+云资料页面不会主动弹出浏览器或操作系统的默认目录选择框。当前环境没有已授权且可读取的位置时，不显示“此设备”，也不能从该页面新增或重新授权位置。
 
-WebWindows Mobile / Android Host 使用 Android Storage Access Framework 选择目录，可提供持久目录权限。用户仍可在系统设置中撤销授权。
+已经由 WebWindows Mobile / Android Host 或 Device Storage Provider 授权的位置可以显示。用户在系统层撤销权限后，WebWindows 不会伪装成仍可访问。
 
-如果没有“此设备”，先确认使用受支持浏览器或 Android Host、页面为 HTTPS，并查看设置中的设备/存储能力；这不是云资料故障。
-
+如果没有“此设备”，表示当前 Provider 没有可读取位置；可以继续使用公共资料或登录后的私人云资料。这不是云资料故障。

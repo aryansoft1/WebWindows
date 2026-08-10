@@ -26,9 +26,20 @@ contents, battery percentage, installed-function lists, or other user data.
 
 ## Tool registry
 
-assets/js/ai-tool-registry.js defines registration, schema validation,
-permission resolution and invocation boundaries. ai/tools/registry.json lists
-planned tools, all disabled. No system operation is implemented in this phase.
-Future tools must be registered by a trusted shell module and must never call
-page-internal functions directly.
+assets/js/ai-tool-registry.js defines registration, recursive schema
+validation, permission resolution, model-visible metadata and invocation
+boundaries. ai/tools/registry.json is the declarative inventory.
 
+File Search Tool v1 registers two controlled tools in
+assets/js/ai-file-tools.js:
+
+- searchFiles is model-visible and delegates every real lookup to the existing
+  WebWindows.files.search() Unified File Search API.
+- openFile is not model-visible. It accepts only an opaque, short-lived result
+  token and requires a DeskTalk confirmation or an explicit open request with
+  one high-confidence result.
+
+Search results stay in the browser and are rendered under the heading
+"搜索结果". They are not sent back to the model. Device URIs and local paths
+remain only in the short-lived browser cache. No delete, move, rename, upload,
+sync, recommendation, content extraction, or autonomous operation exists.

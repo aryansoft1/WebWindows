@@ -13,10 +13,23 @@ if (-not $ftpHost -or -not $ftpUser -or -not $ftpPassword) {
   throw "Set WEBWINDOWS_FTP_HOST, WEBWINDOWS_FTP_USER and WEBWINDOWS_FTP_PASSWORD for this process. Credentials must not be committed."
 }
 
-& (Join-Path $PSScriptRoot "deployment-preflight.ps1") `
-  -AllowLegacyProductionManifest:$AllowLegacyProductionManifest `
-  -UseExistingRemoteRefs:$UseExistingRemoteRefs
-if ($LASTEXITCODE -ne 0) { throw "Deployment preflight failed." }
+$productionManifestProbe = Join-Path $env:TEMP ("webwindows-production-manifest-" + [guid]::NewGuid().ToString("N") + ".json")
+try {
+  $manifestUrl = "ftp://" + $ftpHost + "/wwwroot/deploy/ftp-manifest.json"
+  & curl.exe --silent --show-error --fail --retry 5 --retry-all-errors --retry-delay 1 `
+    --output $productionManifestProbe --user "${ftpUser}:${ftpPassword}" $manifestUrl
+  if ($LASTEXITCODE -ne 0) { throw "Unable to read the production deployment manifest." }
+
+  & (Join-Path $PSScriptRoot "deployment-preflight.ps1") `
+    -AllowLegacyProductionManifest:$AllowLegacyProductionManifest `
+    -UseExistingRemoteRefs:$UseExistingRemoteRefs `
+    -ProductionManifestPath $productionManifestProbe
+  if ($LASTEXITCODE -ne 0) { throw "Deployment preflight failed." }
+  $production = Get-Content -LiteralPath $productionManifestProbe -Raw | ConvertFrom-Json
+}
+finally {
+  if (Test-Path -LiteralPath $productionManifestProbe) { Remove-Item -LiteralPath $productionManifestProbe -Force }
+}
 
 $manifest = Get-Content -LiteralPath (Join-Path $repo "deploy\ftp-manifest.json") -Raw | ConvertFrom-Json
 $adoptUnrecorded = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
@@ -26,7 +39,6 @@ foreach ($relative in $AdoptUnrecordedProductionFiles) {
   }
   [void]$adoptUnrecorded.Add($relative)
 }
-$production = Invoke-RestMethod -Uri ("https://www.y0.hk/deploy/ftp-manifest.json?v=" + [uri]::EscapeDataString([string]$manifest.releaseVersion)) -TimeoutSec 30
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-" + [string]$production.releaseVersion)
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null

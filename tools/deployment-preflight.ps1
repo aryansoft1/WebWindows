@@ -1,6 +1,7 @@
 param(
   [switch]$AllowLegacyProductionManifest,
-  [switch]$UseExistingRemoteRefs
+  [switch]$UseExistingRemoteRefs,
+  [string]$ProductionManifestPath
 )
 
 $ErrorActionPreference = "Stop"
@@ -40,7 +41,11 @@ try {
     if ($actual -ne $expected) { throw "Deployment integrity mismatch: $relative" }
   }
 
-  $production = Invoke-RestMethod -Uri ("https://www.y0.hk/deploy/ftp-manifest.json?v=" + [uri]::EscapeDataString([string]$manifest.releaseVersion)) -TimeoutSec 30
+  $production = if ($ProductionManifestPath) {
+    Get-Content -LiteralPath $ProductionManifestPath -Raw | ConvertFrom-Json
+  } else {
+    Invoke-RestMethod -Uri ("https://www.y0.hk/deploy/ftp-manifest.json?v=" + [uri]::EscapeDataString([string]$manifest.releaseVersion)) -TimeoutSec 30
+  }
   if (-not $production.integrity -and -not $AllowLegacyProductionManifest) {
     throw "Production manifest has no integrity data. Use -AllowLegacyProductionManifest only for the one-time migration after making a backup."
   }

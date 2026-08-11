@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.10.4",
-  "catalogVersion": "2026.08.10.4",
-  "generatedAt": "2026-08-10T06:22:52.984Z",
+  "releaseVersion": "2026.08.11.1",
+  "catalogVersion": "2026.08.11.1",
+  "generatedAt": "2026-08-11T11:39:50.692Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -13,13 +13,20 @@
     "assets/js/tw.js",
     "assets/js/file-query-parser.js",
     "assets/js/file-search.js",
+    "assets/js/ai-tool-registry.js",
     "assets/js/ai-file-tools.js",
+    "assets/js/desktalk.js",
+    "assets/js/taskbar-experience.js",
+    "assets/js/vendor/html2canvas.min.js",
+    "assets/js/sysinfo.js",
     "assets/js/cloud-file-dialog.js",
     "assets/js/resource-open.js",
     "assets/js/function-center.js",
     "assets/js/guide.js",
     "assets/css/function-center.css",
     "assets/css/guide.css",
+    "assets/css/main.css",
+    "assets/css/sysinfo.css",
     "assets/icons/function-center.svg",
     "assets/icons/guide.svg",
     "assets/icons/writeeditor.svg",
@@ -29,6 +36,8 @@
     "function-center.html",
     "guide.html",
     "dreama.html",
+    "sysinfo.html",
+    "inc/sysinfo.asp",
     "worker_SheetCreater.html",
     "worker_WriteEditor.html",
     "worker_SlideEditor.html",
@@ -73,18 +82,18 @@
     "dist-weather/weather-widget.global.js",
     "dist-weather/weather-widget.css"
   ],
-  "previousReleaseVersion": "2026.08.10.3",
+  "previousReleaseVersion": "2026.08.10.4",
   "integrity": {
     "index.html": {
-      "sha256": "449e8932f2cd2df395a7dab93dd732a3470746d0d3a8610ee3b013550599ee33",
-      "size": 33515
+      "sha256": "959b45cd52279e03296fbbea900dee67ed81fb6018160c8beda5979ca53fb484",
+      "size": 33705
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "ff6343c055c611f394d78b7e73371722b980c166f45df6cecca35ccfebeece1f",
+      "sha256": "cb460e675d8659b00cf2e0af28550ac6bb919661daad83e7d49cf041eeb83aaf",
       "size": 12331
     },
     "assets/js/app-registry.js": {
@@ -103,9 +112,29 @@
       "sha256": "9ac136837262a5f6f853e4c7572132663be8bc5e9b48277a6fc544d9f9ed6a52",
       "size": 11226
     },
+    "assets/js/ai-tool-registry.js": {
+      "sha256": "25bd95e453132d62ff9b6c0d98c16d87d109e042fa8e235eb5af0c35dde54410",
+      "size": 4868
+    },
     "assets/js/ai-file-tools.js": {
-      "sha256": "618ab09e7e257e7a4c196adc9b02577c06034cccc91358ca3ad67ffd105c6df0",
-      "size": 9622
+      "sha256": "51bb624a4181e70504bacfa121a16b1d8556f3d23be8a918e942493d04dd6656",
+      "size": 10216
+    },
+    "assets/js/desktalk.js": {
+      "sha256": "8a320175ef5638398afe4ca6af917c3e34947cf4e2ffd49cb29a682ade22c74c",
+      "size": 109440
+    },
+    "assets/js/taskbar-experience.js": {
+      "sha256": "6a69bc664301df1440f036fad8241335a710b4141b414db5424bc6566e92ff29",
+      "size": 13615
+    },
+    "assets/js/vendor/html2canvas.min.js": {
+      "sha256": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e",
+      "size": 198690
+    },
+    "assets/js/sysinfo.js": {
+      "sha256": "ec4b3beb85f79b714c7a6c379504b09a42a5e9723f498cd608fba1e3559a27ee",
+      "size": 6690
     },
     "assets/js/cloud-file-dialog.js": {
       "sha256": "8277c8376452f4a8651aadaa532cbd89d4d99f8c115d6d6428be7b9aa146b0d8",
@@ -130,6 +159,14 @@
     "assets/css/guide.css": {
       "sha256": "d026b79ec80c1dc2a42fdb10bda03ebbc4fdb126af91ea5e901dad95684a3897",
       "size": 5128
+    },
+    "assets/css/main.css": {
+      "sha256": "d3145fda5ab7d1bcfd749c4d6c9d4a5a6c22ad320c56aa287313eaa8731612a1",
+      "size": 13742
+    },
+    "assets/css/sysinfo.css": {
+      "sha256": "5cc4d9eb8190b08448a4681fe5793b7a29b1d6d932f79fe76ec66fef2b1f004b",
+      "size": 2648
     },
     "assets/icons/function-center.svg": {
       "sha256": "c4cf40ec6713946d6f1c33eb76956d1a9bcc53342645e6002569ee002c1463f7",
@@ -166,6 +203,14 @@
     "dreama.html": {
       "sha256": "19c2b438ef6c77f0481e0d559c68380e8d0d3c0e404f44393b138992b9e420b1",
       "size": 5614
+    },
+    "sysinfo.html": {
+      "sha256": "5ca854adee09d1d8d72b8e4a7ce72dce1959897874111254915c170b0f134a71",
+      "size": 3720
+    },
+    "inc/sysinfo.asp": {
+      "sha256": "3cb796a490499418d486d38db97e8837752836e1adfc7635c8e65f83a60f8924",
+      "size": 4500
     },
     "worker_SheetCreater.html": {
       "sha256": "a9bfa810f0c457add9fa03723064965f53c15f44f989fdea5200337456ec86e3",

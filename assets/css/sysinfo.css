@@ -72,3 +72,22 @@ body {
       font-size: 14px;
       color: #444;
     }
+
+    main { min-height: 100vh; }
+    .info-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; padding: 6px 0; border-bottom: 1px solid #eef1f5; }
+    .info-row:last-of-type { border-bottom: 0; }
+    .info-row strong { flex: 0 0 145px; }
+    .info-row span { text-align: right; color: #27364d; }
+    .info-row .wrap { max-width: 70%; overflow-wrap: anywhere; font-size: 12px; }
+    .hint { margin: 10px 0 0; color: #667085; font-size: 12px; line-height: 1.55; }
+    .capability-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; }
+    .capability { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; padding: 9px; border: 1px solid #dce3ec; border-radius: 9px; background: #f8fafc; }
+    .capability span { color: #0b7a3e; font-size: 12px; }
+    .capability.unsupported span { color: #8a4b16; }
+    .capability small { grid-column: 1 / -1; color: #667085; overflow-wrap: anywhere; }
+    @media (max-width: 560px) {
+      .tab-content { padding: 12px; }
+      .card { padding: 13px; margin-bottom: 12px; }
+      .info-row { display: grid; gap: 3px; }
+      .info-row span, .info-row .wrap { max-width: none; text-align: left; }
+    }

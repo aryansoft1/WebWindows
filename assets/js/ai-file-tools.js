@@ -21,6 +21,17 @@
     return /^(请|帮我|麻烦)?\s*(打开|open)/i.test(value) || /(?:找到|找出|搜索到).{0,16}(?:后|就)?\s*(?:直接)?打开/i.test(value);
   }
 
+  function referencedResultIndex(text) {
+    const value = String(text || "").trim();
+    if (!/(?:打开|open).*(?:刚才|上次|搜索结果|结果)/i.test(value)) return -1;
+    const numeric = value.match(/第\s*(\d+)\s*(?:个|项|条|份)?/);
+    if (numeric) return Math.max(0, Number(numeric[1]) - 1);
+    if (/第\s*(?:一|1)\s*(?:个|项|条|份)?|first/i.test(value)) return 0;
+    if (/第\s*(?:二|2)\s*(?:个|项|条|份)?|second/i.test(value)) return 1;
+    if (/第\s*(?:三|3)\s*(?:个|项|条|份)?|third/i.test(value)) return 2;
+    return -1;
+  }
+
   const sourceSchema = { type: "string", enum: ["private", "public", "device"] };
   const dateField = { type: "string", maxLength: 40, description: "ISO 8601 date-time" };
   const searchSchema = {
@@ -204,6 +215,7 @@
     version: 1,
     isSearchIntent,
     isExplicitOpenIntent,
+    referencedResultIndex,
     searchSchema,
     openSchema
   });

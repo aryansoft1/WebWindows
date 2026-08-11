@@ -58,6 +58,9 @@ assert.equal(helpers.isSearchIntent("最近的 Word 文件"), true);
 assert.equal(helpers.isSearchIntent("解释一下光合作用"), false);
 assert.equal(helpers.isSearchIntent("如何打开云资料"), false);
 assert.equal(helpers.isExplicitOpenIntent("打开7月3日的Excel"), true);
+assert.equal(helpers.referencedResultIndex("打开刚才第一个文件"), 0);
+assert.equal(helpers.referencedResultIndex("打开上次结果的第3项"), 2);
+assert.equal(helpers.referencedResultIndex("解释第一个文件格式"), -1);
 
 searchResults = [{
   id: "server-public-1", source: "public", scope: "public", nodeId: "main",

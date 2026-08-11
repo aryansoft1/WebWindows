@@ -245,11 +245,29 @@ const NAME_CACHE = new Map();      // id -> name，供显示名复用
 
 
 /* ===== 偏好 & 好友 ===== */
-var PREF_KEY='ww_prefs'; var prefs=Object.assign({hide_reco:false,undiscoverable:false}, JSON.parse(localStorage.getItem(PREF_KEY)||'{}'));
+var PREF_KEY='ww_prefs'; var prefs=Object.assign({hide_reco:false,undiscoverable:false,dnd:true}, JSON.parse(localStorage.getItem(PREF_KEY)||'{}'));
 function savePrefs(){ localStorage.setItem(PREF_KEY,JSON.stringify(prefs)) }
 var FS_KEY='ww_friends'; var friendSet=new Set(JSON.parse(localStorage.getItem(FS_KEY)||'[]'));
+var FRIEND_META_KEY='ww_friend_meta'; var friendMeta={};
+try{ friendMeta=JSON.parse(localStorage.getItem(FRIEND_META_KEY)||'{}')||{} }catch(_){ friendMeta={} }
 function saveFriends(){ localStorage.setItem(FS_KEY, JSON.stringify(Array.from(friendSet))) }
 function isFriend(id){ return friendSet.has(id) }
+function rememberFriend(p){
+  if(!p || !p.id) return;
+  friendMeta[p.id]={name:p.name||p.id,color:p.color||'#7dd3fc'};
+  localStorage.setItem(FRIEND_META_KEY,JSON.stringify(friendMeta));
+}
+function addFriend(p){
+  if(!p || !p.id) return false;
+  var added=!friendSet.has(p.id);
+  friendSet.add(p.id); rememberFriend(p); saveFriends(); seedInboxOne(p.id); renderAll();
+  return added;
+}
+function removeFriend(p){
+  if(!p || !friendSet.has(p.id)) return;
+  friendSet.delete(p.id); saveFriends(); renderAll();
+  Overlay.HUD.show('已从本机好友列表移除「'+p.name+'」','info',function(){ addFriend(p); Overlay.HUD.show('已恢复好友','ok') });
+}
 
 /* ===== 悬停信息卡 ===== */
 var pop=$('#profile-pop'); var popTimer=null;
@@ -270,7 +288,7 @@ function showProfile(p,rect){
   var w=pop.offsetWidth||260,h=pop.offsetHeight||140; var x=Math.max(12,rect.right-w); var y=rect.bottom+8; if(y+h>window.innerHeight-12) y=rect.top-h-8;
   pop.style.left=x+'px'; pop.style.top=y+'px'; pop.style.display='block';
   $('#pop-chat').onclick=function(){ openChat(p,rect)};
-  var add=$('#pop-add'); if(add){ add.onclick=function(){ friendSet.add(p.id); seedInboxOne(p.id); saveFriends(); renderAll(); Overlay.HUD.show('已添加「'+p.name+'」为好友','ok'); showProfile(p,rect) } }
+  var add=$('#pop-add'); if(add){ add.onclick=function(){ addFriend(p); Overlay.HUD.show('已添加「'+p.name+'」为好友','ok'); showProfile(p,rect) } }
 }
 function hideProfile(){ if(pop) pop.style.display='none' }
 
@@ -299,8 +317,8 @@ function personRow(p){
   main.innerHTML='<div class="name">'+p.name+'</div><div class="last">'+p.last+'</div>';
 
   var cta=document.createElement('div');
-  var btn=document.createElement('button'); btn.className='btn'; btn.textContent=isFriend(p.id)?'已是好友':'加好友';
-  btn.onclick=function(e){ e.stopPropagation(); if(isFriend(p.id)) return Overlay.HUD.show('已在你的好友列表','info'); friendSet.add(p.id);seedInboxOne(p.id); saveFriends(); Overlay.HUD.show('已添加「'+p.name+'」为好友','ok'); renderAll() };
+  var btn=document.createElement('button'); btn.className='btn'; btn.textContent=isFriend(p.id)?'删除好友':'加好友';
+  btn.onclick=function(e){ e.stopPropagation(); if(isFriend(p.id)) return removeFriend(p); addFriend(p); Overlay.HUD.show('已添加「'+p.name+'」为好友','ok') };
   cta.appendChild(btn);
 
   row.appendChild(av); row.appendChild(main); row.appendChild(cta);
@@ -357,6 +375,7 @@ function renderReco(){
   var me = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
 
   var arr = people
+    .filter(function(p){ return !isFriend(p.id) })
     .filter(function(p){ return !(only && p.status!=='online') })
     .filter(function(p){ return p.name.toLowerCase().includes(q) })
     // ← 新增这一段：排除自己
@@ -464,9 +483,12 @@ document.addEventListener('click', function(e){
 
 if(scroller) scroller.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
 
-var dndToggle=$('#dnd-toggle'); var DND=true;
+var dndToggle=$('#dnd-toggle'); var DND=prefs.dnd!==false;
+if(dndToggle) dndToggle.checked=DND;
 if(dndToggle) dndToggle.addEventListener('change',function(){
   DND=dndToggle.checked;
+  prefs.dnd=DND; savePrefs();
+  if(!DND) maybeAskNotify();
   Overlay.HUD.show(DND?'已开启不打扰（仅徽标）':'已关闭不打扰','info');
 });
 
@@ -724,7 +746,7 @@ function refreshMeId(){
 if(btnVoice) btnVoice.onclick=function(){ attempt('语音通话',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）开始语音','info') }) };
 if(btnVideo) btnVideo.onclick=function(){ attempt('视频通话',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）开始视频','info') }) };
 if(btnFile)  btnFile.onclick=function(){ attempt('发送文件',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）发送文件','info') }) };
-if(chatAdd) chatAdd.onclick=function(){ if(currentPeer && typeof friendSet!=='undefined'){ friendSet.add(currentPeer.id); saveFriends && saveFriends(); Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('已添加「'+currentPeer.name+'」为好友','ok'); setCaps(); renderAll && renderAll() } };
+if(chatAdd) chatAdd.onclick=function(){ if(currentPeer){ addFriend(currentPeer); Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('已添加「'+currentPeer.name+'」为好友','ok'); setCaps() } };
 
 /* === 会话状态 === */
 var API_ME='', API_PEER='', CONV_ID='', lastTs=0, pollTimer=null;
@@ -1053,15 +1075,17 @@ async function sendCurrent(){
   if (recentlySent.length > 10) recentlySent.shift();
   try{
     const res = await fetch(urlSend(API_ME, CONV_ID, API_PEER, v), { credentials:'omit' });
-    // 若服务端返回了 key，把文件名加入已渲染集合，避免稍后再次渲染
-    res && res.json && res.json().then(function(j){
-      if (j && j.key) {
-        var id = String(j.key).split('/').pop(); // 1755xxxx-abcdef.json
-        if (id) renderedIds.add(id);
-      }
-    }).catch(function(){}); // 不是 JSON 也无妨
-  }catch(e){}
-  setTimeout(fetchNew, 400);
+    var j=null; try{ j=await res.json() }catch(_){}
+    if(!res.ok || !j || j.ok!==true) throw new Error('send-failed');
+    if(j.key){
+      var id=String(j.key).split('/').pop();
+      if(id) renderedIds.add(id);
+    }
+    setTimeout(fetchNew,400);
+  }catch(e){
+    if(chatInput && !chatInput.value) chatInput.value=v;
+    Overlay.HUD.show('发送失败，消息未送达；内容已放回输入框。','warn');
+  }
 }
 if(chatInput) chatInput.addEventListener('keydown',function(e){ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); sendCurrent() }});
 
@@ -1170,6 +1194,7 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
   var AI_HISTORY_LIMIT = 16;
   var aiHistory  = [];
   var aiRequestInFlight = false;
+  var lastDeskTalkFileSearch = null;
 
   function buildAIRuntimeContext(){
     var device = window.WebWindows && window.WebWindows.device;
@@ -1341,6 +1366,7 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
     heading.textContent='搜索结果';
     bubble.appendChild(heading);
     var results=Array.isArray(payload.results)?payload.results:[];
+    lastDeskTalkFileSearch={query:userText,results:results.slice(),createdAt:Date.now()};
     var summary=document.createElement('p');
     summary.style.margin='6px 0 8px';
     if(!results.length) summary.textContent='没有找到符合条件的文件。';
@@ -1410,6 +1436,41 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
       throw error;
     });
   }
+
+  function runDirectFileCommand(userText){
+    var helpers=window.WebWindows && window.WebWindows.aiFileTools;
+    var registry=window.WebWindows && window.WebWindows.aiTools;
+    if(!helpers || !registry) return Promise.resolve(false);
+
+    var referencedIndex=helpers.referencedResultIndex ? helpers.referencedResultIndex(userText) : -1;
+    if(referencedIndex>=0){
+      var previous=lastDeskTalkFileSearch && lastDeskTalkFileSearch.results;
+      var selected=previous && previous[referencedIndex];
+      if(!selected){
+        aiAppend('ai','刚才的搜索结果里没有这一项，请先重新搜索文件。');
+        return Promise.resolve(true);
+      }
+      return invokeOpenFile(selected,{origin:'desktalk',userConfirmed:true},null).then(function(){
+        aiAppend('ai','已打开“'+selected.name+'”。');
+        aiHistory.push({role:'assistant',content:'[已通过受控 openFile Tool 打开用户明确选择的搜索结果。]'});
+        trimAIHistory();
+        return true;
+      });
+    }
+
+    if(!plausibleFileSearchIntent(userText)) return Promise.resolve(false);
+    return registry.invoke('searchFiles',{
+      query:userText,
+      limit:10,
+      openIfUnique:explicitFileOpenIntent(userText)
+    },{origin:'desktalk'}).then(function(payload){
+      return renderFileSearchResults(payload,userText).then(function(){
+        aiHistory.push({role:'assistant',content:'[已通过 WebWindows 受控文件搜索工具显示结果；文件列表未发送给模型。]'});
+        trimAIHistory();
+        return true;
+      });
+    });
+  }
 function aiAppend(role, text){
   if(!aiBody) return;
   var row = document.createElement('div');
@@ -1464,38 +1525,41 @@ function sendAI(){
   var oldTxt = aiSend && aiSend.textContent;
   aiRequestInFlight = true;
   if(aiSend){ aiSend.disabled=true; aiSend.textContent='思考中…'; }
-  var payload = {
-    model: AI_MODEL,
-    messages: [runtimeContextMessage()].concat(aiHistory),
-    temperature: 0.6,
-    max_tokens: 1200,
-    thinking: { type:'disabled' },
-    stream: false
-  };
-  var availableTools=aiToolDefinitions();
-  if(availableTools.length){
-    payload.tools=availableTools;
-    payload.tool_choice='auto';
-  }
-  requestAI(payload, 0).then(function(data){
-    return handleAIToolCalls(data,v).then(function(handled){
-      if(handled) return;
-      var calls=extractAIToolCalls(data);
-      if(calls.length){
-        var fallbackPayload=Object.assign({},payload);
-        delete fallbackPayload.tools;
-        delete fallbackPayload.tool_choice;
-        return requestAI(fallbackPayload,0).then(function(fallbackData){
-          var fallbackText=extractAIText(fallbackData);
-          aiAppend('ai',fallbackText);
-          aiHistory.push({role:'assistant',content:fallbackText});
-          trimAIHistory();
-        });
-      }
-      var text = extractAIText(data);
-      aiAppend('ai', text);
-      aiHistory.push({ role:'assistant', content:text });
-      trimAIHistory();
+  runDirectFileCommand(v).then(function(handledDirectly){
+    if(handledDirectly) return;
+    var payload = {
+      model: AI_MODEL,
+      messages: [runtimeContextMessage()].concat(aiHistory),
+      temperature: 0.6,
+      max_tokens: 1200,
+      thinking: { type:'disabled' },
+      stream: false
+    };
+    var availableTools=aiToolDefinitions();
+    if(availableTools.length){
+      payload.tools=availableTools;
+      payload.tool_choice='auto';
+    }
+    return requestAI(payload, 0).then(function(data){
+      return handleAIToolCalls(data,v).then(function(handled){
+        if(handled) return;
+        var calls=extractAIToolCalls(data);
+        if(calls.length){
+          var fallbackPayload=Object.assign({},payload);
+          delete fallbackPayload.tools;
+          delete fallbackPayload.tool_choice;
+          return requestAI(fallbackPayload,0).then(function(fallbackData){
+            var fallbackText=extractAIText(fallbackData);
+            aiAppend('ai',fallbackText);
+            aiHistory.push({role:'assistant',content:fallbackText});
+            trimAIHistory();
+          });
+        }
+        var text = extractAIText(data);
+        aiAppend('ai', text);
+        aiHistory.push({ role:'assistant', content:text });
+        trimAIHistory();
+      });
     });
   }).catch(function(err){
     aiAppend('ai', err && err.isFriendly
@@ -1567,13 +1631,15 @@ function upsertPresence(id, name, ts){
   var p = people.find(function(x){ return x.id===id });
   if(!p){
     // 新用户加入列表顶端
-    p = { id:id, name:(name||id), color:'#7dd3fc', status: online?'online':'idle', last:last, _ts: tsSec };
+    p = { id:id, name:(name||id), color:(friendMeta[id]&&friendMeta[id].color)||'#7dd3fc', status: online?'online':'idle', last:last, _ts: tsSec };
     people.unshift(p);
   }else{
     p.name = name || p.name;
     p.status = online ? 'online' : 'idle';
     p.last = last;
+    p._ts = tsSec;
   }
+  NAME_CACHE.set(id,p.name);
 }
 // 替换 desktalk.js 的 fetchPresenceList
 async function fetchPresenceList(){
@@ -1597,6 +1663,7 @@ async function fetchPresenceList(){
     if(Array.isArray(arr)){
        // 只记录权威 presence 列表
         PRESENCE = [];
+        people.forEach(function(existing){ if(existing&&existing.id) NAME_CACHE.set(existing.id,existing.name||existing.id) });
         // 关键：每次基于服务端 presence 全量重建 people
         people = [];
 
@@ -1609,6 +1676,11 @@ async function fetchPresenceList(){
             upsertPresence(it.u||it.id||it.name, it.name||(it.u||it.id), ts);
             }
         });
+        friendSet.forEach(function(id){
+          if(people.some(function(p){ return p.id===id })) return;
+          var meta=friendMeta[id]||{};
+          people.push({id:id,name:meta.name||NAME_CACHE.get(id)||id,color:meta.color||'#7dd3fc',status:'offline',last:'离线',_ts:0});
+        });
         renderAll();          // 用 presence 渲染“推荐好友”
     }
     // 3) 对 people 做一次“衰减”同步（即便这次没返回，也根据时间把在线 -> 闲置）
@@ -1616,7 +1688,8 @@ async function fetchPresenceList(){
     var nowSec = now;
     for (var i=0; i<people.length; i++){
       var p = people[i];
-      var tsSec = (typeof p._ts === 'number' ? p._ts : nowSec); // upsertPresence 里你可以顺手把 ts 存到 p._ts
+      var tsSec = (typeof p._ts === 'number' ? p._ts : nowSec);
+      if(tsSec<=0){ p.status='offline'; p.last='离线'; continue; }
       var online = (nowSec - tsSec < 60);
       p.status = online ? 'online' : 'idle';
       p.last   = online ? '在线'  : Math.max(1, Math.round((nowSec - tsSec)/60)) + ' 分钟前';
@@ -1709,14 +1782,30 @@ function maybeAskNotify(){
     }
   }catch(e){}
 }
-function notifyDesktop(title, body){
+function notifyDesktop(title, body, peer){
   try{
     if (!('Notification' in window)) return;
     if (Notification.permission === 'granted'){
-      var n = new Notification(title, { body: body, tag: 'desktalk', renotify: true });
+      var key=peer&&peer.id?String(peer.id):'message';
+      var n = new Notification(title, { body: body, tag: 'desktalk:'+key, renotify: true });
+      n.onclick=function(){
+        try{ window.focus(); if(peer) openChat(peer); n.close(); }catch(_){}
+      };
       setTimeout(function(){ try{ n.close(); }catch(e){} }, 5000);
     }
   }catch(e){}
+}
+
+function notifyIncomingMessage(pid, message){
+  if(DND) return;
+  var peer=peerById(pid);
+  var body=String(message&&message.body||message&&message.raw||'新消息').slice(0,120);
+  showIsland(peer,body);
+  if(!windowFocused || document.hidden){
+    playDing();
+    notifyDesktop('来自「'+peer.name+'」的新消息',body,peer);
+    startTitleFlash('【'+peer.name+'】新消息');
+  }
 }
 
 // 标题闪烁
@@ -1791,6 +1880,7 @@ var ME_SLUG = meSlug();
 // === 每个会话的“已看到的最后时间戳” ===
 var CONV_TS = {};      // key: convId -> last seen ts (秒)
 var inboxTimer = null;
+var inboxStopped = false;
 
 // —— 单个好友：初始化“已看到”的基线（不触发未读）——
 async function seedInboxOne(pid){
@@ -1816,7 +1906,7 @@ async function seedInboxTs(){
 // —— 后台轮询一个好友：检查新消息（> CONV_TS）——
 async function pollOne(pid){
   // 正在聊天的这位，不在后台轮询，避免重复
-  if (currentPeer && currentPeer.id === pid) return;
+  if (currentPeer && currentPeer.id === pid && chat && chat.classList.contains('show')) return;
 
   var convId = makeConvId(ME_SLUG, slugId(pid));
   var since  = CONV_TS[convId] || 0;
@@ -1833,6 +1923,7 @@ async function pollOne(pid){
         if (slugId(m.from) !== ME_SLUG){
           // 这里传原始 pid（中文也可），内部会归一化
           markPeerUnread(pid);
+          notifyIncomingMessage(pid,m);
         }
       }
     }
@@ -1843,11 +1934,12 @@ async function pollOne(pid){
 function inboxTick(){
   var ids = [...new Set([...(friendSet||[]), ...((people||[]).map(p => p.id))])];
   // 例：最多并发轮询前 10 个，避免过多并发
-  ids.slice(0, 10).forEach(pollOne);
+  return Promise.all(ids.slice(0,10).map(pollOne));
 }
 
 // —— 启动后台收件箱轮询 —— 
 function startInboxWatch(){
+  inboxStopped = false;
   if (inboxTimer) { clearInterval(inboxTimer); inboxTimer = null; }
   ME_SLUG = slugId(meName());
   ME_SLUG = meSlug();
@@ -1971,7 +2063,10 @@ let inboxDelay = INBOX_SLOW;
 
 function scheduleInbox(next){
   if (inboxTimer) clearTimeout(inboxTimer);
-  inboxTimer = setTimeout(inboxTick, next ?? inboxDelay);
+  if(inboxStopped) return;
+  inboxTimer = setTimeout(function(){
+    Promise.resolve(inboxTick()).finally(function(){ scheduleInbox(); });
+  }, next ?? inboxDelay);
 }
 
 function setInboxActive(active){
@@ -1995,6 +2090,13 @@ function stopPolling(){
 document.addEventListener('visibilitychange', ()=>{
   const active = !document.hidden && !!document.querySelector('#chat.show');
   setInboxActive(active);
+});
+window.addEventListener('pagehide',function(){
+  inboxStopped=true;
+  stopPolling();
+  if(inboxTimer) clearTimeout(inboxTimer);
+  if(__titleTimer) stopTitleFlash();
+  if(__islandTimer) clearTimeout(__islandTimer);
 });
 
 

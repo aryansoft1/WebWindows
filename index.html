@@ -9,7 +9,7 @@
     <link href="assets/icons/logo_large.png" rel="icon" />
     <link href="dist-widget/weather-widget.css" rel="stylesheet" />
     <link href="dist-window/window-manager-widget.css?v=20260802-mobile-language-1" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/main.css?v=20260809-snapshot-1">
+    <link rel="stylesheet" href="assets/css/main.css?v=20260811-system-audit-1">
     <link href="assets/css/context_menu.css?v=20260802-device-1" rel="stylesheet" />
     <link rel="stylesheet" href="assets/css/desktalk.css?v=20260802-locale-2">
     <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20260810-drag-1">
@@ -26,7 +26,7 @@
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/vendor/html2canvas.min.js?v=1.4.1"></script>
-    <script defer src="assets/js/taskbar-experience.js?v=20260809-snapshot-1"></script>
+    <script defer src="assets/js/taskbar-experience.js?v=20260811-preview-1"></script>
     <script src="dist-weather/weather-widget.umd.js?v=20260810-drag-1"></script>
     <script defer src="dist-window/window-manager-widget.js?v=20260809-device-storage-1"></script>
     <script defer src="assets/js/app-registry.js?v=20260810-catalog-2"></script>
@@ -469,9 +469,10 @@
     </label>
     <div style="height:8px"></div>
     <label class="switch">
-      <input id="pref-undiscoverable" type="checkbox">
-      <span style="margin-left:6px">不被推荐（隐藏我的账号）</span>
+      <input id="pref-undiscoverable" type="checkbox" disabled aria-describedby="pref-undiscoverable-status">
+      <span style="margin-left:6px">不被推荐</span>
     </label>
+    <div id="pref-undiscoverable-status" class="muted" style="margin:6px 0 0 28px;font-size:12px">服务器隐私能力尚未接入，当前不可用。</div>
   </div>
 </div>
 </div>
@@ -648,8 +649,8 @@
 <script src="assets/js/file-query-parser.js?v=20260810-query-v2-2"></script>
 <script src="assets/js/file-search.js?v=20260810-query-v2-2"></script>
 <script src="assets/js/ai-tool-registry.js?v=20260810-file-tool-1"></script>
-<script src="assets/js/ai-file-tools.js?v=20260810-query-v2-1"></script>
-<script src="assets/js/desktalk.js?v=20260810-file-tool-1"></script>
+<script src="assets/js/ai-file-tools.js?v=20260811-file-tool-1"></script>
+<script src="assets/js/desktalk.js?v=20260811-file-tool-1"></script>
     <script src="assets/js/tw.js?v=20260808-device-api-1"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.11.3",
   "catalogVersion": "2026.08.11.3",
-  "generatedAt": "2026-08-11T15:04:21.552Z",
+  "generatedAt": "2026-08-11T15:11:28.581Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -315,8 +315,8 @@
       "size": 1436
     },
     "assets/css/settings.css": {
-      "sha256": "9cb53f10f4f17ffaaeccd57633708b0bf5c8233b9d40d7e98e3c21d687b1c84b",
-      "size": 1873
+      "sha256": "b5671ad2e5952aa33972b768db7ee08e0d5be6eaf829d31fbbcde893693a0c61",
+      "size": 10120
     },
     "assets/images/case1.jpg": {
       "sha256": "63fc2370b66b3515c03897d17b6d45708ebb3ff058664a708527cc71debdf33f",

@@ -58,7 +58,7 @@ function Test-TextEquivalent([string]$left, [string]$right, [string]$relative) {
   }
   $leftText = (Get-Content -LiteralPath $left -Raw).Replace("`r`n", "`n").Replace("`r", "`n")
   $rightText = (Get-Content -LiteralPath $right -Raw).Replace("`r`n", "`n").Replace("`r", "`n")
-  return [string]::Equals($leftText, $rightText, [StringComparison]::Ordinal)
+  return [string]::Equals($leftText.TrimEnd([char]10), $rightText.TrimEnd([char]10), [StringComparison]::Ordinal)
 }
 
 foreach ($relative in $manifest.requiredFiles) {

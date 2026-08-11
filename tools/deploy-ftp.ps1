@@ -16,7 +16,7 @@ if (-not $ftpHost -or -not $ftpUser -or -not $ftpPassword) {
 $productionManifestProbe = Join-Path $env:TEMP ("webwindows-production-manifest-" + [guid]::NewGuid().ToString("N") + ".json")
 try {
   $manifestUrl = "ftp://" + $ftpHost + "/wwwroot/deploy/ftp-manifest.json"
-  & curl.exe --silent --show-error --fail --retry 5 --retry-all-errors --retry-delay 1 `
+  & curl.exe --silent --show-error --fail --noproxy "*" --retry 5 --retry-all-errors --retry-delay 1 `
     --output $productionManifestProbe --user "${ftpUser}:${ftpPassword}" $manifestUrl
   if ($LASTEXITCODE -ne 0) { throw "Unable to read the production deployment manifest." }
 
@@ -47,7 +47,7 @@ function Invoke-FtpDownload([string]$relative, [string]$destination, [switch]$Al
   $parent = Split-Path -Parent $destination
   if ($parent) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
   $url = "ftp://" + $ftpHost + "/wwwroot/" + $relative
-  & curl.exe --silent --show-error --fail --retry 5 --retry-all-errors --retry-delay 1 `
+  & curl.exe --silent --show-error --fail --noproxy "*" --retry 5 --retry-all-errors --retry-delay 1 `
     --output $destination --user "${ftpUser}:${ftpPassword}" $url
   if ($LASTEXITCODE -ne 0) {
     if ($AllowMissing) {
@@ -62,7 +62,7 @@ function Invoke-FtpDownload([string]$relative, [string]$destination, [switch]$Al
 function Invoke-FtpUpload([string]$relative) {
   $source = Join-Path $repo ($relative -replace '/', '\')
   $url = "ftp://" + $ftpHost + "/wwwroot/" + $relative
-  & curl.exe --silent --show-error --fail --retry 5 --retry-all-errors --retry-delay 1 `
+  & curl.exe --silent --show-error --fail --noproxy "*" --retry 5 --retry-all-errors --retry-delay 1 `
     --ftp-create-dirs --upload-file $source --user "${ftpUser}:${ftpPassword}" $url
   if ($LASTEXITCODE -ne 0) { throw "Unable to upload production file: $relative" }
 }

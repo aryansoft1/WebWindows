@@ -6,7 +6,6 @@
   background: #f5f5f5;
   cursor: default;
 }
-
 .tab-content {
   flex: 1;
   padding: 10px;
@@ -97,6 +96,33 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 .tabs-bar::-webkit-scrollbar{height:8px}
 .tabs-bar .btn{flex:0 0 auto; white-space:nowrap}
 
+#tab-btn-mailbox{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  line-height:1;
+}
+#tab-btn-mailbox .mailbox-icon-inline{
+  display:block;
+  width:18px;
+  height:18px;
+  flex:0 0 18px;
+  vertical-align:initial;
+}
+
+.mailbox-icon-inline{
+  width:20px;
+  height:20px;
+  object-fit:contain;
+  vertical-align:-5px;
+}
+.mailbox-icon-menu{
+  width:24px;
+  height:24px;
+  vertical-align:middle;
+}
+
 /* 顶部工具栏（紧跟 tabs 之下） */
 .toolbar{
   position: sticky; top: 52px; z-index: 2;      /* tabs 高 ~44 + 间距 */
@@ -177,9 +203,35 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 #chat .send{height:40px;padding:0 12px;border-radius:10px}
 
 @media (max-width:1023px){
-  #fab{display:flex}
+  #fab{display:flex;bottom:calc(55px + var(--safe-bot, env(safe-area-inset-bottom)))}
   #chat{left:0;right:0;width:auto;height:65vh;border-radius:18px 18px 0 0;bottom:56px;top:auto}
   #chat::before{display:none}
+}
+
+@media (max-width:820px), (max-width:1000px) and (max-height:500px){
+  #presence-sheet:not(.show){display:none}
+  #presence-sheet.show{display:flex}
+  #presence-sheet{
+    top:max(8px,env(safe-area-inset-top));
+    right:max(8px,env(safe-area-inset-right));
+    bottom:51px;
+    width:min(420px,calc(100vw - 16px - env(safe-area-inset-left) - env(safe-area-inset-right)));
+    max-width:none;
+  }
+
+  #presence-sheet header{
+    min-height:64px;
+  }
+
+  #presence-sheet .btn,
+  #presence-sheet .icon-btn{
+    min-height:44px;
+  }
+
+  #presence-sheet .tabs-bar{
+    overscroll-behavior-x:contain;
+    touch-action:pan-x;
+  }
 }
  /* 时间分割条 */
   #chat .time-sep{
@@ -196,27 +248,36 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   @keyframes ww-blink { 0%,100% { filter:none; } 50% { filter:brightness(1.55) saturate(1.4); } }
   .row .av.blink { animation: ww-blink .9s linear infinite; }   /* 列表头像闪 */
   #btn-desktalk.blink-tray { animation: ww-blink .9s linear infinite; } /* 任务栏图标闪 */
-  #ww-island{
-  position: fixed;
-  left:50%; top: calc(12px + var(--safe-top));
-  transform: translateX(-50%);
-  display: none; align-items: center; gap: 8px;
-  padding: 8px 12px; border-radius: 14px;
-  background: var(--glass-head);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  z-index: var(--z-hud);
-  max-width: min(78vw, 520px);
-  color: var(--fg);
-  backdrop-filter: saturate(120%) blur(calc(var(--glass-blur)*.75));
-  -webkit-backdrop-filter: saturate(120%) blur(calc(var(--glass-blur)*.75));
+ #ww-island{
+  position: fixed;              /* 🔥关键 */
+  top: 12px;                    /* 顶部 */
+  left: 50%;
+  transform: translateX(-50%);  /* 居中 */
+
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  display: none;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 13px;
+
+  z-index: 999999;              /* 🔥关键 */
 }
 #ww-island .mini{
   width: 18px; height: 18px; border-radius: 50%;
   background:#93c5fd; flex:0 0 auto;
   box-shadow: 0 0 0 2px var(--surface);
 }
-#ww-island.show{ display:flex; animation: islandIn .16s ease-out }
+#ww-island.show {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  pointer-events: auto;
+}
 @keyframes islandIn { from{ transform:translateX(-50%) translateY(-6px); opacity:0 } to{ transform:translateX(-50%) translateY(0); opacity:1 } }
   /* Markdown 样式：代码块、引用、列表、链接 */
   #tab-ai .bubble pre { background: rgba(15,23,42,.06); padding: 10px; border-radius: 8px; overflow: auto; }

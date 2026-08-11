@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.11.3",
   "catalogVersion": "2026.08.11.3",
-  "generatedAt": "2026-08-11T15:38:46.419Z",
+  "generatedAt": "2026-08-11T15:52:59.739Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -737,8 +737,8 @@
       "size": 383
     },
     "dist-menus/desktop-menus.global.js": {
-      "sha256": "a2183786c597bc900c65cce62b998b5204458747880a4f9e9d5c0ec0eb6134e6",
-      "size": 3682
+      "sha256": "8f26b6ae9fa228c7dcb3541041efce890c2b60381867b0a4e91767abdfec44f5",
+      "size": 5505
     },
     "dist-widget/weather-widget.css": {
       "sha256": "8a486580878564b533acb8ac7437df97660d70a23693b0d0537c771ab9c77434",

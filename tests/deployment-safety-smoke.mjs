@@ -18,6 +18,7 @@ assert.match(deploy, /Cannot adopt a file outside this release manifest/);
 assert.match(deploy, /adopting_unrecorded_production_file/);
 assert.match(deploy, /AllowMissing/);
 assert.match(deploy, /Post-upload verification failed/);
+assert.match(agents, /deployment-entry-dependency-smoke/);
 assert.doesNotMatch(deploy, /yylwljj|8bdea/i, "deployment tooling must not embed credentials");
 
 console.log("Deployment safety smoke tests passed");

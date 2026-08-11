@@ -9,3 +9,4 @@ These rules apply to every branch and worktree in this repository.
 5. Production files must be backed up and checked against the previous deployment manifest before overwrite. A mismatch stops deployment for manual reconciliation.
 6. Update `deploy/ftp-manifest.json` with `tools/update-deployment-manifest.mjs`; do not hand-edit integrity hashes.
 7. Upload the deployment manifest and entry page last. Never upload ignored credential configuration.
+8. Run `node tests/deployment-entry-dependency-smoke.mjs`; every same-origin entry-page dependency must exist and be recorded in the deployment manifest.

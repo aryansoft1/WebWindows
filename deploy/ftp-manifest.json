@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.11.3",
   "catalogVersion": "2026.08.11.3",
-  "generatedAt": "2026-08-11T15:15:55.445Z",
+  "generatedAt": "2026-08-11T15:27:07.416Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -31,6 +31,8 @@
     "assets/js/main.js",
     "assets/js/login.js",
     "assets/js/news.js",
+    "assets/js/network-speed.js",
+    "assets/js/settings.js",
     "assets/js/snap_drag.js",
     "assets/js/start-menu-functions.js",
     "assets/js/system-session.js",
@@ -76,6 +78,14 @@
     "assets/icons/news.png",
     "assets/icons/power.png",
     "assets/icons/settings.png",
+    "assets/icons/settings-display.svg",
+    "assets/icons/settings-functions.svg",
+    "assets/icons/settings-guide.svg",
+    "assets/icons/settings-language.svg",
+    "assets/icons/settings-network.svg",
+    "assets/icons/settings-power.svg",
+    "assets/icons/settings-sound.svg",
+    "assets/icons/settings-wallpaper.svg",
     "assets/icons/sheeteditor.png",
     "assets/icons/sysinfo.png",
     "assets/icons/wall_aryan.jpg",
@@ -249,6 +259,14 @@
     "assets/js/news.js": {
       "sha256": "84d4b7580114cb5adfdebbb3efc3142db72b92d164bbdd8e9fb73a344a8c5b67",
       "size": 1604
+    },
+    "assets/js/network-speed.js": {
+      "sha256": "09211cff10ced398a30a20b32d8d17874b5d0afa299a7826ff79334ea55eea43",
+      "size": 3207
+    },
+    "assets/js/settings.js": {
+      "sha256": "403cb554252409d27952c84f15733f87420f35a0ebdfc3a985ac9af5494d9743",
+      "size": 21452
     },
     "assets/js/snap_drag.js": {
       "sha256": "db2279015ffce0c7bc57935799262d25a44ee226202607ff5adb03b07119dae5",
@@ -430,6 +448,38 @@
       "sha256": "01e2b2d715b1a1ae03e86a5e85dc44b6aad91218b1d081958f2470967e73c882",
       "size": 1456008
     },
+    "assets/icons/settings-display.svg": {
+      "sha256": "1bd1476a43d18d3f663a3b744422ec5be8a57ee434cf29ee5bc87d4f19dc372e",
+      "size": 612
+    },
+    "assets/icons/settings-functions.svg": {
+      "sha256": "2557d77b348c39a61f71435c0d0581bcbf512850d96af900460a9422f643e5d9",
+      "size": 615
+    },
+    "assets/icons/settings-guide.svg": {
+      "sha256": "49f31517f5b348fc0a855988a73b877c90d567b589b323724bc3d9906df690cf",
+      "size": 569
+    },
+    "assets/icons/settings-language.svg": {
+      "sha256": "7e3cb691fe7ea9287be0a1f27cc40f6bb30ac8e8364ab91a94944aec1d8c16f7",
+      "size": 551
+    },
+    "assets/icons/settings-network.svg": {
+      "sha256": "178ae9ab6f18c5f07c288fc7d5585a20aebfcbeec518b404c6f610092b27bd41",
+      "size": 531
+    },
+    "assets/icons/settings-power.svg": {
+      "sha256": "347169203a5a51fed7b600ae1431ec3fe01a02bb1b5f35a4e605ae0991b7dc2f",
+      "size": 217
+    },
+    "assets/icons/settings-sound.svg": {
+      "sha256": "8ce78b7ac5d7b8d21a8d0d45d7d1ecc0ba9c5000b2c2b3bb399e441f3c1ce374",
+      "size": 271
+    },
+    "assets/icons/settings-wallpaper.svg": {
+      "sha256": "8860bfcf69ea1d773fb6cab2c2bd0dda297480c3683787caa5f072db44aed540",
+      "size": 550
+    },
     "assets/icons/sheeteditor.png": {
       "sha256": "9c60c8a9521eabc959ec4a55a57bcc6806b749bea360e9c411d8e6645c6a3584",
       "size": 414024
@@ -491,8 +541,8 @@
       "size": 1928
     },
     "settings.html": {
-      "sha256": "37da8719c73ea89749f673d6260aa400160873d40aebb456f057b4fccf005d88",
-      "size": 2711
+      "sha256": "a0de051550daab0976afe49f850d943930247b7d89da1957a79810eaa92a684e",
+      "size": 14600
     },
     "aplay.html": {
       "sha256": "18bab64f6feafbbf46885778fac37ef827f1f494678e308ea45bfbf71419d585",

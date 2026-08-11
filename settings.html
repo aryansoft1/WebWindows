@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/css/settings.css" />
+    <link rel="stylesheet" href="assets/css/settings.css?v=20260809-device-state-1" />
+    <script src="assets/js/locale-region.js?v=20260802-1"></script>
+    <script defer src="assets/js/tw.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
+    <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
+    <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/network-speed.js?v=20260808-device-api-1"></script>
+    <script defer="True" src="assets/js/settings.js?v=20260809-device-state-1"></script>
 </head>
 <body>
     <div class="settings-ipad-layout">
@@ -12,8 +20,14 @@
         <aside class="settings-sidebar">
             <h2>设置</h2>
             <ul>
-                <li class="active" onclick="switchTab(this, 'langTab')">语言与区域</li>
-                <li onclick="switchTab(this, 'wallpaperTab')">桌面壁纸</li>
+                <li class="active"><button type="button" data-settings-tab="langTab" onclick="switchTab(this, 'langTab')"><img class="settings-nav-icon" src="assets/icons/settings-language.svg" alt=""><span>语言与区域</span></button></li>
+                <li><button type="button" data-settings-tab="wallpaperTab" onclick="switchTab(this, 'wallpaperTab')"><img class="settings-nav-icon" src="assets/icons/settings-wallpaper.svg" alt=""><span>桌面壁纸</span></button></li>
+                <li><button type="button" data-settings-tab="displayTab" onclick="switchTab(this, 'displayTab')"><img class="settings-nav-icon" src="assets/icons/settings-display.svg" alt=""><span>显示设置</span></button></li>
+                <li><button type="button" data-settings-tab="soundTab" onclick="switchTab(this, 'soundTab')"><img class="settings-nav-icon" src="assets/icons/settings-sound.svg" alt=""><span>声音</span></button></li>
+                <li><button type="button" data-settings-tab="powerTab" onclick="switchTab(this, 'powerTab')"><img class="settings-nav-icon" src="assets/icons/settings-power.svg" alt=""><span>电源管理</span></button></li>
+                <li><button type="button" data-settings-tab="networkTab" onclick="switchTab(this, 'networkTab')"><img class="settings-nav-icon" src="assets/icons/settings-network.svg" alt=""><span>网络与连接</span></button></li>
+                <li><button type="button" data-settings-tab="functionTab" onclick="switchTab(this, 'functionTab')"><img class="settings-nav-icon" src="assets/icons/settings-functions.svg" alt=""><span>功能管理</span></button></li>
+                <li><button type="button" data-settings-tab="guideTab" onclick="switchTab(this, 'guideTab')"><img class="settings-nav-icon" src="assets/icons/settings-guide.svg" alt=""><span>使用向导</span></button></li>
             </ul>
         </aside>
 
@@ -34,13 +48,15 @@
                     <div class="settings-card">
                         <label>地区设置</label>
                         <select id="regionSelect">
-                            <option>中国大陆</option>
-                            <option>日本</option>
-                            <option>台湾</option>
-                            <option>United States</option>
+                            <option value="CN">中国大陆（北京时间）</option>
+                            <option value="JP">日本（日本标准时间）</option>
+                            <option value="TW">台湾（台北时间）</option>
+                            <option value="US">United States（Eastern Time）</option>
                         </select>
+                        <p class="settings-help">地区会同步更新任务栏时钟、日期和日历节假日区域。</p>
                     </div>
                 </section>
+
             </div>
 
             <div id="wallpaperTab" class="tab-content" style="display: none;">
@@ -49,16 +65,179 @@
                     <div id="wallpaperThumbnails" class="wallpaper-grid"></div>
                 </section>
             </div>
+
+            <div id="displayTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>显示设置</h3>
+
+                    <div class="settings-card">
+                        <label>界面缩放</label>
+                        <select id="scaleSelect">
+                            <option value="0.75">75%</option>
+                            <option value="1" selected>100%</option>
+                            <option value="1.25">125%</option>
+                            <option value="1.5">150%</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-card">
+                        <label>当前分辨率</label>
+                        <div id="resolutionInfo"></div>
+                    </div>
+
+                    <div class="settings-card device-control-card">
+                        <label for="visualBrightness">亮度</label>
+                        <div class="settings-range-row">
+                            <input id="visualBrightness" type="range" min="0" max="100" step="1" value="50" aria-describedby="brightnessCapabilityNote">
+                            <output id="visualBrightnessValue" for="visualBrightness">正在读取…</output>
+                        </div>
+                        <p id="brightnessCapabilityNote" class="settings-help">调节 WebWindows 页面视觉亮度，不代表屏幕背光。</p>
+                    </div>
+                </section>
+            </div>
+
+            <div id="soundTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>声音</h3>
+                    <div class="settings-card device-control-card">
+                        <label for="masterVolume">WebWindows 页面音量</label>
+                        <div class="settings-range-row">
+                            <input id="masterVolume" type="range" min="0" max="100" step="1" value="50" aria-describedby="volumeCapabilityNote">
+                            <output id="masterVolumeValue" for="masterVolume">正在读取…</output>
+                        </div>
+                        <p id="volumeCapabilityNote" class="settings-help">调节 WebWindows 页面中的音视频音量，不代表系统硬件音量。</p>
+                    </div>
+                </section>
+            </div>
+
+            <div id="powerTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>电源管理</h3>
+                    <div class="settings-card network-details">
+                        <div><span>当前电源</span><strong id="power-source">正在检测</strong></div>
+                        <div><span>交流电连接</span><strong id="power-ac-connected">正在检测</strong></div>
+                        <div><span>电池</span><strong id="power-battery-present">正在检测</strong></div>
+                        <div><span>电池电量</span><strong id="power-battery-level">正在检测</strong></div>
+                        <div><span>充电状态</span><strong id="power-battery-charging">正在检测</strong></div>
+                    </div>
+                    <p id="powerCapabilityNote" class="settings-help">无法由当前宿主判断的项目会明确显示为“未知”。</p>
+                </section>
+            </div>
+
+            <div id="networkTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>网络与连接</h3>
+
+                    <div class="settings-card network-overview">
+                        <img class="network-glyph" src="assets/icons/settings-network.svg" alt="">
+                        <div>
+                            <strong id="network-status">正在检查网络…</strong>
+                            <p id="network-summary">读取浏览器提供的连接状态。</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-card network-details">
+                        <div><span>接入方式</span><strong id="network-type">正在检测</strong></div>
+                        <div><span>移动网络代际</span><strong id="network-generation">未检测到</strong></div>
+                        <div><span>连接质量</span><strong id="network-quality">未知</strong></div>
+                        <div><span>往返延迟</span><strong id="network-latency">未知</strong></div>
+                        <div><span>节省流量</span><strong id="network-save-data">关闭</strong></div>
+                        <div><span>设备类型</span><strong id="network-device">正在检测</strong></div>
+                    </div>
+
+                    <div class="settings-card network-speed-test">
+                        <div class="network-speed-heading">
+                            <div>
+                                <strong>下载速度测试</strong>
+                                <p>仅在你点击开始后下载测试数据，单次最多约 2 MB。移动网络可能产生流量费用。</p>
+                            </div>
+                            <button id="networkSpeedStart" type="button">开始测速</button>
+                            <button id="networkSpeedCancel" type="button" class="secondary" hidden>取消</button>
+                        </div>
+                        <progress id="networkSpeedProgress" max="100" value="0" hidden></progress>
+                        <div id="networkSpeedStatus" class="network-speed-status" role="status" aria-live="polite">尚未开始</div>
+                        <div id="networkSpeedResult" class="network-speed-result" hidden></div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="functionTab" class="tab-content" style="display: none;">
+                <section class="settings-section function-management">
+                    <div class="function-management-heading">
+                        <div>
+                            <h3>功能管理</h3>
+                            <p>添加或移除的是当前用户与功能的使用关联，不会删除服务器程序文件或云资料。</p>
+                        </div>
+                        <span id="functionScopeBadge" class="function-scope-badge">本机使用者</span>
+                    </div>
+
+                    <div class="function-toolbar settings-card">
+                        <input id="functionSearch" type="search" placeholder="搜索功能" aria-label="搜索功能">
+                        <select id="functionFilter" aria-label="筛选功能">
+                            <option value="all">全部</option>
+                            <option value="installed">我的功能</option>
+                            <option value="available">可添加功能</option>
+                            <option value="system">系统功能</option>
+                        </select>
+                    </div>
+
+                    <div id="functionSummary" class="function-summary" aria-live="polite"></div>
+                    <div id="functionManagerStatus" class="function-manager-status" role="status"></div>
+                    <div id="functionManagerList" class="function-manager-list"></div>
+                </section>
+            </div>
+
+            <div id="guideTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>使用向导</h3>
+                    <div class="settings-card guide-entry-card">
+                        <div>
+                            <strong>查找使用方法与问题解答</strong>
+                            <p>查看入门、账户、云资料、办公功能、设置、隐私安全和故障处理说明。</p>
+                        </div>
+                        <button type="button" onclick="openGuideFromSettings()">打开使用向导</button>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
+
+    <dialog id="functionRemoveDialog" class="function-remove-dialog">
+        <form method="dialog">
+            <h3>移除功能</h3>
+            <p id="functionRemoveMessage"></p>
+            <div class="function-remove-note">
+                只解除当前使用者的功能关联。服务器程序文件、云资料以及本机个人数据都会保留。
+            </div>
+            <div class="function-dialog-actions">
+                <button value="cancel" class="secondary">取消</button>
+                <button id="functionRemoveConfirm" value="confirm" class="danger">确认移除</button>
+            </div>
+        </form>
+    </dialog>
 
     <script>
         function switchTab(clicked, tabId) {
             document.querySelectorAll(".settings-sidebar li").forEach(li => li.classList.remove("active"));
-            clicked.classList.add("active");
+            clicked.closest("li")?.classList.add("active");
             document.querySelectorAll(".tab-content").forEach(div => div.style.display = "none");
             document.getElementById(tabId).style.display = "block";
-        } document.addEventListener("contextmenu", e => e.preventDefault());
+            if (tabId === "wallpaperTab") window.renderWallpaperLibrary?.();
+        }
+
+        function openGuideFromSettings(topic) {
+            const host = window.parent && window.parent !== window ? window.parent : window;
+            const entry = topic
+                ? `guide.html?topic=${encodeURIComponent(topic)}`
+                : "guide.html";
+            if (host.WebWindows?.apps?.launch) {
+                host.WebWindows.apps.launch("webwindows.system.guide", { url: entry });
+                return;
+            }
+            window.location.href = entry;
+        }
+
+        document.addEventListener("contextmenu", e => e.preventDefault());
 
     </script>
     <script src="assets/js/wallpaper.js"></script>

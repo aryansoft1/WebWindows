@@ -52,6 +52,15 @@ function Invoke-FtpUpload([string]$relative) {
   if ($LASTEXITCODE -ne 0) { throw "Unable to upload production file: $relative" }
 }
 
+function Test-TextEquivalent([string]$left, [string]$right, [string]$relative) {
+  if ([IO.Path]::GetExtension($relative) -notin @(".asp", ".css", ".htm", ".html", ".js", ".json", ".md", ".txt", ".xml")) {
+    return $false
+  }
+  $leftText = (Get-Content -LiteralPath $left -Raw).Replace("`r`n", "`n").Replace("`r", "`n")
+  $rightText = (Get-Content -LiteralPath $right -Raw).Replace("`r`n", "`n").Replace("`r", "`n")
+  return [string]::Equals($leftText, $rightText, [StringComparison]::Ordinal)
+}
+
 foreach ($relative in $manifest.requiredFiles) {
   $backup = Join-Path $backupRoot ($relative -replace '/', '\')
   $productionEntry = if ($production.integrity -and $relative -ne "deploy/ftp-manifest.json") { $production.integrity.PSObject.Properties[$relative] } else { $null }
@@ -65,6 +74,11 @@ foreach ($relative in $manifest.requiredFiles) {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
     $expected = [string]$manifest.integrity.PSObject.Properties[$relative].Value.sha256
     if ($actual -ne $expected) {
+      $source = Join-Path $repo ($relative -replace '/', '\')
+      if (Test-TextEquivalent $backup $source $relative) {
+        Write-Output "accepting_newline_equivalent_production_file=$relative"
+        continue
+      }
       if (-not $adoptUnrecorded.Contains($relative)) {
         throw "Unrecorded production dependency differs from this release: $relative"
       }

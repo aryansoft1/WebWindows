@@ -16,6 +16,8 @@ assert.match(deploy, /Unrecorded production dependency differs from this release
 assert.match(deploy, /AdoptUnrecordedProductionFiles/);
 assert.match(deploy, /Cannot adopt a file outside this release manifest/);
 assert.match(deploy, /adopting_unrecorded_production_file/);
+assert.match(deploy, /Test-TextEquivalent/);
+assert.match(deploy, /accepting_newline_equivalent_production_file/);
 assert.match(deploy, /AllowMissing/);
 assert.match(deploy, /Post-upload verification failed/);
 assert.match(agents, /deployment-entry-dependency-smoke/);

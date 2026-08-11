@@ -261,6 +261,7 @@
 
     if (structured) {
       residual = residual
+        .replace(/(?:请)?(?:帮我)?(?:查找|寻找|搜索|找|搜)(?:一下)?|(?:please\s+)?(?:find|search(?:\s+for)?|show(?:\s+me)?)/ig, " ")
         .replace(/(?:所有(?:的)?|全部(?:的)?|全部の|すべての?|all(?:\s+of\s+the)?)/ig, " ")
         .replace(/(?:扩展名|副檔名|拡張子|extension|格式|フォーマット|format|类型|種類|type)/ig, " ")
         .replace(/(?:的)?(?:文件|檔案|ファイル|files?)/ig, " ");

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.11.1",
-  "catalogVersion": "2026.08.11.1",
-  "generatedAt": "2026-08-11T11:39:50.692Z",
+  "releaseVersion": "2026.08.11.2",
+  "catalogVersion": "2026.08.11.2",
+  "generatedAt": "2026-08-11T13:36:09.896Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -82,10 +82,10 @@
     "dist-weather/weather-widget.global.js",
     "dist-weather/weather-widget.css"
   ],
-  "previousReleaseVersion": "2026.08.10.4",
+  "previousReleaseVersion": "2026.08.11.1",
   "integrity": {
     "index.html": {
-      "sha256": "959b45cd52279e03296fbbea900dee67ed81fb6018160c8beda5979ca53fb484",
+      "sha256": "310a7aaa3262ae1eb32494099f1536f92d4597dfd6b57ab949419ef420f04e34",
       "size": 33705
     },
     "api/function-catalog.asp": {
@@ -93,7 +93,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "cb460e675d8659b00cf2e0af28550ac6bb919661daad83e7d49cf041eeb83aaf",
+      "sha256": "1953dacc1ee17f65d52615dbb3ba39857728e3e912ddf3f2128316d744ee3eaf",
       "size": 12331
     },
     "assets/js/app-registry.js": {
@@ -105,8 +105,8 @@
       "size": 49459
     },
     "assets/js/file-query-parser.js": {
-      "sha256": "25f78ecca77d326487996d36ad92410cf23efc279c5f178e2e4117359d3ada7c",
-      "size": 19877
+      "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
+      "size": 20023
     },
     "assets/js/file-search.js": {
       "sha256": "9ac136837262a5f6f853e4c7572132663be8bc5e9b48277a6fc544d9f9ed6a52",
@@ -225,11 +225,11 @@
       "size": 17101
     },
     "cloud/browser/files.asp": {
-      "sha256": "a8d3e10851b763753296c63056d8730b070ceb033be0d3ed260cbf4b3a8d901c",
+      "sha256": "fc3663c23f559ab2e4a78829c03cb90b3c3b008639e2d5309bb466094199dfa7",
       "size": 22448
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "e1cae842c0c35aea7cf8ce8c7eae1d02d2ccc5b11574c5dedcab6fb331aba9ed",
+      "sha256": "f5bc23db6f2f3fbae3a3bc19ce742c1566a10bee9b1097dd6e88fa26b59b2eaf",
       "size": 40690
     },
     "cloud/browser/private-resource.asp": {

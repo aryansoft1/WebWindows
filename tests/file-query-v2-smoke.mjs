@@ -42,10 +42,12 @@ const files = windowObject.WebWindows.files;
 const cases = [
   ["所有的md扩展名的文件", ["md"], null],
   ["所有md文件", ["md"], null],
+  ["找所有 md 文件", ["md"], null],
   [".md", ["md"], null],
   ["Markdown", ["md"], null],
   ["所有Excel文件", ["xlsx","xls","csv"], null],
   ["7月3日存的Excel", ["xlsx","xls","csv"], null],
+  ["找 7月3日存的 Excel", ["xlsx","xls","csv"], null],
   ["7月3日修改的PDF", ["pdf"], null],
   ["名字里有WebWindows的文件", [], null],
   ["上周的Word", ["docx","doc"], null],

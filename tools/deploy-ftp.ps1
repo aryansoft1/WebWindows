@@ -1,5 +1,6 @@
 param(
   [switch]$AllowLegacyProductionManifest,
+  [switch]$UseExistingRemoteRefs,
   [string[]]$AdoptUnrecordedProductionFiles = @()
 )
 
@@ -12,7 +13,9 @@ if (-not $ftpHost -or -not $ftpUser -or -not $ftpPassword) {
   throw "Set WEBWINDOWS_FTP_HOST, WEBWINDOWS_FTP_USER and WEBWINDOWS_FTP_PASSWORD for this process. Credentials must not be committed."
 }
 
-& (Join-Path $PSScriptRoot "deployment-preflight.ps1") -AllowLegacyProductionManifest:$AllowLegacyProductionManifest
+& (Join-Path $PSScriptRoot "deployment-preflight.ps1") `
+  -AllowLegacyProductionManifest:$AllowLegacyProductionManifest `
+  -UseExistingRemoteRefs:$UseExistingRemoteRefs
 if ($LASTEXITCODE -ne 0) { throw "Deployment preflight failed." }
 
 $manifest = Get-Content -LiteralPath (Join-Path $repo "deploy\ftp-manifest.json") -Raw | ConvertFrom-Json

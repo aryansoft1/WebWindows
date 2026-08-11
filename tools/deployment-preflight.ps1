@@ -1,13 +1,16 @@
 param(
-  [switch]$AllowLegacyProductionManifest
+  [switch]$AllowLegacyProductionManifest,
+  [switch]$UseExistingRemoteRefs
 )
 
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 Push-Location $repo
 try {
-  git fetch origin --prune
-  if ($LASTEXITCODE -ne 0) { throw "Unable to fetch origin." }
+  if (-not $UseExistingRemoteRefs) {
+    git fetch origin --prune
+    if ($LASTEXITCODE -ne 0) { throw "Unable to fetch origin." }
+  }
 
   git merge-base --is-ancestor origin/main HEAD
   if ($LASTEXITCODE -ne 0) { throw "Current branch does not contain the latest origin/main." }

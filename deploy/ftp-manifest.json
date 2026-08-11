@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.11.3",
   "catalogVersion": "2026.08.11.3",
-  "generatedAt": "2026-08-11T14:59:25.862Z",
+  "generatedAt": "2026-08-11T15:04:21.552Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -267,8 +267,8 @@
       "size": 7527
     },
     "assets/js/wallpaper.js": {
-      "sha256": "24cff3b9d73a107ca2bc06379952ad42ab0f913b4ae73314de65216a79ce482d",
-      "size": 1311
+      "sha256": "c4016cbbd69154f4548c793a26c104d879a67cf176cfd286cf5893f96928feee",
+      "size": 2897
     },
     "assets/js/cloud-file-dialog.js": {
       "sha256": "daec5aa0d89e0ea1263d14cd12e554e15153cf39c13fafaa9afe2dd68528d9c2",

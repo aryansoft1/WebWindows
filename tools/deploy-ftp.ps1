@@ -1,5 +1,6 @@
 param(
-  [switch]$AllowLegacyProductionManifest
+  [switch]$AllowLegacyProductionManifest,
+  [string[]]$AdoptUnrecordedProductionFiles = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,6 +16,13 @@ if (-not $ftpHost -or -not $ftpUser -or -not $ftpPassword) {
 if ($LASTEXITCODE -ne 0) { throw "Deployment preflight failed." }
 
 $manifest = Get-Content -LiteralPath (Join-Path $repo "deploy\ftp-manifest.json") -Raw | ConvertFrom-Json
+$adoptUnrecorded = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($relative in $AdoptUnrecordedProductionFiles) {
+  if ($manifest.requiredFiles -notcontains $relative -or $relative -eq "deploy/ftp-manifest.json") {
+    throw "Cannot adopt a file outside this release manifest: $relative"
+  }
+  [void]$adoptUnrecorded.Add($relative)
+}
 $production = Invoke-RestMethod -Uri ("https://www.y0.hk/deploy/ftp-manifest.json?v=" + [uri]::EscapeDataString([string]$manifest.releaseVersion)) -TimeoutSec 30
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-" + [string]$production.releaseVersion)
@@ -57,7 +65,10 @@ foreach ($relative in $manifest.requiredFiles) {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
     $expected = [string]$manifest.integrity.PSObject.Properties[$relative].Value.sha256
     if ($actual -ne $expected) {
-      throw "Unrecorded production dependency differs from this release: $relative"
+      if (-not $adoptUnrecorded.Contains($relative)) {
+        throw "Unrecorded production dependency differs from this release: $relative"
+      }
+      Write-Output "adopting_unrecorded_production_file=$relative"
     }
   }
 }

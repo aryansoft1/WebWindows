@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.11.3",
   "catalogVersion": "2026.08.11.3",
-  "generatedAt": "2026-08-11T15:52:59.739Z",
+  "generatedAt": "2026-08-11T15:54:58.340Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -745,12 +745,12 @@
       "size": 969
     },
     "dist-window/window-manager-widget.css": {
-      "sha256": "3d8c68bf08acc9bba619093d65db2a4486e41ee8744e979dfd652724d9bad717",
-      "size": 2356
+      "sha256": "a1410585373f8374beb65443808f629d8ee4cb5d3e49a611e344600db6954347",
+      "size": 3624
     },
     "dist-window/window-manager-widget.js": {
-      "sha256": "a8b755a46942dc4e882ae74ad7857f9367d9e9810b30ca2ae70911246df8afa1",
-      "size": 78262
+      "sha256": "dbd9ba8b8b383f51cca722bbabc03f9d30d7ce27a5de5dab981662b9a16fe12a",
+      "size": 87376
     },
     "dist-weather/weather-widget.umd.js": {
       "sha256": "b49db895a08192d4bc79999e1f70c35af2b6c4a923a4d2a4229e4b1f7676e071",

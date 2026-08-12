@@ -142,6 +142,17 @@ function ensureProfile(){
   }
   return { me: me, first: false };
 }
+function createGuestProfile(){
+  var hasCrypto = typeof window !== 'undefined' && window.crypto && typeof window.crypto.getRandomValues === 'function';
+  var uuid = (hasCrypto && typeof window.crypto.randomUUID === 'function')
+    ? window.crypto.randomUUID()
+    : (Date.now().toString(36) + Math.random().toString(36).slice(2,8));
+  return {
+    id:'guest_'+uuid,
+    name:localStorage.getItem('DT_GUEST_NAME_BACKUP') || ('访客-'+Math.random().toString(16).slice(2,6).toUpperCase()),
+    color:localStorage.getItem('DT_GUEST_COLOR_BACKUP') || randColor()
+  };
+}
 function getProfile(){ return JSON.parse(localStorage.getItem(PROFILE_KEY)||'null') }
 // 在 setProfile(p) 的末尾补这一句
 function setProfile(p){
@@ -220,8 +231,11 @@ function bootstrapProfile(){
     setProfile(next);          // 会触发 updateMeUI()
     localStorage.setItem('DT_NO_FIRST_PROMPT','1'); // 不弹首次改名
   } else {
-    // 未登录：保持/生成游客，不弹改名
-    if (!me){ ensureProfile(); me = getProfile(); }
+    // 未登录：登录档案不得泄漏到游客模式；恢复或生成独立游客档案。
+    if (!me || String(me.id||'').indexOf('guest_')!==0){
+      me = createGuestProfile();
+      setProfile(me);
+    }
 
     // 如有备份游客名/色且当前确为游客，恢复之（可选）
     if (String(me.id||'').indexOf('guest_')===0){
@@ -414,7 +428,7 @@ function switchTab(t){
   var a=$('#tab-reco'), b=$('#tab-friends'), c=$('#tab-ai'), d=$('#tab-mailbox');
   if(a) a.style.display = (t==='reco') ? 'block' : 'none';
   if(b) b.style.display = (t==='friends') ? 'block' : 'none';
-  if(c) c.style.display = (t==='ai') ? 'block' : 'none';
+  if(c) c.style.display = (t==='ai') ? 'flex' : 'none';
   if(d) d.style.display = (t==='mailbox') ? 'block' : 'none';
 
   var btns=[tabBtnReco,tabBtnFriends,tabBtnAI,tabBtnMailbox];
@@ -1087,6 +1101,16 @@ async function sendCurrent(){
     Overlay.HUD.show('发送失败，消息未送达；内容已放回输入框。','warn');
   }
 }
+
+function syncDeskTalkIdentity(forceGuest){
+  if(forceGuest) setProfile(createGuestProfile());
+  else bootstrapProfile();
+  updateMeUI();
+  try{ renderAll(); refreshMeId(); }catch(_){}
+  try{ if(typeof __hb==='function') __hb(); }catch(_){}
+}
+window.addEventListener('webwindows:logout',function(){ syncDeskTalkIdentity(true) });
+window.addEventListener('webwindows:login',function(){ setTimeout(function(){ syncDeskTalkIdentity(false) },0) });
 if(chatInput) chatInput.addEventListener('keydown',function(e){ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); sendCurrent() }});
 
 /* === 在线心跳 === */

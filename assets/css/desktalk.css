@@ -78,7 +78,10 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 }
 #presence-sheet header .left{display:flex;align-items:center;gap:10px}
 #presence-sheet header .right{ display:flex; align-items:center; gap:8px; white-space:nowrap; }
-#presence-sheet .inner{padding:8px;overflow:auto;flex:1;overscroll-behavior:contain;background-color: #FFF;}
+#presence-sheet .inner{
+  display:flex;flex:1;min-height:0;flex-direction:column;
+  padding:8px 8px 58px;overflow:hidden;overscroll-behavior:contain;background-color:#FFF;
+}
 
 /* “我”胶囊 */
 .me-pill{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--glass-border);border-radius:999px;background:var(--glass-head);cursor:pointer;flex:0 0 auto}
@@ -96,6 +99,9 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 }
 .tabs-bar::-webkit-scrollbar{height:8px}
 .tabs-bar .btn{flex:0 0 auto; white-space:nowrap}
+.tabs-bar{flex:0 0 auto}
+#tab-reco,#tab-friends,#tab-mailbox{flex:1;min-height:0;overflow:auto}
+#tab-ai{flex:1;min-height:0;flex-direction:column;overflow:hidden}
 
 #tab-btn-mailbox{
   display:inline-flex;
@@ -391,10 +397,17 @@ main{padding:20px;max-width:1180px;margin:0 auto}
     border-color: var(--primary-600);
     color: #fff !important;
 }
+#tab-ai .ai-prompt-label{flex:0 0 auto;margin:4px 2px 10px}
 #ai-body{
-    background: #FFF !important;
-    min-height: 150px;
+  display:flex;flex:1 1 auto;min-height:0;max-height:none!important;
+  flex-direction:column;gap:8px;overflow:auto;padding:10px;
+  border:1px dashed var(--border);border-radius:12px;background:#FFF!important;
 }
+#ai-composer{display:flex;flex:0 0 auto;gap:8px;margin-top:10px;background:#fff}
+#ai-input{flex:1;min-width:0;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg)}
+#tab-ai .bubble{max-width:calc(100% - 4ch - 8px);overflow-wrap:anywhere}
+#tab-ai .bubble p:first-child{margin-top:0}#tab-ai .bubble p:last-child{margin-bottom:0}
+#tab-ai .bubble img{display:block;max-width:100%;height:auto;margin:8px 0;border-radius:8px}
 
 /* 聊天框样式补充 */
 /* 悬浮聊天窗：固定 + 明确宽度 + 弹性高度 */

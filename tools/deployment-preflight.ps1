@@ -28,18 +28,24 @@ try {
 
   $manifestPath = Join-Path $repo "deploy\ftp-manifest.json"
   $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+  $uploadFiles = if ($manifest.uploadFiles) { @($manifest.uploadFiles) } else { @($manifest.requiredFiles) }
+  if ($uploadFiles -notcontains "deploy/ftp-manifest.json") { throw "Deployment manifest must upload itself last." }
   foreach ($relative in $manifest.requiredFiles) {
-    $tracked = git ls-files --error-unmatch -- $relative 2>$null
-    if ($LASTEXITCODE -ne 0 -or -not $tracked) { throw "Deployment file is not tracked: $relative" }
-    $full = Join-Path $repo ($relative -replace '/', '\')
-    if (-not (Test-Path -LiteralPath $full -PathType Leaf)) { throw "Deployment file is missing: $relative" }
     if ($relative -eq "deploy/ftp-manifest.json") { continue }
     $integrityEntry = $manifest.integrity.PSObject.Properties[$relative]
     $expected = if ($integrityEntry) { $integrityEntry.Value.sha256 } else { $null }
     if (-not $expected) { throw "Deployment integrity is missing: $relative" }
-    $actual = (Get-FileHash -LiteralPath $full -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($actual -ne $expected) { throw "Deployment integrity mismatch: $relative" }
+    if ($uploadFiles -contains $relative) {
+      $tracked = git ls-files --error-unmatch -- $relative 2>$null
+      if ($LASTEXITCODE -ne 0 -or -not $tracked) { throw "Deployment file is not tracked: $relative" }
+      $full = Join-Path $repo ($relative -replace '/', '\')
+      if (-not (Test-Path -LiteralPath $full -PathType Leaf)) { throw "Deployment file is missing: $relative" }
+      $actual = (Get-FileHash -LiteralPath $full -Algorithm SHA256).Hash.ToLowerInvariant()
+      if ($actual -ne $expected) { throw "Deployment integrity mismatch: $relative" }
+    }
   }
+  $manifestTracked = git ls-files --error-unmatch -- "deploy/ftp-manifest.json" 2>$null
+  if ($LASTEXITCODE -ne 0 -or -not $manifestTracked) { throw "Deployment manifest is not tracked." }
 
   $production = if ($ProductionManifestPath) {
     Get-Content -LiteralPath $ProductionManifestPath -Raw | ConvertFrom-Json
@@ -55,6 +61,15 @@ try {
   if ($expectedPrevious -and $productionVersion -ne $expectedPrevious -and $productionVersion -ne $expectedCurrent) {
     throw "Production release changed since this branch was prepared: expected $expectedPrevious or $expectedCurrent, found $productionVersion."
   }
+  foreach ($relative in $manifest.requiredFiles) {
+    if ($relative -eq "deploy/ftp-manifest.json" -or $uploadFiles -contains $relative) { continue }
+    $productionEntry = $production.integrity.PSObject.Properties[$relative]
+    $releaseEntry = $manifest.integrity.PSObject.Properties[$relative]
+    if (-not $productionEntry -or -not $releaseEntry -or
+        [string]$productionEntry.Value.sha256 -ne [string]$releaseEntry.Value.sha256) {
+      throw "Unchanged production integrity mismatch: $relative"
+    }
+  }
 
   Write-Output "preflight_ok=true"
   Write-Output "branch=$branch"
@@ -63,6 +78,7 @@ try {
   Write-Output "production_release=$productionVersion"
   Write-Output ("already_deployed=" + ($productionVersion -eq $expectedCurrent).ToString().ToLowerInvariant())
   Write-Output "files=$($manifest.requiredFiles.Count)"
+  Write-Output "upload_files=$($uploadFiles.Count)"
 }
 finally {
   Pop-Location

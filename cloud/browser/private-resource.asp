@@ -170,7 +170,7 @@ Function AllowedCloudFile(ByVal fileName)
   Set fso = Server.CreateObject("Scripting.FileSystemObject")
   extension = LCase(fso.GetExtensionName(fileName))
   Set fso = Nothing
-  AllowedCloudFile = (InStr(1, ",xlsx,xls,csv,docx,doc,pptx,ppt,pdf,png,jpg,jpeg,gif,webp,json,md,txt,zip,", _
+  AllowedCloudFile = (InStr(1, ",xlsx,xls,csv,docx,doc,pptx,ppt,pdf,png,jpg,jpeg,gif,webp,json,md,txt,zip,mp3,wav,ogg,oga,m4a,aac,flac,opus,mp4,webm,mov,m4v,ogv,mkv,", _
     "," & extension & ",", vbTextCompare) > 0)
 End Function
 
@@ -226,6 +226,30 @@ Sub SendContent(ByVal editorData)
     contentType = "text/markdown; charset=utf-8"
   ElseIf extension = "txt" Then
     contentType = "text/plain; charset=utf-8"
+  ElseIf extension = "mp3" Then
+    contentType = "audio/mpeg"
+  ElseIf extension = "wav" Then
+    contentType = "audio/wav"
+  ElseIf extension = "ogg" Or extension = "oga" Then
+    contentType = "audio/ogg"
+  ElseIf extension = "m4a" Then
+    contentType = "audio/mp4"
+  ElseIf extension = "aac" Then
+    contentType = "audio/aac"
+  ElseIf extension = "flac" Then
+    contentType = "audio/flac"
+  ElseIf extension = "opus" Then
+    contentType = "audio/opus"
+  ElseIf extension = "mp4" Or extension = "m4v" Then
+    contentType = "video/mp4"
+  ElseIf extension = "webm" Then
+    contentType = "video/webm"
+  ElseIf extension = "mov" Then
+    contentType = "video/quicktime"
+  ElseIf extension = "ogv" Then
+    contentType = "video/ogg"
+  ElseIf extension = "mkv" Then
+    contentType = "video/x-matroska"
   Else
     contentType = "text/csv; charset=utf-8"
   End If

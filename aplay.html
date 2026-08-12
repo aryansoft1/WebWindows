@@ -70,8 +70,8 @@ href="data:image/svg+xml;utf8,
       <div id="subtitle" class="text-gray-400">· Home</div>
     </div>
     <div class="flex items-center gap-2">
-      <button id="btn-open-url" class="h-9 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 flex items-center gap-2" title="打开 URL（后续与云资源结合）">
-        <i data-lucide="link-2" class="w-4 h-4"></i><span class="hidden sm:inline">打开 URL</span>
+      <button id="btn-open-media" class="h-9 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 flex items-center gap-2" title="从 WebWindows 资料打开媒体">
+        <i data-lucide="folder-open" class="w-4 h-4"></i><span class="hidden sm:inline">打开媒体</span>
       </button>
       <label class="flex items-center gap-2 h-9 px-3 rounded-xl bg-white border border-gray-200" title="显示海外平台源（YouTube 等）">
         <input id="switch-overseas" type="checkbox" class="accent-blue-600">
@@ -804,8 +804,50 @@ function stopInlinePlayers(){
   });
 }
 
-/* ===== 其它 ===== */
-$('#btn-open-url')?.addEventListener('click', ()=>{ alert('“打开 URL”将于后期与云资源结合，一键用 APlay 打开你的音/视频直链。'); });
+/* ===== WebWindows 统一资料打开 ===== */
+const MEDIA_EXTENSIONS=['mp3','wav','ogg','oga','m4a','aac','flac','opus','mp4','webm','mov','m4v','ogv','mkv'];
+function openWebWindowsMedia(media){
+  if(!media || !['audio','video'].includes(media.kind) || !media.url) return;
+  const meta={title:media.name||'媒体',sub:media.sourceLabel||'WebWindows 资料'};
+  if(media.kind==='audio'){
+    location.hash='#/music';
+    stopInlinePlayers();
+    exitAVMode(true);
+    playAudio(media.url,meta);
+    return;
+  }
+  location.hash='#/video';
+  enterAVMode();
+  playVideoEntry({title:meta.title,type:'file',url:media.url});
+}
+window.addEventListener('message',(event)=>{
+  if(event.origin!==location.origin || event.source!==window.parent) return;
+  if(event.data?.type==='webwindows-aplay-open-media') openWebWindowsMedia(event.data.media);
+});
+window.parent?.postMessage({type:'webwindows-aplay-ready'},location.origin);
+
+$('#btn-open-media')?.addEventListener('click',async ()=>{
+  try{
+    const host=window.parent!==window?window.parent:window;
+    const resource=await host.WebWindows?.fileDialog?.open({
+      title:'用 APlay 打开媒体',
+      fileTypes:[{name:'音频和视频',extensions:MEDIA_EXTENSIONS}],
+      multiple:false,
+      purpose:'aplay-open-media'
+    });
+    if(!resource) return;
+    await host.openResource({
+      protocol:'webwindows-cloud-resource',version:'1.1',
+      nodeId:resource.nodeId,scope:resource.scope,path:resource.path,
+      name:resource.name,mimeType:resource.mimeType,size:resource.size,
+      readUrl:resource.readUrl,url:resource.readUrl,
+      permissions:{read:true,edit:false}
+    });
+  }catch(error){
+    console.error('[APlay]',error);
+    alert(error?.message||'媒体打开失败。');
+  }
+});
 document.addEventListener('contextmenu', (e)=>{
   if(e.target.closest('#video-player')||e.target.closest('#video-iframe')||e.target.closest('#tv-player')||e.target.closest('#tv-iframe')) e.preventDefault();
 });

@@ -97,7 +97,7 @@ End Function
 Function SupportedPrivateFile(ByVal extension)
   Dim value
   value = LCase(CStr(extension))
-  SupportedPrivateFile = (InStr(1, ",xlsx,xls,csv,docx,doc,pptx,ppt,pdf,png,jpg,jpeg,gif,webp,json,md,txt,zip,", _
+  SupportedPrivateFile = (InStr(1, ",xlsx,xls,csv,docx,doc,pptx,ppt,pdf,png,jpg,jpeg,gif,webp,json,md,txt,zip,mp3,wav,ogg,oga,m4a,aac,flac,opus,mp4,webm,mov,m4v,ogv,mkv,", _
     "," & value & ",", vbTextCompare) > 0)
 End Function
 
@@ -119,6 +119,18 @@ Function FileMime(ByVal extension)
     Case "json": FileMime = "application/json"
     Case "md": FileMime = "text/markdown"
     Case "txt": FileMime = "text/plain"
+    Case "mp3": FileMime = "audio/mpeg"
+    Case "wav": FileMime = "audio/wav"
+    Case "ogg", "oga": FileMime = "audio/ogg"
+    Case "m4a": FileMime = "audio/mp4"
+    Case "aac": FileMime = "audio/aac"
+    Case "flac": FileMime = "audio/flac"
+    Case "opus": FileMime = "audio/opus"
+    Case "mp4", "m4v": FileMime = "video/mp4"
+    Case "webm": FileMime = "video/webm"
+    Case "mov": FileMime = "video/quicktime"
+    Case "ogv": FileMime = "video/ogg"
+    Case "mkv": FileMime = "video/x-matroska"
     Case Else: FileMime = "application/octet-stream"
   End Select
 End Function

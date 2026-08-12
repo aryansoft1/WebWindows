@@ -9,6 +9,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   "inc/sysinfo.asp",
   "cloud/browser/files.asp",
+  "cloud/browser/openResource.asp",
   "cloud/browser/private-files.asp",
   "cloud/browser/private-resource.asp",
   "cloud/browser/search.asp"

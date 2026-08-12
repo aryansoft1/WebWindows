@@ -1,7 +1,8 @@
 param(
   [switch]$AllowLegacyProductionManifest,
   [switch]$UseExistingRemoteRefs,
-  [string[]]$AdoptUnrecordedProductionFiles = @()
+  [string[]]$AdoptUnrecordedProductionFiles = @(),
+  [string[]]$AdoptChangedProductionFiles = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,6 +40,13 @@ foreach ($relative in $AdoptUnrecordedProductionFiles) {
     throw "Cannot adopt a file outside this release manifest: $relative"
   }
   [void]$adoptUnrecorded.Add($relative)
+}
+$adoptChanged = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($relative in $AdoptChangedProductionFiles) {
+  if ($manifest.requiredFiles -notcontains $relative -or $relative -eq "deploy/ftp-manifest.json") {
+    throw "Cannot adopt a changed file outside this release manifest: $relative"
+  }
+  [void]$adoptChanged.Add($relative)
 }
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-" + [string]$production.releaseVersion)
@@ -84,7 +92,10 @@ foreach ($relative in $manifest.requiredFiles) {
   if ($productionEntry) {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne [string]$productionEntry.Value.sha256) {
-      throw "Production file changed outside the recorded release: $relative"
+      if (-not $adoptChanged.Contains($relative)) {
+        throw "Production file changed outside the recorded release: $relative"
+      }
+      Write-Output "adopting_changed_production_file=$relative"
     }
   } elseif ($downloaded -and $relative -ne "deploy/ftp-manifest.json") {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()

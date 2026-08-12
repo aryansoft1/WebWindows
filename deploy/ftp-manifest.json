@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.12.3",
   "catalogVersion": "2026.08.12.3",
-  "generatedAt": "2026-08-12T04:33:11.673Z",
+  "generatedAt": "2026-08-12T04:34:57.943Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",

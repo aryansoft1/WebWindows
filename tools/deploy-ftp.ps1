@@ -1,6 +1,7 @@
 param(
   [switch]$AllowLegacyProductionManifest,
   [switch]$UseExistingRemoteRefs,
+  [switch]$AuditOnly,
   [string[]]$AdoptUnrecordedProductionFiles = @(),
   [string[]]$AdoptChangedProductionFiles = @()
 )
@@ -51,6 +52,8 @@ foreach ($relative in $AdoptChangedProductionFiles) {
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-" + [string]$production.releaseVersion)
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
+$auditChanged = [System.Collections.Generic.List[string]]::new()
+$auditNotRelease = [System.Collections.Generic.List[string]]::new()
 
 function Invoke-FtpDownload([string]$relative, [string]$destination, [switch]$AllowMissing) {
   $parent = Split-Path -Parent $destination
@@ -92,6 +95,14 @@ foreach ($relative in $manifest.requiredFiles) {
   if ($productionEntry) {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($actual -ne [string]$productionEntry.Value.sha256) {
+      if ($AuditOnly) {
+        $expected = [string]$manifest.integrity.PSObject.Properties[$relative].Value.sha256
+        $releaseMatch = $actual -eq $expected
+        $auditChanged.Add($relative)
+        if (-not $releaseMatch) { $auditNotRelease.Add($relative) }
+        Write-Output "changed_production_file=$relative release_match=$($releaseMatch.ToString().ToLowerInvariant())"
+        continue
+      }
       if (-not $adoptChanged.Contains($relative)) {
         throw "Production file changed outside the recorded release: $relative"
       }
@@ -107,11 +118,25 @@ foreach ($relative in $manifest.requiredFiles) {
         continue
       }
       if (-not $adoptUnrecorded.Contains($relative)) {
+        if ($AuditOnly) {
+          $auditChanged.Add($relative)
+          $auditNotRelease.Add($relative)
+          Write-Output "unrecorded_production_file=$relative release_match=false"
+          continue
+        }
         throw "Unrecorded production dependency differs from this release: $relative"
       }
       Write-Output "adopting_unrecorded_production_file=$relative"
     }
   }
+}
+
+if ($AuditOnly) {
+  Write-Output "audit_ok=true"
+  Write-Output "changed_files=$($auditChanged.Count)"
+  Write-Output "not_release_files=$($auditNotRelease.Count)"
+  Write-Output "backup=$backupRoot"
+  return
 }
 
 $late = @("data/apps/system-apps.json", "api/function-catalog.asp", "deploy/ftp-manifest.json", "index.html")

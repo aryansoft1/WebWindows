@@ -21,6 +21,7 @@ assert.match(deploy, /adopting_unrecorded_production_file/);
 assert.match(deploy, /AllowMissing/);
 assert.match(deploy, /Post-upload verification failed/);
 assert.match(deploy, /\$uploadFiles/);
+assert.match(deploy, /reconciling_production_file/);
 assert.doesNotMatch(deploy, /yylwljj|8bdea/i, "deployment tooling must not embed credentials");
 
 console.log("Deployment safety smoke tests passed");

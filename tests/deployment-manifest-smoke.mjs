@@ -33,12 +33,15 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.12.1");
+assert.equal(manifest.previousReleaseVersion, "2026.08.12.2");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-assert.ok(uploadFiles.includes("aplay.html"));
-assert.ok(uploadFiles.includes("assets/js/resource-open.js"));
 assert.ok(!uploadFiles.some((relative) => /(^|\/)desktalk(\/|\.)/i.test(relative)),
   "incremental APlay release must not upload DeskTalk files");
+if (manifest.reconciledFiles) {
+  assert.deepEqual(uploadFiles, ["deploy/ftp-manifest.json"]);
+  assert.ok(manifest.reconciledFiles.includes("assets/js/app-registry.js"));
+  assert.ok(manifest.reconciledFiles.includes("assets/js/desktalk.js"));
+}
 for (const runtimeDependency of [
   "cloud/browser/styles.css",
   "cloud/browser/toolbar.js",

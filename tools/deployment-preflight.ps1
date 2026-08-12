@@ -25,6 +25,7 @@ try {
   $manifestPath = Join-Path $repo "deploy\ftp-manifest.json"
   $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
   $uploadFiles = if ($manifest.uploadFiles) { @($manifest.uploadFiles) } else { @($manifest.requiredFiles) }
+  $reconciledFiles = if ($manifest.reconciledFiles) { @($manifest.reconciledFiles) } else { @() }
   if ($uploadFiles -notcontains "deploy/ftp-manifest.json") { throw "Deployment manifest must upload itself last." }
   foreach ($relative in $manifest.requiredFiles) {
     if ($relative -eq "deploy/ftp-manifest.json") { continue }
@@ -57,8 +58,11 @@ try {
     if ($relative -eq "deploy/ftp-manifest.json" -or $uploadFiles -contains $relative) { continue }
     $productionEntry = $production.integrity.PSObject.Properties[$relative]
     $releaseEntry = $manifest.integrity.PSObject.Properties[$relative]
-    if (-not $productionEntry -or -not $releaseEntry -or
-        [string]$productionEntry.Value.sha256 -ne [string]$releaseEntry.Value.sha256) {
+    if (-not $productionEntry -or -not $releaseEntry) {
+      throw "Unchanged production integrity mismatch: $relative"
+    }
+    if ([string]$productionEntry.Value.sha256 -ne [string]$releaseEntry.Value.sha256 -and
+        $reconciledFiles -notcontains $relative) {
       throw "Unchanged production integrity mismatch: $relative"
     }
   }
@@ -71,6 +75,7 @@ try {
   Write-Output ("already_deployed=" + ($productionVersion -eq $expectedCurrent).ToString().ToLowerInvariant())
   Write-Output "files=$($manifest.requiredFiles.Count)"
   Write-Output "upload_files=$($uploadFiles.Count)"
+  Write-Output "reconciled_files=$($reconciledFiles.Count)"
 }
 finally {
   Pop-Location

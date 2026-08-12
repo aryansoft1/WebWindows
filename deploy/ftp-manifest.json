@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.12.3",
-  "catalogVersion": "2026.08.12.3",
-  "generatedAt": "2026-08-12T04:37:56.089Z",
+  "releaseVersion": "2026.08.12.4",
+  "catalogVersion": "2026.08.12.4",
+  "generatedAt": "2026-08-12T05:04:24.371Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -159,7 +159,7 @@
     "dist-weather/weather-widget.css",
     "cloud/browser/openResource.asp"
   ],
-  "previousReleaseVersion": "2026.08.12.2",
+  "previousReleaseVersion": "2026.08.12.3",
   "integrity": {
     "index.html": {
       "sha256": "af1e55a749abe8fa83165f7bf29e09d59689da80e4dc7c76f028b9a0f6f49e4f",
@@ -170,7 +170,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "9f5021671f22da2308cb431ba802e46800fe87e158831dcc201b12a1b8832d18",
+      "sha256": "c70357f8e188a4c1b80c5a5dfae1207700a03a378ecfcefc09cfdc711b6edf7b",
       "size": 13386
     },
     "assets/js/app-registry.js": {

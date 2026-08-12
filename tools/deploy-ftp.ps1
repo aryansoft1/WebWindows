@@ -35,6 +35,7 @@ finally {
 
 $manifest = Get-Content -LiteralPath (Join-Path $repo "deploy\ftp-manifest.json") -Raw | ConvertFrom-Json
 $uploadFiles = if ($manifest.uploadFiles) { @($manifest.uploadFiles) } else { @($manifest.requiredFiles) }
+$reconciledFiles = if ($manifest.reconciledFiles) { @($manifest.reconciledFiles) } else { @() }
 $adoptUnrecorded = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($relative in $AdoptUnrecordedProductionFiles) {
   if ($manifest.requiredFiles -notcontains $relative -or $relative -eq "deploy/ftp-manifest.json") {
@@ -103,10 +104,15 @@ foreach ($relative in $manifest.requiredFiles) {
         Write-Output "changed_production_file=$relative release_match=$($releaseMatch.ToString().ToLowerInvariant())"
         continue
       }
-      if (-not $adoptChanged.Contains($relative)) {
+      $releaseEntry = $manifest.integrity.PSObject.Properties[$relative]
+      if ($reconciledFiles -contains $relative -and $releaseEntry -and
+          $actual -eq [string]$releaseEntry.Value.sha256) {
+        Write-Output "reconciling_production_file=$relative"
+      } elseif ($adoptChanged.Contains($relative)) {
+        Write-Output "adopting_changed_production_file=$relative"
+      } else {
         throw "Production file changed outside the recorded release: $relative"
       }
-      Write-Output "adopting_changed_production_file=$relative"
     }
   } elseif ($downloaded -and $relative -ne "deploy/ftp-manifest.json") {
     $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -161,4 +167,5 @@ Write-Output "deployment_ok=true"
 Write-Output "release=$($manifest.releaseVersion)"
 Write-Output "files=$($manifest.requiredFiles.Count)"
 Write-Output "uploaded_files=$($uploadFiles.Count)"
+Write-Output "reconciled_files=$($reconciledFiles.Count)"
 Write-Output "backup=$backupRoot"

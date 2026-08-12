@@ -5,12 +5,41 @@
   const unavailable = "不可用";
 
   document.addEventListener("contextmenu", (event) => event.preventDefault());
-  document.querySelectorAll(".tab-btn[data-tab]").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((item) => item.classList.toggle("active", item === button));
-      document.querySelectorAll(".tab-content").forEach((panel) => panel.classList.toggle("active", panel.id === `tab-${button.dataset.tab}`));
+
+  function activateTab(tabName, focus = false) {
+    const button = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    const panel = byId(`tab-${tabName}`);
+    if (!button || !panel) return false;
+    document.querySelectorAll(".tab-btn[data-tab]").forEach((item) => {
+      const active = item === button;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-selected", String(active));
+      item.tabIndex = active ? 0 : -1;
     });
+    document.querySelectorAll(".tab-content").forEach((item) => {
+      const active = item === panel;
+      item.classList.toggle("active", active);
+      item.setAttribute("aria-hidden", String(!active));
+    });
+    if (focus) button.focus();
+    return true;
+  }
+
+  document.querySelector(".tabs")?.addEventListener("click", (event) => {
+    const button = event.target.closest?.(".tab-btn[data-tab]");
+    if (button) activateTab(button.dataset.tab);
   });
+  document.querySelector(".tabs")?.addEventListener("keydown", (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const buttons = [...document.querySelectorAll(".tab-btn[data-tab]")];
+    const current = buttons.indexOf(document.activeElement);
+    if (current < 0 || !buttons.length) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1
+      : (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+    activateTab(buttons[next].dataset.tab, true);
+  });
+  activateTab(document.querySelector(".tab-btn.active[data-tab]")?.dataset.tab || "system");
 
   function deviceApi() {
     try { return window.parent?.WebWindows?.device || window.WebWindows?.device || null; }

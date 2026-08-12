@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.11.3",
-  "catalogVersion": "2026.08.11.3",
-  "generatedAt": "2026-08-11T15:54:58.340Z",
+  "releaseVersion": "2026.08.12.1",
+  "catalogVersion": "2026.08.12.1",
+  "generatedAt": "2026-08-12T01:20:53.697Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -158,7 +158,7 @@
     "dist-weather/weather-widget.global.js",
     "dist-weather/weather-widget.css"
   ],
-  "previousReleaseVersion": "2026.08.11.2",
+  "previousReleaseVersion": "2026.08.11.3",
   "integrity": {
     "index.html": {
       "sha256": "0c98b9330ab417acf9beab52a6902442efec396a4059134774607041191e65e4",
@@ -169,8 +169,8 @@
       "size": 9061
     },
     "data/apps/system-apps.json": {
-      "sha256": "481ef7dde7eaa016a567e926cf99808c35466c12ae5f9e7f6c1ba05af3ff9140",
-      "size": 12813
+      "sha256": "32083cbfc936c5e95fb5e61a5881b5b919b9b8b9d75a15be304127ac61b8d4a6",
+      "size": 12812
     },
     "assets/js/app-registry.js": {
       "sha256": "b2baa49460992fd3a7aacead5c333a9c54459e5b8f87a6d35aa41a7d0533d61d",
@@ -209,8 +209,8 @@
       "size": 198710
     },
     "assets/js/sysinfo.js": {
-      "sha256": "c57b025caf117361c7daf162131960f1aab48cb3f02fcac369d55729adc00f19",
-      "size": 6811
+      "sha256": "7aa6ad5f3a3d473fa20400699f06d41ef4d6b2a6041aaa8fe9f4c8105892f56b",
+      "size": 8046
     },
     "assets/js/auth-session.js": {
       "sha256": "c4f73467d319c55d65efd0eda0b8daae2c4644ff9f4d09225ab5e91d4aa54cca",
@@ -533,8 +533,8 @@
       "size": 5862
     },
     "sysinfo.html": {
-      "sha256": "9199d9e0c5d6e98d5d72ddfbeedc1d57bfbc2de839aa1a59692becbd00600acb",
-      "size": 3771
+      "sha256": "3310c29d217b310ca493f4fcb61d5bbacc2f119c7e24d87aceabd28b80c706b7",
+      "size": 4056
     },
     "login.html": {
       "sha256": "19f42a029db5866e6cf764f707db4068515baa651aed7dc527c3dc9a3a416fe2",

@@ -2,17 +2,18 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>系统信息</title>
-  <link rel="stylesheet" href="assets/css/sysinfo.css?v=20260811-1">
+  <link rel="stylesheet" href="assets/css/sysinfo.css?v=20260812-1">
 </head>
 <body>
   <div class="tabs" role="tablist" aria-label="系统信息分类">
-    <button class="tab-btn active" data-tab="system" role="tab">WebWindows</button>
-    <button class="tab-btn" data-tab="device" role="tab">设备与能力</button>
-    <button class="tab-btn" data-tab="host" role="tab">服务节点</button>
+    <button class="tab-btn active" data-tab="system" role="tab" aria-selected="true" aria-controls="tab-system">WebWindows</button>
+    <button class="tab-btn" data-tab="device" role="tab" aria-selected="false" aria-controls="tab-device">设备与能力</button>
+    <button class="tab-btn" data-tab="host" role="tab" aria-selected="false" aria-controls="tab-host">服务节点</button>
   </div>
   <main>
-    <section id="tab-system" class="tab-content active" role="tabpanel">
+    <section id="tab-system" class="tab-content active" role="tabpanel" aria-hidden="false">
       <div class="card"><h3>版本与构建</h3>
         <div class="info-row"><strong>当前版本</strong><span id="releaseVersion">读取中…</span></div>
         <div class="info-row"><strong>构建时间</strong><span id="buildDate">读取中…</span></div>
@@ -26,7 +27,7 @@
         <div class="info-row"><strong>浏览器 / WebView</strong><span id="browserInfo" class="wrap">--</span></div>
       </div>
     </section>
-    <section id="tab-device" class="tab-content" role="tabpanel">
+    <section id="tab-device" class="tab-content" role="tabpanel" aria-hidden="true">
       <div class="card"><h3>设备概要</h3>
         <div class="info-row"><strong>设备类型</strong><span id="deviceType">--</span></div>
         <div class="info-row"><strong>逻辑处理器</strong><span id="cpuCores">不可用</span></div>
@@ -42,7 +43,7 @@
         <p class="hint">浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。</p>
       </div>
     </section>
-    <section id="tab-host" class="tab-content" role="tabpanel">
+    <section id="tab-host" class="tab-content" role="tabpanel" aria-hidden="true">
       <div class="card"><h3>WebWindows 服务节点</h3>
         <div class="info-row"><strong>CPU 型号</strong><span id="hostCpuModel">不可用</span></div>
         <div class="info-row"><strong>CPU 使用率</strong><span id="hostCpuUsage">不可用</span></div>
@@ -53,6 +54,6 @@
       </div>
     </section>
   </main>
-  <script src="assets/js/sysinfo.js?v=20260811-1"></script>
+  <script src="assets/js/sysinfo.js?v=20260812-1"></script>
 </body>
 </html>

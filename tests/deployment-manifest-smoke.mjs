@@ -29,7 +29,7 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.11.2");
+assert.equal(manifest.previousReleaseVersion, "2026.08.11.3");
 for (const runtimeDependency of [
   "cloud/browser/styles.css",
   "cloud/browser/toolbar.js",

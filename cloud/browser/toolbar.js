@@ -295,6 +295,7 @@
       openMode,
       path: item.dataset.path,
       name: item.dataset.name,
+      mimeType: item.dataset.mimeType || "application/octet-stream",
       url: new URL(item.dataset.resourceUrl, window.location.href).toString()
     };
 

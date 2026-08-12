@@ -16,6 +16,7 @@ if (-not $ftpHost -or -not $ftpUser -or -not $ftpPassword) {
 if ($LASTEXITCODE -ne 0) { throw "Deployment preflight failed." }
 
 $manifest = Get-Content -LiteralPath (Join-Path $repo "deploy\ftp-manifest.json") -Raw | ConvertFrom-Json
+$uploadFiles = if ($manifest.uploadFiles) { @($manifest.uploadFiles) } else { @($manifest.requiredFiles) }
 $adoptUnrecorded = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 foreach ($relative in $AdoptUnrecordedProductionFiles) {
   if ($manifest.requiredFiles -notcontains $relative -or $relative -eq "deploy/ftp-manifest.json") {
@@ -74,7 +75,7 @@ foreach ($relative in $manifest.requiredFiles) {
 }
 
 $late = @("data/apps/system-apps.json", "api/function-catalog.asp", "deploy/ftp-manifest.json", "index.html")
-$ordered = @($manifest.requiredFiles | Where-Object { $late -notcontains $_ }) + @($late | Where-Object { $manifest.requiredFiles -contains $_ })
+$ordered = @($uploadFiles | Where-Object { $late -notcontains $_ }) + @($late | Where-Object { $uploadFiles -contains $_ })
 foreach ($relative in $ordered) { Invoke-FtpUpload $relative }
 
 foreach ($relative in $manifest.requiredFiles) {
@@ -94,4 +95,5 @@ foreach ($relative in $manifest.requiredFiles) {
 Write-Output "deployment_ok=true"
 Write-Output "release=$($manifest.releaseVersion)"
 Write-Output "files=$($manifest.requiredFiles.Count)"
+Write-Output "uploaded_files=$($uploadFiles.Count)"
 Write-Output "backup=$backupRoot"

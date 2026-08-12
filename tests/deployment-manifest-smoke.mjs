@@ -8,6 +8,7 @@ const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const manifest = JSON.parse(await readFile(resolve(root, "deploy/ftp-manifest.json"), "utf8"));
 const catalog = JSON.parse(await readFile(resolve(root, "data/apps/system-apps.json"), "utf8"));
 const catalogApi = await readFile(resolve(root, "api/function-catalog.asp"), "utf8");
+const uploadFiles = manifest.uploadFiles || manifest.requiredFiles;
 
 assert.equal(manifest.schemaVersion, 1);
 assert.equal(catalog.repository.catalogVersion, manifest.catalogVersion,
@@ -18,18 +19,26 @@ assert.doesNotMatch(catalogApi, /StrComp\(fileVersion, activeVersion/,
   "lexical comparison misorders legacy catalog labels and date versions");
 
 for (const relative of manifest.requiredFiles) {
-  await access(resolve(root, relative));
   if (relative === "deploy/ftp-manifest.json") continue;
-  const bytes = await readFile(resolve(root, relative));
-  assert.equal(manifest.integrity?.[relative]?.sha256,
-    createHash("sha256").update(bytes).digest("hex"),
-    `deployment hash must match ${relative}`);
-  assert.equal(manifest.integrity?.[relative]?.size, bytes.length,
-    `deployment size must match ${relative}`);
+  assert.ok(manifest.integrity?.[relative]?.sha256, `deployment hash must exist for ${relative}`);
+  if (uploadFiles.includes(relative)) {
+    await access(resolve(root, relative));
+    const bytes = await readFile(resolve(root, relative));
+    assert.equal(manifest.integrity[relative].sha256,
+      createHash("sha256").update(bytes).digest("hex"),
+      `deployment hash must match uploaded file ${relative}`);
+    assert.equal(manifest.integrity[relative].size, bytes.length,
+      `deployment size must match uploaded file ${relative}`);
+  }
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.11.2");
+assert.equal(manifest.previousReleaseVersion, "2026.08.12.1");
+assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
+assert.ok(uploadFiles.includes("aplay.html"));
+assert.ok(uploadFiles.includes("assets/js/resource-open.js"));
+assert.ok(!uploadFiles.some((relative) => /(^|\/)desktalk(\/|\.)/i.test(relative)),
+  "incremental APlay release must not upload DeskTalk files");
 for (const runtimeDependency of [
   "cloud/browser/styles.css",
   "cloud/browser/toolbar.js",

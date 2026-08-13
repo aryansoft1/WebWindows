@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.12.4",
-  "catalogVersion": "2026.08.12.4",
-  "generatedAt": "2026-08-12T05:04:24.371Z",
+  "releaseVersion": "2026.08.14.1",
+  "catalogVersion": "2026.08.14.1",
+  "generatedAt": "2026-08-13T23:48:21.240Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -159,7 +159,7 @@
     "dist-weather/weather-widget.css",
     "cloud/browser/openResource.asp"
   ],
-  "previousReleaseVersion": "2026.08.12.3",
+  "previousReleaseVersion": "2026.08.12.4",
   "integrity": {
     "index.html": {
       "sha256": "af1e55a749abe8fa83165f7bf29e09d59689da80e4dc7c76f028b9a0f6f49e4f",
@@ -170,8 +170,8 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "c70357f8e188a4c1b80c5a5dfae1207700a03a378ecfcefc09cfdc711b6edf7b",
-      "size": 13386
+      "sha256": "5e0c3571a1beb53c4813eb4753299ef2e0af8dc59239d2ee61d397e57cd5fa3a",
+      "size": 13423
     },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
@@ -258,8 +258,8 @@
       "size": 4301
     },
     "assets/js/news.js": {
-      "sha256": "84d4b7580114cb5adfdebbb3efc3142db72b92d164bbdd8e9fb73a344a8c5b67",
-      "size": 1604
+      "sha256": "ac195b92ad02ef3a49230afcb7ff001965a26114f499bdbf361d3935018e8d92",
+      "size": 4102
     },
     "assets/js/network-speed.js": {
       "sha256": "2ca5e8ebcbbd44e6964dd401aa6d5431ee3cf931cdafac035da1f492c32590e4",
@@ -330,8 +330,8 @@
       "size": 22230
     },
     "assets/css/news.css": {
-      "sha256": "3420068c7815c230ad20a05179dddc55906eec3fcd3f5b57c0bddd87e56dc8b3",
-      "size": 1436
+      "sha256": "f6168f2b253b7617b35b487c2456bb22d9cc1bce427b156c64008cf3ccd0b6ff",
+      "size": 6577
     },
     "assets/css/settings.css": {
       "sha256": "a23fbf44427551379ceab83358c5e3cad3c9ab0abf2c0dee49e3e4a5b2861d78",
@@ -550,8 +550,8 @@
       "size": 46850
     },
     "news.html": {
-      "sha256": "8605fd225c17dae1cbf590ee17e778679d41e5d5be8fdbc0b78630497ace0fff",
-      "size": 1185
+      "sha256": "39ed6bcc10143d317447dcbd8fa690f5927635e3bdb4831e716ab3c5cdd23d05",
+      "size": 2900
     },
     "web.html": {
       "sha256": "51ddffe31d490810c139bf43ef581e542803de5d82072e6c97eeb77dfee0ab0c",
@@ -590,12 +590,12 @@
       "size": 17101
     },
     "cloud/browser/files.asp": {
-      "sha256": "b54b009d18aba47a8743f4488eb696b335ba56431add2b8808e271c054ef998b",
-      "size": 24276
+      "sha256": "fece25274e32f4220c3c1a6e63e58b1dcad35bd7175f6328e6447d81679aba90",
+      "size": 24273
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "a659c2a93afccb8bcf4b6af11debd21a7cae8b24abb50ccd2b9cee50564c73a1",
-      "size": 42044
+      "sha256": "830e48bd839868f8e57f81a2f448f9f11d179280c4e42fab12f24edaf5a4197e",
+      "size": 42041
     },
     "cloud/browser/private-resource.asp": {
       "sha256": "e438be83e3e742dc1278bb81dee4de82fe83969bccd27d2e393355eebd2adee1",
@@ -606,16 +606,16 @@
       "size": 17718
     },
     "cloud/browser/search-ui.js": {
-      "sha256": "197e80f5fc6fd209693e213a685d62526cb3ca2d737b19bf3a58d8e8a1ad314f",
-      "size": 10483
+      "sha256": "e71672d8ecfed763e19057dd4843c097f653183ac41de2424acf3258186cc759",
+      "size": 10888
     },
     "cloud/browser/file-search.css": {
-      "sha256": "36ba52d4f55cda6fd083d8c4c57061605366c9a0bc5e33bcd25c3d345b94d345",
-      "size": 2884
+      "sha256": "c22e359b784c2643ff9c2b22fb4ac78a9d8e2ec342712056815865b0e0e4bd02",
+      "size": 3006
     },
     "cloud/browser/styles.css": {
-      "sha256": "145aded7d38ce514ee398bbae0dfb2c374180a94244c9fcf8e777a3b6ee42029",
-      "size": 13449
+      "sha256": "e7703088ff103b20f1092c54611424fa8c91dbb19a3227c042c37a6471c9b8a5",
+      "size": 13560
     },
     "cloud/browser/toolbar.js": {
       "sha256": "db75341e9dd75025c90d0d341ead344075568c8a51107b18501a716b6c4a9457",
@@ -626,8 +626,8 @@
       "size": 13251
     },
     "cloud/browser/private-files.css": {
-      "sha256": "5175481dd1bc8ad1ca0ffbb29d20c9da9f5650b11d8814888a33020bdeae5251",
-      "size": 5846
+      "sha256": "1a2accc01f79e55f5b61efc4afeea51ac180dda8150efdb73595b2d60176e5f0",
+      "size": 5937
     },
     "cloud/browser/FILE_DIALOG_API.md": {
       "sha256": "4add76270d4d1c9dc132a5e618878f3410b769dc131c788b49fea2aab56ea702",

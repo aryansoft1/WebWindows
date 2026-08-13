@@ -1,40 +1,64 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>新闻中心</title>
-  <link rel="stylesheet" href="assets/css/news.css" />
+  <link rel="stylesheet" href="assets/css/news.css?v=20260814-help-1">
+  <script src="assets/js/news.js?v=20260814-help-1" defer></script>
 </head>
 <body>
-  <div class="news-wrapper">
-    <div class="explorer">
-      <div class="sidebar">
-        <ul class="tree">
-          <li>📁 全部</li>
-          <li>📁 公司新闻</li>
-          <li>📁 行业动态</li>
-          <li>📁 通知公告</li>
-        </ul>
+  <div class="news-help-shell">
+    <header class="news-help-header">
+      <div class="news-help-brand">
+        <span class="news-help-mark" aria-hidden="true">W</span>
+        <div><span>WebWindows 支持</span><strong>新闻中心</strong></div>
       </div>
-      <div class="main">
-        <table>
-          <thead>
-            <tr>
-              <th>文章标题 <span class="sort-icon">▾</span></th>
-              <th>分类 <span class="sort-icon">▾</span></th>
-              <th>发布时间 <span class="sort-icon">▾</span></th>
-              <th>类型 <span class="sort-icon">▾</span></th>
-              <th>大小 <span class="sort-icon">▾</span></th>
-            </tr>
-          </thead>
-          <tbody id="news-list">
-            <tr><td colspan="5" class="text-gray-500">正在加载新闻...</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <label class="news-search">
+        <span aria-hidden="true">⌕</span>
+        <input id="news-search" type="search" placeholder="搜索新闻和公告" aria-label="搜索新闻和公告">
+      </label>
+    </header>
+
+    <div class="news-help-layout">
+      <aside class="news-help-sidebar" aria-label="新闻分类">
+        <div class="news-sidebar-caption">浏览新闻</div>
+        <nav id="news-categories" class="news-category-list">
+          <button type="button" class="active" data-category="全部"><span aria-hidden="true">⌂</span>全部新闻</button>
+          <button type="button" data-category="公司新闻"><span aria-hidden="true">▤</span>公司新闻</button>
+          <button type="button" data-category="行业动态"><span aria-hidden="true">◎</span>行业动态</button>
+          <button type="button" data-category="通知公告"><span aria-hidden="true">◇</span>通知公告</button>
+        </nav>
+        <div class="news-sidebar-tip">
+          <strong>找不到内容？</strong>
+          <span>尝试使用标题或分类关键词搜索。</span>
+        </div>
+      </aside>
+
+      <main class="news-help-main">
+        <div class="news-breadcrumb">WebWindows <span>›</span> 新闻中心</div>
+        <section class="news-hero">
+          <div>
+            <span class="news-kicker">最新动态与使用提示</span>
+            <h1>有什么新内容？</h1>
+            <p>查看 WebWindows 更新、服务公告和产品相关资讯。</p>
+          </div>
+          <div class="news-hero-icon" aria-hidden="true">?</div>
+        </section>
+
+        <section class="news-content-section" aria-labelledby="news-section-title">
+          <div class="news-section-head">
+            <div><h2 id="news-section-title">全部新闻</h2><p id="news-result-summary">正在加载新闻…</p></div>
+            <label class="news-sort">排序
+              <select id="news-sort"><option value="newest">最新发布</option><option value="oldest">最早发布</option></select>
+            </label>
+          </div>
+          <div id="news-list" class="news-article-list" aria-live="polite">
+            <div class="news-loading"><span></span><span></span><span></span></div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
-
-  <script src="assets/js/news.js"></script>
 </body>
 </html>

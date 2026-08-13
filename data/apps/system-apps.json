@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.08.12.4",
-    "updatedAt": "2026-08-12T14:15:00+09:00"
+    "catalogVersion": "2026.08.14.1",
+    "updatedAt": "2026-08-14T12:00:00+09:00"
   },
   "apps": [
     {
@@ -14,7 +14,7 @@
       "type": "system",
       "name": "云资料",
       "icon": "assets/icons/explorer.png",
-      "entry": "cloud/browser/files.asp",
+      "entry": "cloud/browser/files.asp?v=20260814-toolbar-1",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -303,7 +303,7 @@
       "type": "system",
       "name": "新闻中心",
       "icon": "assets/icons/news.png",
-      "entry": "news.html",
+      "entry": "news.html?v=20260814-help-1",
       "install": {
         "defaultState": "installed",
         "uninstallable": false

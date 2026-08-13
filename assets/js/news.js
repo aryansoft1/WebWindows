@@ -1,49 +1,56 @@
-fetch('getNews.asp')
-  .then(res => res.json())
-  .then(list => {
-    const tbody = document.getElementById('news-list')
-    tbody.innerHTML = ''
+(function () {
+  "use strict";
+  const list = document.getElementById("news-list");
+  const search = document.getElementById("news-search");
+  const categories = document.getElementById("news-categories");
+  const summary = document.getElementById("news-result-summary");
+  const title = document.getElementById("news-section-title");
+  const sort = document.getElementById("news-sort");
+  let records = [];
+  let category = "全部";
 
-    if (list.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-gray-400">暂无新闻</td></tr>'
-      return
+  function normalized(value) { return String(value || "").trim().toLocaleLowerCase("zh-CN"); }
+  function dateValue(value) { const time = Date.parse(String(value || "").replace(" ", "T")); return Number.isNaN(time) ? 0 : time; }
+  function displayDate(value) { const time = dateValue(value); return time ? new Date(time).toLocaleDateString() : String(value || "").split(" ")[0]; }
+
+  function render() {
+    const needle = normalized(search.value);
+    const visible = records.filter(item => {
+      const categoryMatches = category === "全部" || String(item.category || "") === category;
+      const textMatches = !needle || normalized(`${item.title} ${item.category}`).includes(needle);
+      return categoryMatches && textMatches;
+    }).sort((a, b) => (sort.value === "oldest" ? 1 : -1) * (dateValue(a.created_at) - dateValue(b.created_at)));
+    list.replaceChildren();
+    title.textContent = category === "全部" ? "全部新闻" : category;
+    summary.textContent = needle ? `找到 ${visible.length} 条相关内容` : `共 ${visible.length} 条内容`;
+    if (!visible.length) {
+      const empty = document.createElement("div"); empty.className = "news-empty";
+      empty.textContent = "没有找到符合条件的新闻，请尝试其他关键词或分类。"; list.appendChild(empty); return;
     }
+    visible.forEach(item => {
+      const link = document.createElement("a"); link.className = "news-article"; link.href = `news_view.html?id=${encodeURIComponent(item.id)}`;
+      const main = document.createElement("div"); main.className = "news-article-main";
+      const icon = document.createElement("span"); icon.className = "news-article-icon"; icon.setAttribute("aria-hidden", "true"); icon.textContent = "▤";
+      const copy = document.createElement("div"); copy.className = "news-article-copy";
+      const heading = document.createElement("h3"); heading.textContent = item.title || "未命名新闻";
+      const description = document.createElement("p"); description.textContent = "查看这篇 WebWindows 新闻或公告的完整内容。";
+      copy.append(heading, description); main.append(icon, copy);
+      const meta = document.createElement("div"); meta.className = "news-article-meta";
+      const badge = document.createElement("span"); badge.className = "news-category-badge"; badge.textContent = item.category || "新闻";
+      const date = document.createElement("time"); date.textContent = displayDate(item.created_at);
+      const arrow = document.createElement("span"); arrow.className = "news-arrow"; arrow.setAttribute("aria-hidden", "true"); arrow.textContent = "›";
+      meta.append(badge, date, arrow); link.append(main, meta); list.appendChild(link);
+    });
+  }
 
-    const today = new Date().toISOString().split('T')[0]
-    let grouped = { 今天: [], 更早: [] }
-
-    list.forEach(item => {
-      const date = item.created_at.split(' ')[0]
-      if (date === today) grouped['今天'].push(item)
-      else grouped['更早'].push(item)
-    })
-
-    for (let group in grouped) {
-      if (grouped[group].length > 0) {
-        const trGroup = document.createElement('tr')
-        trGroup.className = 'group'
-        trGroup.innerHTML = `<td colspan="5">${group}</td>`
-        tbody.appendChild(trGroup)
-
-        grouped[group].forEach(news => {
-          const row = document.createElement('tr')
-          row.innerHTML = `
-            <td class="filename">
-                <img src="assets/icons/html-icon.png" class="icon">
-                <a href="news_view.html?id=${news.id}" >${news.title}</a>
-            </td>
-            <td>${news.category}</td>
-            <td>${news.created_at.split(' ')[0]}</td>
-            <td>系统新闻</td>
-            <td>--</td>
-            `
-
-          tbody.appendChild(row)
-        })
-      }
-    }
-  })
-  .catch(err => {
-    document.getElementById('news-list').innerHTML = '<tr><td colspan="5" style="color: red;">加载失败</td></tr>'
-    console.error('加载新闻失败:', err)
-  })
+  categories.addEventListener("click", event => {
+    const button = event.target.closest("button[data-category]"); if (!button) return;
+    category = button.dataset.category; categories.querySelectorAll("button").forEach(item => item.classList.toggle("active", item === button)); render();
+  });
+  search.addEventListener("input", render); sort.addEventListener("change", render);
+  fetch("getNews.asp", { credentials: "same-origin" }).then(response => {
+    if (!response.ok) throw new Error(`news-${response.status}`); return response.json();
+  }).then(data => { records = Array.isArray(data) ? data : []; render(); }).catch(error => {
+    console.error("加载新闻失败:", error); list.replaceChildren(); const message = document.createElement("div"); message.className = "news-error"; message.textContent = "新闻暂时无法加载，请稍后重试。"; list.appendChild(message); summary.textContent = "加载失败";
+  });
+})();

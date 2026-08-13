@@ -6,7 +6,7 @@
     jp: { placeholder:"ファイル・日付・種類・説明を検索",search:"検索",clear:"検索をクリア",loading:"検索中…",heading:"検索結果：",understood:"検索条件",empty:"ファイルが見つかりません",emptyHint:"別の名前、日付、種類をお試しください。",results:"件",private:"マイクラウド",public:"パブリック",device:"このデバイス",multiple:"複数条件に一致",fileNameExact:"ファイル名一致",fileNamePrefix:"ファイル名一致",fileNameContains:"ファイル名一致",fileNameTokens:"ファイル名一致",fileNameFuzzy:"ファイル名の類似一致",fileType:"ファイル種類一致",mimeType:"ファイル種類一致",folderPath:"パス一致",createdAt:"日付一致",modifiedAt:"日付一致",uploadedAt:"日付一致",size:"サイズ一致" },
     en: { placeholder:"Search files, dates, types, or descriptions",search:"Search",clear:"Clear search",loading:"Searching…",heading:"Search results: ",understood:"Understood as",empty:"No files found",emptyHint:"Try another name, date, or file type.",results:"results",private:"My cloud files",public:"Public files",device:"This device",multiple:"Multiple conditions",fileNameExact:"File name match",fileNamePrefix:"File name match",fileNameContains:"File name match",fileNameTokens:"File name match",fileNameFuzzy:"Fuzzy file name match",fileType:"File type match",mimeType:"File type match",folderPath:"Path match",createdAt:"Date match",modifiedAt:"Date match",uploadedAt:"Date match",size:"Size match" }
   };
-  function language(){const value=String(document.body.dataset.language||global.localStorage?.getItem("lang")||"zh").toLowerCase();if(value==="jp"||value.startsWith("ja"))return"jp";if(value.startsWith("en"))return"en";return"zh"}
+  function language(){const value=String(global.localStorage?.getItem("lang")||document.body.dataset.language||"zh").toLowerCase();if(value==="jp"||value.startsWith("ja"))return"jp";if(value.startsWith("en"))return"en";return"zh"}
   function t(key){return labels[language()][key]||labels.zh[key]||key}
   function formatDate(value){if(!value)return"";const date=new Date(typeof value==="number"?value:String(value));return Number.isNaN(date.getTime())?"":date.toLocaleDateString()}
   function formatSize(value){const size=Number(value)||0;if(size<1024)return size+" B";if(size<1048576)return(size/1024).toFixed(1)+" KB";return(size/1048576).toFixed(1)+" MB"}
@@ -58,7 +58,10 @@
     function restore(){clearTimeout(timer);serial+=1;controller?.abort();controller=null;input.value="";clear.hidden=true;view.hidden=true;view.replaceChildren();directory.hidden=false}
     async function searchNow(allowAI){const query=input.value.trim();if(!query){restore();return}const request=++serial;controller?.abort();controller=new AbortController();clear.hidden=false;directory.hidden=true;view.hidden=false;view.innerHTML=`<div class="file-search-loading">${t("loading")}</div>`;try{const payload=await global.WebWindows.files.search(query,{signal:controller.signal,allowAI:allowAI===true});if(request===serial)render(view,payload,query)}catch(error){if(error?.name!=="AbortError"&&request===serial)view.textContent=error.message}}
     function schedule(){clearTimeout(timer);if(!input.value.trim()){restore();return}timer=global.setTimeout(()=>searchNow(false),DEBOUNCE_MS)}
+    function applyLanguage(){input.placeholder=t("placeholder");input.setAttribute("aria-label",t("placeholder"));clear.title=t("clear");clear.setAttribute("aria-label",t("clear"));submit.textContent=t("search")}
     form.addEventListener("submit",event=>{event.preventDefault();clearTimeout(timer);searchNow(true)});input.addEventListener("input",schedule);clear.addEventListener("click",()=>{restore();input.focus()});
+    global.addEventListener("storage",event=>{if(event.key==="lang")applyLanguage()});
+    global.addEventListener("message",event=>{if(event.data?.type==="change-language")applyLanguage()});
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initialize,{once:true});else initialize();
 })(window);

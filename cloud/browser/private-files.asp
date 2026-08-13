@@ -210,9 +210,9 @@ End If
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
   <script defer src="../../assets/js/file-query-parser.js?v=20260811-query-v2-3"></script>
   <script defer src="../../assets/js/file-search.js?v=20260811-query-v2-3"></script>
-  <script defer src="search-ui.js?v=20260810-query-v2-2"></script>
-  <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-2">
-  <link rel="stylesheet" href="private-files.css?v=20260810-layout-1">
+  <script defer src="search-ui.js?v=20260814-language-1"></script>
+  <link rel="stylesheet" href="file-search.css?v=20260814-toolbar-1">
+  <link rel="stylesheet" href="private-files.css?v=20260814-toolbar-1">
   <style>
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}

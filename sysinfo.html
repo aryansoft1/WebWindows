@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>系统信息</title>
-  <link rel="stylesheet" href="assets/css/sysinfo.css?v=20260812-1">
+  <link rel="stylesheet" href="assets/css/sysinfo.css?v=20260814-quota-1">
 </head>
 <body>
   <div class="tabs" role="tablist" aria-label="系统信息分类">
@@ -49,11 +49,25 @@
         <div class="info-row"><strong>CPU 使用率</strong><span id="hostCpuUsage">不可用</span></div>
         <div class="info-row"><strong>内存使用</strong><span id="hostMemory">不可用</span></div>
         <div class="info-row"><strong>系统文件占用</strong><span id="systemStorage">不可用</span></div>
-        <div class="info-row"><strong>当前用户云资料占用</strong><span id="userStorage">未登录或不可用</span></div>
-        <p class="hint">这里是服务节点信息，不代表当前用户设备。共享主机未提供的总容量不显示。</p>
+        <div class="storage-allocation" aria-live="polite">
+          <div class="label-row">
+            <span>已用：<span id="userStorageUsed">未登录或不可用</span></span>
+            <span>剩余：<span id="userStorageRemaining">不可用</span></span>
+          </div>
+          <div class="label-row">
+            <span>总配额：<span id="userStorageTotal">不可用</span></span>
+            <span id="userStorageDatacenter">数据中心未知</span>
+          </div>
+          <div class="progress-container" role="progressbar" aria-label="当前用户云资料空间使用率"
+            aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="userStorageProgress">
+            <div id="userStorageBar" class="progress-bar" style="width:0%"></div>
+          </div>
+          <p class="hint" id="userStorageStatus">正在读取当前用户的数据中心空间分配…</p>
+        </div>
+        <p class="hint">这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。</p>
       </div>
     </section>
   </main>
-  <script src="assets/js/sysinfo.js?v=20260812-1"></script>
+  <script src="assets/js/sysinfo.js?v=20260814-quota-1"></script>
 </body>
 </html>

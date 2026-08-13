@@ -65,6 +65,7 @@ body {
     .progress-bar {
       height: 100%;
       background: linear-gradient(to right, #42a5f5, #1e88e5);
+      transition: width .2s ease;
     }
 
     .info-row {
@@ -80,6 +81,11 @@ body {
     .info-row span { text-align: right; color: #27364d; }
     .info-row .wrap { max-width: 70%; overflow-wrap: anywhere; font-size: 12px; }
     .hint { margin: 10px 0 0; color: #667085; font-size: 12px; line-height: 1.55; }
+    .storage-allocation { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eef1f5; }
+    .storage-allocation .label-row { gap: 14px; }
+    .storage-allocation .label-row > span:last-child { text-align: right; }
+    .storage-allocation[data-status="over-quota"] .progress-bar { background: #dc2626; }
+    .storage-allocation[data-status="unavailable"] .progress-bar { background: #98a2b3; }
     .capability-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 8px; }
     .capability { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; padding: 9px; border: 1px solid #dce3ec; border-radius: 9px; background: #f8fafc; }
     .capability span { color: #0b7a3e; font-size: 12px; }

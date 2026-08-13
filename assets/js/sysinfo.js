@@ -137,14 +137,79 @@
       setText("hostCpuUsage", data.cpuUsage == null ? unavailable : `${data.cpuUsage}%`);
       setText("hostMemory", Number(data.memTotal) > 0 ? `${formatMB(data.memUsed)} / ${formatMB(data.memTotal)}` : unavailable);
       setText("systemStorage", data.sysUsed == null ? unavailable : formatMB(data.sysUsed));
-      setText("userStorage", data.diskUsed == null ? "未登录或不可用" : formatMB(data.diskUsed));
     } catch (_) {
       ["hostCpuModel", "hostCpuUsage", "hostMemory", "systemStorage"].forEach((id) => setText(id, unavailable));
-      setText("userStorage", "未登录或不可用");
     }
   }
 
-  loadRelease(); refreshDevice(); refreshHost();
-  const hostTimer = setInterval(refreshHost, 30000);
+  function resetStorage(message, status = "unavailable") {
+    setText("userStorageUsed", message);
+    setText("userStorageRemaining", unavailable);
+    setText("userStorageTotal", unavailable);
+    setText("userStorageDatacenter", "数据中心未知");
+    setText("userStorageStatus", message);
+    const bar = byId("userStorageBar");
+    const progress = byId("userStorageProgress");
+    const allocation = document.querySelector(".storage-allocation");
+    if (bar) bar.style.width = "0%";
+    if (progress) progress.setAttribute("aria-valuenow", "0");
+    if (allocation) allocation.dataset.status = status;
+  }
+
+  async function refreshStorage() {
+    try {
+      const response = await fetch("api/storage-quota.asp", { cache: "no-store", credentials: "same-origin" });
+      const data = await response.json();
+      if (!response.ok || data.ok !== true) throw new Error(data.storageStatus || "storage-unavailable");
+      if (!data.authenticated) {
+        resetStorage("未登录，无法读取用户空间", "unavailable");
+        return;
+      }
+
+      setText("userStorageDatacenter", data.dataCenterName || "数据中心未分配");
+      setText("userStorageUsed", data.statsAvailable ? formatMB(data.usedMB) : unavailable);
+      if (!data.statsAvailable) {
+        setText("userStorageRemaining", unavailable);
+        setText("userStorageTotal", data.quotaKnown ? formatMB(data.quotaMB) : unavailable);
+        setText("userStorageStatus", "用户目录统计失败；未显示推测值。");
+        resetStorageProgress("unavailable");
+        return;
+      }
+      if (!data.quotaKnown) {
+        setText("userStorageRemaining", unavailable);
+        setText("userStorageTotal", unavailable);
+        setText("userStorageStatus", "账号未分配有效数据中心配额。");
+        resetStorageProgress("unavailable");
+        return;
+      }
+
+      const percent = Math.min(100, Math.max(0, Number(data.usedPercent) || 0));
+      setText("userStorageRemaining", formatMB(data.remainingMB));
+      setText("userStorageTotal", formatMB(data.quotaMB));
+      setText("userStorageStatus", data.storageStatus === "over-quota"
+        ? "已超过分配空间，请清理文件或联系管理员调整配额。"
+        : `${percent.toFixed(2)}% 已使用${data.legacyDefault ? "（兼容默认 1 GB）" : ""}`);
+      const bar = byId("userStorageBar");
+      const progress = byId("userStorageProgress");
+      const allocation = document.querySelector(".storage-allocation");
+      if (bar) bar.style.width = `${percent}%`;
+      if (progress) progress.setAttribute("aria-valuenow", String(percent));
+      if (allocation) allocation.dataset.status = data.storageStatus === "over-quota" ? "over-quota" : "available";
+    } catch (_) {
+      resetStorage("配额或空间统计暂时不可用", "unavailable");
+    }
+  }
+
+  function resetStorageProgress(status) {
+    const bar = byId("userStorageBar");
+    const progress = byId("userStorageProgress");
+    const allocation = document.querySelector(".storage-allocation");
+    if (bar) bar.style.width = "0%";
+    if (progress) progress.setAttribute("aria-valuenow", "0");
+    if (allocation) allocation.dataset.status = status;
+  }
+
+  loadRelease(); refreshDevice(); refreshHost(); refreshStorage();
+  const hostTimer = setInterval(() => { refreshHost(); refreshStorage(); }, 30000);
   window.addEventListener("pagehide", () => clearInterval(hostTimer), { once: true });
 })();

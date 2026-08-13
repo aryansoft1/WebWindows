@@ -1,4 +1,8 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<!--#include file="adminGuard.asp"-->
+<%
+RequireAdminMutation "datacenter-quota"
+%>
 <!--#include file="../inc/conn.asp"-->
 <%
 Response.ContentType = "application/json"

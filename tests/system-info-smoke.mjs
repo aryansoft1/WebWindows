@@ -7,13 +7,19 @@ const server = await readFile(new URL("../inc/sysinfo.asp", import.meta.url), "u
 
 assert.doesNotMatch(html, /WebWindows V2/);
 assert.match(html, /服务节点/);
+assert.match(html, /userStorageRemaining/);
+assert.match(html, /userStorageBar/);
+assert.match(html, /用户空间按账号所属数据中心分配/);
 assert.match(client, /deploy\/ftp-manifest\.json/);
 assert.match(client, /getCapabilities/);
 assert.match(client, /function activateTab/);
 assert.match(client, /aria-selected/);
-assert.match(html, /sysinfo\.js\?v=20260812-1/);
-assert.match(html, /sysinfo\.css\?v=20260812-1/);
-assert.match(client, /setInterval\(refreshHost,\s*30000\)/);
+assert.match(html, /sysinfo\.js\?v=20260814-quota-1/);
+assert.match(html, /sysinfo\.css\?v=20260814-quota-1/);
+assert.match(client, /setInterval\(\(\) => \{ refreshHost\(\); refreshStorage\(\); \}, 30000\)/);
+assert.match(client, /api\/storage-quota\.asp/);
+assert.match(client, /refreshStorage/);
+assert.match(client, /data\.remainingMB/);
 assert.doesNotMatch(client, /setInterval\(refreshData,\s*1000\)/);
 assert.doesNotMatch(server, /diskTotal\s*=\s*1229/i);
 assert.doesNotMatch(server, /username\s*=\s*"admin"/i);

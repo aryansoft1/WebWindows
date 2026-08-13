@@ -8,6 +8,10 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   "inc/sysinfo.asp",
+  "api/storage-quota.asp",
+  "admin_api/getDatacenters.asp",
+  "admin_api/saveDatacenter.asp",
+  "admin_api/deleteDatacenter.asp",
   "cloud/browser/files.asp",
   "cloud/browser/openResource.asp",
   "cloud/browser/private-files.asp",

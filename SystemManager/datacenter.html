@@ -21,6 +21,7 @@
     <tr>
       <th class="p-2 border">名称</th>
       <th class="p-2 border">接口地址</th>
+      <th class="p-2 border">每用户空间</th>
       <th class="p-2 border">状态</th>
       <th class="p-2 border">接通情况</th>
       <th class="p-2 border">操作</th>
@@ -30,6 +31,7 @@
     <tr data-api-url="https://api.node-a.example.com" data-id="1">
       <td class="p-2 border">节点A（上海）</td>
       <td class="p-2 border">https://api.node-a.example.com</td>
+      <td class="p-2 border">1 GB</td>
       <td class="p-2 border text-green-600">正常</td>
       <td class="p-2 border connectivity-cell text-gray-500">检测中...</td>
       <td class="p-2 border">
@@ -40,6 +42,7 @@
     <tr data-api-url="https://api.node-b.example.com" data-id="2">
       <td class="p-2 border">节点B（东京）</td>
       <td class="p-2 border">https://api.node-b.example.com</td>
+      <td class="p-2 border">1 GB</td>
       <td class="p-2 border text-green-600">正常</td>
       <td class="p-2 border connectivity-cell text-gray-500">检测中...</td>
       <td class="p-2 border">
@@ -50,6 +53,7 @@
     <tr data-api-url="https://api.node-c.example.com" data-id="3">
       <td class="p-2 border">节点C（香港）</td>
       <td class="p-2 border">https://api.node-c.example.com</td>
+      <td class="p-2 border">1 GB</td>
       <td class="p-2 border text-yellow-600">维护中</td>
       <td class="p-2 border connectivity-cell text-gray-500">检测中...</td>
       <td class="p-2 border">
@@ -72,6 +76,11 @@
 
         <label class="block mb-2">接口地址</label>
         <input type="url" id="centerURL" class="w-full border rounded px-3 py-1 mb-3" required />
+
+        <label class="block mb-2" for="centerQuotaGB">每用户分配空间（GB）</label>
+        <input type="number" id="centerQuotaGB" class="w-full border rounded px-3 py-1 mb-1"
+          min="1" max="1024" step="1" value="1" required />
+        <p class="text-xs text-gray-500 mb-3">最小 1 GB；现有数据中心迁移后默认保持 1 GB。</p>
 
         <button type="button" onclick="checkEndpoint()" class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">检测接口有效性</button>
 

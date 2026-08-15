@@ -252,9 +252,10 @@ main{padding:20px;max-width:1180px;margin:0 auto}
     background: var(--surface);
   }
   /* 新消息闪烁 */
-  @keyframes ww-blink { 0%,100% { filter:none; } 50% { filter:brightness(1.55) saturate(1.4); } }
+  @keyframes ww-blink { 0%,100% { filter:none; box-shadow:none; transform:translateY(0); } 50% { filter:brightness(1.65) saturate(1.55); box-shadow:0 0 0 3px rgba(255,193,7,.8),0 0 18px rgba(255,193,7,.95); transform:translateY(-2px); } }
   .row .av.blink { animation: ww-blink .9s linear infinite; }   /* 列表头像闪 */
-  #btn-desktalk.blink-tray { animation: ww-blink .9s linear infinite; } /* 任务栏图标闪 */
+  #btn-desktalk.blink-tray,
+  #btn-desktalk.flash { animation: ww-blink .9s ease-in-out infinite!important; } /* 任务栏图标闪 */
  #ww-island{
   position: fixed;              /* 🔥关键 */
   top: 12px;                    /* 顶部 */

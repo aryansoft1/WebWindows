@@ -216,7 +216,7 @@ export default {
         this.weatherTemp = '--°C';
         this.weatherDesc = '无服务';
         this.weatherIcon = 'https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg';
-        if (!this.weatherLocation) this.weatherLocation = '未知地点';
+        if (!this.weatherLocation || this.weatherLocation === '定位中...') this.weatherLocation = '未知地点';
       }
     }
 
@@ -235,6 +235,7 @@ export default {
         lastWeatherAt = now;
         const lat = Number(coords.latitude);
         const lon = Number(coords.longitude);
+        if (!this.weatherLocation || this.weatherLocation === '定位中...') this.weatherLocation = '当前位置';
         if (this.$el && Number.isFinite(accuracy)) this.$el.title = `定位精度约 ±${Math.max(1, Math.round(accuracy))} 米`;
         await this.fetchWeather(lat, lon);
       };
@@ -437,7 +438,7 @@ export default {
       };
 
       const c = Number(code);
-      return MAP[c] || o("Unknown", "未知", "不明", ICON.CLOUD);
+      return M[c] || o("Unknown", "未知", "不明", ICON.CLOUD);
     },
 
     closeWidget() {      // ★ 新增：与旧逻辑等价

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.15.1",
-  "catalogVersion": "2026.08.15.1",
-  "generatedAt": "2026-08-15T07:10:00.238Z",
+  "releaseVersion": "2026.08.15.2",
+  "catalogVersion": "2026.08.15.2",
+  "generatedAt": "2026-08-15T10:39:01.828Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -168,20 +168,21 @@
     "SystemManager/assets/css/admin.css",
     "SystemManager/assets/css/global.css",
     "assets/js/news_view.js",
-    "news_view.html"
+    "news_view.html",
+    "api/dt_fetch_links.asp"
   ],
-  "previousReleaseVersion": "2026.08.14.1",
+  "previousReleaseVersion": "2026.08.15.1",
   "integrity": {
     "index.html": {
-      "sha256": "d236109edfa11921ca8fa0bfead3b67d5d7c6cbc669a1dc8cb7e65840e92853a",
-      "size": 33698
+      "sha256": "3134cf4bd7fab84cabcc3d863823e22f0502f09c5c026a4f6cfa9a6f69de08c3",
+      "size": 33714
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "85315656e26f6fba2b55fae5b5543621dbe1e10277f42e81dae075fa2d445a30",
+      "sha256": "61ba8c7d7aa53f45c0406bf6ae83b4118a60d3f5ee16c2ad239ff757aec6e8d1",
       "size": 13455
     },
     "assets/js/app-registry.js": {
@@ -209,8 +210,8 @@
       "size": 10216
     },
     "assets/js/desktalk.js": {
-      "sha256": "d1dd955df8e0f950415af603ad85d23e3f6c2be90f2da8a6fb491ad0c270e413",
-      "size": 110910
+      "sha256": "cb846548f491a2e6bf5add06b3bb965b5d34d3b9188e27d14f99595e3b247ec1",
+      "size": 112912
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "16cd610f120d2b60270ee267df8facca00ccc7668ab31ea9639fc6e1b866e5bd",
@@ -269,8 +270,8 @@
       "size": 4301
     },
     "assets/js/news.js": {
-      "sha256": "13e7c85a8508200d9880d7483e87dffb3239f1636f776f61d6858b913f4cfafa",
-      "size": 4547
+      "sha256": "4575b842db12c63b7b4730c23498423e469e61575b597939be2fd16c751dcaf8",
+      "size": 4572
     },
     "assets/js/network-speed.js": {
       "sha256": "2ca5e8ebcbbd44e6964dd401aa6d5431ee3cf931cdafac035da1f492c32590e4",
@@ -337,8 +338,8 @@
       "size": 3739
     },
     "assets/css/desktalk.css": {
-      "sha256": "95d5136dc98f6fa2e88e773e55daaa401eae1825a138d6ba213d88a3d6ac9579",
-      "size": 22230
+      "sha256": "05dfc64425f1e9b6c4d604a5229748d72288bf6ed4fb9c1b9aec3380a5da3755",
+      "size": 22407
     },
     "assets/css/news.css": {
       "sha256": "25051efec335935b78287bba240a42a7f1a3ae8fc52a34bc5738cba34bb180fe",
@@ -561,7 +562,7 @@
       "size": 46850
     },
     "news.html": {
-      "sha256": "8fb73d597693a3db51e8e137c930e22de43a3fb4619fb8268c0a89df0880e3c7",
+      "sha256": "701d96a958432111461d2043d7debcc491d5e25f3c16b302cd89d3acdbf67d09",
       "size": 2914
     },
     "web.html": {
@@ -765,15 +766,15 @@
       "size": 87423
     },
     "dist-weather/weather-widget.umd.js": {
-      "sha256": "6f12e205bd1f8f182b711497396105c80238f14ae8feafe4db2b0660f7d86fcf",
-      "size": 11224
+      "sha256": "70c6fb9c3d1548ff5950a8b3a9ff069e381a3553b38cc0adda7481905d01cefd",
+      "size": 15417
     },
     "dist-weather/weather-widget.global.js": {
-      "sha256": "cf89cd3f554a67488c06e831da95cec72030d150ee09ab6ab316d2a34866c1ae",
-      "size": 11021
+      "sha256": "71f75f3634f325edb0151664a25719acbd8d182c673f62abff6b1692f195e6eb",
+      "size": 15214
     },
     "dist-weather/weather-widget.css": {
-      "sha256": "62c8e1305b29194bea851e39f19142efa9f7766aa27df0e9ed3222073f5911a5",
+      "sha256": "60e85bd0a173bbbf5017f8402dce43e58ccf1cf3d81036c2e0dceca7b4c12397",
       "size": 915
     },
     "cloud/browser/openResource.asp": {
@@ -805,8 +806,8 @@
       "size": 4380
     },
     "api/storage-quota.asp": {
-      "sha256": "85d9cf090fd6c25a60476b4664a3738891bb507c00f1424467c1bfe7aa875d04",
-      "size": 8123
+      "sha256": "88ee51dadff394d701f7974194757389cdb253f232df737e4142ad3f3b615c95",
+      "size": 7997
     },
     "SystemManager/assets/css/admin.css": {
       "sha256": "35d03df5b6096af50693ac711ea048dc6e4a5d4f235f261d22c08ad108dde196",
@@ -817,177 +818,31 @@
       "size": 1504
     },
     "assets/js/news_view.js": {
-      "sha256": "65b7b842c1268c0adc56b44f268640e96eb6a4ac213396e7cd989cca2bf09f72",
-      "size": 2722
+      "sha256": "fff7f3e0924d9e35481d3c5c2c277e146e115e34b82ec045e6865d90b5d95b60",
+      "size": 2772
     },
     "news_view.html": {
-      "sha256": "735365b61aa8964f94a9daeb24bee1c055fb85e0a235b4261ffd77481d84f049",
+      "sha256": "5cbc1bf2ec0a9c7f3965e42a80d0f68657655bf557fef43cb5ec1990e54eb999",
       "size": 2439
+    },
+    "api/dt_fetch_links.asp": {
+      "sha256": "787b24649aa1a04d4365bb24030a2e0766a91221752fb7c62dec6ee3bd463c28",
+      "size": 2877
     }
   },
   "uploadFiles": [
-    "index.html",
-    "api/function-catalog.asp",
-    "data/apps/system-apps.json",
-    "assets/js/app-registry.js",
-    "assets/js/tw.js",
-    "assets/js/file-query-parser.js",
-    "assets/js/file-search.js",
-    "assets/js/ai-tool-registry.js",
-    "assets/js/ai-file-tools.js",
-    "assets/js/desktalk.js",
-    "assets/js/taskbar-experience.js",
-    "assets/js/vendor/html2canvas.min.js",
-    "assets/js/sysinfo.js",
-    "assets/js/auth-session.js",
-    "assets/js/connectivity.js",
-    "assets/js/contextmenu-guard.js",
-    "assets/js/desktop-functions.js",
-    "assets/js/device-api.js",
-    "assets/js/device-controls.js",
-    "assets/js/device-storage-provider.js",
-    "assets/js/function-sync.js",
-    "assets/js/locale-region.js",
-    "assets/js/main.js",
-    "assets/js/login.js",
-    "assets/js/news.js",
-    "assets/js/network-speed.js",
-    "assets/js/settings.js",
-    "assets/js/snap_drag.js",
-    "assets/js/start-menu-functions.js",
-    "assets/js/system-session.js",
-    "assets/js/webwindows-message.js",
-    "assets/js/wallpaper.js",
-    "assets/js/cloud-file-dialog.js",
-    "assets/js/resource-open.js",
-    "assets/js/function-center.js",
-    "assets/js/guide.js",
-    "assets/css/function-center.css",
-    "assets/css/guide.css",
-    "assets/css/main.css",
-    "assets/css/sysinfo.css",
-    "assets/css/context_menu.css",
-    "assets/css/desktalk.css",
-    "assets/css/news.css",
-    "assets/css/settings.css",
-    "assets/images/case1.jpg",
-    "assets/images/case2.jpg",
-    "assets/images/case3.jpg",
-    "assets/images/cloud-server.jpg",
-    "assets/images/cloud-website.jpg",
-    "assets/img/japan/japan_client.jpg",
-    "assets/img/japan/japan_features.jpg",
-    "assets/img/japan/japan_process.jpg",
-    "assets/img/japan/japan_service.jpg",
-    "assets/img/software/software1.jpg",
-    "assets/img/software/software2.jpg",
-    "assets/img/software/software3.jpg",
-    "assets/img/software/software4.jpg",
-    "assets/img/software/software5.jpg",
-    "assets/icons/149071.png",
-    "assets/icons/aplay.png",
-    "assets/icons/cloud.png",
-    "assets/icons/cloud_secretary.png",
-    "assets/icons/code.png",
-    "assets/icons/contact.png",
-    "assets/icons/desktalk.png",
-    "assets/icons/explorer.png",
-    "assets/icons/japan.png",
-    "assets/icons/logo.png",
-    "assets/icons/logo_large.png",
-    "assets/icons/news.png",
-    "assets/icons/power.png",
-    "assets/icons/settings.png",
-    "assets/icons/settings-display.svg",
-    "assets/icons/settings-functions.svg",
-    "assets/icons/settings-guide.svg",
-    "assets/icons/settings-language.svg",
-    "assets/icons/settings-network.svg",
-    "assets/icons/settings-power.svg",
-    "assets/icons/settings-sound.svg",
-    "assets/icons/settings-wallpaper.svg",
-    "assets/icons/sheeteditor.png",
-    "assets/icons/sysinfo.png",
-    "assets/icons/wall_aryan.jpg",
-    "assets/icons/web.png",
-    "assets/icons/function-center.svg",
-    "assets/icons/guide.svg",
-    "assets/icons/writeeditor.svg",
-    "assets/icons/slideeditor.svg",
-    "assets/icons/dreama.png",
-    "assets/icons/mailbox.png",
-    "function-center.html",
-    "guide.html",
-    "dreama.html",
-    "sysinfo.html",
-    "login.html",
-    "settings.html",
-    "aplay.html",
-    "news.html",
-    "web.html",
-    "cloud.html",
-    "software.html",
-    "japan.html",
-    "contact.html",
-    "inc/sysinfo.asp",
-    "worker_SheetCreater.html",
-    "worker_WriteEditor.html",
-    "worker_SlideEditor.html",
-    "cloud/browser/files.asp",
-    "cloud/browser/private-files.asp",
-    "cloud/browser/private-resource.asp",
-    "cloud/browser/search.asp",
-    "cloud/browser/search-ui.js",
-    "cloud/browser/file-search.css",
-    "cloud/browser/styles.css",
-    "cloud/browser/toolbar.js",
-    "cloud/browser/device-locations.js",
-    "cloud/browser/private-files.css",
-    "cloud/browser/FILE_DIALOG_API.md",
-    "cloud/browser/FILE_SEARCH_QUERY_V2.md",
-    "cloud/browser/assets/archive.svg",
-    "cloud/browser/assets/back.svg",
-    "cloud/browser/assets/cloud.svg",
-    "cloud/browser/assets/compact.svg",
-    "cloud/browser/assets/copy.svg",
-    "cloud/browser/assets/download.svg",
-    "cloud/browser/assets/eye.svg",
-    "cloud/browser/assets/file.svg",
-    "cloud/browser/assets/folder.svg",
-    "cloud/browser/assets/forward.svg",
-    "cloud/browser/assets/grid.svg",
-    "cloud/browser/assets/home.svg",
-    "cloud/browser/assets/image.svg",
-    "cloud/browser/assets/info.svg",
-    "cloud/browser/assets/json.svg",
-    "cloud/browser/assets/list.svg",
-    "cloud/browser/assets/markdown.svg",
-    "cloud/browser/assets/open.svg",
-    "cloud/browser/assets/pdf.svg",
-    "cloud/browser/assets/presentation.svg",
-    "cloud/browser/assets/refresh.svg",
-    "cloud/browser/assets/sheet.svg",
-    "cloud/browser/assets/sort.svg",
-    "cloud/browser/assets/up.svg",
-    "cloud/browser/assets/word.svg",
-    "dist-menus/desktop-menus.global.js",
-    "dist-widget/weather-widget.css",
-    "dist-window/window-manager-widget.css",
-    "dist-window/window-manager-widget.js",
-    "dist-weather/weather-widget.umd.js",
-    "dist-weather/weather-widget.global.js",
-    "dist-weather/weather-widget.css",
-    "cloud/browser/openResource.asp",
-    "SystemManager/assets/js/datacenter.js",
-    "SystemManager/datacenter.html",
-    "admin_api/adminGuard.asp",
-    "admin_api/deleteDatacenter.asp",
-    "admin_api/getDatacenters.asp",
-    "admin_api/saveDatacenter.asp",
+    "api/dt_fetch_links.asp",
     "api/storage-quota.asp",
-    "SystemManager/assets/css/admin.css",
-    "SystemManager/assets/css/global.css",
+    "assets/css/desktalk.css",
+    "assets/js/desktalk.js",
+    "assets/js/news.js",
     "assets/js/news_view.js",
+    "data/apps/system-apps.json",
+    "dist-weather/weather-widget.css",
+    "dist-weather/weather-widget.global.js",
+    "dist-weather/weather-widget.umd.js",
+    "index.html",
+    "news.html",
     "news_view.html",
     "deploy/ftp-manifest.json"
   ]

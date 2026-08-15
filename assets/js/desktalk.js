@@ -1120,7 +1120,8 @@ try{
     var me = (typeof getProfile === 'function') ? getProfile() : null;
     if(!me) return;
     // 仅用稳定 ID 识别用户；昵称仅作展示（可选）
-    fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(me.name), 
+    fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(me.id)
+         + '&name=' + encodeURIComponent(me.name || me.id),
          { credentials: 'omit', cache: 'no-store', headers: { 'Accept': 'application/json' }});
   };
   __hb(); setInterval(__hb, 30000);
@@ -1675,7 +1676,7 @@ async function fetchPresenceList(){
   try{
     // 1) 防缓存：cache:no-store + 时间戳参数
     var me  = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
-    var url = '/api/dt_presence_mem.asp?list=1&_=' + Date.now();
+    var url = '/api/dt_presence_mem.asp?list=1&u=' + encodeURIComponent(me.id || '') + '&_=' + Date.now();
     var r = await fetch(url, {
       credentials: 'omit',     // 你现在的服务端允许 omit 也行，但 include 更不易被代理公用缓存复用
       cache: 'no-store'
@@ -1826,10 +1827,11 @@ function notifyDesktop(title, body, peer){
 }
 
 function notifyIncomingMessage(pid, message){
-  if(DND) return;
   var peer=peerById(pid);
   var body=String(message&&message.body||message&&message.raw||'新消息').slice(0,120);
+  // 灵动岛是被动状态提示；不打扰只关闭声音、系统通知和标题闪烁。
   showIsland(peer,body);
+  if(DND) return;
   if(!windowFocused || document.hidden){
     playDing();
     notifyDesktop('来自「'+peer.name+'」的新消息',body,peer);
@@ -1911,6 +1913,7 @@ var ME_SLUG = meSlug();
 
 // === 每个会话的“已看到的最后时间戳” ===
 var CONV_TS = {};      // key: convId -> last seen ts (秒)
+var notifiedMessageIds = new Set();
 var inboxTimer = null;
 var inboxStopped = false;
 
@@ -1956,19 +1959,62 @@ async function pollOne(pid){
         if (ts > (CONV_TS[convId] || 0)) CONV_TS[convId] = ts;
         // 来自“对方”的消息才算未读
         if (slugId(m.from) !== ME_SLUG){
-          // 这里传原始 pid（中文也可），内部会归一化
-          markPeerUnread(pid);
-          notifyIncomingMessage(pid,m);
+          handleIncomingNotification(pid,m);
         }
       }
     }
   }catch(e){}
 }
 
+function messageNoticeKey(message){
+  if(message && message.id) return String(message.id);
+  return [message&&message.from,message&&message.ts,message&&message.body||message&&message.raw].join('|');
+}
+
+function handleIncomingNotification(pid,message){
+  var key=messageNoticeKey(message);
+  if(key && notifiedMessageIds.has(key)) return;
+  if(key){
+    notifiedMessageIds.add(key);
+    if(notifiedMessageIds.size>500) notifiedMessageIds.delete(notifiedMessageIds.values().next().value);
+  }
+  var senderId=slugId(message&&message.from||pid);
+  var isActive=currentPeer && slugId(currentPeer.id)===senderId && chat && chat.classList.contains('show');
+  if(isActive) return;
+  markPeerUnread(senderId);
+  notifyIncomingMessage(senderId,message);
+}
+
+// 收件箱指针是新消息的权威入口；发送方离线或不在本机好友列表时仍能收到通知。
+async function pollInboxLinks(){
+  try{
+    var r=await fetch(API_ROOT+'dt_fetch_links.asp?u='+encodeURIComponent(ME_SLUG)+'&_='+Date.now(),{
+      credentials:'include',cache:'no-store',headers:{Accept:'application/json'}
+    });
+    if(!r.ok) return;
+    var j=await r.json();
+    var links=Array.isArray(j&&j.links)?j.links:[];
+    await Promise.all(links.map(async function(link){
+      try{
+        if(!/^\/data\/chat\/conversations\/[a-z0-9_-]+\/[a-z0-9_.-]+$/i.test(String(link||''))) return;
+        var mr=await fetch(link,{credentials:'same-origin',cache:'no-store'});
+        if(!mr.ok) return;
+        var m=await mr.json();
+        if(slugId(m&&m.from)===ME_SLUG) return;
+        var parts=String(link).split('/');
+        var convId=parts.length>3?parts[parts.length-2]:'';
+        var ts=Number(m&&m.ts)||0;
+        if(convId && ts>(CONV_TS[convId]||0)) CONV_TS[convId]=ts;
+        handleIncomingNotification(slugId(m&&m.from),m);
+      }catch(_){ }
+    }));
+  }catch(_){ }
+}
+
 // —— 每次 tick 轮询所有好友（可按需节流/分批）——
 function inboxTick(){
   var ids = [...new Set([...(friendSet||[]), ...((people||[]).map(p => p.id))])];
-  return Promise.all(ids.map(pollOne));
+  return Promise.all([pollInboxLinks(), ...ids.map(pollOne)]);
 }
 
 // —— 启动后台收件箱轮询 —— 

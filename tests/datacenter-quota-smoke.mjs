@@ -16,6 +16,9 @@ const [migration, quotaApi, getDatacenters, saveDatacenter, deleteDatacenter, ma
 assert.match(migration, /user_quota_mb INT UNSIGNED NOT NULL DEFAULT 1024/i);
 assert.match(quotaApi, /Session\("webwindows_user_id"\)/i);
 assert.match(quotaApi, /u\.data_center_id\s*=\s*d\.id/i);
+assert.match(quotaApi, /WHERE u\.id=\? LIMIT 1/i);
+assert.doesNotMatch(quotaApi, /WHERE u\.id=\? AND u\.username=\?/i,
+  "the authenticated session id is authoritative and must survive legacy username session differences");
 assert.match(quotaApi, /1024 AS user_quota_mb/i);
 assert.match(quotaApi, /storageStatus"":""unauthenticated/i);
 assert.match(quotaApi, /quota-lookup-failed/i);

@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 const source = await readFile(new URL("../assets/js/desktalk.js", import.meta.url), "utf8");
 const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const css = await readFile(new URL("../assets/css/desktalk.css", import.meta.url), "utf8");
+const inboxApi = await readFile(new URL("../api/dt_fetch_links.asp", import.meta.url), "utf8");
 
 assert.match(source, /runDirectFileCommand\(v\)/);
 assert.match(source, /referencedResultIndex/);
@@ -11,7 +12,21 @@ assert.match(source, /registry\.invoke\('searchFiles'/);
 assert.match(source, /userConfirmed:true/);
 assert.match(source, /Promise\.resolve\(inboxTick\(\)\)\.finally\(function\(\)\{ scheduleInbox\(\); \}\)/);
 assert.match(source, /currentPeer\.id === pid && chat && chat\.classList\.contains\('show'\)/);
-assert.match(source, /notifyIncomingMessage\(pid,m\)/);
+assert.match(source, /handleIncomingNotification\(pid,m\)/);
+assert.match(source, /dt_presence_mem\.asp\?u=' \+ encodeURIComponent\(me\.id\)/,
+  "presence heartbeat must publish the stable account id rather than a nickname");
+assert.match(source, /'&name=' \+ encodeURIComponent\(me\.name \|\| me\.id\)/,
+  "presence may carry the nickname only as display metadata");
+assert.match(source, /async function pollInboxLinks\(\)/,
+  "incoming notifications must consume the server inbox instead of depending only on the online list");
+assert.match(source, /dt_fetch_links\.asp\?u=/);
+assert.match(inboxApi, /Session\("webwindows_user_id"\)/,
+  "the server inbox must prefer the authenticated stable user id");
+assert.doesNotMatch(inboxApi, /Dim u : u = Session\("username"\)/,
+  "the inbox directory must not be selected by a mutable display username");
+assert.match(source, /Promise\.all\(\[pollInboxLinks\(\), \.\.\.ids\.map\(pollOne\)\]\)/);
+assert.ok(source.indexOf("showIsland(peer,body)") < source.indexOf("if(DND) return"),
+  "do-not-disturb must retain the passive island while suppressing disruptive notification channels");
 assert.match(source, /CONV_ID = await resolveConvIdFor\(currentPeer\)/,
   "foreground chat and background notifications must resolve the same conversation bucket");
 assert.match(source, /var convId = await resolveConvIdFor\(peer\)/,
@@ -40,4 +55,6 @@ assert.match(css, /#ai-composer\{[^}]*flex:0 0 auto/s,
   "AI composer must remain pinned below the stretching history");
 assert.match(css, /#tab-ai \.bubble img\{[^}]*max-width:100%/s,
   "sanitized Markdown image output must fit the DeskTalk panel");
+assert.match(css, /#btn-desktalk\.flash[^}]*ww-blink/s,
+  "the taskbar message state must use a visible pulse animation");
 console.log("DeskTalk lifecycle smoke tests passed");

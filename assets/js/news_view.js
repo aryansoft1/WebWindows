@@ -28,7 +28,7 @@ if (!validId) {
           if (!d.error) {
             const host = document.getElementById("prev-news")
             host.append(document.createTextNode("上一篇："))
-            const link = document.createElement("a"); link.href = `news_view.html?id=${encodeURIComponent(d.id)}`; link.textContent = d.title; host.appendChild(link)
+            const link = document.createElement("a"); link.href = `news_view.html?id=${encodeURIComponent(d.id)}&v=20260815-help-detail-2`; link.textContent = d.title; host.appendChild(link)
           }
         })
 
@@ -39,7 +39,7 @@ if (!validId) {
           if (!d.error) {
             const host = document.getElementById("next-news")
             host.append(document.createTextNode("下一篇："))
-            const link = document.createElement("a"); link.href = `news_view.html?id=${encodeURIComponent(d.id)}`; link.textContent = d.title; host.appendChild(link)
+            const link = document.createElement("a"); link.href = `news_view.html?id=${encodeURIComponent(d.id)}&v=20260815-help-detail-2`; link.textContent = d.title; host.appendChild(link)
           }
         })
     })

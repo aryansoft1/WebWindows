@@ -52,12 +52,12 @@ On Error GoTo 0
 If hasQuotaColumn Then
   sql = "SELECT u.data_center_id, d.name AS data_center_name, d.user_quota_mb " & _
     "FROM webwindows_users u LEFT JOIN webwindows_datacenters d ON u.data_center_id=d.id " & _
-    "WHERE u.id=? AND u.username=? LIMIT 1"
+    "WHERE u.id=? LIMIT 1"
 Else
   legacyDefault = True
   sql = "SELECT u.data_center_id, d.name AS data_center_name, 1024 AS user_quota_mb " & _
     "FROM webwindows_users u LEFT JOIN webwindows_datacenters d ON u.data_center_id=d.id " & _
-    "WHERE u.id=? AND u.username=? LIMIT 1"
+    "WHERE u.id=? LIMIT 1"
 End If
 
 Set cmd = Server.CreateObject("ADODB.Command")
@@ -65,7 +65,6 @@ Set cmd.ActiveConnection = conn
 cmd.CommandType = 1
 cmd.CommandText = sql
 cmd.Parameters.Append cmd.CreateParameter("user_id", 3, 1, , CLng(webWindowsUserId))
-cmd.Parameters.Append cmd.CreateParameter("username", 200, 1, 255, webWindowsUsername)
 On Error Resume Next
 Set rs = cmd.Execute
 If Err.Number <> 0 Then

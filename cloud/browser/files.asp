@@ -154,8 +154,8 @@ itemCount = subfolders.Count + visibleFileCount
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WebWindows <%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></title>
-  <link rel="stylesheet" href="styles.css?v=20260814-toolbar-1">
-  <link rel="stylesheet" href="file-search.css?v=20260814-toolbar-1">
+  <link rel="stylesheet" href="styles.css?v=20260815-toolbar-layout-1">
+  <link rel="stylesheet" href="file-search.css?v=20260815-toolbar-layout-1">
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-storage-provider.js?v=20260809-storage-2"></script>

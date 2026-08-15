@@ -6,14 +6,20 @@ function getQueryParam(name) {
 const id = getQueryParam("id")
 const validId = /^\d+$/.test(String(id || ""))
 if (!validId) {
-  document.getElementById('news-title').innerText = "错误：缺少新闻ID"
+  document.getElementById('news-title').innerText = "无法打开这篇新闻"
+  document.getElementById('news-content').textContent = "新闻编号无效，请返回新闻中心重新选择。"
 } else {
   fetch("getNewsById.asp?id=" + encodeURIComponent(id), { credentials: "same-origin" })
-    .then(res => res.json())
+    .then(res => { if (!res.ok) throw new Error("news-" + res.status); return res.json() })
     .then(data => {
-      document.getElementById("news-title").innerText = data.title
-      document.getElementById("news-meta").innerText = `${data.category} ｜ ${data.created_at}`
-      document.getElementById("news-content").innerHTML = data.content
+      const title = String(data.title || "未命名新闻")
+      const category = String(data.category || "新闻与公告")
+      document.title = `${title} - WebWindows 新闻中心`
+      document.getElementById("news-title").textContent = title
+      document.getElementById("news-breadcrumb-title").textContent = title
+      document.getElementById("news-category").textContent = category
+      document.getElementById("news-meta").textContent = `${category} ｜ ${data.created_at || ""}`
+      document.getElementById("news-content").innerHTML = data.content || "<p>这篇新闻暂时没有正文。</p>"
 
       // 加载上一篇
       fetch("getPrevNextNews.asp?dir=prev&id=" + encodeURIComponent(id), { credentials: "same-origin" })
@@ -37,4 +43,13 @@ if (!validId) {
           }
         })
     })
+    .catch(() => {
+      document.getElementById("news-title").textContent = "新闻暂时无法载入"
+      document.getElementById("news-content").textContent = "请稍后重试，或返回新闻中心查看其他内容。"
+    })
 }
+
+document.getElementById("news-detail-search")?.addEventListener("submit", event => {
+  const input = event.currentTarget.elements.q
+  if (!input.value.trim()) event.preventDefault()
+})

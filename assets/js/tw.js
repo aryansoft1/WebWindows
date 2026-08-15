@@ -362,6 +362,22 @@ Object.assign(languageCatalog.jp, {
   "当前浏览器或宿主不提供电源结构，相关项目明确显示为“未知”。": "このブラウザーまたはホストでは電源構成を取得できないため、関連項目は「不明」と表示します。"
 });
 
+Object.assign(languageCatalog.tw, {
+  "任务管理器": "工作管理員", "关闭任务管理器": "關閉工作管理員", "个正在运行的窗口": "個執行中的視窗",
+  "当前没有打开的窗口": "目前沒有開啟的視窗", "已最小化": "已最小化", "正在使用": "使用中",
+  "运行中": "執行中", "切换": "切換", "结束任务": "結束工作", "结束此窗口任务？未保存内容可能丢失。": "結束此視窗工作？未儲存的內容可能會遺失。"
+});
+Object.assign(languageCatalog.en, {
+  "任务管理器": "Task Manager", "关闭任务管理器": "Close Task Manager", "个正在运行的窗口": "running windows",
+  "当前没有打开的窗口": "No open windows", "已最小化": "Minimized", "正在使用": "In use",
+  "运行中": "Running", "切换": "Switch", "结束任务": "End task", "结束此窗口任务？未保存内容可能丢失。": "End this window task? Unsaved content may be lost."
+});
+Object.assign(languageCatalog.jp, {
+  "任务管理器": "タスク マネージャー", "关闭任务管理器": "タスク マネージャーを閉じる", "个正在运行的窗口": "個の実行中ウィンドウ",
+  "当前没有打开的窗口": "開いているウィンドウはありません", "已最小化": "最小化済み", "正在使用": "使用中",
+  "运行中": "実行中", "切换": "切り替え", "结束任务": "タスクを終了", "结束此窗口任务？未保存内容可能丢失。": "このウィンドウのタスクを終了しますか？未保存の内容が失われる可能性があります。"
+});
+
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;

@@ -33,7 +33,7 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.12.4");
+assert.equal(manifest.previousReleaseVersion, "2026.08.14.1");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
 assert.ok(uploadFiles.includes("aplay.html"));
 assert.ok(uploadFiles.includes("assets/js/resource-open.js"));

@@ -12,6 +12,16 @@ assert.match(source, /userConfirmed:true/);
 assert.match(source, /Promise\.resolve\(inboxTick\(\)\)\.finally\(function\(\)\{ scheduleInbox\(\); \}\)/);
 assert.match(source, /currentPeer\.id === pid && chat && chat\.classList\.contains\('show'\)/);
 assert.match(source, /notifyIncomingMessage\(pid,m\)/);
+assert.match(source, /CONV_ID = await resolveConvIdFor\(currentPeer\)/,
+  "foreground chat and background notifications must resolve the same conversation bucket");
+assert.match(source, /var convId = await resolveConvIdFor\(peer\)/,
+  "background inbox polling must use the shared conversation resolver");
+assert.match(source, /hasOwnProperty\.call\(CONV_TS, convId\)/,
+  "presence refreshes must not reset an existing inbox baseline and swallow messages");
+assert.doesNotMatch(source, /ids\.slice\(0,10\)\.map\(pollOne\)/,
+  "contacts after the first ten must still receive notifications");
+assert.match(source, /INBOX_FAST\s*=\s*3000/);
+assert.match(source, /INBOX_SLOW\s*=\s*6000/);
 assert.match(source, /发送失败，消息未送达；内容已放回输入框/);
 assert.match(source, /\.filter\(function\(p\)\{ return !isFriend\(p\.id\) \}\)/);
 assert.match(index, /pref-undiscoverable[^>]+disabled/);

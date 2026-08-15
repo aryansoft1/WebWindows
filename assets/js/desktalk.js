@@ -775,10 +775,10 @@ async function openChat(p, rect){
     // 2) 刷新“我方标识”（仅用于 me/peer 判定）
     if (typeof refreshMeId === 'function') refreshMeId();
 
-    // 3) 统一“旧规则”的会话ID（保证历史立刻可见）
-    API_PEER   = slugId(peerNameFrom(currentPeer));
-    const MY_LEGACY = slugId(meName());              // 我方昵称 slug（旧规则）
-    CONV_ID    = makeConvId(MY_LEGACY, API_PEER);    // 只保留这一种，不再混用 resolveConvIdFor 的结果
+    // 3) 打开聊天与后台收件箱共用同一会话解析规则。
+    //    新会话使用稳定账号 ID，已有昵称会话仍由解析器兼容复用。
+    API_PEER = slugId(currentPeer.id || peerNameFrom(currentPeer));
+    CONV_ID = await resolveConvIdFor(currentPeer);
 
     // 4) 头部 UI
     const peerText = currentPeer?.name || peerNameFrom(currentPeer) || '';
@@ -1108,6 +1108,7 @@ function syncDeskTalkIdentity(forceGuest){
   updateMeUI();
   try{ renderAll(); refreshMeId(); }catch(_){}
   try{ if(typeof __hb==='function') __hb(); }catch(_){}
+  try{ if(typeof startInboxWatch==='function') startInboxWatch(); }catch(_){}
 }
 window.addEventListener('webwindows:logout',function(){ syncDeskTalkIdentity(true) });
 window.addEventListener('webwindows:login',function(){ setTimeout(function(){ syncDeskTalkIdentity(false) },0) });
@@ -1133,7 +1134,11 @@ var unreadPeers = new Set();
 function flashPeerUI(peerId, on){
   // 任务栏图标：只要有任何未读就闪
   var btn = $('#btn-desktalk');
-  if (btn) btn.classList.toggle('blink-tray', on || unreadPeers.size > 0);
+  if (btn) {
+    var shouldFlash = !!on || unreadPeers.size > 0;
+    btn.classList.toggle('blink-tray', shouldFlash);
+    btn.classList.toggle('flash', shouldFlash);
+  }
 
   // 列表里的头像：只点亮该 peer 所在的行
   $$('#reco-list .row, #friends-list .row').forEach(function(row){
@@ -1875,6 +1880,7 @@ function flashTaskbarFor(id, on){
   if (!btnDT) return;
   var p = peerById(id);
   btnDT.classList.toggle('flash', !!on);
+  btnDT.classList.toggle('blink-tray', !!on || unreadPeers.size > 0);
   var dot = btnDT.querySelector('.new-icon');
   if (on) {
     if (!dot) { dot = document.createElement('span'); dot.className = 'new-icon'; btnDT.appendChild(dot); }
@@ -1897,6 +1903,8 @@ function clearUnreadFor(id){
   var cid = makeConvId(API_ME || slugId(meName()), id);
     if (UNREAD[cid]) { delete UNREAD[cid]; }
     flashListAvatar(id, false);
+    unreadPeers.delete(id);
+    flashPeerUI(id, false);
 }
 // === 我自己的 slug（用于拼会话ID） ===
 var ME_SLUG = meSlug();
@@ -1909,7 +1917,9 @@ var inboxStopped = false;
 // —— 单个好友：初始化“已看到”的基线（不触发未读）——
 async function seedInboxOne(pid){
   try{
-    var convId = makeConvId(ME_SLUG, slugId(pid));
+    var peer = peerById(pid) || { id: pid, name: nameBySlug(pid) };
+    var convId = await resolveConvIdFor(peer);
+    if (Object.prototype.hasOwnProperty.call(CONV_TS, convId)) return;
     const r = await fetch(urlGet(convId, 0, 1), { credentials:'include' });
     const j = await r.json();
     var last = 0;
@@ -1932,7 +1942,8 @@ async function pollOne(pid){
   // 正在聊天的这位，不在后台轮询，避免重复
   if (currentPeer && currentPeer.id === pid && chat && chat.classList.contains('show')) return;
 
-  var convId = makeConvId(ME_SLUG, slugId(pid));
+  var peer = peerById(pid) || { id: pid, name: nameBySlug(pid) };
+  var convId = await resolveConvIdFor(peer);
   var since  = CONV_TS[convId] || 0;
 
   try{
@@ -1957,8 +1968,7 @@ async function pollOne(pid){
 // —— 每次 tick 轮询所有好友（可按需节流/分批）——
 function inboxTick(){
   var ids = [...new Set([...(friendSet||[]), ...((people||[]).map(p => p.id))])];
-  // 例：最多并发轮询前 10 个，避免过多并发
-  return Promise.all(ids.slice(0,10).map(pollOne));
+  return Promise.all(ids.map(pollOne));
 }
 
 // —— 启动后台收件箱轮询 —— 
@@ -2081,8 +2091,8 @@ function showIsland(peer, text){
 // === 统一调度（追加在文件末尾即可） ===
 pollTimer = null;         // 会话轮询（fetchNew）
 inboxTimer = null;        // 收件箱轻轮询（inboxTick）
-const INBOX_FAST = 8000;      // 打开聊天窗时
-const INBOX_SLOW = 15000;     // 关闭聊天窗/页面后台时
+const INBOX_FAST = 3000;      // 打开聊天窗时
+const INBOX_SLOW = 6000;      // 关闭聊天窗/页面后台时
 let inboxDelay = INBOX_SLOW;
 
 function scheduleInbox(next){

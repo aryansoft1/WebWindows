@@ -34,10 +34,12 @@ export default {
       touchOffset: { x: 0, y: 0 },
       lang: (navigator.language || "zh").slice(0, 2),
       refreshTimer: null,
+      geoWatchId: null,
+      geoWatchStopTimer: null,
+      locationRequest: 0,
+      bestAccuracy: Infinity,
       isVisible: true,
       hasDragged: false,
-      offsetLat: -0.0000095, // 纠偏：纬度增量（+向北，-向南），单位：度
-      offsetLon: 0.0000215, // 纠偏：经度增量（+向东，-向西），单位：度
     };
   },
   computed: {
@@ -68,6 +70,8 @@ export default {
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mouseup", this.onMouseUp);
     clearInterval(this.refreshTimer);
+    if (this.geoWatchId != null) navigator.geolocation?.clearWatch(this.geoWatchId);
+    clearTimeout(this.geoWatchStopTimer);
   },
   methods: {
     onMouseDown(e) {
@@ -123,17 +127,20 @@ export default {
     // ========= 仅替换为 Open-Meteo 的实现，其他逻辑尽量不动 =========
     // 仅替换 methods 里的 fetchWeather()
     async fetchWeather(lat, lon) {
-      const safeLat = Number.isFinite(lat) ? lat : 30.73019;
-      const safeLon = Number.isFinite(lon) ? lon : 104.09282;
+      const hasCoordinates = Number.isFinite(lat) && Number.isFinite(lon);
+      const safeLat = hasCoordinates ? lat : 30.73019;
+      const safeLon = hasCoordinates ? lon : 104.09282;
 
       // ---------- 1) wttr 优先（~lat,lon + 两位小数；非 JSON/Unknown 则抛错） ----------
       try {
-        const lat2 = Math.round(safeLat * 100) / 100;   // 两位小数足够
-        const lon2 = Math.round(safeLon * 100) / 100;
+        const lat2 = Number(safeLat.toFixed(4));
+        const lon2 = Number(safeLon.toFixed(4));
         // 强烈建议：wttr 通过服务端代理，否则容易被 CORS/WAF 影响
         // 如已上代理：/api/wttr_proxy.asp?lat=...&lon=...&lang=...
         // 这里先保留直连写法（如果你已经搭了代理，请把下面一行替换成代理 URL）
-        const wttrUrl = `https://wttr.in/~${lat2},${lon2}?format=j1&lang=${this.lang}`;
+        const wttrUrl = hasCoordinates
+          ? `https://wttr.in/~${lat2},${lon2}?format=j1&lang=${this.lang}`
+          : `https://wttr.in/?format=j1&lang=${this.lang}`;
 
         const wttrRes = await fetch(wttrUrl, { cache: 'no-store' });
         const wttrText = await wttrRes.text();
@@ -172,6 +179,7 @@ export default {
             || data?.nearest_area?.[0]?.areaName?.[0]?.value
             || '';
           if (areaName) {
+            this.weatherLocation = areaName;
             const resp = await fetch(`/api/geonames.asp?city=${encodeURIComponent(areaName)}&lang=${this.lang}`);
             const txt2 = await resp.text();
             try {
@@ -215,29 +223,41 @@ export default {
     ,
 
     async loadWeather() {
+      const request = ++this.locationRequest;
+      this.bestAccuracy = Infinity;
+      let lastWeatherAt = 0;
       const onPos = async ({ coords }) => {
-        const lat = coords.latitude + (this.offsetLat || 0);
-        const lon = coords.longitude + (this.offsetLon || 0);
-
-        // 先并发拿“区/郡”并显示（不阻塞天气）
-        (async () => {
-          try {
-            const district = await this.fetchDistrict(lat, lon);
-            if (district) this.weatherLocation = district;   // “区/郡”优先显示
-          } catch { }
-        })();
-
-        // 再拉天气
+        if (request !== this.locationRequest) return;
+        const accuracy = Number(coords.accuracy);
+        const now = Date.now();
+        if (Number.isFinite(accuracy) && accuracy >= this.bestAccuracy * 0.8 && now - lastWeatherAt < 5000) return;
+        if (Number.isFinite(accuracy)) this.bestAccuracy = Math.min(this.bestAccuracy, accuracy);
+        lastWeatherAt = now;
+        const lat = Number(coords.latitude);
+        const lon = Number(coords.longitude);
+        if (this.$el && Number.isFinite(accuracy)) this.$el.title = `定位精度约 ±${Math.max(1, Math.round(accuracy))} 米`;
         await this.fetchWeather(lat, lon);
       };
 
+      const onError = () => {
+        if (request !== this.locationRequest || lastWeatherAt) return;
+        this.weatherLocation = '按网络位置定位';
+        this.fetchWeather(Number.NaN, Number.NaN);
+      };
+
+      const options = { enableHighAccuracy: true, timeout: 12000, maximumAge: 300000 };
+
       if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          onPos,
-          () => onPos({ coords: { latitude: 0, longitude: 0 } })
-        );
+        navigator.geolocation.getCurrentPosition(onPos, onError, options);
+        if (this.geoWatchId != null) navigator.geolocation.clearWatch(this.geoWatchId);
+        this.geoWatchId = navigator.geolocation.watchPosition(onPos, () => {}, options);
+        clearTimeout(this.geoWatchStopTimer);
+        this.geoWatchStopTimer = setTimeout(() => {
+          if (this.geoWatchId != null) navigator.geolocation.clearWatch(this.geoWatchId);
+          this.geoWatchId = null;
+        }, 12000);
       } else {
-        onPos({ coords: { latitude: 0, longitude: 0 } });
+        onError();
       }
     },
     // —— Open-Meteo / WMO 天气码 → 多语言描述 + 图标 —— //
@@ -417,7 +437,7 @@ export default {
       };
 
       const c = Number(code);
-      return M[c] || o("Unknown", "未知", "不明", ICON.CLOUD);
+      return MAP[c] || o("Unknown", "未知", "不明", ICON.CLOUD);
     },
 
     closeWidget() {      // ★ 新增：与旧逻辑等价

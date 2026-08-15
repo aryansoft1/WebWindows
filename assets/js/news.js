@@ -8,6 +8,13 @@
   const sort = document.getElementById("news-sort");
   let records = [];
   let category = "全部";
+  const initialQuery = new URL(location.href).searchParams;
+  search.value = initialQuery.get("q") || "";
+  const requestedCategory = initialQuery.get("category");
+  if (requestedCategory && categories.querySelector(`button[data-category="${CSS.escape(requestedCategory)}"]`)) {
+    category = requestedCategory;
+    categories.querySelectorAll("button").forEach(item => item.classList.toggle("active", item.dataset.category === category));
+  }
 
   function normalized(value) { return String(value || "").trim().toLocaleLowerCase("zh-CN"); }
   function dateValue(value) { const time = Date.parse(String(value || "").replace(" ", "T")); return Number.isNaN(time) ? 0 : time; }

@@ -18,8 +18,11 @@ assert.match(privateCss, /\.private-view-btn\{[^}]*flex:0 0 auto[^}]*white-space
 assert.ok(searchUi.indexOf('localStorage?.getItem("lang")') < searchUi.indexOf("document.body.dataset.language"),
   "search UI must prefer the WebWindows language setting over browser-derived server language");
 assert.match(searchUi, /change-language/);
-assert.match(publicPage, /20260814-toolbar-1/);
-assert.match(privatePage, /20260814-toolbar-1/);
+assert.match(publicPage, /20260815-toolbar-layout-1/);
+assert.match(privatePage, /20260815-toolbar-layout-1/);
+assert.match(searchCss, /@media\(max-width:1100px\)/);
+assert.match(publicCss, /@media \(max-width: 1100px\)/);
+assert.match(privateCss, /@media\(max-width:1100px\)/);
 
 assert.match(newsHtml, /news-help-shell/);
 assert.match(newsHtml, /id="news-search"/);
@@ -30,6 +33,8 @@ assert.match(newsCss, /@media\(max-width:760px\)/);
 assert.doesNotMatch(newsJs, /item\.title[^\n]*innerHTML|news\.title[^\n]*innerHTML/,
   "server-provided news titles must use textContent");
 assert.match(newsViewHtml, /news-detail-card/);
+assert.match(newsViewHtml, /news-help-sidebar/);
+assert.match(newsViewHtml, /news-detail-search/);
 assert.match(newsViewJs, /\^\\d\+\$/);
 new vm.Script(newsJs, { filename: "assets/js/news.js" });
 new vm.Script(newsViewJs, { filename: "assets/js/news_view.js" });

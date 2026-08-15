@@ -4,26 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>新闻详情</title>
-  <link rel="stylesheet" href="assets/css/news.css?v=20260814-help-1">
-  <script src="assets/js/news_view.js?v=20260814-help-1" defer></script>
+  <link rel="stylesheet" href="assets/css/news.css?v=20260815-help-detail-1">
+  <script src="assets/js/news_view.js?v=20260815-help-detail-1" defer></script>
 </head>
-<body>
+<body class="news-detail-page">
   <div class="news-help-shell">
     <header class="news-help-header">
       <div class="news-help-brand"><span class="news-help-mark" aria-hidden="true">W</span><div><span>WebWindows 支持</span><strong>新闻中心</strong></div></div>
-      <a class="news-back" href="news.html">返回新闻中心</a>
+      <form class="news-search" id="news-detail-search" action="news.html" method="get" role="search">
+        <span aria-hidden="true">⌕</span>
+        <input name="q" type="search" placeholder="搜索新闻和公告" aria-label="搜索新闻和公告">
+      </form>
     </header>
-    <main class="news-help-main news-detail-main">
-      <div class="news-breadcrumb">WebWindows <span>›</span> 新闻中心 <span>›</span> 文章</div>
-      <a class="news-back" href="news.html">‹ 返回全部新闻</a>
-      <article class="news-detail-card">
-        <span class="news-kicker">新闻与公告</span>
-        <h1 id="news-title">正在加载…</h1>
-        <div id="news-meta" class="news-detail-meta"></div>
-        <div id="news-content" class="news-detail-content"></div>
-      </article>
-      <nav class="news-detail-nav" aria-label="相邻新闻"><div id="prev-news"></div><div id="next-news"></div></nav>
-    </main>
+    <div class="news-help-layout">
+      <aside class="news-help-sidebar" aria-label="新闻导航">
+        <div class="news-sidebar-caption">浏览新闻</div>
+        <nav class="news-category-list">
+          <a class="active" href="news.html"><span aria-hidden="true">⌂</span>全部新闻</a>
+          <a href="news.html?category=公司新闻"><span aria-hidden="true">▤</span>公司新闻</a>
+          <a href="news.html?category=行业动态"><span aria-hidden="true">◎</span>行业动态</a>
+          <a href="news.html?category=通知公告"><span aria-hidden="true">◇</span>通知公告</a>
+        </nav>
+        <div class="news-sidebar-tip"><strong>继续浏览</strong><span>使用左侧分类或顶部搜索查找其他内容。</span></div>
+      </aside>
+      <main class="news-help-main news-detail-main">
+        <div class="news-breadcrumb">WebWindows <span>›</span> 新闻中心 <span>›</span> <span id="news-breadcrumb-title">文章</span></div>
+        <a class="news-back" href="news.html">‹ 返回全部新闻</a>
+        <article class="news-detail-card">
+          <span class="news-kicker" id="news-category">新闻与公告</span>
+          <h1 id="news-title">正在加载…</h1>
+          <div id="news-meta" class="news-detail-meta"></div>
+          <div id="news-content" class="news-detail-content"></div>
+        </article>
+        <nav class="news-detail-nav" aria-label="相邻新闻"><div id="prev-news"></div><div id="next-news"></div></nav>
+      </main>
+    </div>
   </div>
 </body>
 </html>

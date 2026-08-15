@@ -8,9 +8,9 @@
   let previewShowTimer = null;
   let previewHideTimer = null;
   const thumbnailCache = new Map();
-  const PREVIEW_SHOW_DELAY = 110;
-  const PREVIEW_HIDE_DELAY = 240;
-  const THUMBNAIL_CACHE_MS = 2500;
+  const PREVIEW_SHOW_DELAY = 220;
+  const PREVIEW_HIDE_DELAY = 320;
+  const THUMBNAIL_CACHE_MS = 15000;
 
   function taskbarApps() {
     return [...document.querySelectorAll(".taskbar-app[data-id]")];
@@ -45,7 +45,18 @@
     preview.id = "taskbar-window-preview";
     preview.className = "taskbar-window-preview";
     preview.hidden = true;
-    preview.innerHTML = '<strong class="taskbar-window-preview__title"></strong><div class="taskbar-window-preview__viewport"></div>';
+    preview.innerHTML = '<header><strong class="taskbar-window-preview__title"></strong><button type="button" class="taskbar-window-preview__close" aria-label="关闭窗口">×</button></header><div class="taskbar-window-preview__viewport"></div>';
+    preview.querySelector(".taskbar-window-preview__close").addEventListener("click", (event) => {
+      event.stopPropagation();
+      const id = preview.dataset.windowId || "";
+      if (id) window.closeTargetWindow?.(id.replace(/^win-/, ""));
+      hidePreview();
+    });
+    preview.addEventListener("click", (event) => {
+      if (event.target.closest("button")) return;
+      document.querySelector(`.taskbar-app[data-id="${CSS.escape(preview.dataset.windowId || "")}"]`)?.click();
+      hidePreview();
+    });
     document.body.appendChild(preview);
     return preview;
   }
@@ -207,6 +218,82 @@
     return overlay;
   }
 
+  function taskManager() {
+    let overlay = document.getElementById("task-manager-overlay");
+    if (overlay) return overlay;
+    overlay = document.createElement("section");
+    overlay.id = "task-manager-overlay";
+    overlay.className = "task-manager-overlay";
+    overlay.hidden = true;
+    overlay.innerHTML = '<div class="task-manager-panel" role="dialog" aria-modal="true" aria-labelledby="task-manager-title"><header><div><span>WebWindows</span><h2 id="task-manager-title"></h2></div><button type="button" data-task-manager-close>×</button></header><div class="task-manager-summary"></div><div class="task-manager-list" role="list"></div></div>';
+    overlay.querySelector("h2").textContent = translated("任务管理器");
+    overlay.querySelector("[data-task-manager-close]").setAttribute("aria-label", translated("关闭任务管理器"));
+    overlay.addEventListener("click", (event) => { if (event.target === overlay || event.target.closest("[data-task-manager-close]")) overlay.hidden = true; });
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function openTaskManager() {
+    hidePreview();
+    const overlay = taskManager();
+    const windows = [...document.querySelectorAll(".window[id]")];
+    const list = overlay.querySelector(".task-manager-list");
+    const summary = overlay.querySelector(".task-manager-summary");
+    list.replaceChildren();
+    summary.textContent = windows.length ? `${windows.length} ${translated("个正在运行的窗口")}` : translated("当前没有打开的窗口");
+    windows.forEach((win) => {
+      const icon = document.querySelector(`.taskbar-app[data-id="${CSS.escape(win.id)}"]`);
+      const row = document.createElement("article");
+      row.className = "task-manager-row";
+      row.setAttribute("role", "listitem");
+      const copy = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = icon?.title || win.querySelector(".window-title, .title")?.textContent?.trim() || translated("窗口");
+      const status = document.createElement("span");
+      const minimized = getComputedStyle(win).display === "none" || win.classList.contains("minimized");
+      status.textContent = translated(minimized ? "已最小化" : (win.classList.contains("active") ? "正在使用" : "运行中"));
+      copy.append(title, status);
+      const actions = document.createElement("div");
+      const activate = document.createElement("button");
+      activate.type = "button"; activate.textContent = translated("切换");
+      activate.addEventListener("click", () => { overlay.hidden = true; icon?.click(); });
+      const close = document.createElement("button");
+      close.type = "button"; close.className = "danger"; close.textContent = translated("结束任务");
+      close.addEventListener("click", () => {
+        if (!window.confirm(translated("结束此窗口任务？未保存内容可能丢失。"))) return;
+        window.closeTargetWindow?.(win.id.replace(/^win-/, ""));
+        row.remove();
+        const remaining = list.children.length;
+        summary.textContent = remaining ? `${remaining} ${translated("个正在运行的窗口")}` : translated("当前没有打开的窗口");
+      });
+      actions.append(activate, close);
+      row.append(copy, actions);
+      list.appendChild(row);
+    });
+    overlay.hidden = false;
+    overlay.querySelector("[data-task-manager-close]")?.focus();
+  }
+
+  function taskbarContextMenu() {
+    let menu = document.getElementById("taskbar-context-menu");
+    if (menu) return menu;
+    menu = document.createElement("div");
+    menu.id = "taskbar-context-menu";
+    menu.className = "taskbar-context-menu";
+    menu.hidden = true;
+    menu.innerHTML = '<button type="button" data-taskbar-command="view">▦ <span></span></button><button type="button" data-taskbar-command="manager">▤ <span></span></button>';
+    menu.querySelector('[data-taskbar-command="view"] span').textContent = translated("任务视图");
+    menu.querySelector('[data-taskbar-command="manager"] span').textContent = translated("任务管理器");
+    menu.addEventListener("click", (event) => {
+      const command = event.target.closest("button")?.dataset.taskbarCommand;
+      menu.hidden = true;
+      if (command === "view") openTaskView();
+      if (command === "manager") openTaskManager();
+    });
+    document.body.appendChild(menu);
+    return menu;
+  }
+
   function openTaskView() {
     const overlay = taskView();
     const grid = overlay.querySelector(".task-view-grid");
@@ -270,6 +357,29 @@
   document.addEventListener("pointerout", (event) => {
     if (event.target.closest?.(".taskbar-app[data-id]") && !event.relatedTarget?.closest?.(".taskbar-window-preview")) scheduleHidePreview();
   });
+
+  document.addEventListener("contextmenu", (event) => {
+    if (!event.target.closest?.(".taskbar")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const menu = taskbarContextMenu();
+    menu.hidden = false;
+    const width = menu.offsetWidth || 190;
+    const height = menu.offsetHeight || 90;
+    menu.style.left = `${Math.max(8, Math.min(innerWidth - width - 8, event.clientX))}px`;
+    menu.style.top = `${Math.max(8, Math.min(innerHeight - height - 8, event.clientY - height))}px`;
+  }, true);
+  document.addEventListener("pointerdown", (event) => {
+    const menu = document.getElementById("taskbar-context-menu");
+    if (menu && !event.target.closest?.("#taskbar-context-menu")) menu.hidden = true;
+  }, true);
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+    const menu = document.getElementById("taskbar-context-menu");
+    const manager = document.getElementById("task-manager-overlay");
+    if (menu) menu.hidden = true;
+    if (manager) manager.hidden = true;
+  });
   document.addEventListener("focusin", (event) => { const icon = event.target.closest?.(".taskbar-app[data-id]"); if (icon) showPreview(icon); });
   document.addEventListener("focusout", (event) => { if (event.target.closest?.(".taskbar-app[data-id]")) scheduleHidePreview(); });
   document.addEventListener("pointerover", (event) => { if (event.target.closest?.(".taskbar-window-preview")) clearTimeout(previewHideTimer); });
@@ -313,4 +423,5 @@
 
   window.WebWindows = window.WebWindows || {};
   window.WebWindows.taskView = Object.freeze({ open: openTaskView, getOrder: () => taskbarApps().map((icon) => icon.dataset.id) });
+  window.WebWindows.taskManager = Object.freeze({ open: openTaskManager });
 })();

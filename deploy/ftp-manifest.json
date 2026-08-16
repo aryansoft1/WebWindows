@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.15.2",
-  "catalogVersion": "2026.08.15.2",
-  "generatedAt": "2026-08-15T10:39:01.828Z",
+  "releaseVersion": "2026.08.16.1",
+  "catalogVersion": "2026.08.16.1",
+  "generatedAt": "2026-08-16T01:55:00.489Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -171,10 +171,10 @@
     "news_view.html",
     "api/dt_fetch_links.asp"
   ],
-  "previousReleaseVersion": "2026.08.15.1",
+  "previousReleaseVersion": "2026.08.15.2",
   "integrity": {
     "index.html": {
-      "sha256": "3134cf4bd7fab84cabcc3d863823e22f0502f09c5c026a4f6cfa9a6f69de08c3",
+      "sha256": "bf10937ea3032766a6bc201fc7f453f9777d897309892c119b45d33063d679b4",
       "size": 33714
     },
     "api/function-catalog.asp": {
@@ -182,7 +182,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "61ba8c7d7aa53f45c0406bf6ae83b4118a60d3f5ee16c2ad239ff757aec6e8d1",
+      "sha256": "79285d42a5bd9309e7456c7ac8811420cc77e0aaf7ee6ebf12026d888829a516",
       "size": 13455
     },
     "assets/js/app-registry.js": {
@@ -806,7 +806,7 @@
       "size": 4380
     },
     "api/storage-quota.asp": {
-      "sha256": "88ee51dadff394d701f7974194757389cdb253f232df737e4142ad3f3b615c95",
+      "sha256": "0eb4881ce85d3e8b13a02c2fb82904813df30bccbfcd9659834c51696963fd7b",
       "size": 7997
     },
     "SystemManager/assets/css/admin.css": {
@@ -831,19 +831,9 @@
     }
   },
   "uploadFiles": [
-    "api/dt_fetch_links.asp",
     "api/storage-quota.asp",
-    "assets/css/desktalk.css",
-    "assets/js/desktalk.js",
-    "assets/js/news.js",
-    "assets/js/news_view.js",
     "data/apps/system-apps.json",
-    "dist-weather/weather-widget.css",
-    "dist-weather/weather-widget.global.js",
-    "dist-weather/weather-widget.umd.js",
     "index.html",
-    "news.html",
-    "news_view.html",
     "deploy/ftp-manifest.json"
   ]
 }

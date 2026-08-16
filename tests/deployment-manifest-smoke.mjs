@@ -33,18 +33,16 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.15.1");
+assert.equal(manifest.previousReleaseVersion, "2026.08.15.2");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-assert.ok(uploadFiles.includes("assets/js/desktalk.js"),
-  "real-time messaging release must include DeskTalk files");
-assert.ok(uploadFiles.includes("api/dt_fetch_links.asp"),
-  "real-time messaging release must include the stable-id inbox endpoint");
 assert.ok(uploadFiles.includes("api/storage-quota.asp"),
-  "data-center quota correction must include the quota endpoint");
-assert.ok(uploadFiles.includes("assets/js/news_view.js") && uploadFiles.includes("news_view.html"),
-  "news detail cache correction must deploy both its shell and runtime");
-assert.ok(uploadFiles.includes("dist-weather/weather-widget.global.js"),
-  "weather location correction must deploy its browser bundle");
+  "Classic ASP quota hotfix must include the quota endpoint");
+assert.ok(uploadFiles.includes("data/apps/system-apps.json") && uploadFiles.includes("index.html"),
+  "the hotfix must advance the catalog and system-info cache entry together");
+for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
+  assert.ok(manifest.requiredFiles.includes(realtimeDependency),
+    `DeskTalk real-time dependency must remain managed: ${realtimeDependency}`);
+}
 for (const runtimeDependency of [
   "cloud/browser/styles.css",
   "cloud/browser/toolbar.js",

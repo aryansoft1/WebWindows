@@ -136,7 +136,7 @@ Function TrySinglePath(ByVal value, ByRef normalized)
   If raw = "" Or raw = "." Or raw = ".." Or LCase(raw) = "_system" Then TrySinglePath = False: Exit Function
   If InStr(raw, Chr(0)) > 0 Or InStr(raw, "/") > 0 Or InStr(raw, "\") > 0 Or _
      InStr(raw, ":") > 0 Or InStr(raw, "*") > 0 Or InStr(raw, "?") > 0 Or _
-     InStr(raw, """) > 0 Or InStr(raw, "<") > 0 Or InStr(raw, ">") > 0 Or InStr(raw, "|") > 0 Then
+     InStr(raw, """") > 0 Or InStr(raw, "<") > 0 Or InStr(raw, ">") > 0 Or InStr(raw, "|") > 0 Then
     TrySinglePath = False
     Exit Function
   End If

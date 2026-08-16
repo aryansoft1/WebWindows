@@ -23,6 +23,8 @@ assert.match(quotaApi, /1024 AS user_quota_mb/i);
 assert.match(quotaApi, /storageStatus"":""unauthenticated/i);
 assert.match(quotaApi, /quota-lookup-failed/i);
 assert.match(quotaApi, /stats-failed/i);
+assert.match(quotaApi, /InStr\(raw, """"\) > 0/i,
+  "the Classic ASP path guard must encode a literal quote with four quotes");
 assert.match(getDatacenters, /SHOW COLUMNS FROM webwindows_datacenters LIKE 'user_quota_mb'/i);
 assert.match(getDatacenters, /1024 AS user_quota_mb/i);
 assert.match(saveDatacenter, /RequireAdminMutation "datacenter-quota"/i);

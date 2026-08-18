@@ -33,12 +33,14 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.15.2");
+assert.equal(manifest.previousReleaseVersion, "2026.08.16.1");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-assert.ok(uploadFiles.includes("api/storage-quota.asp"),
-  "Classic ASP quota hotfix must include the quota endpoint");
+assert.ok(uploadFiles.includes("api/dt_presence_mem.asp"),
+  "presence deduplication release must include the heartbeat endpoint");
+assert.ok(uploadFiles.includes("assets/js/desktalk.js") && uploadFiles.includes("assets/css/desktalk.css"),
+  "DeskTalk presence and layout corrections must deploy together");
 assert.ok(uploadFiles.includes("data/apps/system-apps.json") && uploadFiles.includes("index.html"),
-  "the hotfix must advance the catalog and system-info cache entry together");
+  "the release must advance its catalog and browser cache entry together");
 for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
   assert.ok(manifest.requiredFiles.includes(realtimeDependency),
     `DeskTalk real-time dependency must remain managed: ${realtimeDependency}`);

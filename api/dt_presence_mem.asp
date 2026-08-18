@@ -71,7 +71,11 @@ Sub Touch(id, display)
         rname = ""
         If UBound(f) >= 2 Then rname = f(2)
         If rid<>"" And LCase(rid)<>"guest" Then
-          If nowS - rts < TTL And rid <> id Then
+          ' A legacy client published its nickname as the id.  When the same
+          ' display name reports a stable account id, replace the stale record
+          ' instead of showing one person twice.
+          If nowS - rts < TTL And rid <> id And _
+             (Len(display)=0 Or Len(rname)=0 Or StrComp(rname, display, vbTextCompare)<>0) Then
             n = n + 1 : ReDim Preserve outArr(n)
             outArr(n) = rid & SEP_FLD & rts & SEP_FLD & rname
           End If

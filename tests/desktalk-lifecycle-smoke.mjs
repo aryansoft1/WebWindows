@@ -5,6 +5,7 @@ const source = await readFile(new URL("../assets/js/desktalk.js", import.meta.ur
 const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const css = await readFile(new URL("../assets/css/desktalk.css", import.meta.url), "utf8");
 const inboxApi = await readFile(new URL("../api/dt_fetch_links.asp", import.meta.url), "utf8");
+const presenceApi = await readFile(new URL("../api/dt_presence_mem.asp", import.meta.url), "utf8");
 
 assert.match(source, /runDirectFileCommand\(v\)/);
 assert.match(source, /referencedResultIndex/);
@@ -25,6 +26,27 @@ assert.match(inboxApi, /Session\("webwindows_user_id"\)/,
 assert.doesNotMatch(inboxApi, /Dim u : u = Session\("username"\)/,
   "the inbox directory must not be selected by a mutable display username");
 assert.match(source, /Promise\.all\(\[pollInboxLinks\(\), \.\.\.ids\.map\(pollOne\)\]\)/);
+assert.match(source, /function normalizePresenceItems\(items, now\)/,
+  "presence results must be normalized before rendering");
+assert.match(source, /byId\.get\(id\)\|\|byName\.get\(nameKey\)/,
+  "the same account must be collapsed by stable id or normalized display name");
+const normalizeSource = source.match(/function normalizePresenceItems\(items, now\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(normalizeSource, "presence normalizer must be extractable for behavior testing");
+const normalizePresenceItems = Function(`${normalizeSource}; return normalizePresenceItems;`)();
+const normalizedPeople = normalizePresenceItems([
+  { u: "legacy-nickname-id", name: "内测用户", ts: 100 },
+  { u: "42", name: "内测用户", ts: 120 },
+  { u: "guest-a", name: "访客-E2D9", ts: 121 },
+  { u: "guest-b", name: "访客-E2D9", ts: 122 },
+], 130);
+assert.deepEqual(normalizedPeople.map((person) => person.id), ["42", "guest-b"],
+  "duplicate display identities must retain only their newest stable presence record");
+assert.match(presenceApi, /StrComp\(rname, display, vbTextCompare\)<>0/,
+  "a stable-id heartbeat must replace a legacy nickname-id presence record");
+assert.match(source, /new VList\(\$\('#reco-list'\), \$\('#reco-list'\), 64/,
+  "the recommendation virtual list must listen to its actual scroll container");
+assert.match(source, /\(t==='reco'\) \? 'flex' : 'none'/,
+  "the recommendation tab must preserve its column layout when activated");
 assert.ok(source.indexOf("showIsland(peer,body)") < source.indexOf("if(DND) return"),
   "do-not-disturb must retain the passive island while suppressing disruptive notification channels");
 assert.match(source, /CONV_ID = await resolveConvIdFor\(currentPeer\)/,
@@ -57,4 +79,8 @@ assert.match(css, /#tab-ai \.bubble img\{[^}]*max-width:100%/s,
   "sanitized Markdown image output must fit the DeskTalk panel");
 assert.match(css, /#btn-desktalk\.flash[^}]*ww-blink/s,
   "the taskbar message state must use a visible pulse animation");
+assert.match(css, /#tab-reco,#tab-friends\{[^}]*overflow:hidden;flex-direction:column/s,
+  "search controls and member lists must occupy separate flex rows");
+assert.match(css, /#reco-list,#friends-list\{[^}]*overflow:auto/s,
+  "member results must scroll below the fixed search controls");
 console.log("DeskTalk lifecycle smoke tests passed");

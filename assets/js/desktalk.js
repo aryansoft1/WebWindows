@@ -378,9 +378,8 @@ VList.prototype.onScroll=function(force){
 }
 
 /* ===== 实例化 ===== */
-var scroller=$('#sheet-inner');
-var vReco = new VList($('#reco-list'), scroller, 62, 10, personRow);
-var vFriends = new VList($('#friends-list'), scroller, 62, 10, personRow);
+var vReco = new VList($('#reco-list'), $('#reco-list'), 64, 10, personRow);
+var vFriends = new VList($('#friends-list'), $('#friends-list'), 64, 10, personRow);
 
 /* ===== 过滤/渲染 ===== */
 function renderReco(){
@@ -426,8 +425,8 @@ var activeTab='reco';
 function switchTab(t){
   activeTab = t;
   var a=$('#tab-reco'), b=$('#tab-friends'), c=$('#tab-ai'), d=$('#tab-mailbox');
-  if(a) a.style.display = (t==='reco') ? 'block' : 'none';
-  if(b) b.style.display = (t==='friends') ? 'block' : 'none';
+  if(a) a.style.display = (t==='reco') ? 'flex' : 'none';
+  if(b) b.style.display = (t==='friends') ? 'flex' : 'none';
   if(c) c.style.display = (t==='ai') ? 'flex' : 'none';
   if(d) d.style.display = (t==='mailbox') ? 'block' : 'none';
 
@@ -1671,6 +1670,25 @@ function upsertPresence(id, name, ts){
   }
   NAME_CACHE.set(id,p.name);
 }
+
+function normalizePresenceItems(items, now){
+  var byId=new Map(), byName=new Map();
+  (Array.isArray(items)?items:[]).forEach(function(item){
+    var raw=typeof item==='string'?{u:item,name:item}:item||{};
+    var id=String(raw.u||raw.id||raw.name||'').trim();
+    if(!id) return;
+    var name=String(raw.name||id).trim()||id;
+    var ts=(typeof raw.ts==='number'&&raw.ts>0)?raw.ts
+      :(typeof raw.secs==='number'?(now-raw.secs):now);
+    var candidate={id:id,name:name,ts:ts};
+    var nameKey=name.toLocaleLowerCase();
+    var previous=byId.get(id)||byName.get(nameKey);
+    if(previous && Number(previous.ts||0)>Number(ts||0)) return;
+    if(previous){ byId.delete(previous.id); byName.delete(previous.name.toLocaleLowerCase()); }
+    byId.set(id,candidate); byName.set(nameKey,candidate);
+  });
+  return Array.from(byId.values());
+}
 // 替换 desktalk.js 的 fetchPresenceList
 async function fetchPresenceList(){
   try{
@@ -1697,14 +1715,8 @@ async function fetchPresenceList(){
         // 关键：每次基于服务端 presence 全量重建 people
         people = [];
 
-        arr.forEach(function(it){
-            if(typeof it==='string'){ upsertPresence(it, it, now) }
-            else{
-            // 优先 ts，没有则按 secs 推回去
-            var ts = (typeof it.ts==='number' && it.ts>0) ? it.ts
-                    : (typeof it.secs==='number' ? (now - it.secs) : now);
-            upsertPresence(it.u||it.id||it.name, it.name||(it.u||it.id), ts);
-            }
+        normalizePresenceItems(arr,now).forEach(function(it){
+            upsertPresence(it.id,it.name,it.ts);
         });
         friendSet.forEach(function(id){
           if(people.some(function(p){ return p.id===id })) return;

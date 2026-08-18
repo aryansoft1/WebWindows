@@ -45,6 +45,10 @@ assert.match(presenceApi, /StrComp\(rname, display, vbTextCompare\)<>0/,
   "a stable-id heartbeat must replace a legacy nickname-id presence record");
 assert.match(source, /new VList\(\$\('#reco-list'\), \$\('#reco-list'\), 64/,
   "the recommendation virtual list must listen to its actual scroll container");
+assert.doesNotMatch(source, /if\(scroller\)/,
+  "DeskTalk initialization must not reference the removed outer scroller variable");
+assert.match(source, /\[\$\('#reco-list'\),\$\('#friends-list'\)\]\.[\s\S]*addEventListener\('scroll'/,
+  "profile-card dismissal must bind to the two real list scrollers");
 assert.match(source, /\(t==='reco'\) \? 'flex' : 'none'/,
   "the recommendation tab must preserve its column layout when activated");
 assert.ok(source.indexOf("showIsland(peer,body)") < source.indexOf("if(DND) return"),

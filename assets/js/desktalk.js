@@ -494,7 +494,9 @@ document.addEventListener('click', function(e){
   // if (chat && chat.classList.contains('show') && onMask) closeChat(true);
 }, true);
 
-if(scroller) scroller.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
+[$('#reco-list'),$('#friends-list')].forEach(function(listScroller){
+  if(listScroller) listScroller.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
+});
 
 var dndToggle=$('#dnd-toggle'); var DND=prefs.dnd!==false;
 if(dndToggle) dndToggle.checked=DND;

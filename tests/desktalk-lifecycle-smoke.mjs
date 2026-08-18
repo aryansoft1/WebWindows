@@ -89,4 +89,6 @@ assert.match(css, /#reco-list,#friends-list\{[^}]*overflow:auto/s,
   "member results must scroll below the fixed search controls");
 assert.match(css, /#presence-sheet\.show\{[^}]*transform:none!important/s,
   "the open DeskTalk panel must not remain translated outside the viewport");
+assert.match(css, /#presence-sheet\.show\{[^}]*transition:none!important/s,
+  "the open state must not be held off-screen by a stale transform transition");
 console.log("DeskTalk lifecycle smoke tests passed");

@@ -71,6 +71,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 #presence-sheet.show{
     /* Opening must win over the closed-state transform even in older hosted WebViews. */
     transform:none!important;
+    transition:none!important;
 }
 #presence-sheet header{
   display:grid; grid-template-columns: 1fr auto; align-items:center; gap:8px;

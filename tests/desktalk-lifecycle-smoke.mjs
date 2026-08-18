@@ -87,4 +87,6 @@ assert.match(css, /#tab-reco,#tab-friends\{[^}]*display:flex;[^}]*overflow:hidde
   "search controls and member lists must occupy separate flex rows");
 assert.match(css, /#reco-list,#friends-list\{[^}]*overflow:auto/s,
   "member results must scroll below the fixed search controls");
+assert.match(css, /#presence-sheet\.show\{[^}]*transform:none!important/s,
+  "the open DeskTalk panel must not remain translated outside the viewport");
 console.log("DeskTalk lifecycle smoke tests passed");

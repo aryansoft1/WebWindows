@@ -33,7 +33,7 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.18.2");
+assert.equal(manifest.previousReleaseVersion, "2026.08.18.3");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
 assert.ok(uploadFiles.includes("assets/js/desktalk.js"),
   "DeskTalk initialization hotfix must include its runtime");

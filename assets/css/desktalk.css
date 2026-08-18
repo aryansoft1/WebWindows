@@ -69,7 +69,8 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 }
 #presence-sheet{ border-radius:16px;     backdrop-filter: saturate(120%) blur(var(--glass-blur));}
 #presence-sheet.show{
-    transform:translateX(0);
+    /* Opening must win over the closed-state transform even in older hosted WebViews. */
+    transform:none!important;
 }
 #presence-sheet header{
   display:grid; grid-template-columns: 1fr auto; align-items:center; gap:8px;

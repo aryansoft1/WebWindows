@@ -79,7 +79,7 @@ assert.match(css, /#tab-ai \.bubble img\{[^}]*max-width:100%/s,
   "sanitized Markdown image output must fit the DeskTalk panel");
 assert.match(css, /#btn-desktalk\.flash[^}]*ww-blink/s,
   "the taskbar message state must use a visible pulse animation");
-assert.match(css, /#tab-reco,#tab-friends\{[^}]*overflow:hidden;flex-direction:column/s,
+assert.match(css, /#tab-reco,#tab-friends\{[^}]*display:flex;[^}]*overflow:hidden;flex-direction:column/s,
   "search controls and member lists must occupy separate flex rows");
 assert.match(css, /#reco-list,#friends-list\{[^}]*overflow:auto/s,
   "member results must scroll below the fixed search controls");

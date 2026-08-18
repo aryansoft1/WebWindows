@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.18.1",
-  "catalogVersion": "2026.08.18.1",
-  "generatedAt": "2026-08-18T08:36:50.412Z",
+  "releaseVersion": "2026.08.18.2",
+  "catalogVersion": "2026.08.18.2",
+  "generatedAt": "2026-08-18T09:13:56.846Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -172,10 +172,10 @@
     "api/dt_fetch_links.asp",
     "api/dt_presence_mem.asp"
   ],
-  "previousReleaseVersion": "2026.08.16.1",
+  "previousReleaseVersion": "2026.08.18.1",
   "integrity": {
     "index.html": {
-      "sha256": "4ac54309e114c532e41028a5f5e91f4fad7149fe5ff95bd7adb35d97bb8e302b",
+      "sha256": "f10ab1ef9dd7241f9f105d2872ddb6aa704dd9fc1a883d7b7d12f397cbb7e2a7",
       "size": 33728
     },
     "api/function-catalog.asp": {
@@ -183,7 +183,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "653dd7647a31c29926e011637854c01e2d1120076d76a2084aa4dba05613fc86",
+      "sha256": "a87f7b15c7ebb63fb08854b0a32d3161684c7a8153fce59e53404ec1d4f830d7",
       "size": 13455
     },
     "assets/js/app-registry.js": {
@@ -339,8 +339,8 @@
       "size": 3739
     },
     "assets/css/desktalk.css": {
-      "sha256": "f3c2feb3f91f85a951d3af7dd2eb14404f109cc0c43ca185d883de1b3fe829ad",
-      "size": 22519
+      "sha256": "6f37912c240bf8fc1399a6f90d26396dc6a1144c321ac020d858cd1ac4e8aa3a",
+      "size": 22532
     },
     "assets/css/news.css": {
       "sha256": "25051efec335935b78287bba240a42a7f1a3ae8fc52a34bc5738cba34bb180fe",
@@ -836,9 +836,7 @@
     }
   },
   "uploadFiles": [
-    "api/dt_presence_mem.asp",
     "assets/css/desktalk.css",
-    "assets/js/desktalk.js",
     "data/apps/system-apps.json",
     "index.html",
     "deploy/ftp-manifest.json"

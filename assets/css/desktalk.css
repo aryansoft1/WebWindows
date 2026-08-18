@@ -100,7 +100,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 .tabs-bar::-webkit-scrollbar{height:8px}
 .tabs-bar .btn{flex:0 0 auto; white-space:nowrap}
 .tabs-bar{flex:0 0 auto}
-#tab-reco,#tab-friends{flex:1;min-height:0;overflow:hidden;flex-direction:column}
+#tab-reco,#tab-friends{display:flex;flex:1;min-height:0;overflow:hidden;flex-direction:column}
 #tab-mailbox{flex:1;min-height:0;overflow:auto}
 #tab-ai{flex:1;min-height:0;flex-direction:column;overflow:hidden}
 

@@ -54,9 +54,15 @@
     return `${size.toFixed(index ? 2 : 0)} ${units[index]}`;
   }
   function formatMB(value) { return Number.isFinite(Number(value)) ? formatBytes(Number(value) * 1024 * 1024) : unavailable; }
+  function selectedLocale() {
+    return window.WebWindowsI18n?.getLocale?.() || ({ zh: "zh-CN", tw: "zh-TW", en: "en-US", jp: "ja-JP" }[localStorage.getItem("lang")] || "zh-CN");
+  }
+  function selectedLanguageLabel() {
+    return ({ zh: "简体中文", tw: "繁體中文", en: "English", jp: "日本語" }[window.WebWindowsI18n?.getLanguage?.() || localStorage.getItem("lang")] || "简体中文");
+  }
   function formatDate(value) {
     const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? unavailable : date.toLocaleString();
+    return Number.isNaN(date.getTime()) ? unavailable : date.toLocaleString(selectedLocale());
   }
   function runtimeLabel(adapter) {
     if (adapter === "android") return "Android Host / WebView";
@@ -104,7 +110,7 @@
     const adapter = device?.getAdapter?.() || "browser";
     setText("runtimeMode", runtimeLabel(adapter));
     setText("deviceApiVersion", device ? `v${device.version || 1}` : unavailable);
-    setText("language", navigator.language || unavailable);
+    setText("language", selectedLanguageLabel());
     setText("browserInfo", navigator.userAgent || unavailable);
     setText("deviceType", deviceType());
     setText("cpuCores", navigator.hardwareConcurrency || unavailable);
@@ -209,7 +215,12 @@
     if (allocation) allocation.dataset.status = status;
   }
 
-  loadRelease(); refreshDevice(); refreshHost(); refreshStorage();
-  const hostTimer = setInterval(() => { refreshHost(); refreshStorage(); }, 30000);
-  window.addEventListener("pagehide", () => clearInterval(hostTimer), { once: true });
+  function start() {
+    loadRelease(); refreshDevice(); refreshHost(); refreshStorage();
+    const hostTimer = setInterval(() => { refreshHost(); refreshStorage(); }, 30000);
+    window.addEventListener("pagehide", () => clearInterval(hostTimer), { once: true });
+    window.addEventListener("webwindows:language-changed", () => setText("language", selectedLanguageLabel()));
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });
+  else start();
 })();

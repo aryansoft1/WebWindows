@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.19.1",
-  "catalogVersion": "2026.08.19.1",
-  "generatedAt": "2026-08-19T03:05:38.750Z",
+  "releaseVersion": "2026.08.19.2",
+  "catalogVersion": "2026.08.19.2",
+  "generatedAt": "2026-08-19T03:48:43.070Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -172,7 +172,7 @@
     "api/dt_fetch_links.asp",
     "api/dt_presence_mem.asp"
   ],
-  "previousReleaseVersion": "2026.08.18.5",
+  "previousReleaseVersion": "2026.08.19.1",
   "integrity": {
     "index.html": {
       "sha256": "d5ddb3bb1da4b730664b11053973045675cc27bdbbefd78b58ce504ee7189ce2",
@@ -183,16 +183,16 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "f36c2caf8a73939de17fefaccd605772fdc0c0f2af7e23706b97be25132d072a",
-      "size": 13455
+      "sha256": "1c376968f3338ea5702fd359a5a98b54e88560df872e476cd37a85c590f8b2d7",
+      "size": 13454
     },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "fcc09393c846fa8d94cc312feba8b3897b9ba1914d965afe5b84262bf575d114",
-      "size": 51075
+      "sha256": "4ee5e7c41edd749ae8bef3f50e90bbfbd44ddec0de15b51fa1f35243cb2749e4",
+      "size": 61122
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -223,8 +223,8 @@
       "size": 198690
     },
     "assets/js/sysinfo.js": {
-      "sha256": "f3d600f654f1a74d209ddc8924575593531d1590c6883398f3d7f6b093122cd3",
-      "size": 11244
+      "sha256": "ddfe90c4c0137b9ac9c5d3fdd7a01a10bb05ad8271cc30128c8b1dc7434ac245",
+      "size": 11915
     },
     "assets/js/auth-session.js": {
       "sha256": "1310531e22ec40ee178dee90f2839fee5c43389ba3981aa94e3eecf156448b07",
@@ -547,8 +547,8 @@
       "size": 5614
     },
     "sysinfo.html": {
-      "sha256": "7b2bfafa1dc88c578f2bf97bb581ffb478ec55b0901abd2dbad6eab118b1a07c",
-      "size": 4879
+      "sha256": "98c73db8ee5374d89388a418ff02c1d7b3e670d92b41f87da04bf0721e64d112",
+      "size": 4953
     },
     "login.html": {
       "sha256": "dfcf39d4670cf62a79b0d5f4908eadb7a4321e28772d53b20f51703f26678aa8",
@@ -836,8 +836,9 @@
     }
   },
   "uploadFiles": [
-    "api/storage-quota.asp",
-    "cloud/browser/private-resource.asp",
+    "assets/js/tw.js",
+    "assets/js/sysinfo.js",
+    "sysinfo.html",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

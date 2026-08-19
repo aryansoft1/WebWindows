@@ -378,6 +378,81 @@ Object.assign(languageCatalog.jp, {
   "运行中": "実行中", "切换": "切り替え", "结束任务": "タスクを終了", "结束此窗口任务？未保存内容可能丢失。": "このウィンドウのタスクを終了しますか？未保存の内容が失われる可能性があります。"
 });
 
+// 系统信息：静态标签与异步状态共用同一目录，避免窗口主体停留在中文，
+// 也避免显示浏览器语言而不是 WebWindows 当前显示语言。
+Object.assign(languageCatalog.tw, {
+  "系统信息分类": "系統資訊分類", "设备与能力": "裝置與能力", "服务节点": "服務節點",
+  "版本与构建": "版本與組建", "当前版本": "目前版本", "读取中…": "讀取中…",
+  "构建时间": "組建時間", "上一版本": "上一版本", "版本数据来自部署清单，不另行维护副本。": "版本資料來自部署清單，不另行維護副本。",
+  "当前运行环境": "目前執行環境", "运行模式": "執行模式", "检测中…": "偵測中…", "语言": "語言",
+  "浏览器 / WebView": "瀏覽器 / WebView", "设备概要": "裝置概要", "逻辑处理器": "邏輯處理器",
+  "浏览器报告内存": "瀏覽器回報記憶體", "显示": "顯示", "实时状态": "即時狀態", "网络": "網路",
+  "电池 / 供电": "電池 / 供電", "存储 Provider": "儲存 Provider", "Device API capabilities": "Device API 能力",
+  "浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。": "瀏覽器或主機未提供的能力會明確顯示「不可用」，不會推測硬體資訊。",
+  "WebWindows 服务节点": "WebWindows 服務節點", "CPU 型号": "CPU 型號", "CPU 使用率": "CPU 使用率",
+  "内存使用": "記憶體使用量", "系统文件占用": "系統檔案占用", "已用：": "已用：", "剩余：": "剩餘：",
+  "总配额：": "總配額：", "未登录或不可用": "未登入或不可用", "数据中心未知": "資料中心未知",
+  "当前用户云资料空间使用率": "目前使用者雲端資料空間使用率",
+  "正在读取当前用户的数据中心空间分配…": "正在讀取目前使用者的資料中心空間配置…",
+  "这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。": "此處為服務節點資訊，不代表目前使用者的裝置。使用者空間依帳號所屬資料中心配置。",
+  "部署清单当前不可读取；未显示推测版本。": "目前無法讀取部署清單；不顯示推測版本。",
+  "移动设备": "行動裝置", "桌面设备": "桌面裝置", "在线": "線上", "外接供电": "外接電源",
+  "电池供电": "電池供電", "个已授权位置": "個已授權位置", "Device API 不可用": "Device API 不可用",
+  "未登录，无法读取用户空间": "未登入，無法讀取使用者空間", "数据中心未分配": "尚未配置資料中心",
+  "用户目录统计失败；未显示推测值。": "使用者目錄統計失敗；不顯示推測值。",
+  "账号未分配有效数据中心配额。": "帳號尚未配置有效的資料中心配額。",
+  "已超过分配空间，请清理文件或联系管理员调整配额。": "已超過配置空間，請清理檔案或聯絡管理員調整配額。",
+  "已使用": "已使用", "（兼容默认 1 GB）": "（相容預設 1 GB）", "配额或空间统计暂时不可用": "配額或空間統計暫時不可用"
+});
+Object.assign(languageCatalog.en, {
+  "系统信息分类": "System information categories", "设备与能力": "Device & Capabilities", "服务节点": "Service Node",
+  "版本与构建": "Version & Build", "当前版本": "Current version", "读取中…": "Loading…",
+  "构建时间": "Build time", "上一版本": "Previous version", "版本数据来自部署清单，不另行维护副本。": "Version data comes from the deployment manifest; no separate copy is maintained.",
+  "当前运行环境": "Current Environment", "运行模式": "Runtime mode", "检测中…": "Detecting…", "语言": "Language",
+  "浏览器 / WebView": "Browser / WebView", "设备概要": "Device Summary", "逻辑处理器": "Logical processors",
+  "浏览器报告内存": "Browser-reported memory", "显示": "Display", "实时状态": "Live Status", "网络": "Network",
+  "电池 / 供电": "Battery / Power", "存储 Provider": "Storage Provider",
+  "浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。": "Capabilities not provided by the browser or host are shown as unavailable; hardware information is never guessed.",
+  "WebWindows 服务节点": "WebWindows Service Node", "CPU 型号": "CPU model", "CPU 使用率": "CPU usage",
+  "内存使用": "Memory usage", "系统文件占用": "System files", "已用：": "Used:", "剩余：": "Remaining:",
+  "总配额：": "Total quota:", "未登录或不可用": "Not signed in or unavailable", "数据中心未知": "Data center unknown",
+  "当前用户云资料空间使用率": "Current user's Cloud Files storage usage",
+  "正在读取当前用户的数据中心空间分配…": "Reading the current user's data-center storage allocation…",
+  "这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。": "This is service-node information, not the current user's device. User storage is allocated by the account's data center.",
+  "部署清单当前不可读取；未显示推测版本。": "The deployment manifest is unavailable; no guessed version is shown.",
+  "移动设备": "Mobile device", "桌面设备": "Desktop device", "在线": "Online", "外接供电": "External power",
+  "电池供电": "Battery power", "个已授权位置": " authorized locations", "Device API 不可用": "Device API unavailable",
+  "未登录，无法读取用户空间": "Sign in to read user storage", "数据中心未分配": "No data center assigned",
+  "用户目录统计失败；未显示推测值。": "User directory statistics failed; no guessed value is shown.",
+  "账号未分配有效数据中心配额。": "The account has no valid data-center quota.",
+  "已超过分配空间，请清理文件或联系管理员调整配额。": "The allocation is exceeded. Delete files or ask an administrator to adjust the quota.",
+  "已使用": " used", "（兼容默认 1 GB）": " (legacy default 1 GB)", "配额或空间统计暂时不可用": "Quota or storage statistics are temporarily unavailable"
+});
+Object.assign(languageCatalog.jp, {
+  "系统信息分类": "システム情報カテゴリ", "设备与能力": "デバイスと機能", "服务节点": "サービスノード",
+  "版本与构建": "バージョンとビルド", "当前版本": "現在のバージョン", "读取中…": "読み込み中…",
+  "构建时间": "ビルド日時", "上一版本": "前のバージョン", "版本数据来自部署清单，不另行维护副本。": "バージョン情報は配置マニフェストから取得し、別の複製は保持しません。",
+  "当前运行环境": "現在の実行環境", "运行模式": "実行モード", "检测中…": "検出中…", "语言": "言語",
+  "浏览器 / WebView": "ブラウザー / WebView", "设备概要": "デバイス概要", "逻辑处理器": "論理プロセッサ",
+  "浏览器报告内存": "ブラウザー報告メモリ", "显示": "ディスプレイ", "实时状态": "リアルタイム状態", "网络": "ネットワーク",
+  "电池 / 供电": "バッテリー / 電源", "存储 Provider": "ストレージ Provider", "Device API capabilities": "Device API 機能",
+  "浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。": "ブラウザーまたはホストが提供しない機能は「利用不可」と表示し、ハードウェア情報を推測しません。",
+  "WebWindows 服务节点": "WebWindows サービスノード", "CPU 型号": "CPU モデル", "CPU 使用率": "CPU 使用率",
+  "内存使用": "メモリ使用量", "系统文件占用": "システムファイル使用量", "已用：": "使用済み：", "剩余：": "残り：",
+  "总配额：": "合計割り当て：", "未登录或不可用": "未ログインまたは利用不可", "数据中心未知": "データセンター不明",
+  "当前用户云资料空间使用率": "現在のユーザーのクラウド資料使用率",
+  "正在读取当前用户的数据中心空间分配…": "現在のユーザーのデータセンター容量割り当てを読み込んでいます…",
+  "这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。": "これはサービスノードの情報で、現在のユーザーデバイス情報ではありません。ユーザー容量はアカウント所属のデータセンターから割り当てられます。",
+  "部署清单当前不可读取；未显示推测版本。": "配置マニフェストを読み取れないため、推測したバージョンは表示しません。",
+  "移动设备": "モバイルデバイス", "桌面设备": "デスクトップデバイス", "在线": "オンライン", "外接供电": "外部電源",
+  "电池供电": "バッテリー電源", "个已授权位置": " 個の許可済み場所", "Device API 不可用": "Device API は利用できません",
+  "未登录，无法读取用户空间": "未ログインのためユーザー容量を取得できません", "数据中心未分配": "データセンター未割り当て",
+  "用户目录统计失败；未显示推测值。": "ユーザーディレクトリの集計に失敗したため、推測値は表示しません。",
+  "账号未分配有效数据中心配额。": "アカウントに有効なデータセンター容量が割り当てられていません。",
+  "已超过分配空间，请清理文件或联系管理员调整配额。": "割り当て容量を超えています。ファイルを整理するか、管理者に容量変更を依頼してください。",
+  "已使用": " 使用済み", "（兼容默认 1 GB）": "（互換用の既定値 1 GB）", "配额或空间统计暂时不可用": "容量または使用量の集計は一時的に利用できません"
+});
+
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;

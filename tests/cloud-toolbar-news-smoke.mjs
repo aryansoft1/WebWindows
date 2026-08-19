@@ -36,7 +36,9 @@ assert.match(newsViewHtml, /news-detail-card/);
 assert.match(newsViewHtml, /news-help-sidebar/);
 assert.match(newsViewHtml, /news-detail-search/);
 assert.match(newsViewJs, /\^\\d\+\$/);
-assert.match(newsJs, /news_view\.html\?id=\$\{encodeURIComponent\(item\.id\)\}&v=20260815-help-detail-2/,
+assert.match(newsJs, /function renderCategories\(\)/,
+  "the news navigation must reflect the categories actually returned by the live feed");
+assert.match(newsJs, /news_view\.html\?id=\$\{encodeURIComponent\(item\.id\)\}&v=20260819-news-feed-1/,
   "news detail navigation must bypass stale cached detail HTML");
 new vm.Script(newsJs, { filename: "assets/js/news.js" });
 new vm.Script(newsViewJs, { filename: "assets/js/news_view.js" });

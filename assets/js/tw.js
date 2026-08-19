@@ -453,6 +453,28 @@ Object.assign(languageCatalog.jp, {
   "已使用": " 使用済み", "（兼容默认 1 GB）": "（互換用の既定値 1 GB）", "配额或空间统计暂时不可用": "容量または使用量の集計は一時的に利用できません"
 });
 
+Object.assign(languageCatalog.tw, {
+  "不被推荐": "不被推薦", "正在读取账号的发现设置…": "正在讀取帳號的探索設定…",
+  "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "登入 WebWindows 後可設定是否顯示於 DeskTalk 推薦中。",
+  "发现设置暂时不可用，请稍后重试。": "探索設定暫時無法使用，請稍後再試。",
+  "已开启：你的账号不会出现在桌讯推荐和在线发现结果中。": "已開啟：你的帳號不會顯示於 DeskTalk 推薦或線上探索結果中。",
+  "已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。": "已關閉：其他 WebWindows 使用者可在 DeskTalk 推薦中找到你。"
+});
+Object.assign(languageCatalog.en, {
+  "不被推荐": "Do not recommend me", "正在读取账号的发现设置…": "Loading account discovery settings…",
+  "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "Sign in to control whether you appear in DeskTalk recommendations.",
+  "发现设置暂时不可用，请稍后重试。": "Discovery settings are temporarily unavailable. Try again later.",
+  "已开启：你的账号不会出现在桌讯推荐和在线发现结果中。": "On: your account is hidden from DeskTalk recommendations and online discovery.",
+  "已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。": "Off: other WebWindows users can discover you in DeskTalk recommendations."
+});
+Object.assign(languageCatalog.jp, {
+  "不被推荐": "おすすめに表示しない", "正在读取账号的发现设置…": "アカウントの公開設定を読み込み中…",
+  "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "WebWindows にログインすると、DeskTalk のおすすめ表示を設定できます。",
+  "发现设置暂时不可用，请稍后重试。": "公開設定は一時的に利用できません。しばらくしてから再試行してください。",
+  "已开启：你的账号不会出现在桌讯推荐和在线发现结果中。": "オン：アカウントは DeskTalk のおすすめとオンライン検索に表示されません。",
+  "已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。": "オフ：他の WebWindows ユーザーが DeskTalk のおすすめからあなたを見つけられます。"
+});
+
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;

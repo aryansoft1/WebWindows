@@ -11,8 +11,21 @@
   const initialQuery = new URL(location.href).searchParams;
   search.value = initialQuery.get("q") || "";
   const requestedCategory = initialQuery.get("category");
-  if (requestedCategory && categories.querySelector(`button[data-category="${CSS.escape(requestedCategory)}"]`)) {
-    category = requestedCategory;
+
+  function renderCategories() {
+    const existing = categories.querySelector('[data-category="全部"]');
+    categories.replaceChildren(existing);
+    const values = Array.from(new Set(records.map(item => String(item.category || "").trim()).filter(Boolean)));
+    values.sort((a, b) => a.localeCompare(b, "zh-CN"));
+    values.forEach(value => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.category = value;
+      button.innerHTML = '<span aria-hidden="true">▤</span>';
+      button.append(document.createTextNode(value));
+      categories.appendChild(button);
+    });
+    category = requestedCategory && values.includes(requestedCategory) ? requestedCategory : "全部";
     categories.querySelectorAll("button").forEach(item => item.classList.toggle("active", item.dataset.category === category));
   }
 
@@ -35,7 +48,7 @@
       empty.textContent = "没有找到符合条件的新闻，请尝试其他关键词或分类。"; list.appendChild(empty); return;
     }
     visible.forEach(item => {
-      const link = document.createElement("a"); link.className = "news-article"; link.href = `news_view.html?id=${encodeURIComponent(item.id)}&v=20260815-help-detail-2`;
+      const link = document.createElement("a"); link.className = "news-article"; link.href = `news_view.html?id=${encodeURIComponent(item.id)}&v=20260819-news-feed-1`;
       const main = document.createElement("div"); main.className = "news-article-main";
       const icon = document.createElement("span"); icon.className = "news-article-icon"; icon.setAttribute("aria-hidden", "true"); icon.textContent = "▤";
       const copy = document.createElement("div"); copy.className = "news-article-copy";
@@ -57,7 +70,7 @@
   search.addEventListener("input", render); sort.addEventListener("change", render);
   fetch("getNews.asp", { credentials: "same-origin" }).then(response => {
     if (!response.ok) throw new Error(`news-${response.status}`); return response.json();
-  }).then(data => { records = Array.isArray(data) ? data : []; render(); }).catch(error => {
+  }).then(data => { records = Array.isArray(data) ? data : []; renderCategories(); render(); }).catch(error => {
     console.error("加载新闻失败:", error); list.replaceChildren(); const message = document.createElement("div"); message.className = "news-error"; message.textContent = "新闻暂时无法加载，请稍后重试。"; list.appendChild(message); summary.textContent = "加载失败";
   });
 })();

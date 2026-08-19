@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.19.2",
-  "catalogVersion": "2026.08.19.2",
-  "generatedAt": "2026-08-19T03:48:43.070Z",
+  "releaseVersion": "2026.08.19.3",
+  "catalogVersion": "2026.08.19.3",
+  "generatedAt": "2026-08-19T09:16:21.264Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -170,29 +170,30 @@
     "assets/js/news_view.js",
     "news_view.html",
     "api/dt_fetch_links.asp",
-    "api/dt_presence_mem.asp"
+    "api/dt_presence_mem.asp",
+    "api/dt_discovery.asp"
   ],
-  "previousReleaseVersion": "2026.08.19.1",
+  "previousReleaseVersion": "2026.08.19.2",
   "integrity": {
     "index.html": {
-      "sha256": "d5ddb3bb1da4b730664b11053973045675cc27bdbbefd78b58ce504ee7189ce2",
-      "size": 33728
+      "sha256": "e7edff8b6fa72bb10ed6bbe8d2d8e329df2334741213f86d8f97819c446849e0",
+      "size": 33712
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "1c376968f3338ea5702fd359a5a98b54e88560df872e476cd37a85c590f8b2d7",
-      "size": 13454
+      "sha256": "929d0e984b7e966435bfd3be73ce2339f31d573fc60e519d38ab2dd6e9e8cee8",
+      "size": 13452
     },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "4ee5e7c41edd749ae8bef3f50e90bbfbd44ddec0de15b51fa1f35243cb2749e4",
-      "size": 61122
+      "sha256": "236ba13d49000ceda8fbda316a3d8f4c8b55d694cdb9145de725677cad6d1689",
+      "size": 63492
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -211,8 +212,8 @@
       "size": 10216
     },
     "assets/js/desktalk.js": {
-      "sha256": "62e87a268827d7001c6d5b67420b387bfc716821fd8147b4df7e7f04692c7206",
-      "size": 113505
+      "sha256": "461115f9034424068d9941578748d8fdc28e4838e978144b7d7b223518b95c8c",
+      "size": 116114
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "16cd610f120d2b60270ee267df8facca00ccc7668ab31ea9639fc6e1b866e5bd",
@@ -263,16 +264,16 @@
       "size": 4786
     },
     "assets/js/main.js": {
-      "sha256": "388fe9bb593e4fe174851a00e718285259aca840f24270fc605073fe632416b9",
-      "size": 23256
+      "sha256": "793cf83959a23e490a659308f0c46eda8c23ffdc1aadbce5749c93dec2250787",
+      "size": 23442
     },
     "assets/js/login.js": {
       "sha256": "2299f0c3a5c1f07bed23047515dcf75a5a30554a6ccc01ee23ffc5ecdc7cabba",
       "size": 4301
     },
     "assets/js/news.js": {
-      "sha256": "4575b842db12c63b7b4730c23498423e469e61575b597939be2fd16c751dcaf8",
-      "size": 4572
+      "sha256": "26d6f41a293cc1922523134a3e829a46a00d593675774c53a7e23476c19f2e27",
+      "size": 5180
     },
     "assets/js/network-speed.js": {
       "sha256": "2ca5e8ebcbbd44e6964dd401aa6d5431ee3cf931cdafac035da1f492c32590e4",
@@ -563,8 +564,8 @@
       "size": 46850
     },
     "news.html": {
-      "sha256": "701d96a958432111461d2043d7debcc491d5e25f3c16b302cd89d3acdbf67d09",
-      "size": 2914
+      "sha256": "0d730c53908680bc38d2559ceb5c75e969e11ec7d54350270a69e508806001e4",
+      "size": 2556
     },
     "web.html": {
       "sha256": "51ddffe31d490810c139bf43ef581e542803de5d82072e6c97eeb77dfee0ab0c",
@@ -831,14 +832,23 @@
       "size": 2877
     },
     "api/dt_presence_mem.asp": {
-      "sha256": "24f440f62083024197f539352e0f7a19f97f899ef88d8aba19f86878f48d89b6",
-      "size": 4982
+      "sha256": "9be07c749dc15c47981aaa24d4fb066dcaa961b3177aaea5bb8de4a4fe74ba60",
+      "size": 7498
+    },
+    "api/dt_discovery.asp": {
+      "sha256": "e3b5fb37e6418a0c2bc121d67c020fcbc3fecce7fc785baaa3e9733d79172659",
+      "size": 4266
     }
   },
   "uploadFiles": [
+    "index.html",
+    "assets/js/desktalk.js",
+    "api/dt_presence_mem.asp",
+    "api/dt_discovery.asp",
+    "assets/js/main.js",
     "assets/js/tw.js",
-    "assets/js/sysinfo.js",
-    "sysinfo.html",
+    "news.html",
+    "assets/js/news.js",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

@@ -6,6 +6,8 @@ const index = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const css = await readFile(new URL("../assets/css/desktalk.css", import.meta.url), "utf8");
 const inboxApi = await readFile(new URL("../api/dt_fetch_links.asp", import.meta.url), "utf8");
 const presenceApi = await readFile(new URL("../api/dt_presence_mem.asp", import.meta.url), "utf8");
+const discoveryApi = await readFile(new URL("../api/dt_discovery.asp", import.meta.url), "utf8");
+const discoveryMigration = await readFile(new URL("../database/migrations/20260819_add_desktalk_discovery_privacy.sql", import.meta.url), "utf8");
 
 assert.match(source, /runDirectFileCommand\(v\)/);
 assert.match(source, /referencedResultIndex/);
@@ -65,7 +67,23 @@ assert.match(source, /INBOX_FAST\s*=\s*3000/);
 assert.match(source, /INBOX_SLOW\s*=\s*6000/);
 assert.match(source, /发送失败，消息未送达；内容已放回输入框/);
 assert.match(source, /\.filter\(function\(p\)\{ return !isFriend\(p\.id\) \}\)/);
-assert.match(index, /pref-undiscoverable[^>]+disabled/);
+assert.match(index, /pref-undiscoverable[^>]+disabled/,
+  "the server preference must finish loading before the discovery control becomes interactive");
+assert.match(source, /fetch\('\/api\/dt_discovery\.asp\?_='/);
+assert.match(source, /method:'POST',credentials:'include'/);
+assert.match(source, /'X-WebWindows-Request':'desktalk-discovery'/);
+assert.match(source, /prefs\.undiscoverable=!!data\.undiscoverable/,
+  "the server response must be authoritative over the local UI cache");
+assert.match(presenceApi, /LoadHiddenUsers\(hidden\)/);
+assert.match(presenceApi, /Not IsHidden\(hidden, rid\)/,
+  "hidden users must be omitted by the server presence feed rather than filtered only in the browser");
+assert.match(presenceApi, /Session\("webwindows_user_id"\)/,
+  "signed-in heartbeats must be bound to the authenticated account id");
+assert.match(discoveryApi, /Session\("webwindows_user_id"\)/);
+assert.match(discoveryApi, /ON DUPLICATE KEY UPDATE undiscoverable=VALUES\(undiscoverable\)/);
+assert.match(discoveryApi, /RemovePresence\(userId\)/,
+  "enabling privacy must remove an already-published presence immediately");
+assert.match(discoveryMigration, /PRIMARY KEY \(user_id\)/);
 assert.match(source, /（占位）开始语音/);
 assert.match(source, /（占位）开始视频/);
 assert.match(source, /webwindows:logout[^\n]+syncDeskTalkIdentity\(true\)/,

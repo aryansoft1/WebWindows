@@ -525,7 +525,13 @@ window.addEventListener("message", (event) => {
 });
 
 function openAbout() {
-  document.getElementById('about-overlay').classList.add('show');
+  const overlay = document.getElementById('about-overlay');
+  if (!overlay) return;
+  const i18n = window.WebWindowsI18n;
+  if (i18n && typeof i18n.apply === 'function') {
+    i18n.apply(document, i18n.getLanguage());
+  }
+  overlay.classList.add('show');
 }
 
 function closeAbout() {

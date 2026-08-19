@@ -9,6 +9,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
   "inc/sysinfo.asp",
   "api/storage-quota.asp",
+  "api/dt_discovery.asp",
+  "api/dt_presence_mem.asp",
   "admin_api/getDatacenters.asp",
   "admin_api/saveDatacenter.asp",
   "admin_api/deleteDatacenter.asp",

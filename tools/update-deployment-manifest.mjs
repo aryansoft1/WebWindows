@@ -36,6 +36,7 @@ if (releaseVersion) {
     manifest.releaseVersion = releaseVersion;
     manifest.catalogVersion = reconcileDirectory ? priorCatalogVersion : releaseVersion;
   }
+  if (!reconcileDirectory) manifest.catalogVersion = releaseVersion;
 }
 
 let integrity = {};

@@ -33,12 +33,16 @@ for (const relative of manifest.requiredFiles) {
 }
 assert.equal(Object.keys(manifest.integrity || {}).length, manifest.requiredFiles.length - 1,
   "every non-self deployment file must have exactly one integrity record");
-assert.equal(manifest.previousReleaseVersion, "2026.08.19.1");
+assert.notEqual(manifest.previousReleaseVersion, manifest.releaseVersion);
+assert.ok(manifest.releaseVersion.localeCompare(manifest.previousReleaseVersion, undefined, { numeric: true }) > 0,
+  "the release version must advance beyond the production version");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-assert.ok(uploadFiles.includes("assets/js/tw.js") && uploadFiles.includes("assets/js/sysinfo.js"),
-  "the system-information release must update both shared translations and runtime values");
-assert.ok(uploadFiles.includes("sysinfo.html") && uploadFiles.includes("data/apps/system-apps.json"),
-  "the release must advance the system-information entry and catalog cache together");
+assert.ok(uploadFiles.includes("assets/js/desktalk.js") && uploadFiles.includes("api/dt_presence_mem.asp") &&
+  uploadFiles.includes("api/dt_discovery.asp"),
+  "DeskTalk discovery UI, presence filtering, and account preference API must deploy together");
+assert.ok(uploadFiles.includes("news.html") && uploadFiles.includes("assets/js/news.js") &&
+  uploadFiles.includes("data/apps/system-apps.json"),
+  "the news feed and catalog cache busting must deploy together");
 for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
   assert.ok(manifest.requiredFiles.includes(realtimeDependency),
     `DeskTalk real-time dependency must remain managed: ${realtimeDependency}`);

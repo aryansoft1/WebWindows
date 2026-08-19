@@ -508,17 +508,88 @@ if(dndToggle) dndToggle.addEventListener('change',function(){
 });
 
 /* ===== 设置 ===== */
-var chkHideReco=$('#pref-hide-reco'); var chkUndisc=$('#pref-undiscoverable'); var privacyHint=$('#privacy-hint');
+var chkHideReco=$('#pref-hide-reco'); var chkUndisc=$('#pref-undiscoverable');
+var privacyHint=$('#pref-undiscoverable-status') || $('#privacy-hint');
+var discoveryState={loading:false,available:false,authenticated:false};
 function applyPrefs(toast){
   toast = !!toast;
   if(tabBtnReco) tabBtnReco.style.display = prefs.hide_reco ? 'none' : '';
   if(prefs.hide_reco && activeTab==='reco') switchTab('friends');
   document.body.classList.toggle('undiscoverable', !!prefs.undiscoverable);
-  if(privacyHint) privacyHint.textContent = prefs.undiscoverable ? '你已选择“不被推荐”。不会出现在附近/推荐/搜索中（演示标记，需后端配合）。' : '你目前允许被发现。';
+  if(privacyHint){
+    if(discoveryState.loading) privacyHint.textContent='正在读取账号的发现设置…';
+    else if(!discoveryState.authenticated) privacyHint.textContent='登录 WebWindows 后可设置是否出现在桌讯推荐中。';
+    else if(!discoveryState.available) privacyHint.textContent='发现设置暂时不可用，请稍后重试。';
+    else privacyHint.textContent=prefs.undiscoverable
+      ? '已开启：你的账号不会出现在桌讯推荐和在线发现结果中。'
+      : '已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。';
+  }
   if(toast) Overlay.HUD.show('隐私设置已更新','ok');
 }
 if(chkHideReco){ chkHideReco.checked=!!prefs.hide_reco; chkHideReco.addEventListener('change',function(){ prefs.hide_reco=chkHideReco.checked; savePrefs(); applyPrefs(true) }) }
-if(chkUndisc){ chkUndisc.checked=!!prefs.undiscoverable; chkUndisc.addEventListener('change',function(){ prefs.undiscoverable=chkUndisc.checked; savePrefs(); applyPrefs(true) }) }
+async function loadDiscoveryPreference(){
+  if(!chkUndisc) return;
+  discoveryState.loading=true;
+  chkUndisc.disabled=true;
+  applyPrefs(false);
+  try{
+    var response=await fetch('/api/dt_discovery.asp?_='+Date.now(),{
+      credentials:'include',cache:'no-store',headers:{'Accept':'application/json'}
+    });
+    var data=await response.json().catch(function(){ return null });
+    if(response.status===401){
+      discoveryState={loading:false,available:false,authenticated:false};
+      prefs.undiscoverable=false;
+    }else if(response.ok && data && data.ok===true){
+      discoveryState={loading:false,available:true,authenticated:true};
+      prefs.undiscoverable=!!data.undiscoverable;
+      chkUndisc.disabled=false;
+    }else{
+      throw new Error((data&&data.error)||('privacy-'+response.status));
+    }
+  }catch(_){
+    discoveryState.loading=false;
+    discoveryState.available=false;
+    discoveryState.authenticated=!!wwGetLogin().loggedIn;
+  }
+  chkUndisc.checked=!!prefs.undiscoverable;
+  savePrefs();
+  applyPrefs(false);
+}
+async function saveDiscoveryPreference(nextValue){
+  if(!chkUndisc || !discoveryState.available) return;
+  var previous=!!prefs.undiscoverable;
+  chkUndisc.disabled=true;
+  try{
+    var response=await fetch('/api/dt_discovery.asp',{
+      method:'POST',credentials:'include',cache:'no-store',
+      headers:{
+        'Accept':'application/json',
+        'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8',
+        'X-WebWindows-Request':'desktalk-discovery'
+      },
+      body:'undiscoverable='+(nextValue?'1':'0')
+    });
+    var data=await response.json().catch(function(){ return null });
+    if(!response.ok || !data || data.ok!==true) throw new Error((data&&data.error)||('privacy-'+response.status));
+    prefs.undiscoverable=!!data.undiscoverable;
+    savePrefs();
+    applyPrefs(true);
+    try{ if(typeof __hb==='function') __hb(); }catch(_){}
+    setTimeout(fetchPresenceList,150);
+  }catch(_){
+    prefs.undiscoverable=previous;
+    chkUndisc.checked=previous;
+    savePrefs();
+    Overlay.HUD.show('发现设置保存失败，请稍后重试。','warn');
+  }finally{
+    chkUndisc.disabled=!discoveryState.available;
+    applyPrefs(false);
+  }
+}
+if(chkUndisc){
+  chkUndisc.addEventListener('change',function(){ saveDiscoveryPreference(chkUndisc.checked) });
+}
 
 /* ===== 昵称弹窗 ===== */
 var modal=$('#profile-modal'), modalName=$('#modal-name'), modalColor=$('#modal-color');
@@ -1110,6 +1181,7 @@ function syncDeskTalkIdentity(forceGuest){
   try{ renderAll(); refreshMeId(); }catch(_){}
   try{ if(typeof __hb==='function') __hb(); }catch(_){}
   try{ if(typeof startInboxWatch==='function') startInboxWatch(); }catch(_){}
+  setTimeout(loadDiscoveryPreference,0);
 }
 window.addEventListener('webwindows:logout',function(){ syncDeskTalkIdentity(true) });
 window.addEventListener('webwindows:login',function(){ setTimeout(function(){ syncDeskTalkIdentity(false) },0) });
@@ -1123,7 +1195,7 @@ try{
     // 仅用稳定 ID 识别用户；昵称仅作展示（可选）
     fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(me.id)
          + '&name=' + encodeURIComponent(me.name || me.id),
-         { credentials: 'omit', cache: 'no-store', headers: { 'Accept': 'application/json' }});
+         { credentials: 'include', cache: 'no-store', headers: { 'Accept': 'application/json' }});
   };
   __hb(); setInterval(__hb, 30000);
 }catch(e){}
@@ -1637,6 +1709,7 @@ updateMeUI();
 renderAll(); 
 applyPrefs();
 refreshMeId();  // 档案就绪后立即刷新
+loadDiscoveryPreference();
 
 // 档案准备好再触发一次心跳，避免首包是 guest
 if (typeof __hb === 'function') { __hb(); }
@@ -1698,7 +1771,7 @@ async function fetchPresenceList(){
     var me  = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
     var url = '/api/dt_presence_mem.asp?list=1&u=' + encodeURIComponent(me.id || '') + '&_=' + Date.now();
     var r = await fetch(url, {
-      credentials: 'omit',     // 你现在的服务端允许 omit 也行，但 include 更不易被代理公用缓存复用
+      credentials: 'include',
       cache: 'no-store'
     });
 

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.19.4",
-  "catalogVersion": "2026.08.19.4",
-  "generatedAt": "2026-08-19T10:00:41.145Z",
+  "releaseVersion": "2026.08.19.5",
+  "catalogVersion": "2026.08.19.5",
+  "generatedAt": "2026-08-19T11:09:09.607Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -173,18 +173,18 @@
     "api/dt_presence_mem.asp",
     "api/dt_discovery.asp"
   ],
-  "previousReleaseVersion": "2026.08.19.3",
+  "previousReleaseVersion": "2026.08.19.4",
   "integrity": {
     "index.html": {
-      "sha256": "66e2e283993779ce5dac814f972b49fba5ccf44115159871ba62143cef40ea1a",
-      "size": 33712
+      "sha256": "86458260eb79728a3c7b51641e92438ff8d97769386e15142a4d5d42ccc397c3",
+      "size": 33727
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "870db15b5c90a5f7a557d1fa2cd02efe65077ae7e975fbd30b89c5650c334bc5",
+      "sha256": "fb034bdb9fa22ed1d30312411925aada1e6ad44b988ba6438102d03a139dd111",
       "size": 13452
     },
     "assets/js/app-registry.js": {
@@ -192,8 +192,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "8386ce96f3347f82110ed0691fc0c4a15e2b6ed9a0abd4cba5ea86603cc26ace",
-      "size": 66645
+      "sha256": "39404d9725250219856e9c7649672c67de17ac15878a2e04e332cba826f0ae0e",
+      "size": 67047
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -260,8 +260,8 @@
       "size": 9206
     },
     "assets/js/locale-region.js": {
-      "sha256": "020973f7e7de690294db05f778c3576ddc9b5c302a6683b9c290fa21a0c6e2f2",
-      "size": 4786
+      "sha256": "950cd8da2f6f1b7b51ab5deae05bde328b5e2dc975dc57494f5bb7d33468e3e5",
+      "size": 6039
     },
     "assets/js/main.js": {
       "sha256": "b7e0ab3a4e9fa305422bc507e42bd73d5e538f25e7fdca7f5a230ce2f1705968",
@@ -280,8 +280,8 @@
       "size": 3295
     },
     "assets/js/settings.js": {
-      "sha256": "6ab2caf9cac2bc1a60119ffbf9bacff7302150c1b246ebb4917634d68dacadf3",
-      "size": 21926
+      "sha256": "58ef8dc3025aec0c521a9738ba4e32e27a162b521390a43696985752dca135c2",
+      "size": 22153
     },
     "assets/js/snap_drag.js": {
       "sha256": "db2279015ffce0c7bc57935799262d25a44ee226202607ff5adb03b07119dae5",
@@ -556,8 +556,8 @@
       "size": 1970
     },
     "settings.html": {
-      "sha256": "0ca354f4921df311bc97958d74ff1284c343715087d2a119d4a26f45f07c5740",
-      "size": 14845
+      "sha256": "cadc0744d6df2f29cb62acb74a4b005e66f38d33954fe11c40a9be7a7ac32683",
+      "size": 14867
     },
     "aplay.html": {
       "sha256": "c7800f5c46c8f916dda4423f738655cb6f94ec3f3dd7a2e7227072336ea1905e",
@@ -842,8 +842,10 @@
   },
   "uploadFiles": [
     "index.html",
-    "assets/js/main.js",
+    "settings.html",
+    "assets/js/locale-region.js",
     "assets/js/tw.js",
+    "assets/js/settings.js",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

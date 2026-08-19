@@ -37,9 +37,10 @@ assert.notEqual(manifest.previousReleaseVersion, manifest.releaseVersion);
 assert.ok(manifest.releaseVersion.localeCompare(manifest.previousReleaseVersion, undefined, { numeric: true }) > 0,
   "the release version must advance beyond the production version");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-assert.ok(uploadFiles.includes("index.html") && uploadFiles.includes("assets/js/main.js") &&
-  uploadFiles.includes("assets/js/tw.js") && uploadFiles.includes("data/apps/system-apps.json"),
-  "the welcome-language runtime and both cache-busting entries must deploy together");
+assert.ok(uploadFiles.includes("index.html") && uploadFiles.includes("settings.html") &&
+  uploadFiles.includes("assets/js/locale-region.js") && uploadFiles.includes("assets/js/tw.js") &&
+  uploadFiles.includes("assets/js/settings.js") && uploadFiles.includes("data/apps/system-apps.json"),
+  "language detection, manual preference tracking, and their cache-busting entries must deploy together");
 for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
   assert.ok(manifest.requiredFiles.includes(realtimeDependency),
     `DeskTalk real-time dependency must remain managed: ${realtimeDependency}`);

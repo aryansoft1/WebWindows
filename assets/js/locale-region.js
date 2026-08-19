@@ -10,6 +10,9 @@
   var REGION_KEY = "webwindows.region";
   var TIME_ZONE_KEY = "webwindows.timeZone";
   var REGION_SOURCE_KEY = "webwindows.region.source";
+  var LANGUAGE_SOURCE_KEY = "webwindows.language.source";
+  var LANGUAGE_MIGRATION_KEY = "webwindows.language.migration";
+  var LANGUAGE_MIGRATION_VERSION = "2026.08.19.1";
 
   function systemLocale() {
     return (navigator.languages && navigator.languages[0]) || navigator.language || "en-US";
@@ -21,6 +24,29 @@
     if (value.startsWith("zh-tw") || value.startsWith("zh-hk") || value.startsWith("zh-mo") || value.includes("hant")) return "tw";
     if (value.startsWith("zh")) return "zh";
     return "en";
+  }
+
+  function initializeLanguage() {
+    var detectedLanguage = languageFromLocale(systemLocale());
+    var savedLanguage = localStorage.getItem("lang");
+    var source = localStorage.getItem(LANGUAGE_SOURCE_KEY);
+    var migration = localStorage.getItem(LANGUAGE_MIGRATION_KEY);
+
+    if (!savedLanguage) {
+      localStorage.setItem("lang", detectedLanguage);
+      localStorage.setItem(LANGUAGE_SOURCE_KEY, "system");
+    } else if (!source && migration !== LANGUAGE_MIGRATION_VERSION) {
+      // Older releases stored the Chinese fallback without recording whether it
+      // came from the operating system or Settings. Migrate that legacy default
+      // once so Japanese/English systems are not permanently pinned to Chinese.
+      localStorage.setItem("lang", detectedLanguage);
+      localStorage.setItem(LANGUAGE_SOURCE_KEY, "system");
+    } else if (source === "system" && savedLanguage !== detectedLanguage) {
+      localStorage.setItem("lang", detectedLanguage);
+    }
+
+    localStorage.setItem(LANGUAGE_MIGRATION_KEY, LANGUAGE_MIGRATION_VERSION);
+    return localStorage.getItem("lang") || detectedLanguage;
   }
 
   function regionFromEnvironment(locale, timeZone) {
@@ -75,7 +101,7 @@
   }
 
   function initialize() {
-    if (!localStorage.getItem("lang")) localStorage.setItem("lang", languageFromLocale(systemLocale()));
+    initializeLanguage();
     if (!localStorage.getItem(REGION_KEY)) {
       var zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       setRegion(regionFromEnvironment(systemLocale(), zone), { source: "system", emit: false });
@@ -87,7 +113,8 @@
     return getRegion();
   }
 
-  var api = Object.freeze({ REGIONS: REGIONS, initialize: initialize, getRegion: getRegion, setRegion: setRegion,
+  var api = Object.freeze({ REGIONS: REGIONS, initialize: initialize, initializeLanguage: initializeLanguage,
+    getRegion: getRegion, setRegion: setRegion,
     systemLocale: systemLocale, languageFromLocale: languageFromLocale, regionFromEnvironment: regionFromEnvironment,
     regionFromCoordinates: regionFromCoordinates, refineRegionFromAuthorizedLocation: refineRegionFromAuthorizedLocation });
   window.WebWindowsLocale = api;

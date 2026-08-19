@@ -634,7 +634,7 @@ function syncIframeLanguage(iframe, language) {
       // 已接入共通语言层的子应用自己维护原文缓存。父子同时改同一 DOM 会把
       // 上一种译文误记为原文，造成 English -> 日本語 时 iframe 仍停在英文。
       if (typeof iframe.contentWindow?.setLanguage === "function") {
-        iframe.contentWindow.setLanguage(language);
+        iframe.contentWindow.setLanguage(language, { source: "sync" });
         return;
       }
       const frameDocument = iframe.contentDocument;
@@ -644,7 +644,7 @@ function syncIframeLanguage(iframe, language) {
       observeDocument(frameDocument, language);
     } catch (_) {
       // Cross-origin applications own their language handling.
-      iframe.contentWindow?.postMessage({ type: "change-language", lang: language }, "*");
+      iframe.contentWindow?.postMessage({ type: "change-language", lang: language, source: "sync" }, "*");
     }
   };
   if (!wiredIframes.has(iframe)) {
@@ -654,13 +654,15 @@ function syncIframeLanguage(iframe, language) {
   try {
     if (iframe.contentDocument?.readyState === "complete") translateFrame();
   } catch (_) {
-    iframe.contentWindow?.postMessage({ type: "change-language", lang: language }, "*");
+    iframe.contentWindow?.postMessage({ type: "change-language", lang: language, source: "sync" }, "*");
   }
 }
 
-function setLanguage(language) {
+function setLanguage(language, options) {
   if (!languageCatalog[language] && language !== "zh") return;
   localStorage.setItem("lang", language);
+  if (options?.source !== "sync") localStorage.setItem("webwindows.language.source", "manual");
+  localStorage.setItem("webwindows.language.migration", "2026.08.19.1");
   applyLanguageToDocument(document, language);
   window.dispatchEvent(new CustomEvent("webwindows:language-changed", { detail: { language } }));
 }
@@ -681,12 +683,14 @@ function setupLanguageControl() {
       : (/^zh-(tw|hk|mo)/.test(locale) || locale.includes("hant")) ? "tw"
       : locale.startsWith("zh") ? "zh" : "en";
     localStorage.setItem("lang", initialLanguage);
+    localStorage.setItem("webwindows.language.source", "system");
+    localStorage.setItem("webwindows.language.migration", "2026.08.19.1");
   }
   const language = localStorage.getItem("lang");
   applyLanguageToDocument(document, language);
   window.setLanguage = setLanguage;
   window.addEventListener("message", (event) => {
-    if (event.data?.type === "change-language") setLanguage(event.data.lang);
+    if (event.data?.type === "change-language") setLanguage(event.data.lang, { source: event.data.source });
   });
 }
 

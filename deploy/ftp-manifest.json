@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.18.5",
-  "catalogVersion": "2026.08.18.5",
-  "generatedAt": "2026-08-18T13:31:29.243Z",
+  "releaseVersion": "2026.08.19.1",
+  "catalogVersion": "2026.08.19.1",
+  "generatedAt": "2026-08-19T03:05:38.750Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -172,7 +172,7 @@
     "api/dt_fetch_links.asp",
     "api/dt_presence_mem.asp"
   ],
-  "previousReleaseVersion": "2026.08.18.4",
+  "previousReleaseVersion": "2026.08.18.5",
   "integrity": {
     "index.html": {
       "sha256": "d5ddb3bb1da4b730664b11053973045675cc27bdbbefd78b58ce504ee7189ce2",
@@ -183,7 +183,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "7bc53e8c4bec640c60019bf49634ecfcfa58350108ba35d2f2f117bfbca4e95a",
+      "sha256": "f36c2caf8a73939de17fefaccd605772fdc0c0f2af7e23706b97be25132d072a",
       "size": 13455
     },
     "assets/js/app-registry.js": {
@@ -611,8 +611,8 @@
       "size": 42055
     },
     "cloud/browser/private-resource.asp": {
-      "sha256": "e4aa27a0379ca34262e198c7e850dc1d20d72152d46047a1621bb48a7d1381c4",
-      "size": 25678
+      "sha256": "6792d580192df1cb5e172d24df5551c725d07e4528a3a35e5e324b0626eefe28",
+      "size": 25629
     },
     "cloud/browser/search.asp": {
       "sha256": "31e1ca25c4f7f6161083db6356baa9f67ceb414b5fcead255469f9fdde22c19d",
@@ -807,8 +807,8 @@
       "size": 4380
     },
     "api/storage-quota.asp": {
-      "sha256": "0eb4881ce85d3e8b13a02c2fb82904813df30bccbfcd9659834c51696963fd7b",
-      "size": 7997
+      "sha256": "d85f62d65ca35dd0c2996648b5298f6ec83b1fdccaee961f37d6ba0ab88524dc",
+      "size": 8187
     },
     "SystemManager/assets/css/admin.css": {
       "sha256": "35d03df5b6096af50693ac711ea048dc6e4a5d4f235f261d22c08ad108dde196",
@@ -836,8 +836,8 @@
     }
   },
   "uploadFiles": [
-    "assets/css/desktalk.css",
-    "index.html",
+    "api/storage-quota.asp",
+    "cloud/browser/private-resource.asp",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

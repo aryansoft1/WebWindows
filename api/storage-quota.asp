@@ -34,7 +34,7 @@ End If
 <!--#include file="../inc/conn.asp"-->
 <%
 Dim schemaRs, hasQuotaColumn, sql, cmd, rs
-Dim dataCenterId, dataCenterName, quotaMB, quotaKnown, legacyDefault
+Dim dataCenterId, dataCenterName, quotaMB, quotaKnown, legacyDefault, quotaCandidate, quotaConversionOk
 hasQuotaColumn = False
 legacyDefault = False
 Set schemaRs = Nothing
@@ -85,10 +85,16 @@ quotaKnown = False
 If Not rs.EOF Then
   If Not IsNull(rs("data_center_id")) Then dataCenterId = CLng(rs("data_center_id"))
   dataCenterName = Trim(CStr(rs("data_center_name") & ""))
-  If Not IsNull(dataCenterId) And dataCenterName <> "" And Not IsNull(rs("user_quota_mb")) Then
-    If IsNumeric(rs("user_quota_mb")) Then
-      If CDbl(rs("user_quota_mb")) >= 1024 Then
-        quotaMB = CDbl(rs("user_quota_mb"))
+  If Not IsNull(dataCenterId) And dataCenterName <> "" And Not IsNull(rs("user_quota_mb").Value) Then
+    quotaConversionOk = False
+    On Error Resume Next
+    quotaCandidate = CDbl(rs("user_quota_mb").Value)
+    If Err.Number = 0 Then quotaConversionOk = True
+    Err.Clear
+    On Error GoTo 0
+    If quotaConversionOk Then
+      If quotaCandidate >= 1024 Then
+        quotaMB = quotaCandidate
         quotaKnown = True
       End If
     End If

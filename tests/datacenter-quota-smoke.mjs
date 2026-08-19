@@ -20,6 +20,10 @@ assert.match(quotaApi, /WHERE u\.id=\? LIMIT 1/i);
 assert.doesNotMatch(quotaApi, /WHERE u\.id=\? AND u\.username=\?/i,
   "the authenticated session id is authoritative and must survive legacy username session differences");
 assert.match(quotaApi, /1024 AS user_quota_mb/i);
+assert.match(quotaApi, /CDbl\(rs\("user_quota_mb"\)\.Value\)/i,
+  "unsigned MySQL quota fields must be converted from their explicit ADO value");
+assert.doesNotMatch(quotaApi, /IsNumeric\(rs\("user_quota_mb"\)\)/i,
+  "ADO unsigned integer fields must not be rejected by IsNumeric(Field)");
 assert.match(quotaApi, /storageStatus"":""unauthenticated/i);
 assert.match(quotaApi, /quota-lookup-failed/i);
 assert.match(quotaApi, /stats-failed/i);
@@ -36,5 +40,8 @@ assert.match(managerJs, /user_quota_mb/i);
 assert.match(managerJs, /X-WebWindows-Admin-Request/i);
 assert.match(privateResource, /QUOTA_EXCEEDED/i);
 assert.match(privateResource, /CurrentUserQuotaMB/i);
+assert.match(privateResource, /CDbl\(quotaRs\("user_quota_mb"\)\.Value\)/i);
+assert.doesNotMatch(privateResource, /WHERE u\.id=\? AND u\.username=\?/i,
+  "quota enforcement must use the authenticated stable user id");
 
 console.log("Data center quota smoke tests passed");

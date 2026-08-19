@@ -16,6 +16,10 @@ assert.match(client, /function activateTab/);
 assert.match(client, /aria-selected/);
 assert.match(html, /sysinfo\.js\?v=20260814-quota-1/);
 assert.match(html, /sysinfo\.css\?v=20260814-quota-1/);
+const catalog = JSON.parse(await readFile(new URL("../data/apps/system-apps.json", import.meta.url), "utf8"));
+const sysinfoApp = catalog.apps.find((app) => app.id === "webwindows.system.info");
+assert.match(sysinfoApp?.entry || "", /sysinfo\.html\?v=20260819-quota-4/,
+  "the system information app must reopen with the corrected quota endpoint");
 assert.match(client, /setInterval\(\(\) => \{ refreshHost\(\); refreshStorage\(\); \}, 30000\)/);
 assert.match(client, /api\/storage-quota\.asp/);
 assert.match(client, /refreshStorage/);

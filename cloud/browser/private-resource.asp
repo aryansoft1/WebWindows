@@ -542,25 +542,30 @@ Function CurrentUserQuotaMB(ByRef quotaKnown, ByRef legacyDefault, ByRef lookupS
   Err.Clear
   If hasQuotaColumn Then
     quotaSql = "SELECT d.user_quota_mb FROM webwindows_users u " & _
-      "INNER JOIN webwindows_datacenters d ON u.data_center_id=d.id WHERE u.id=? AND u.username=? LIMIT 1"
+      "INNER JOIN webwindows_datacenters d ON u.data_center_id=d.id WHERE u.id=? LIMIT 1"
   Else
     legacyDefault = True
     quotaSql = "SELECT 1024 AS user_quota_mb FROM webwindows_users u " & _
-      "INNER JOIN webwindows_datacenters d ON u.data_center_id=d.id WHERE u.id=? AND u.username=? LIMIT 1"
+      "INNER JOIN webwindows_datacenters d ON u.data_center_id=d.id WHERE u.id=? LIMIT 1"
   End If
   Set quotaCmd = Server.CreateObject("ADODB.Command")
   Set quotaCmd.ActiveConnection = conn
   quotaCmd.CommandType = 1
   quotaCmd.CommandText = quotaSql
   quotaCmd.Parameters.Append quotaCmd.CreateParameter("user_id", 3, 1, , userId)
-  quotaCmd.Parameters.Append quotaCmd.CreateParameter("username", 200, 1, 255, webWindowsUsername)
   Set quotaRs = quotaCmd.Execute
   If Err.Number = 0 Then
     lookupSucceeded = True
     If Not quotaRs.EOF Then
-      If Not IsNull(quotaRs("user_quota_mb")) And IsNumeric(quotaRs("user_quota_mb")) Then
-        value = CDbl(quotaRs("user_quota_mb"))
-        quotaKnown = (value >= 1024)
+      If Not IsNull(quotaRs("user_quota_mb").Value) Then
+        Err.Clear
+        value = CDbl(quotaRs("user_quota_mb").Value)
+        If Err.Number = 0 Then
+          quotaKnown = (value >= 1024)
+        Else
+          value = Null
+        End If
+        Err.Clear
       End If
     End If
   End If

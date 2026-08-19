@@ -528,8 +528,8 @@ function openAbout() {
   const overlay = document.getElementById('about-overlay');
   if (!overlay) return;
   const i18n = window.WebWindowsI18n;
-  if (i18n && typeof i18n.apply === 'function') {
-    i18n.apply(document, i18n.getLanguage());
+  if (i18n && typeof i18n.applyTo === 'function') {
+    i18n.applyTo(overlay, i18n.getLanguage());
   }
   overlay.classList.add('show');
 }

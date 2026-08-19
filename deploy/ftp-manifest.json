@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.19.3",
-  "catalogVersion": "2026.08.19.3",
-  "generatedAt": "2026-08-19T09:16:21.264Z",
+  "releaseVersion": "2026.08.19.4",
+  "catalogVersion": "2026.08.19.4",
+  "generatedAt": "2026-08-19T10:00:41.145Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -173,10 +173,10 @@
     "api/dt_presence_mem.asp",
     "api/dt_discovery.asp"
   ],
-  "previousReleaseVersion": "2026.08.19.2",
+  "previousReleaseVersion": "2026.08.19.3",
   "integrity": {
     "index.html": {
-      "sha256": "e7edff8b6fa72bb10ed6bbe8d2d8e329df2334741213f86d8f97819c446849e0",
+      "sha256": "66e2e283993779ce5dac814f972b49fba5ccf44115159871ba62143cef40ea1a",
       "size": 33712
     },
     "api/function-catalog.asp": {
@@ -184,7 +184,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "929d0e984b7e966435bfd3be73ce2339f31d573fc60e519d38ab2dd6e9e8cee8",
+      "sha256": "870db15b5c90a5f7a557d1fa2cd02efe65077ae7e975fbd30b89c5650c334bc5",
       "size": 13452
     },
     "assets/js/app-registry.js": {
@@ -192,8 +192,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "236ba13d49000ceda8fbda316a3d8f4c8b55d694cdb9145de725677cad6d1689",
-      "size": 63492
+      "sha256": "8386ce96f3347f82110ed0691fc0c4a15e2b6ed9a0abd4cba5ea86603cc26ace",
+      "size": 66645
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -264,8 +264,8 @@
       "size": 4786
     },
     "assets/js/main.js": {
-      "sha256": "793cf83959a23e490a659308f0c46eda8c23ffdc1aadbce5749c93dec2250787",
-      "size": 23442
+      "sha256": "b7e0ab3a4e9fa305422bc507e42bd73d5e538f25e7fdca7f5a230ce2f1705968",
+      "size": 23445
     },
     "assets/js/login.js": {
       "sha256": "2299f0c3a5c1f07bed23047515dcf75a5a30554a6ccc01ee23ffc5ecdc7cabba",
@@ -842,13 +842,8 @@
   },
   "uploadFiles": [
     "index.html",
-    "assets/js/desktalk.js",
-    "api/dt_presence_mem.asp",
-    "api/dt_discovery.asp",
     "assets/js/main.js",
     "assets/js/tw.js",
-    "news.html",
-    "assets/js/news.js",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

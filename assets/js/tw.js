@@ -454,6 +454,27 @@ Object.assign(languageCatalog.jp, {
 });
 
 Object.assign(languageCatalog.tw, {
+  "认识我 · WebWindows": "認識我 · WebWindows", "我是谁": "我是誰", "我能做什么": "我能做什麼",
+  "云桌面": "雲端桌面", "理念": "理念", "我们公司": "我們公司", "继续了解": "繼續瞭解",
+  "多窗口系统": "多視窗系統", "云端同步": "雲端同步", "打开使用向导": "開啟使用指南",
+  "你好，我是 WebWindows": "你好，我是 WebWindows", "立志成为中国第一个真正的桌面操作系统": "立志成為中國第一個真正的桌面作業系統",
+  "成都亚原软件有限公司 出品": "成都亞原軟體有限公司 出品", "这是 WebWindows 的核心能力": "這是 WebWindows 的核心能力",
+  "你可以与系统交互、获取信息，甚至作为助手使用": "你可以與系統互動、取得資訊，甚至作為助手使用",
+  "你的桌面不会消失": "你的桌面不會消失", "所有状态都会被保存": "所有狀態都會被儲存",
+  "你可以在任何设备继续使用": "你可以在任何裝置繼續使用",
+  "像电脑一样打开和管理多个窗口": "像電腦一樣開啟和管理多個視窗",
+  "自动保存状态，换设备继续使用": "自動儲存狀態，換裝置繼續使用",
+  "内置交互与信息辅助能力": "內建互動與資訊輔助能力",
+  "WebWindows 的出发点，并不是做一个普通的网页应用": "WebWindows 的出發點，並不是做一個普通的網頁應用程式",
+  "在不同设备、不同系统之间，软件始终是割裂的": "在不同裝置、不同系統之間，軟體始終是割裂的",
+  "但 Web，是少数可以跨越一切设备的共同标准": "但 Web，是少數可以跨越所有裝置的共同標準",
+  "无论硬件如何变化": "無論硬體如何變化", "无论系统如何演进": "無論系統如何演進", "浏览器始终存在": "瀏覽器始終存在",
+  "WebWindows 正是基于这一点诞生的": "WebWindows 正是基於這一點誕生的",
+  "它尝试把“桌面”带到 Web 上": "它嘗試把「桌面」帶到 Web 上", "让任何设备，都可以拥有统一的使用环境": "讓任何裝置都可以擁有統一的使用環境",
+  "同时，我们也希望在既有标准之外": "同時，我們也希望在既有標準之外", "探索一种属于自己的系统形态": "探索一種屬於自己的系統形態",
+  "这不是一个工具，而是一种新的操作方式": "這不是一個工具，而是一種新的操作方式",
+  "WebWindows 由成都亚原软件有限公司持续开发。": "WebWindows 由成都亞原軟體有限公司持續開發。",
+  "我们关注 Web 应用、云端工作空间与跨设备使用体验。": "我們關注 Web 應用程式、雲端工作空間與跨裝置使用體驗。",
   "不被推荐": "不被推薦", "正在读取账号的发现设置…": "正在讀取帳號的探索設定…",
   "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "登入 WebWindows 後可設定是否顯示於 DeskTalk 推薦中。",
   "发现设置暂时不可用，请稍后重试。": "探索設定暫時無法使用，請稍後再試。",
@@ -553,6 +574,10 @@ function observeDocument(targetDocument, language) {
   if (observedDocuments.has(targetDocument)) return;
 
   const observer = new MutationObserver((mutations) => {
+    // A disconnected observer may still have already-queued records.  Ignore
+    // those records after the user switches language, otherwise the old
+    // observer can remember a translated/empty value as the new source text.
+    if ((localStorage.getItem("lang") || "zh") !== language) return;
     mutations.forEach((mutation) => {
       if (mutation.type === "characterData") {
         const node = mutation.target;
@@ -672,6 +697,7 @@ window.WebWindowsI18n = Object.freeze({
   translate: (text, language = localStorage.getItem("lang") || "zh") => language === "zh" ? String(text) : translateText(String(text), language),
   setLanguage,
   apply: applyLanguageToDocument,
+  applyTo: (element, language = localStorage.getItem("lang") || "zh") => applyLanguage(language, element),
   catalog: languageCatalog
 });
 

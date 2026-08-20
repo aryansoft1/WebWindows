@@ -34,6 +34,7 @@ const languageCatalog = {
 // 共通桌面、设置、云资料与编辑器词汇。动态创建的窗口也通过同一目录翻译，
 // 避免各功能分别维护语言状态而出现一半中文、一半目标语言。
 Object.assign(languageCatalog.en, {
+  "正在启动 WebWindows…": "Starting WebWindows…",
   "功能管理": "Features", "使用向导": "User Guide", "中国大陆（北京时间）": "Mainland China (Beijing Time)",
   "日本（日本标准时间）": "Japan (Japan Standard Time)", "台湾（台北时间）": "Taiwan (Taipei Time)",
   "地区会同步更新任务栏时钟、日期和日历节假日区域。": "The region controls the taskbar clock, date, calendar, and holidays.",
@@ -110,6 +111,7 @@ Object.assign(languageCatalog.en, {
 });
 
 Object.assign(languageCatalog.jp, {
+  "正在启动 WebWindows…": "WebWindows を起動しています…",
   "功能管理": "機能管理", "使用向导": "利用ガイド", "中国大陆（北京时间）": "中国本土（北京時間）",
   "日本（日本标准时间）": "日本（日本標準時）", "台湾（台北时间）": "台湾（台北時間）",
   "地区会同步更新任务栏时钟、日期和日历节假日区域。": "地域はタスクバーの時刻、日付、カレンダー、祝日に反映されます。",
@@ -187,6 +189,7 @@ Object.assign(languageCatalog.jp, {
 
 // 设备操作专题：保持菜单和会话遮罩为完整句翻译，避免长句被旧词条局部替换。
 Object.assign(languageCatalog.tw, {
+  "正在启动 WebWindows…": "正在啟動 WebWindows…",
   "WebWindows 会话与设备操作": "WebWindows 工作階段與裝置操作",
   "锁定 WebWindows": "鎖定 WebWindows",
   "休眠 WebWindows 会话": "讓 WebWindows 工作階段休眠",

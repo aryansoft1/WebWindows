@@ -19,9 +19,16 @@ assert.doesNotMatch(main, /i18n\.apply\(document/,
 assert.match(translations, /localStorage\.getItem\("lang"\)[\s\S]*!== language\) return/,
   "queued records from a stale language observer must not overwrite source text");
 assert.match(translations, /applyTo: \(element,[\s\S]*applyLanguage\(language, element\)/);
-assert.match(index, /main\.js\?v=20260819-welcome-language-2/);
+assert.match(index, /main\.js\?v=20260820-boot-language-1/);
 assert.match(index, /locale-region\.js\?v=20260819-language-source-1/);
-assert.match(index, /tw\.js\?v=20260819-welcome-language-3/);
+assert.match(index, /tw\.js\?v=20260820-boot-language-1/);
+assert.match(main, /data-boot-status[\s\S]*正在启动 WebWindows…/,
+  "the startup welcome screen must contain a stable Simplified Chinese source string");
+assert.match(main, /i18n\.applyTo\(loader, i18n\.getLanguage\(\)\)/,
+  "the startup welcome screen must be translated before it is attached to the page");
+for (const text of ["Starting WebWindows…", "WebWindows を起動しています…", "正在啟動 WebWindows…"]) {
+  assert.ok(translations.includes(`"${text}"`), `missing startup welcome translation: ${text}`);
+}
 assert.match(settingsPage, /settings\.js\?v=20260819-language-source-1/);
 assert.match(localeRegion, /function initializeLanguage\(\)/);
 assert.match(localeRegion, /!source && migration !== LANGUAGE_MIGRATION_VERSION[\s\S]*localStorage\.setItem\("lang", detectedLanguage\)/,

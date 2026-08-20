@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
     loader.innerHTML = `
                     <img src="assets/icons/ARYANSOFT-logo1-01.gif" style="width: 120px; height: 120px; margin-bottom: 20px;">
-                    <div style="font-size: 15px; opacity: 0.85;">正在启动WebWindows...</div>
+                    <div data-boot-status style="font-size: 15px; opacity: 0.85;">正在启动 WebWindows…</div>
                     <div style="
                       width: 44px;
                       height: 44px;
@@ -74,6 +74,10 @@ document.addEventListener("DOMContentLoaded", () => {
                       @keyframes spin { to { transform: rotate(360deg); } }
                     </style>
                 `;
+    const i18n = window.WebWindowsI18n;
+    if (i18n && typeof i18n.applyTo === 'function') {
+        i18n.applyTo(loader, i18n.getLanguage());
+    }
     document.body.appendChild(loader);
 
     // 动画延迟后淡出 boot-loader，桌面淡入

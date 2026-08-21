@@ -1,8 +1,13 @@
 (function installWebWindowsDeviceApi(global) {
   "use strict";
 
+  if (global.WebWindows?.device?.version === 1 && global.WebWindows.device.runtime?.getInfo) return;
+
   const STORAGE_VOLUME = "webwindows.pageVolume";
   const STORAGE_BRIGHTNESS = "webwindows.visualBrightness";
+  const BRIDGE_VERSION = "1.0";
+  const NATIVE_RUNTIME_TIMEOUT_MS = 1000;
+  const RUNTIME_CAPABILITIES = ["battery", "network", "display", "audio", "storage", "power", "updater"];
   const TRUSTED_HOSTS = new Set(["www.y0.hk", "y0.hk", "localhost", "127.0.0.1"]);
   const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection || null;
   const listeners = new Map();
@@ -12,6 +17,9 @@
   let adapter = null;
   let storageProvider = null;
   let initialized = false;
+  let initializationPromise = null;
+  let runtimeInfo = null;
+  let runtimeError = null;
   let volume = clamp(readNumber(STORAGE_VOLUME, 0.5), 0, 1);
   let brightness = clamp(readNumber(STORAGE_BRIGHTNESS, 1), 0, 1);
   let batteryState = unsupportedBattery();
@@ -58,12 +66,104 @@
       (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1");
   }
 
-  function androidBridge() {
+  function nativeBridgeCandidate() {
     const bridge = global.WebWindowsNative;
     if (!isTrustedTopLevel() || !bridge) return null;
-    return typeof bridge.getBatteryStatus === "function" &&
-      typeof bridge.getScreenBrightness === "function" &&
-      typeof bridge.setScreenBrightness === "function" ? bridge : null;
+    return typeof bridge.getRuntimeInfo === "function" ? bridge : null;
+  }
+
+  function structuredBridgeError(error, method) {
+    const value = error && typeof error === "object" ? error : {};
+    return {
+      code: typeof value.code === "string" && value.code ? value.code : "native-runtime-unavailable",
+      message: typeof value.message === "string" && value.message ? value.message : "Native runtime information is unavailable.",
+      platform: typeof value.platform === "string" && value.platform ? value.platform : "unknown",
+      method,
+      details: value.details ?? null
+    };
+  }
+
+  function withTimeout(promise, method) {
+    return new Promise((resolve, reject) => {
+      const timer = global.setTimeout(() => {
+        const error = new Error("Native bridge request timed out.");
+        error.code = "timeout";
+        error.platform = "unknown";
+        error.method = method;
+        reject(error);
+      }, NATIVE_RUNTIME_TIMEOUT_MS);
+      Promise.resolve(promise).then(
+        (value) => { global.clearTimeout(timer); resolve(value); },
+        (error) => { global.clearTimeout(timer); reject(error); }
+      );
+    });
+  }
+
+  function normalizeRuntimeInfo(value) {
+    if (!value || typeof value !== "object") return null;
+    if (value.runtimeName !== "Dreama Runtime" || typeof value.runtimeVersion !== "string" || !value.runtimeVersion) return null;
+    if (typeof value.bridgeVersion !== "string" || value.bridgeVersion.split(".")[0] !== BRIDGE_VERSION.split(".")[0]) return null;
+    if (!["android", "windows"].includes(value.platform) || value.native !== true || value.trusted !== true) return null;
+    if (!["android-webview", "webview2", "unknown"].includes(value.engine)) return null;
+    if (!["phone", "tablet", "desktop", "laptop", "unknown"].includes(value.deviceClass)) return null;
+    if (!value.capabilities || RUNTIME_CAPABILITIES.some((name) => typeof value.capabilities[name] !== "boolean")) return null;
+    return Object.freeze({
+      runtimeName: value.runtimeName,
+      runtimeVersion: value.runtimeVersion,
+      bridgeVersion: value.bridgeVersion,
+      platform: value.platform,
+      platformVersion: typeof value.platformVersion === "string" && value.platformVersion ? value.platformVersion : null,
+      engine: value.engine,
+      engineVersion: typeof value.engineVersion === "string" && value.engineVersion ? value.engineVersion : null,
+      deviceClass: value.deviceClass,
+      native: true,
+      trusted: true,
+      capabilities: Object.freeze(Object.fromEntries(RUNTIME_CAPABILITIES.map((name) => [name, value.capabilities[name]])))
+    });
+  }
+
+  function browserRuntimeInfo() {
+    const batterySupported = typeof navigator.getBattery === "function";
+    return Object.freeze({
+      runtimeName: "Browser Runtime",
+      runtimeVersion: null,
+      bridgeVersion: null,
+      platform: "browser",
+      platformVersion: null,
+      engine: "browser",
+      engineVersion: null,
+      deviceClass: "unknown",
+      native: false,
+      trusted: false,
+      capabilities: Object.freeze({
+        battery: batterySupported,
+        network: true,
+        display: true,
+        audio: true,
+        storage: Boolean(storageProvider) || typeof navigator.storage?.estimate === "function",
+        power: batterySupported,
+        updater: false
+      })
+    });
+  }
+
+  async function trustedNativeBridge() {
+    const bridge = nativeBridgeCandidate();
+    if (!bridge) return null;
+    try {
+      const info = normalizeRuntimeInfo(await withTimeout(bridge.getRuntimeInfo(), "getRuntimeInfo"));
+      if (!info) {
+        const error = new Error("Native runtime response is incomplete or invalid.");
+        error.code = "invalid-response";
+        throw error;
+      }
+      runtimeError = null;
+      return { bridge, info };
+    } catch (error) {
+      runtimeError = structuredBridgeError(error, "getRuntimeInfo");
+      emit("webwindows:native-bridge-error", runtimeError);
+      return null;
+    }
   }
 
   function emit(type, detail) {
@@ -183,15 +283,19 @@
     }
   }
 
-  class AndroidAdapter extends BrowserAdapter {
-    constructor(bridge) {
+  class NativeAdapter extends BrowserAdapter {
+    constructor(bridge, info) {
       super();
-      this.id = "android";
+      this.id = info.platform;
       this.bridge = bridge;
+      this.runtimeInfo = info;
+      this.native = true;
+      this.source = `${info.platform}-native`;
     }
 
     async getBatteryStatus() {
-      try { return normalizeBattery(await this.bridge.getBatteryStatus(), "android-native"); }
+      if (typeof this.bridge.getBatteryStatus !== "function") return super.getBatteryStatus();
+      try { return normalizeBattery(await this.bridge.getBatteryStatus(), this.source); }
       catch (_) { return super.getBatteryStatus(); }
     }
 
@@ -203,10 +307,10 @@
           value: Number.isFinite(Number(state?.level)) ? clamp(Number(state.level), 0, 1) : null,
           systemDefault: state?.systemDefault === true,
           scope: "native",
-          source: "android-native"
+          source: this.source
         };
       } catch (_) {
-        return { supported: false, value: null, scope: "native", source: "android-native", reason: "unavailable" };
+        return { supported: false, value: null, scope: "native", source: this.source, reason: "unavailable" };
       }
     }
 
@@ -219,7 +323,7 @@
         supported: true,
         value: Number.isFinite(Number(state?.level)) ? Number(state.level) : nativeValue,
         scope: "native",
-        source: "android-native"
+        source: this.source
       };
     }
 
@@ -233,10 +337,10 @@
           current: Number.isFinite(Number(state?.current)) ? Number(state.current) : null,
           maximum: Number.isFinite(Number(state?.maximum)) ? Number(state.maximum) : null,
           scope: "native",
-          source: "android-native"
+          source: this.source
         };
       } catch (_) {
-        return { supported: false, value: null, scope: "native", source: "android-native", reason: "unavailable" };
+        return { supported: false, value: null, scope: "native", source: this.source, reason: "unavailable" };
       }
     }
 
@@ -253,24 +357,27 @@
         current: Number.isFinite(Number(state?.current)) ? Number(state.current) : null,
         maximum: Number.isFinite(Number(state?.maximum)) ? Number(state.maximum) : null,
         scope: "native",
-        source: "android-native"
+        source: this.source
       };
     }
   }
 
-  function selectAdapter() {
-    const bridge = androidBridge();
-    adapter = bridge ? new AndroidAdapter(bridge) : new BrowserAdapter();
-    storageProvider = global.WebWindowsStorageProvider?.create?.({ bridge, emit }) || null;
+  async function selectAdapter() {
+    const native = await trustedNativeBridge();
+    adapter = native ? new NativeAdapter(native.bridge, native.info) : new BrowserAdapter();
+    storageProvider = global.WebWindowsStorageProvider?.create?.({ bridge: native?.bridge || null, emit }) || null;
+    runtimeInfo = native?.info || browserRuntimeInfo();
     return adapter;
   }
 
-  selectAdapter();
+  adapter = new BrowserAdapter();
+  storageProvider = global.WebWindowsStorageProvider?.create?.({ bridge: null, emit }) || null;
+  runtimeInfo = browserRuntimeInfo();
 
   function batteryCapabilities() {
-    const native = adapter?.id === "android";
+    const native = adapter?.native === true;
     return {
-      status: capability(native || typeof navigator.getBattery === "function", native ? "android-native" :
+      status: capability(native || typeof navigator.getBattery === "function", native ? adapter.source :
         (typeof navigator.getBattery === "function" ? "battery-status-api" : "unsupported"))
     };
   }
@@ -279,7 +386,7 @@
     if (!batteryState.supported) {
       return { supported: false, source: "unknown", acConnected: null, batteryPresent: null };
     }
-    const acConnected = adapter?.id === "android"
+    const acConnected = adapter?.native === true
       ? batteryState.connected
       : (batteryState.charging === true ? true : batteryState.charging === false ? false : null);
     return {
@@ -344,6 +451,17 @@
     })
   });
 
+  const runtime = Object.freeze({
+    isSupported: () => true,
+    getCapabilities: () => ({ info: capability(true, runtimeInfo?.native ? adapter.source : "browser") }),
+    getInfo: () => runtimeInfo,
+    getLastError: () => runtimeError ? Object.assign({}, runtimeError) : null,
+    refresh: async () => {
+      await selectAdapter();
+      return runtimeInfo;
+    }
+  });
+
   const network = Object.freeze({
     isSupported: () => true,
     getCapabilities: () => ({
@@ -368,8 +486,8 @@
   const display = Object.freeze({
     isSupported: () => true,
     getCapabilities: () => ({
-      brightness: capability(true, adapter?.id === "android" ? "android-native" : "webwindows-visual", {
-        scope: adapter?.id === "android" ? "native" : "visual"
+      brightness: capability(true, adapter?.native === true ? adapter.source : "webwindows-visual", {
+        scope: adapter?.native === true ? "native" : "visual"
       }),
       screen: capability(Boolean(global.screen), global.screen ? "screen-api" : "unsupported")
     }),
@@ -392,8 +510,8 @@
 
   const audio = Object.freeze({
     isSupported: () => true,
-    getCapabilities: () => ({ volume: capability(true, adapter?.id === "android" && typeof adapter.bridge?.getMediaVolume === "function" ? "android-native" : "webwindows-page", {
-      scope: adapter?.id === "android" && typeof adapter.bridge?.getMediaVolume === "function" ? "native" : "page"
+    getCapabilities: () => ({ volume: capability(true, adapter?.native === true && typeof adapter.bridge?.getMediaVolume === "function" ? adapter.source : "webwindows-page", {
+      scope: adapter?.native === true && typeof adapter.bridge?.getMediaVolume === "function" ? "native" : "page"
     }) }),
     getVolume: () => Object.assign({}, volumeState),
     refresh: refreshVolume,
@@ -428,6 +546,7 @@
   function getCapabilities() {
     return {
       system: system.getCapabilities(),
+      runtime: runtime.getCapabilities(),
       network: network.getCapabilities(),
       battery: battery.getCapabilities(),
       display: display.getCapabilities(),
@@ -442,6 +561,7 @@
   const device = Object.freeze({
     version: 1,
     system,
+    runtime,
     network,
     battery,
     display,
@@ -455,16 +575,21 @@
   });
 
   async function initialize() {
-    selectAdapter();
-    applyMediaVolume(document);
-    applyVisualBrightness();
-    await Promise.all([refreshBattery(), refreshStorage(), refreshBrightness(), refreshVolume()]);
-    network.refresh();
-    if (!initialized) {
-      initialized = true;
-      readyResolve(device);
-    }
-    emit("webwindows:device-ready", { adapter: adapter.id, capabilities: getCapabilities() });
+    if (initializationPromise) return initializationPromise;
+    initializationPromise = (async () => {
+      await selectAdapter();
+      applyMediaVolume(document);
+      applyVisualBrightness();
+      await Promise.allSettled([refreshBattery(), refreshStorage(), refreshBrightness(), refreshVolume()]);
+      network.refresh();
+      if (!initialized) {
+        initialized = true;
+        readyResolve(device);
+      }
+      emit("webwindows:device-ready", { adapter: adapter.id, runtime: runtimeInfo, capabilities: getCapabilities() });
+      return device;
+    })().finally(() => { initializationPromise = null; });
+    return initializationPromise;
   }
 
   global.WebWindows = global.WebWindows || {};

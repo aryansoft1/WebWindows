@@ -39,6 +39,8 @@ async function runCase({ native = false, topLevel = true, batteryApi = false } =
     CustomEvent: class { constructor(type, options) { this.type = type; this.detail = options?.detail; } },
     Node: { ELEMENT_NODE: 1 },
     MutationObserver: class { observe() {} },
+    setTimeout,
+    clearTimeout,
     addEventListener(name, callback) {
       const callbacks = listeners.get(name) || [];
       callbacks.push(callback);
@@ -60,9 +62,30 @@ async function runCase({ native = false, topLevel = true, batteryApi = false } =
   }
   if (native) {
     window.WebWindowsNative = {
+      getRuntimeInfo: async () => ({
+        runtimeName: "Dreama Runtime",
+        runtimeVersion: "1.0.0",
+        bridgeVersion: "1.0",
+        platform: "android",
+        platformVersion: "15",
+        engine: "android-webview",
+        engineVersion: null,
+        deviceClass: "phone",
+        native: true,
+        trusted: true,
+        capabilities: {
+          battery: true, network: true, display: true, audio: true,
+          storage: true, power: false, updater: true
+        }
+      }),
       getBatteryStatus: async () => ({ present: true, connected: true, charging: true, level: 75 }),
       getScreenBrightness: async () => ({ level: 0.7, systemDefault: false }),
-      setScreenBrightness: async ({ value } = {}) => ({ level: value })
+      setScreenBrightness: async ({ value } = {}) => ({ level: value }),
+      storageListVolumes: async () => [],
+      storagePickDirectory: async () => ({ id: "saf-test" }),
+      storageListDirectory: async () => [],
+      storageOpenFile: async () => ({ metadata: {}, data: "" }),
+      storageGetMetadata: async () => ({})
     };
     window.WebWindowsNative.setScreenBrightness = async (value) => ({ level: value });
     window.WebWindowsNative.getMediaVolume = async () => ({ current: 3, maximum: 10, level: 0.3 });
@@ -79,6 +102,8 @@ async function runCase({ native = false, topLevel = true, batteryApi = false } =
 
 const browser = await runCase();
 assert.equal(browser.device.getAdapter(), "browser");
+assert.equal(browser.device.runtime.getInfo().platform, "browser");
+assert.equal(browser.device.runtime.getInfo().native, false);
 assert.equal(browser.device.network.getState().kind, "wifi");
 assert.equal(browser.device.battery.isSupported(), false);
 assert.deepEqual(
@@ -96,12 +121,16 @@ assert.equal(browserBattery.device.power.getState().acConnected, false);
 
 const android = await runCase({ native: true });
 assert.equal(android.device.getAdapter(), "android");
+assert.equal(android.device.runtime.getInfo().runtimeName, "Dreama Runtime");
+assert.equal(android.device.runtime.getInfo().platform, "android");
+assert.equal(android.device.runtime.getInfo().native, true);
 assert.equal(android.device.battery.getState().level, 0.75);
 assert.equal(android.device.power.getState().source, "ac");
 assert.equal(android.device.power.getState().acConnected, true);
 assert.equal((await android.device.display.setBrightness(0.8)).scope, "native");
 assert.equal(android.device.audio.getVolume().value, 0.3);
 assert.equal((await android.device.audio.setVolume(0.6)).scope, "native");
+assert.deepEqual(await android.device.storage.listVolumes(), []);
 
 const iframe = await runCase({ native: true, topLevel: false });
 assert.equal(iframe.device.getAdapter(), "browser");

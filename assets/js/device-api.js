@@ -200,6 +200,18 @@
     };
   }
 
+  function normalizeNativeBattery(raw, source) {
+    if (!raw || typeof raw !== "object" || typeof raw.present !== "boolean" || typeof raw.connected !== "boolean") return null;
+    if (raw.charging !== null && typeof raw.charging !== "boolean") return null;
+    if (raw.level !== null && (!Number.isFinite(Number(raw.level)) || Number(raw.level) < 0 || Number(raw.level) > 100)) return null;
+    return normalizeBattery({
+      present: raw.present,
+      connected: raw.connected,
+      charging: raw.present ? raw.charging : null,
+      level: raw.present ? raw.level : null
+    }, source);
+  }
+
   function networkKind() {
     if (navigator.onLine === false) return "offline";
     const type = String(connection?.type || "").toLowerCase();
@@ -295,8 +307,11 @@
     }
 
     async getBatteryStatus() {
-      if (typeof this.bridge.getBatteryStatus !== "function") return super.getBatteryStatus();
-      try { return normalizeBattery(await this.bridge.getBatteryStatus(), this.source); }
+      if (this.runtimeInfo.capabilities.battery !== true || typeof this.bridge.getBatteryStatus !== "function") return super.getBatteryStatus();
+      try {
+        const state = normalizeNativeBattery(await this.bridge.getBatteryStatus(), this.source);
+        return state || await super.getBatteryStatus();
+      }
       catch (_) { return super.getBatteryStatus(); }
     }
 
@@ -376,11 +391,10 @@
   runtimeInfo = browserRuntimeInfo();
 
   function batteryCapabilities() {
-    const native = adapter?.native === true;
-    return {
-      status: capability(native || typeof navigator.getBattery === "function", native ? adapter.source :
-        (typeof navigator.getBattery === "function" ? "battery-status-api" : "unsupported"))
-    };
+    const native = adapter?.native === true && adapter.runtimeInfo?.capabilities?.battery === true &&
+      typeof adapter.bridge?.getBatteryStatus === "function";
+    const browser = typeof navigator.getBattery === "function";
+    return { status: capability(native || browser, native ? adapter.source : (browser ? "battery-status-api" : "unsupported")) };
   }
 
   function powerSnapshot() {

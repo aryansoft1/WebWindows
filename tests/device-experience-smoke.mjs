@@ -34,7 +34,7 @@ assert.match(settings, /id="networkSpeedStart"/);
 assert.match(settings, /id="networkSpeedCancel"[^>]*hidden/);
 
 assert.match(deviceApi, /class BrowserAdapter/);
-assert.match(deviceApi, /class AndroidAdapter extends BrowserAdapter/);
+assert.match(deviceApi, /class NativeAdapter extends BrowserAdapter/);
 assert.match(deviceApi, /global\.WebWindows\.device = device/);
 assert.match(deviceApi, /querySelectorAll\?\.\("audio,video"\)/);
 assert.match(deviceApi, /media\.volume = volume/);

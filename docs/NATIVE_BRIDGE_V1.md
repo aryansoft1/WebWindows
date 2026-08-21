@@ -121,6 +121,40 @@ Allowed platforms are `android`, `windows`, `browser`, and `unknown`; engines ar
 
 The public page API is `window.WebWindows.device.runtime.getInfo()`. A plain browser reports Browser Runtime information with `platform: "browser"`, `native: false`, and `trusted: false`. A page selects a native adapter only after a trusted top-level bridge successfully returns a complete, compatible runtime response. UA markers such as `WebWindowsMobile/1.0` are compatibility hints only and never establish trust.
 
+## Battery capability
+
+Battery uses the existing v1 method name `getBatteryStatus` with an empty parameter object. It does not change any v1 request, response, error, event, version, ID, timeout, navigation, or trust semantics.
+
+```json
+{
+  "version": "1.0",
+  "id": "43",
+  "method": "getBatteryStatus",
+  "params": {}
+}
+```
+
+```json
+{
+  "version": "1.0",
+  "id": "43",
+  "ok": true,
+  "result": {
+    "present": true,
+    "connected": false,
+    "charging": false,
+    "level": 0.72
+  }
+}
+```
+
+- `present` reports whether Android reports a battery.
+- `connected` reports external power connection, not Bridge connectivity.
+- `charging` is `true`, `false`, or `null` when Android cannot determine the charging state.
+- `level` is normalized to `0..1`, or `null` when unavailable. During migration the Device API also accepts the previous Android `0..100` value and normalizes it without exposing that difference publicly.
+- `RuntimeInfo.capabilities.battery` means the Runtime implements the method. It does not claim that a physical battery is present. Android currently reports `true` because `getBatteryStatus` is implemented without an additional runtime permission. Browser Runtime derives the capability from `navigator.getBattery` availability.
+- No Bridge event is required for Battery v1. The public API refreshes through `window.WebWindows.device.battery.refresh()` and emits the existing page event `webwindows:battery-change`.
+
 ## Failure and compatibility behavior
 
 - Missing bridges, timeouts, rejected Promises, incompatible versions, and malformed runtime responses fall back to BrowserAdapter.

@@ -262,6 +262,27 @@
     };
   }
 
+  function normalizeNativeBrightness(raw, source) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw) || typeof raw.systemDefault !== "boolean") return null;
+    if (raw.level !== null && (typeof raw.level !== "number" || !Number.isFinite(raw.level) ||
+        raw.level < 0 || raw.level > 1)) return null;
+    return {
+      supported: true,
+      value: raw.level,
+      systemDefault: raw.systemDefault,
+      scope: "native",
+      source
+    };
+  }
+
+  function invalidNativeResult(method) {
+    const error = new Error(`Native ${method} response is incomplete or invalid.`);
+    error.code = "invalid-response";
+    error.platform = "unknown";
+    error.method = method;
+    return error;
+  }
+
   function applyMediaVolume(root) {
     root?.querySelectorAll?.("audio,video").forEach((media) => {
       mediaElements.add(media);
@@ -359,31 +380,29 @@
     }
 
     async getBrightness() {
+      if (this.runtimeInfo.capabilities.display !== true ||
+          typeof this.bridge.getScreenBrightness !== "function" ||
+          typeof this.bridge.setScreenBrightness !== "function") return super.getBrightness();
       try {
-        const state = await this.bridge.getScreenBrightness();
-        return {
-          supported: true,
-          value: Number.isFinite(Number(state?.level)) ? clamp(Number(state.level), 0, 1) : null,
-          systemDefault: state?.systemDefault === true,
-          scope: "native",
-          source: this.source
-        };
+        const state = normalizeNativeBrightness(await this.bridge.getScreenBrightness(), this.source);
+        return state || { supported: false, value: null, systemDefault: false,
+          scope: "native", source: this.source, reason: "invalid-response" };
       } catch (_) {
-        return { supported: false, value: null, scope: "native", source: this.source, reason: "unavailable" };
+        return { supported: false, value: null, systemDefault: false,
+          scope: "native", source: this.source, reason: "unavailable" };
       }
     }
 
     async setBrightness(value) {
       const nativeValue = clamp(Number(value), 0, 1);
-      const state = await this.bridge.setScreenBrightness(nativeValue);
-      brightness = clamp(Number(value), 0, 1);
+      if (this.runtimeInfo.capabilities.display !== true || typeof this.bridge.setScreenBrightness !== "function") {
+        return super.setBrightness(nativeValue);
+      }
+      const state = normalizeNativeBrightness(await this.bridge.setScreenBrightness(nativeValue), this.source);
+      if (!state || state.value === null || state.systemDefault) throw invalidNativeResult("setScreenBrightness");
+      brightness = state.value;
       persist(STORAGE_BRIGHTNESS, brightness);
-      return {
-        supported: true,
-        value: Number.isFinite(Number(state?.level)) ? Number(state.level) : nativeValue,
-        scope: "native",
-        source: this.source
-      };
+      return state;
     }
 
     async getVolume() {
@@ -560,8 +579,13 @@
   const display = Object.freeze({
     isSupported: () => true,
     getCapabilities: () => ({
-      brightness: capability(true, adapter?.native === true ? adapter.source : "webwindows-visual", {
-        scope: adapter?.native === true ? "native" : "visual"
+      brightness: capability(true, adapter?.native === true &&
+        adapter.runtimeInfo?.capabilities?.display === true &&
+        typeof adapter.bridge?.getScreenBrightness === "function" &&
+        typeof adapter.bridge?.setScreenBrightness === "function" ? adapter.source : "webwindows-visual", {
+        scope: adapter?.native === true && adapter.runtimeInfo?.capabilities?.display === true &&
+          typeof adapter.bridge?.getScreenBrightness === "function" &&
+          typeof adapter.bridge?.setScreenBrightness === "function" ? "native" : "visual"
       }),
       screen: capability(Boolean(global.screen), global.screen ? "screen-api" : "unsupported")
     }),

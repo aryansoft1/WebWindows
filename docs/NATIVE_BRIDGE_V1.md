@@ -188,6 +188,51 @@ Network Status uses the v1 method name `getNetworkStatus` with an empty paramete
 - The result does not contain SSID, BSSID, MAC, IP addresses, gateway, DNS, SIM/operator data, Wi-Fi scans, stable identifiers, speed, throughput, latency, or ping.
 - No Native Bridge event is added in Network Status v1. Existing browser `online`, `offline`, and Network Information change signals continue to refresh the public state. Native callers may use the existing synchronous `network.refresh()` cache surface; a later event-based refresh can use the already frozen event envelope without changing this method.
 
+## Display Brightness capability
+
+Display Brightness uses the existing v1 method names `getScreenBrightness` and `setScreenBrightness`. Both use the frozen request/response/error envelopes, version, request ID, timeout, navigation lifecycle, trust model, and fixed method dispatch without modification.
+
+```json
+{
+  "version": "1.0",
+  "id": "45",
+  "method": "getScreenBrightness",
+  "params": {}
+}
+```
+
+```json
+{
+  "version": "1.0",
+  "id": "45",
+  "ok": true,
+  "result": {
+    "level": 0.6,
+    "systemDefault": true
+  }
+}
+```
+
+```json
+{
+  "version": "1.0",
+  "id": "46",
+  "method": "setScreenBrightness",
+  "params": {
+    "level": 0.8
+  }
+}
+```
+
+The set result has the same shape as the get result and reflects the value read back after the write.
+
+- `level` is a JSON number in the inclusive platform-neutral range `0..1`, or `null` only when the effective level cannot be read reliably. Strings, non-finite values, objects, arrays, and out-of-range values are invalid Native ABI parameters or results.
+- `systemDefault` is a boolean. On Android, `true` means the Activity window is using the system brightness default. Android's internal `screenBrightness == -1` sentinel never crosses the Bridge; the Runtime reports the read-only effective system level when available, otherwise `level: null`.
+- Android applies writes only to the Dreama Runtime Activity through `WindowManager.LayoutParams.screenBrightness`. The capability scope is `runtime-window`; it does not modify global Android settings, request `WRITE_SETTINGS`, or control automatic brightness.
+- `RuntimeInfo.capabilities.display` means the Runtime implements both brightness methods. It does not advertise sensors, automatic/adaptive brightness, HDR, color temperature, display enumeration, resolution, or refresh-rate control.
+- The public `window.WebWindows.device.display` API retains its established `0..1` state and compatibility behavior. Its BrowserAdapter continues WebWindows-only visual dimming and does not claim to change physical display brightness. The historical public setter coerces and clamps values before adapter dispatch; the private Native ABI itself remains strict.
+- No Native Bridge event is added. A successful public set updates the Device API cache and emits the existing page event `webwindows:display-change`; failed or malformed writes leave the previous cache unchanged.
+
 ## Failure and compatibility behavior
 
 - Missing bridges, timeouts, rejected Promises, incompatible versions, and malformed runtime responses fall back to BrowserAdapter.

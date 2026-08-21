@@ -33,6 +33,25 @@ const entries = await device.storage.listDirectory(volume.id, []);
 const file = await device.storage.openFile(volume.id, [entries[0].name]);
 ```
 
+Display brightness preserves the existing public surface:
+
+```js
+device.display.getCapabilities();
+await device.display.getBrightness(); // cached state
+await device.display.refresh();       // refreshes from the active adapter
+await device.display.setBrightness(0.8);
+device.display.getInfo();             // browser Screen API information
+```
+
+Brightness state is `{ supported, value, scope, source, systemDefault? }`, where
+`value` is normalized to `0..1` when known. Android NativeAdapter uses
+`scope: "native"` for public compatibility, with the concrete capability scoped
+to the current Dreama Runtime Activity/window. `systemDefault: true` means the
+window inherits Android's system brightness; the Android `-1` sentinel is never
+exposed. BrowserAdapter retains `scope: "visual"` and applies WebWindows-only
+visual dimming. The established public setter coerces and clamps inputs to
+`0..1`; Native Bridge method parameters and results are validated strictly.
+
 ## Storage provider
 
 The browser provider uses `showDirectoryPicker()` and stores granted
@@ -87,6 +106,7 @@ Linux and Windows hosts can add adapters behind this boundary without changing p
 - `webwindows:device-ready`
 - `webwindows:battery-change`
 - `webwindows:network-change`
+- `webwindows:display-change`
 - `webwindows:volume-change`
 - `webwindows:storage-change`
 

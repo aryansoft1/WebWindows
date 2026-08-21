@@ -80,14 +80,14 @@ async function runCase({ native = false, topLevel = true, batteryApi = false } =
       }),
       getBatteryStatus: async () => ({ present: true, connected: true, charging: true, level: 75 }),
       getScreenBrightness: async () => ({ level: 0.7, systemDefault: false }),
-      setScreenBrightness: async ({ value } = {}) => ({ level: value }),
+      setScreenBrightness: async ({ value } = {}) => ({ level: value, systemDefault: false }),
       storageListVolumes: async () => [],
       storagePickDirectory: async () => ({ id: "saf-test" }),
       storageListDirectory: async () => [],
       storageOpenFile: async () => ({ metadata: {}, data: "" }),
       storageGetMetadata: async () => ({})
     };
-    window.WebWindowsNative.setScreenBrightness = async (value) => ({ level: value });
+    window.WebWindowsNative.setScreenBrightness = async (value) => ({ level: value, systemDefault: false });
     window.WebWindowsNative.getMediaVolume = async () => ({ current: 3, maximum: 10, level: 0.3 });
     window.WebWindowsNative.setMediaVolume = async (value) => ({ current: Math.round(value * 10), maximum: 10, level: value });
   }

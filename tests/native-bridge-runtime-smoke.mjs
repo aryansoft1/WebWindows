@@ -31,7 +31,7 @@ function nativeBridge(getRuntimeInfo) {
     getRuntimeInfo,
     getBatteryStatus: async () => ({ present: true, connected: true, charging: false, level: 50 }),
     getScreenBrightness: async () => ({ level: 0.5, systemDefault: false }),
-    setScreenBrightness: async (level) => ({ level }),
+    setScreenBrightness: async (level) => ({ level, systemDefault: false }),
     getMediaVolume: async () => ({ current: 5, maximum: 10, level: 0.5 }),
     setMediaVolume: async (level) => ({ current: level * 10, maximum: 10, level }),
     storageListVolumes: async () => [],

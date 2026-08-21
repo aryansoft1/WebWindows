@@ -24,6 +24,7 @@
   let volume = clamp(readNumber(STORAGE_VOLUME, 0.5), 0, 1);
   let brightness = clamp(readNumber(STORAGE_BRIGHTNESS, 1), 0, 1);
   let batteryState = unsupportedBattery();
+  let networkState = null;
   let volumeState = { supported: true, value: volume, scope: "page", source: "webwindows" };
   let brightnessState = { supported: true, value: brightness, scope: "visual", source: "webwindows" };
   let storageState = { supported: false, usage: null, quota: null, source: "unsupported" };
@@ -221,15 +222,43 @@
   }
 
   function networkSnapshot() {
+    const connected = navigator.onLine !== false;
+    const kind = networkKind();
     return {
       supported: true,
-      online: navigator.onLine !== false,
-      kind: networkKind(),
+      online: connected,
+      connected,
+      internetAvailable: null,
+      transport: kind === "offline" ? "none" : kind,
+      kind,
       effectiveType: connection?.effectiveType || null,
       downlink: Number.isFinite(connection?.downlink) ? connection.downlink : null,
       rtt: Number.isFinite(connection?.rtt) ? connection.rtt : null,
       saveData: connection?.saveData === true,
       source: connection ? "network-information-api" : "browser-online-api"
+    };
+  }
+
+  function normalizeNativeNetwork(raw, source) {
+    const transports = new Set(["wifi", "cellular", "ethernet", "vpn", "other", "unknown", "none"]);
+    if (!raw || typeof raw !== "object" || typeof raw.connected !== "boolean" ||
+        (raw.internetAvailable !== null && typeof raw.internetAvailable !== "boolean") ||
+        typeof raw.transport !== "string" || !transports.has(raw.transport)) return null;
+    if ((!raw.connected && raw.transport !== "none") || (raw.connected && raw.transport === "none")) return null;
+    const kind = raw.connected && ["wifi", "cellular", "ethernet"].includes(raw.transport)
+      ? raw.transport : (raw.connected ? "unknown" : "offline");
+    return {
+      supported: true,
+      online: raw.connected,
+      connected: raw.connected,
+      internetAvailable: raw.internetAvailable,
+      transport: raw.transport,
+      kind,
+      effectiveType: null,
+      downlink: null,
+      rtt: null,
+      saveData: null,
+      source
     };
   }
 
@@ -252,6 +281,10 @@
 
   class BrowserAdapter {
     constructor() { this.id = "browser"; }
+
+    async getNetworkStatus() {
+      return networkSnapshot();
+    }
 
     async getBatteryStatus() {
       if (typeof navigator.getBattery !== "function") return unsupportedBattery();
@@ -313,6 +346,16 @@
         return state || await super.getBatteryStatus();
       }
       catch (_) { return super.getBatteryStatus(); }
+    }
+
+    async getNetworkStatus() {
+      if (this.runtimeInfo.capabilities.network !== true || typeof this.bridge.getNetworkStatus !== "function") return super.getNetworkStatus();
+      try {
+        const state = normalizeNativeNetwork(await this.bridge.getNetworkStatus(), this.source);
+        return state || await super.getNetworkStatus();
+      } catch (_) {
+        return super.getNetworkStatus();
+      }
     }
 
     async getBrightness() {
@@ -389,6 +432,7 @@
   adapter = new BrowserAdapter();
   storageProvider = global.WebWindowsStorageProvider?.create?.({ bridge: null, emit }) || null;
   runtimeInfo = browserRuntimeInfo();
+  networkState = networkSnapshot();
 
   function batteryCapabilities() {
     const native = adapter?.native === true && adapter.runtimeInfo?.capabilities?.battery === true &&
@@ -416,6 +460,12 @@
     batteryState = await (adapter || selectAdapter()).getBatteryStatus();
     emit("webwindows:battery-change", batteryState);
     return batteryState;
+  }
+
+  async function refreshNetwork() {
+    networkState = await (adapter || selectAdapter()).getNetworkStatus();
+    emit("webwindows:network-change", networkState);
+    return Object.assign({}, networkState);
   }
 
   async function refreshStorage() {
@@ -479,15 +529,24 @@
 
   const network = Object.freeze({
     isSupported: () => true,
-    getCapabilities: () => ({
-      status: capability(true, "browser-online-api"),
-      details: capability(Boolean(connection), connection ? "network-information-api" : "unsupported")
-    }),
-    getState: networkSnapshot,
+    getCapabilities: () => {
+      const native = adapter?.native === true && adapter.runtimeInfo?.capabilities?.network === true &&
+        typeof adapter.bridge?.getNetworkStatus === "function";
+      return {
+        status: capability(true, native ? adapter.source : "browser-online-api"),
+        details: capability(native || Boolean(connection), native ? adapter.source :
+          (connection ? "network-information-api" : "unsupported"))
+      };
+    },
+    getState: () => Object.assign({}, networkState),
     refresh: () => {
-      const state = networkSnapshot();
-      emit("webwindows:network-change", state);
-      return state;
+      if (adapter?.native === true) {
+        refreshNetwork().catch((error) => console.warn("[DeviceAPI]", error));
+        return Object.assign({}, networkState);
+      }
+      networkState = networkSnapshot();
+      emit("webwindows:network-change", networkState);
+      return Object.assign({}, networkState);
     }
   });
 
@@ -595,8 +654,7 @@
       await selectAdapter();
       applyMediaVolume(document);
       applyVisualBrightness();
-      await Promise.allSettled([refreshBattery(), refreshStorage(), refreshBrightness(), refreshVolume()]);
-      network.refresh();
+      await Promise.allSettled([refreshNetwork(), refreshBattery(), refreshStorage(), refreshBrightness(), refreshVolume()]);
       if (!initialized) {
         initialized = true;
         readyResolve(device);

@@ -155,6 +155,39 @@ Battery uses the existing v1 method name `getBatteryStatus` with an empty parame
 - `RuntimeInfo.capabilities.battery` means the Runtime implements the method. It does not claim that a physical battery is present. Android currently reports `true` because `getBatteryStatus` is implemented without an additional runtime permission. Browser Runtime derives the capability from `navigator.getBattery` availability.
 - No Bridge event is required for Battery v1. The public API refreshes through `window.WebWindows.device.battery.refresh()` and emits the existing page event `webwindows:battery-change`.
 
+## Network Status capability
+
+Network Status uses the v1 method name `getNetworkStatus` with an empty parameter object. It uses the frozen v1 request/response/error envelopes, version, request ID, timeout, navigation lifecycle, and trust model without modification.
+
+```json
+{
+  "version": "1.0",
+  "id": "44",
+  "method": "getNetworkStatus",
+  "params": {}
+}
+```
+
+```json
+{
+  "version": "1.0",
+  "id": "44",
+  "ok": true,
+  "result": {
+    "connected": true,
+    "internetAvailable": true,
+    "transport": "wifi"
+  }
+}
+```
+
+- `connected` reports whether the platform has an active network attachment. It does not assert Internet reachability.
+- `internetAvailable` is `true`, `false`, or `null`. Android maps it from `NET_CAPABILITY_VALIDATED`; Browser Runtime returns `null` because `navigator.onLine` is not an Internet reachability test.
+- `transport` is `wifi`, `cellular`, `ethernet`, `vpn`, `other`, `unknown`, or `none`. `none` is valid only when `connected` is false. Android SDK constants never cross the Bridge.
+- `RuntimeInfo.capabilities.network` reports that the Runtime implements `getNetworkStatus`; it does not report current connection, transport, or Internet validation.
+- The result does not contain SSID, BSSID, MAC, IP addresses, gateway, DNS, SIM/operator data, Wi-Fi scans, stable identifiers, speed, throughput, latency, or ping.
+- No Native Bridge event is added in Network Status v1. Existing browser `online`, `offline`, and Network Information change signals continue to refresh the public state. Native callers may use the existing synchronous `network.refresh()` cache surface; a later event-based refresh can use the already frozen event envelope without changing this method.
+
 ## Failure and compatibility behavior
 
 - Missing bridges, timeouts, rejected Promises, incompatible versions, and malformed runtime responses fall back to BrowserAdapter.

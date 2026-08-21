@@ -64,6 +64,16 @@ device.power.getState();
 
 `battery.present` describes whether a battery exists. `power.source` describes the current source. They are never treated as the same fact.
 
+Network state preserves the existing synchronous `getState()`/`refresh()` surface:
+
+```js
+device.network.getState();
+// { supported, online, connected, internetAvailable, transport, kind,
+//   effectiveType, downlink, rtt, saveData, source }
+```
+
+`connected` means a network attachment exists. `online` remains its compatibility alias for existing modules. `internetAvailable` is a separate `true | false | null` fact and is `null` when the platform cannot reliably validate Internet reachability. `transport` is the platform-neutral detailed value; legacy `kind` remains `wifi`, `cellular`, `ethernet`, `offline`, or `unknown` so existing taskbar and Settings consumers remain compatible. Network status never includes speed-test measurements or network identity information.
+
 ## Adapters and security
 
 The BrowserAdapter uses standard browser APIs where available and returns explicit unsupported states otherwise. NativeAdapter is considered only after the host announces its private bridge and a compatible `getRuntimeInfo()` round trip succeeds. Merely assigning `window.WebWindowsNative`, setting a mobile UA marker, or returning `trusted: true` does not activate NativeAdapter. Device API code repeats the trusted-origin and top-frame checks; the native host remains responsible for its origin allowlist, main-frame, current-URL, lifecycle, request validation, and method whitelist.

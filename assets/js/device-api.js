@@ -52,6 +52,14 @@
     return Object.freeze(Object.assign({ supported: Boolean(supported), source }, extra || {}));
   }
 
+  function isStructuredObject(value) {
+    return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function isFiniteNumberInRange(value, minimum, maximum) {
+    return typeof value === "number" && Number.isFinite(value) && value >= minimum && value <= maximum;
+  }
+
   function unsupportedBattery() {
     return {
       supported: false,
@@ -202,9 +210,9 @@
   }
 
   function normalizeNativeBattery(raw, source) {
-    if (!raw || typeof raw !== "object" || typeof raw.present !== "boolean" || typeof raw.connected !== "boolean") return null;
+    if (!isStructuredObject(raw) || typeof raw.present !== "boolean" || typeof raw.connected !== "boolean") return null;
     if (raw.charging !== null && typeof raw.charging !== "boolean") return null;
-    if (raw.level !== null && (!Number.isFinite(Number(raw.level)) || Number(raw.level) < 0 || Number(raw.level) > 100)) return null;
+    if (raw.level !== null && !isFiniteNumberInRange(raw.level, 0, 100)) return null;
     return normalizeBattery({
       present: raw.present,
       connected: raw.connected,
@@ -241,7 +249,7 @@
 
   function normalizeNativeNetwork(raw, source) {
     const transports = new Set(["wifi", "cellular", "ethernet", "vpn", "other", "unknown", "none"]);
-    if (!raw || typeof raw !== "object" || typeof raw.connected !== "boolean" ||
+    if (!isStructuredObject(raw) || typeof raw.connected !== "boolean" ||
         (raw.internetAvailable !== null && typeof raw.internetAvailable !== "boolean") ||
         typeof raw.transport !== "string" || !transports.has(raw.transport)) return null;
     if ((!raw.connected && raw.transport !== "none") || (raw.connected && raw.transport === "none")) return null;
@@ -263,9 +271,8 @@
   }
 
   function normalizeNativeBrightness(raw, source) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw) || typeof raw.systemDefault !== "boolean") return null;
-    if (raw.level !== null && (typeof raw.level !== "number" || !Number.isFinite(raw.level) ||
-        raw.level < 0 || raw.level > 1)) return null;
+    if (!isStructuredObject(raw) || typeof raw.systemDefault !== "boolean") return null;
+    if (raw.level !== null && !isFiniteNumberInRange(raw.level, 0, 1)) return null;
     return {
       supported: true,
       value: raw.level,
@@ -276,9 +283,7 @@
   }
 
   function normalizeNativeVolume(raw, source) {
-    if (!raw || typeof raw !== "object" || Array.isArray(raw) ||
-        typeof raw.level !== "number" || !Number.isFinite(raw.level) ||
-        raw.level < 0 || raw.level > 1) return null;
+    if (!isStructuredObject(raw) || !isFiniteNumberInRange(raw.level, 0, 1)) return null;
     return {
       supported: true,
       value: raw.level,
@@ -407,7 +412,9 @@
 
     async setBrightness(value) {
       const nativeValue = clamp(Number(value), 0, 1);
-      if (this.runtimeInfo.capabilities.display !== true || typeof this.bridge.setScreenBrightness !== "function") {
+      if (this.runtimeInfo.capabilities.display !== true ||
+          typeof this.bridge.getScreenBrightness !== "function" ||
+          typeof this.bridge.setScreenBrightness !== "function") {
         return super.setBrightness(nativeValue);
       }
       const state = normalizeNativeBrightness(await this.bridge.setScreenBrightness(nativeValue), this.source);

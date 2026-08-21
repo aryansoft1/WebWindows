@@ -25,6 +25,7 @@ async function runCase({
   native = false,
   announce = native,
   displayCapability = true,
+  includeGetMethod = true,
   getResult = { level: 0.5, systemDefault: false },
   getError = null,
   setResult,
@@ -80,7 +81,7 @@ async function runCase({
   context.self = context;
   context.top = context;
   if (native) {
-    context.WebWindowsNative = {
+    const bridge = {
       getRuntimeInfo: async () => ({
         ...runtimeTemplate,
         capabilities: { ...runtimeTemplate.capabilities, display: displayCapability }
@@ -104,6 +105,8 @@ async function runCase({
         return setResult === undefined ? { level, systemDefault: false } : setResult;
       }
     };
+    if (!includeGetMethod) delete bridge.getScreenBrightness;
+    context.WebWindowsNative = bridge;
   }
 
   vm.runInNewContext(source, context, { filename: "device-api.js" });
@@ -189,6 +192,11 @@ const noCapability = await runCase({ native: true, displayCapability: false });
 assert.equal(noCapability.getCalls, 0);
 assert.equal(noCapability.device.display.getCapabilities().brightness.scope, "visual");
 assert.equal((await noCapability.device.display.setBrightness(0.6)).scope, "visual");
+
+const incompleteMethods = await runCase({ native: true, includeGetMethod: false });
+assert.equal(incompleteMethods.device.display.getCapabilities().brightness.scope, "visual");
+assert.equal((await incompleteMethods.device.display.setBrightness(0.6)).scope, "visual");
+assert.equal(incompleteMethods.setCalls.length, 0, "Display requires both Native methods before dispatch");
 
 const compatibilityClamp = await runCase({ native: true });
 for (const [input, expected] of [[-1, 0], [2, 1], [Number.NaN, 0], [Number.POSITIVE_INFINITY, 0], ["0.75", 0.75]]) {

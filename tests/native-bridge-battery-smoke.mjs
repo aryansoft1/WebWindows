@@ -168,6 +168,13 @@ assert.equal(malformed.device.battery.isSupported(), true);
 assert.equal(malformed.device.battery.getState().supported, false);
 assert.equal(malformed.indicator.hidden, true);
 
+const numericString = await runCase({
+  nativeBattery: { present: true, connected: false, charging: false, level: "0.5" }
+});
+assert.equal(numericString.device.battery.getState().supported, false,
+  "Native Battery results must not coerce numeric strings");
+assert.equal(numericString.device.battery.getState().source, "unsupported");
+
 const unavailable = await runCase({ nativeBattery: new Error("unavailable") });
 assert.equal(unavailable.device.getAdapter(), "android");
 assert.equal(unavailable.device.battery.isSupported(), true);

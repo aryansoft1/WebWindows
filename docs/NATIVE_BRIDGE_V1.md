@@ -287,3 +287,18 @@ The set result has the same shape as the get result and reflects the normalized 
 - Native failures must not reject `window.WebWindows.device.ready()` or prevent WebWindows initialization.
 - Adapter initialization is idempotent. Repeated availability events may refresh state but must not replace the established public API or duplicate global listeners.
 - Existing battery, display, audio, storage, network, and power APIs retain their current public shapes.
+
+## Adding a Native capability
+
+Future capabilities should follow the same narrow path:
+
+1. Define or preserve the stable public method and state in `window.WebWindows.device`.
+2. Use one `RuntimeInfo.capabilities` boolean to mean that the Runtime implements every Native method required by that capability; it must not represent current device state.
+3. Add fixed, platform-neutral method names and parameter/result schemas without changing the frozen Bridge envelopes or lifecycle.
+4. Validate parameters in the Native host, keep platform conversion in a small testable policy where useful, and assemble only platform-neutral results.
+5. Gate NativeAdapter use on the capability flag and all required methods, then validate result types, nullability, ranges, and enums before updating public state.
+6. Define the Browser behavior and Native failure behavior explicitly. Observational Battery and Network reads can safely fall back to browser signals. Display and Audio use an explicit unavailable Native state after an operational failure so they do not silently switch control scope; their Browser implementations are selected when the capability or required methods are absent.
+7. Update cache and existing page events only with validated results. Capability failures must remain isolated from Runtime identity, `device.ready()`, and other capabilities.
+8. Add capability-specific schema/mapping/fallback tests while reusing the common Runtime trust and Bridge lifecycle tests.
+
+All Native result validators require structured JSON objects and exact JSON primitive types. Numeric strings are malformed; compatibility transformations, such as the temporary numeric `0..100` Battery level, apply only after the value has passed its declared type check.

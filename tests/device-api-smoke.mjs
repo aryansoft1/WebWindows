@@ -88,8 +88,8 @@ async function runCase({ native = false, topLevel = true, batteryApi = false } =
       storageGetMetadata: async () => ({})
     };
     window.WebWindowsNative.setScreenBrightness = async (value) => ({ level: value, systemDefault: false });
-    window.WebWindowsNative.getMediaVolume = async () => ({ current: 3, maximum: 10, level: 0.3 });
-    window.WebWindowsNative.setMediaVolume = async (value) => ({ current: Math.round(value * 10), maximum: 10, level: value });
+    window.WebWindowsNative.getMediaVolume = async () => ({ level: 0.3 });
+    window.WebWindowsNative.setMediaVolume = async (value) => ({ level: value });
   }
   Object.assign(window, {
     Promise, Object, Number, String, Boolean, Math, Set, Map, JSON, console

@@ -233,6 +233,52 @@ The set result has the same shape as the get result and reflects the value read 
 - The public `window.WebWindows.device.display` API retains its established `0..1` state and compatibility behavior. Its BrowserAdapter continues WebWindows-only visual dimming and does not claim to change physical display brightness. The historical public setter coerces and clamps values before adapter dispatch; the private Native ABI itself remains strict.
 - No Native Bridge event is added. A successful public set updates the Device API cache and emits the existing page event `webwindows:display-change`; failed or malformed writes leave the previous cache unchanged.
 
+## Audio Volume capability
+
+Audio Volume uses the existing v1 method names `getMediaVolume` and `setMediaVolume`. Both use the frozen request/response/error envelopes, version, request ID, timeout, navigation lifecycle, trust model, and fixed method dispatch without modification.
+
+```json
+{
+  "version": "1.0",
+  "id": "47",
+  "method": "getMediaVolume",
+  "params": {}
+}
+```
+
+```json
+{
+  "version": "1.0",
+  "id": "47",
+  "ok": true,
+  "result": {
+    "level": 0.6
+  }
+}
+```
+
+```json
+{
+  "version": "1.0",
+  "id": "48",
+  "method": "setMediaVolume",
+  "params": {
+    "level": 0.8
+  }
+}
+```
+
+The set result has the same shape as the get result and reflects the normalized value read back after Android applies its integer stream level.
+
+- `level` is a JSON number in the inclusive platform-neutral range `0..1`. Strings, non-finite values, objects, arrays, and out-of-range values are invalid Native ABI parameters or results.
+- Android maps between `level` and the device-dependent integer range of the fixed `AudioManager.STREAM_MUSIC` stream. Set conversion uses nearest-integer rounding; Android `current` and `maximum` values do not cross the Bridge or enter the public Device API.
+- Invalid or unavailable Android stream ranges produce the existing structured `audio-unavailable` error; the Runtime does not fabricate a zero level.
+- The capability means Dreama Runtime controls WebWindows media playback volume. It does not mean Android system-wide master volume and does not include ringtone, notification, alarm, call, accessibility, microphone, audio-focus, or output-device control.
+- There is no separate mute field in the existing public contract. `level: 0` is preserved as a numeric volume value and is not interpreted as logical mute.
+- `RuntimeInfo.capabilities.audio` means the Runtime implements both media-volume methods, not that it supports recording, input devices, Bluetooth, or audio-device enumeration.
+- BrowserAdapter keeps `scope: "page"` and applies the value only to WebWindows-managed same-origin `audio` and `video` elements. NativeAdapter uses public `scope: "native"`; its concrete Android scope is the fixed media stream.
+- No Native Bridge event is added. The public `audio.refresh()` reads current Native state when invoked, including when Settings opens. A successful public set updates page media, cache, persistence, and the existing `webwindows:volume-change` page event. Failed or malformed writes leave the previous cache unchanged.
+
 ## Failure and compatibility behavior
 
 - Missing bridges, timeouts, rejected Promises, incompatible versions, and malformed runtime responses fall back to BrowserAdapter.

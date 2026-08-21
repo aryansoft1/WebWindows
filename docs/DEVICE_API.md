@@ -52,6 +52,24 @@ exposed. BrowserAdapter retains `scope: "visual"` and applies WebWindows-only
 visual dimming. The established public setter coerces and clamps inputs to
 `0..1`; Native Bridge method parameters and results are validated strictly.
 
+Audio volume likewise preserves the existing public surface:
+
+```js
+device.audio.getCapabilities();
+device.audio.getVolume();       // cached state
+await device.audio.refresh();   // refreshes from the active adapter
+await device.audio.setVolume(0.5);
+```
+
+Volume state is `{ supported, value, scope, source }`, with `value` normalized
+to `0..1`. There is no separate public `muted` state; level zero is only a
+numeric volume level and is not asserted to be Android logical mute. Browser
+scope is `page` and controls WebWindows-managed same-origin media elements.
+Android Native scope is `media` and maps the normalized value to the fixed
+`AudioManager.STREAM_MUSIC` range without exposing its device-dependent integer
+maximum. The established public setter coerces and clamps inputs to `0..1`;
+Native Bridge parameters and results are validated strictly.
+
 ## Storage provider
 
 The browser provider uses `showDirectoryPicker()` and stores granted

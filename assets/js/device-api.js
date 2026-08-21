@@ -275,6 +275,18 @@
     };
   }
 
+  function normalizeNativeVolume(raw, source) {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw) ||
+        typeof raw.level !== "number" || !Number.isFinite(raw.level) ||
+        raw.level < 0 || raw.level > 1) return null;
+    return {
+      supported: true,
+      value: raw.level,
+      scope: "native",
+      source
+    };
+  }
+
   function invalidNativeResult(method) {
     const error = new Error(`Native ${method} response is incomplete or invalid.`);
     error.code = "invalid-response";
@@ -406,37 +418,31 @@
     }
 
     async getVolume() {
-      if (typeof this.bridge.getMediaVolume !== "function") return super.getVolume();
+      if (this.runtimeInfo.capabilities.audio !== true ||
+          typeof this.bridge.getMediaVolume !== "function" ||
+          typeof this.bridge.setMediaVolume !== "function") return super.getVolume();
       try {
-        const state = await this.bridge.getMediaVolume();
-        return {
-          supported: true,
-          value: Number.isFinite(Number(state?.level)) ? clamp(Number(state.level), 0, 1) : null,
-          current: Number.isFinite(Number(state?.current)) ? Number(state.current) : null,
-          maximum: Number.isFinite(Number(state?.maximum)) ? Number(state.maximum) : null,
-          scope: "native",
-          source: this.source
-        };
+        const state = normalizeNativeVolume(await this.bridge.getMediaVolume(), this.source);
+        return state || { supported: false, value: null,
+          scope: "native", source: this.source, reason: "invalid-response" };
       } catch (_) {
         return { supported: false, value: null, scope: "native", source: this.source, reason: "unavailable" };
       }
     }
 
     async setVolume(value) {
-      if (typeof this.bridge.setMediaVolume !== "function") return super.setVolume(value);
       const nativeValue = clamp(Number(value), 0, 1);
-      const state = await this.bridge.setMediaVolume(nativeValue);
-      volume = nativeValue;
+      if (this.runtimeInfo.capabilities.audio !== true ||
+          typeof this.bridge.getMediaVolume !== "function" ||
+          typeof this.bridge.setMediaVolume !== "function") {
+        return super.setVolume(nativeValue);
+      }
+      const state = normalizeNativeVolume(await this.bridge.setMediaVolume(nativeValue), this.source);
+      if (!state) throw invalidNativeResult("setMediaVolume");
+      volume = state.value;
       persist(STORAGE_VOLUME, volume);
       applyMediaVolume(document);
-      return {
-        supported: true,
-        value: Number.isFinite(Number(state?.level)) ? clamp(Number(state.level), 0, 1) : nativeValue,
-        current: Number.isFinite(Number(state?.current)) ? Number(state.current) : null,
-        maximum: Number.isFinite(Number(state?.maximum)) ? Number(state.maximum) : null,
-        scope: "native",
-        source: this.source
-      };
+      return state;
     }
   }
 
@@ -608,8 +614,13 @@
 
   const audio = Object.freeze({
     isSupported: () => true,
-    getCapabilities: () => ({ volume: capability(true, adapter?.native === true && typeof adapter.bridge?.getMediaVolume === "function" ? adapter.source : "webwindows-page", {
-      scope: adapter?.native === true && typeof adapter.bridge?.getMediaVolume === "function" ? "native" : "page"
+    getCapabilities: () => ({ volume: capability(true, adapter?.native === true &&
+      adapter.runtimeInfo?.capabilities?.audio === true &&
+      typeof adapter.bridge?.getMediaVolume === "function" &&
+      typeof adapter.bridge?.setMediaVolume === "function" ? adapter.source : "webwindows-page", {
+      scope: adapter?.native === true && adapter.runtimeInfo?.capabilities?.audio === true &&
+        typeof adapter.bridge?.getMediaVolume === "function" &&
+        typeof adapter.bridge?.setMediaVolume === "function" ? "native" : "page"
     }) }),
     getVolume: () => Object.assign({}, volumeState),
     refresh: refreshVolume,

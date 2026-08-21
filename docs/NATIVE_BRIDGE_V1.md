@@ -2,6 +2,16 @@
 
 Dreama Native Bridge is the private transport between a trusted Dreama Runtime host and the top-level WebWindows document. Applications and WebWindows functions must use `window.WebWindows.device`; they must not call `window.WebWindowsNative` directly.
 
+## ABI boundary and trust model
+
+- `window.WebWindows.device` is the stable public API. Runtime information remains namespaced at `window.WebWindows.device.runtime.getInfo()`; there is no public top-level `device.getRuntimeInfo()` alias.
+- `window.WebWindowsNative` is a private ABI between Dreama Runtime and the Device API. Business features, third-party features, and ordinary WebWindows modules must not depend on it. Native transports may evolve while the public Device API remains compatible.
+- `RuntimeInfo.trusted` is a status description produced after the native host has accepted the request. It is never, by itself, a credential or an authorization decision.
+- NativeAdapter activation requires a host availability announcement, a trusted top-level WebWindows origin, a compatible asynchronous bridge round trip, and a complete RuntimeInfo response. A page-created object or a UA marker alone remains BrowserAdapter.
+- The actual privilege boundary is native: Android exposes its WebMessage object only to its HTTPS allowlist and independently verifies source origin, main frame, current URL, active navigation lifecycle, request shape, protocol version, parameters, and method whitelist before executing a method. Web code must never use Adapter identity or `trusted` as authorization for privileged native work.
+
+As with any same-JavaScript-realm API, arbitrary script execution in an allowed trusted origin can imitate page-visible objects or replace application behavior. This ABI does not claim to be cryptographic remote attestation; preventing same-origin script compromise depends on the trusted origin's script and content-security controls. Such imitation does not bypass the native listener's checks or create native capability.
+
 ## Versions and transport
 
 - `bridgeVersion` is currently `1.0` and versions the wire contract.
@@ -9,6 +19,7 @@ Dreama Native Bridge is the private transport between a trusted Dreama Runtime h
 - Every bridge method is asynchronous and returns a Promise.
 - Android transports JSON messages through its existing origin-scoped WebMessage listener and reply proxy. Request IDs, method-specific timeouts, structured replies, the trusted-origin allowlist, top-frame checks, current-URL checks, and bridge lifecycle shutdown on navigation remain mandatory.
 - A v1 client may accept the legacy Android success field `data` while hosts migrate to `result`. New hosts must emit `result`.
+- `data` is read only from a legacy response that omits `version`. A versioned v1 response containing `data` instead of `result` is malformed.
 
 ## Request
 
@@ -113,6 +124,8 @@ The public page API is `window.WebWindows.device.runtime.getInfo()`. A plain bro
 ## Failure and compatibility behavior
 
 - Missing bridges, timeouts, rejected Promises, incompatible versions, and malformed runtime responses fall back to BrowserAdapter.
+- Unknown response IDs and duplicate responses are ignored. A completed or timed-out request is removed from the pending map, so a late response cannot complete it again.
+- A malformed message safely rejects active requests as `invalid-response`; navigation/pagehide closes the page-side bridge, clears its timers, and rejects remaining requests as `bridge-closed`.
 - Native failures must not reject `window.WebWindows.device.ready()` or prevent WebWindows initialization.
 - Adapter initialization is idempotent. Repeated availability events may refresh state but must not replace the established public API or duplicate global listeners.
 - Existing battery, display, audio, storage, network, and power APIs retain their current public shapes.

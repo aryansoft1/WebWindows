@@ -18,6 +18,7 @@
   let storageProvider = null;
   let initialized = false;
   let initializationPromise = null;
+  let nativeBridgeAnnounced = false;
   let runtimeInfo = null;
   let runtimeError = null;
   let volume = clamp(readNumber(STORAGE_VOLUME, 0.5), 0, 1);
@@ -68,7 +69,7 @@
 
   function nativeBridgeCandidate() {
     const bridge = global.WebWindowsNative;
-    if (!isTrustedTopLevel() || !bridge) return null;
+    if (!nativeBridgeAnnounced || !isTrustedTopLevel() || !bridge) return null;
     return typeof bridge.getRuntimeInfo === "function" ? bridge : null;
   }
 
@@ -598,7 +599,11 @@
   global.addEventListener("online", network.refresh);
   global.addEventListener("offline", network.refresh);
   connection?.addEventListener?.("change", network.refresh);
-  global.addEventListener("webwindowsnativeavailable", () => initialize().catch((error) => console.warn("[DeviceAPI]", error)));
+  global.addEventListener("webwindowsnativeavailable", () => {
+    nativeBridgeAnnounced = true;
+    Promise.resolve(initializationPromise).then(() => initialize())
+      .catch((error) => console.warn("[DeviceAPI]", error));
+  });
 
   if (typeof MutationObserver === "function") {
     const observer = new MutationObserver((mutations) => mutations.forEach((mutation) =>

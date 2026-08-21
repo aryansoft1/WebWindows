@@ -5,6 +5,7 @@ The public device boundary is `window.WebWindows.device`. Application and Settin
 ## Groups
 
 - `system`: host and platform information.
+- `runtime`: Dreama Runtime identity and bridge capability information.
 - `network`: online state and optional Network Information details.
 - `battery`: battery presence, level, and charging state.
 - `display`: screen information and native or visual brightness.
@@ -19,6 +20,7 @@ const device = await window.WebWindows.device.ready();
 
 device.getAdapter(); // "browser" or "android"
 device.getCapabilities();
+device.runtime.getInfo();
 
 device.network.getState();
 device.battery.getState();
@@ -64,7 +66,9 @@ device.power.getState();
 
 ## Adapters and security
 
-The Browser adapter uses standard browser APIs where available and returns explicit unsupported states otherwise. The Android adapter is selected only when the existing trusted top-level `WebWindowsNative` bridge is present. Device API code repeats the trusted-origin and top-frame checks; the Android host remains responsible for its existing origin allowlist, main-frame, current-URL, and lifecycle checks.
+The BrowserAdapter uses standard browser APIs where available and returns explicit unsupported states otherwise. NativeAdapter is considered only after the host announces its private bridge and a compatible `getRuntimeInfo()` round trip succeeds. Merely assigning `window.WebWindowsNative`, setting a mobile UA marker, or returning `trusted: true` does not activate NativeAdapter. Device API code repeats the trusted-origin and top-frame checks; the native host remains responsible for its origin allowlist, main-frame, current-URL, lifecycle, request validation, and method whitelist.
+
+`window.WebWindows.device` is the stable public API for WebWindows functions and developers. `window.WebWindowsNative` is a private Dreama Runtime ABI used only by the Device API and bridge implementation. Application code, third-party functions, and ordinary WebWindows modules must not call it directly. Its Android and Windows transport implementation may change without changing the public Device API.
 
 Linux and Windows hosts can add adapters behind this boundary without changing page code. No placeholder native values are fabricated.
 

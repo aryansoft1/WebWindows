@@ -97,6 +97,13 @@ async function runCase({ native = false, topLevel = true, batteryApi = false } =
   vm.runInNewContext(storageSource, window, { filename: "device-storage-provider.js" });
   vm.runInNewContext(source, window, { filename: "device-api.js" });
   await window.WebWindows.device.ready();
+  if (native && topLevel) {
+    const nativeReady = new Promise((resolve) => window.addEventListener("webwindows:device-ready", (event) => {
+      if (event.detail?.adapter === "android") resolve();
+    }));
+    window.dispatchEvent(new window.CustomEvent("webwindowsnativeavailable"));
+    await nativeReady;
+  }
   return { window, device: window.WebWindows.device, events };
 }
 

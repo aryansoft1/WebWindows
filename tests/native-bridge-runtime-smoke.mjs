@@ -42,7 +42,7 @@ function nativeBridge(getRuntimeInfo) {
   };
 }
 
-async function runCase(bridge, userAgent = "test") {
+async function runCase({ bridge = null, userAgent = "test", announce = Boolean(bridge) } = {}) {
   const listeners = new Map();
   let listenerRegistrations = 0;
   const document = {
@@ -95,19 +95,28 @@ async function runCase(bridge, userAgent = "test") {
   if (bridge) context.WebWindowsNative = bridge;
   vm.runInNewContext(source, context, { filename: "device-api.js" });
   await context.WebWindows.device.ready();
+  if (announce) {
+    const refreshed = new Promise((resolve) => context.addEventListener("webwindows:device-ready", resolve));
+    context.dispatchEvent(new context.CustomEvent("webwindowsnativeavailable"));
+    await refreshed;
+  }
   return { context, get listenerRegistrations() { return listenerRegistrations; } };
 }
 
-const browser = await runCase(null);
+const browser = await runCase();
 assert.equal(browser.context.WebWindows.device.getAdapter(), "browser");
 assert.equal(browser.context.WebWindows.device.runtime.getInfo().platform, "browser");
 assert.equal(browser.context.WebWindows.device.runtime.getInfo().native, false);
 
-const uaOnly = await runCase(null, "test WebWindowsMobile/1.0");
+const uaOnly = await runCase({ userAgent: "test WebWindowsMobile/1.0" });
 assert.equal(uaOnly.context.WebWindows.device.getAdapter(), "browser");
 assert.equal(uaOnly.context.WebWindows.device.runtime.getInfo().trusted, false);
 
-const android = await runCase(nativeBridge(async () => validRuntime));
+const fakeObjectOnly = await runCase({ bridge: nativeBridge(async () => validRuntime), announce: false });
+assert.equal(fakeObjectOnly.context.WebWindows.device.getAdapter(), "browser");
+assert.equal(fakeObjectOnly.context.WebWindows.device.runtime.getInfo().trusted, false);
+
+const android = await runCase({ bridge: nativeBridge(async () => validRuntime) });
 assert.equal(android.context.WebWindows.device.getAdapter(), "android");
 assert.equal(android.context.WebWindows.device.runtime.getInfo().platform, "android");
 assert.equal(android.context.WebWindows.device.runtime.getInfo().native, true);
@@ -116,14 +125,22 @@ assert.equal((await android.context.WebWindows.device.display.setBrightness(0.7)
 assert.equal((await android.context.WebWindows.device.audio.setVolume(0.4)).scope, "native");
 
 const timeoutStart = Date.now();
-const timeout = await runCase(nativeBridge(() => new Promise(() => {})));
+const timeout = await runCase({ bridge: nativeBridge(() => new Promise(() => {})) });
 assert.equal(timeout.context.WebWindows.device.getAdapter(), "browser");
 assert.equal(timeout.context.WebWindows.device.runtime.getLastError().code, "timeout");
 assert.ok(Date.now() - timeoutStart < 2000, "runtime timeout must safely release initialization");
 
-const invalid = await runCase(nativeBridge(async () => ({ runtimeName: "Dreama Runtime", native: true })));
+const invalid = await runCase({ bridge: nativeBridge(async () => ({ runtimeName: "Dreama Runtime", native: true })) });
 assert.equal(invalid.context.WebWindows.device.getAdapter(), "browser");
 assert.equal(invalid.context.WebWindows.device.runtime.getLastError().code, "invalid-response");
+
+const untrusted = await runCase({ bridge: nativeBridge(async () => ({ ...validRuntime, trusted: false })) });
+assert.equal(untrusted.context.WebWindows.device.getAdapter(), "browser");
+assert.equal(untrusted.context.WebWindows.device.runtime.getLastError().code, "invalid-response");
+
+const incompatible = await runCase({ bridge: nativeBridge(async () => ({ ...validRuntime, bridgeVersion: "2.0" })) });
+assert.equal(incompatible.context.WebWindows.device.getAdapter(), "browser");
+assert.equal(incompatible.context.WebWindows.device.runtime.getLastError().code, "invalid-response");
 
 const originalDevice = android.context.WebWindows.device;
 const listenerCount = android.listenerRegistrations;

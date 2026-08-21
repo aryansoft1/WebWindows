@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>功能中心</title>
+  <script src="assets/js/locale-region.js?v=20260802-1"></script>
+  <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
+<link rel="stylesheet" href="assets/css/function-center.css?v=20260729-mobile-3">
+  <script defer src="assets/js/app-registry.js?v=20260729-5"></script>
+  <script defer src="assets/js/function-center.js?v=20260729-4"></script>
+</head>
+<body>
+  <div class="function-center-shell">
+    <aside class="function-center-sidebar">
+      <div class="function-center-brand">
+        <img src="assets/icons/function-center.svg" alt="">
+        <div>
+          <h1>功能中心</h1>
+          <p>WebWindows 功能仓库</p>
+        </div>
+      </div>
+      <nav aria-label="功能分类">
+        <button class="active" data-view="all">全部功能</button>
+        <button data-view="installed">我的功能</button>
+        <button data-view="available">可添加</button>
+        <button data-view="system">系统功能</button>
+        <button data-view="office">办公与文件</button>
+      </nav>
+      <div class="repository-state">
+        <span id="repositoryIndicator"></span>
+        <div>
+          <strong id="repositoryName">功能仓库</strong>
+          <small id="repositoryMessage">正在连接……</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="function-center-main">
+      <header class="function-center-header">
+        <div>
+          <h2 id="viewTitle">全部功能</h2>
+          <p id="viewDescription">浏览 WebWindows 当前提供的全部功能。</p>
+        </div>
+        <div class="function-center-header-actions">
+          <button id="developerCenterEntry" type="button">开发者中心</button>
+          <span id="accountScope" class="account-scope">本机使用者</span>
+        </div>
+      </header>
+
+      <div class="function-center-toolbar">
+        <input id="functionCenterSearch" type="search" placeholder="搜索名称、功能 ID 或文件格式" aria-label="搜索功能">
+        <button id="refreshCatalog" type="button">刷新</button>
+      </div>
+
+      <div id="catalogSummary" class="catalog-summary"></div>
+      <div id="catalogStatus" class="catalog-status" role="status">正在读取功能仓库……</div>
+      <section id="catalogGrid" class="catalog-grid" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <dialog id="removeFunctionDialog">
+    <form method="dialog">
+      <h3>移除功能</h3>
+      <p id="removeFunctionMessage"></p>
+      <div class="remove-function-note">这只会解除当前使用者的功能关联。服务器程序文件、云资料和个人数据都会保留。</div>
+      <div class="dialog-actions">
+        <button value="cancel">取消</button>
+        <button value="confirm" class="danger">确认移除</button>
+      </div>
+    </form>
+  </dialog>
+</body>
+</html>

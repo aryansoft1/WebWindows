@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Hello WebWindows">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#278af0"/><stop offset="1" stop-color="#0759b5"/></linearGradient></defs>
+  <rect width="128" height="128" rx="28" fill="url(#g)"/><path fill="#fff" d="M28 34h15l11 48 12-38h14l12 38 11-48h15L99 96H85L73 61 61 96H47z"/>
+</svg>

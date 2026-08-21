@@ -1,0 +1,15 @@
+[
+  { "question": "WebWindows 是什么？", "topics": ["overview"], "mustMention": ["浏览器"] },
+  { "question": "什么是功能？", "topics": ["functions"], "mustMention": ["功能"] },
+  { "question": "如何打开云资料？", "topics": ["cloud-files"], "mustMention": ["云资料"] },
+  { "question": "云资料怎么打开文件？", "topics": ["cloud-files", "file-open"], "mustMention": ["打开"] },
+  { "question": "我的云资料和公共资料有什么区别？", "topics": ["cloud-files"], "mustMention": ["公共", "私人"] },
+  { "question": "为什么我没有“此设备”？", "topics": ["local-device-storage", "troubleshooting"], "mustMention": ["浏览器", "授权"] },
+  { "question": "怎么选择本地文件夹？", "topics": ["local-device-storage"], "mustMention": ["授权"] },
+  { "question": "声音在哪里设置？", "topics": ["sound", "settings"], "mustMention": ["设置"] },
+  { "question": "如何调节亮度？", "topics": ["display"], "mustMention": ["显示"] },
+  { "question": "电源与电池是什么？", "topics": ["power-battery"], "mustMention": ["电池"] },
+  { "question": "如何安装一个功能？", "topics": ["function-center"], "mustMention": ["功能中心", "添加"] },
+  { "question": "开发者中心是什么？", "topics": ["developer-center"], "mustMention": ["开发"] },
+  { "question": "用一句话解释光合作用。", "topics": [], "mustMention": ["光"] }
+]

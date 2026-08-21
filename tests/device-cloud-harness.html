@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <title>Device cloud harness</title>
+  <link rel="stylesheet" href="../cloud/browser/styles.css">
+</head>
+<body data-language="zh">
+  <p id="harness-runtime-status" style="margin:12px;padding:10px;border-radius:8px;background:#eef6ff">正在检查本地设备存储能力…</p>
+  <main class="main" style="height:600px">
+    <aside id="sidebar">
+      <button id="public-root-button" class="root-node selected" type="button">公共资料</button>
+      <button id="device-root-button" class="root-node device-root-node" type="button" hidden><span>▣</span><span>此设备</span></button>
+    </aside>
+    <section class="file-list">云资料未被设备视图覆盖</section>
+    <section id="device-panel" class="device-panel" hidden>
+      <div class="device-panel-heading"><div><h2>此设备</h2><p>测试</p></div><button id="device-add-location" type="button">添加本地位置</button></div>
+      <div id="device-breadcrumbs"></div><div id="device-status"></div><div id="device-content" class="device-content"></div>
+    </section>
+  </main>
+  <script src="../assets/js/device-storage-provider.js"></script>
+  <script src="../assets/js/device-api.js"></script>
+  <script>
+    const scenario = new URLSearchParams(location.search).get("scenario") || "unsupported";
+    const permissions = {
+      read: { state: "granted", readable: true, writable: false, persisted: true },
+      write: { state: "granted", readable: true, writable: true, persisted: true },
+      revoked: { state: "revoked", readable: false, writable: false, persisted: false, revoked: true }
+    };
+    const volumeList = scenario === "volumes" ? [
+      { id: "read-volume", name: "只读资料", permission: permissions.read },
+      { id: "write-volume", name: "工作目录", permission: permissions.write },
+      { id: "revoked-volume", name: "失效位置", permission: permissions.revoked }
+    ] : [];
+    const storage = {
+      getCapabilities: () => scenario === "unsupported"
+        ? { directoryPicker: { supported: false }, read: { supported: false } }
+        : { directoryPicker: { supported: true }, read: { supported: true } },
+      listVolumes: async () => volumeList,
+      pickDirectory: async ({ replaceVolumeId } = {}) => {
+        document.body.dataset.picked = replaceVolumeId || "new";
+        return { id: replaceVolumeId || "new", name: "新位置", permission: permissions.write };
+      },
+      listDirectory: async (volumeId, path) => path.length
+        ? [{ name: "note.txt", kind: "file", path: [...path, "note.txt"], size: 5, type: "text/plain", readable: true, writable: false }]
+        : [{ name: "子目录", kind: "directory", path: ["子目录"], readable: true, writable: volumeId === "write-volume" }],
+      openFile: async () => ({ metadata: { name: "note.txt", type: "text/plain" }, data: new TextEncoder().encode("hello").buffer })
+    };
+    if (scenario !== "live") {
+      window.WebWindows = { device: { storage, ready: async () => window.WebWindows.device } };
+    }
+    window.openResource = async (resource) => {
+      document.body.dataset.opened = resource.path;
+      document.body.dataset.scope = resource.scope;
+      document.getElementById("harness-runtime-status").textContent = `已通过现有打开链路读取：${resource.path}`;
+    };
+  </script>
+  <script src="../cloud/browser/device-locations.js"></script>
+  <script>
+    async function reportHarnessStorage() {
+      const status = document.getElementById("harness-runtime-status");
+      if (scenario !== "live") {
+        status.textContent = `模拟测试状态：${scenario}`;
+        return;
+      }
+      const device = window.WebWindows?.device;
+      await device?.ready?.();
+      const capabilities = device?.storage?.getCapabilities?.();
+      const supported = capabilities?.directoryPicker?.supported === true && capabilities?.read?.supported === true;
+      status.textContent = supported
+        ? "当前浏览器支持本地目录：请点击“此设备”，再选择文件夹。"
+        : "当前浏览器不支持 File System Access API，因此按设计隐藏“此设备”。请使用桌面版 Chrome 或 Edge。";
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", reportHarnessStorage, { once: true });
+    else reportHarnessStorage();
+  </script>
+</body>
+</html>

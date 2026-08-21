@@ -11,6 +11,9 @@
       <div class="context-menu-item" @click="onDeskPick('刷新')">
         <span class="menu-icon">🔄</span><span style="padding-left:10px">刷新</span>
       </div>
+      <div class="context-menu-item" @click="onDeskPick('自动排列图标')">
+        <span class="menu-icon">▦</span><span style="padding-left:10px">自动排列图标</span>
+      </div>
       <div class="context-menu-item" @click="onDeskPick('设置')">
         <span class="menu-icon">⚙️</span><span style="padding-left:10px">设置</span>
       </div>
@@ -31,7 +34,14 @@ const desk = reactive({ x: 0, y: 0, show: false })
 
 function showDeskMenu(x, y) {
   desk.x = x; desk.y = y; desk.show = true
-  requestAnimationFrame(() => document.getElementById('custom-context-menu')?.classList.add('show'))
+  requestAnimationFrame(() => {
+    const menu = document.getElementById('custom-context-menu')
+    if (!menu) return
+    const rect = menu.getBoundingClientRect()
+    desk.x = Math.max(4, Math.min(x, window.innerWidth - rect.width - 4))
+    desk.y = Math.max(4, Math.min(y, window.innerHeight - rect.height - 4))
+    menu.classList.add('show')
+  })
 }
 function hideDeskMenu() {
   const el = document.getElementById('custom-context-menu')
@@ -41,6 +51,7 @@ function hideDeskMenu() {
 function onDeskPick(text) {
   hideDeskMenu()
   if (text === '刷新') W.refreshDesktop?.()
+  if (text === '自动排列图标') W.autoArrangeDesktopIcons?.()
   if (text === '设置') W.openWindow?.('settings', '设置', 'settings.html', 'assets/icons/settings.png', true)
 }
 
@@ -54,7 +65,82 @@ function onGlobalContext(e) {
   hideWindowMenu() // 如果窗口菜单开着，先关掉
   showDeskMenu(e.pageX, e.pageY)
 }
-function onGlobalClick() {
+let suppressTouchClickUntil = 0
+let longPressTimer = null
+let longPressPointerId = null
+let longPressStartX = 0
+let longPressStartY = 0
+
+function clearLongPress() {
+  if (longPressTimer != null) {
+    clearTimeout(longPressTimer)
+    longPressTimer = null
+  }
+  longPressPointerId = null
+}
+
+function onPointerDown(event) {
+  if (event.pointerType === 'mouse' || event.button !== 0) return
+  const target = event.target
+  if (!target?.closest) return
+  if (target.closest('#start-menu, #custom-context-menu, #window-context-menu')) return
+
+  const windowHeader = target.closest('.window-header')
+  const taskbarApp = target.closest('.taskbar-app')
+  const desktop = target.closest('.desktop')
+  if (!windowHeader && !taskbarApp && !desktop) return
+  if (windowHeader?.querySelector('.buttons')?.contains(target)) return
+
+  longPressPointerId = event.pointerId
+  longPressStartX = event.clientX
+  longPressStartY = event.clientY
+  longPressTimer = window.setTimeout(() => {
+    longPressTimer = null
+    suppressTouchClickUntil = Date.now() + 700
+    if (windowHeader) {
+      const win = windowHeader.closest('.window')
+      if (win) {
+        hideDeskMenu()
+        W.showWindowContextMenu?.(
+          { preventDefault() {}, pageX: longPressStartX, pageY: longPressStartY },
+          win.id.replace(/^win-/, '')
+        )
+      }
+      return
+    }
+    if (taskbarApp) {
+      const id = (taskbarApp.dataset.id || '').replace(/^win-/, '')
+      hideDeskMenu()
+      W.showWindowContextMenu?.(
+        { preventDefault() {}, pageX: longPressStartX, pageY: longPressStartY },
+        id
+      )
+      return
+    }
+    hideWindowMenu()
+    showDeskMenu(longPressStartX, longPressStartY)
+  }, 520)
+}
+
+function onPointerMove(event) {
+  if (event.pointerId !== longPressPointerId) return
+  if (Math.hypot(event.clientX - longPressStartX, event.clientY - longPressStartY) > 12) {
+    clearLongPress()
+  }
+}
+
+function onPointerEnd(event) {
+  if (event.pointerId !== longPressPointerId) return
+  clearLongPress()
+}
+
+function onGlobalClick(event) {
+  if (Date.now() < suppressTouchClickUntil) {
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    suppressTouchClickUntil = 0
+    return
+  }
   hideDeskMenu()
   hideWindowMenu()
 }
@@ -114,6 +200,10 @@ onMounted(() => {
   // 全局：捕获阶段，保证优先于其他脚本拿到事件
   window.addEventListener('contextmenu', onGlobalContext, true)
   window.addEventListener('click', onGlobalClick, true)
+  window.addEventListener('pointerdown', onPointerDown, true)
+  window.addEventListener('pointermove', onPointerMove, true)
+  window.addEventListener('pointerup', onPointerEnd, true)
+  window.addEventListener('pointercancel', onPointerEnd, true)
 
   // 初始已有窗口
   document.querySelectorAll('.window').forEach(bindWindowContext)
@@ -135,6 +225,11 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('contextmenu', onGlobalContext, true)
   window.removeEventListener('click', onGlobalClick, true)
+  window.removeEventListener('pointerdown', onPointerDown, true)
+  window.removeEventListener('pointermove', onPointerMove, true)
+  window.removeEventListener('pointerup', onPointerEnd, true)
+  window.removeEventListener('pointercancel', onPointerEnd, true)
+  clearLongPress()
   mo?.disconnect()
   document.querySelectorAll('.window').forEach(unbindWindowContext)
 })

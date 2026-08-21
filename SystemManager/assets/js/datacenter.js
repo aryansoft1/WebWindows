@@ -53,17 +53,14 @@ function deleteDataCenter(id) {
 }
 
 function checkConnectivity(baseUrl, callback) {
-  const testUrl = baseUrl.replace(/\/+\$/, '') + '/getFolders.asp';
+  const testUrl = baseUrl.replace(/\/+$/, '') + '/node-info.asp';
   fetch(testUrl)
-    .then(res => res.text())
-    .then(text => {
-      try {
-        JSON.parse(text);
-        callback(true);
-      } catch (e) {
-        callback(false);
-      }
-    })
+    .then(res => res.json())
+    .then(info => callback(
+      info?.protocol === 'webwindows-cloud-resource' &&
+      typeof info?.version === 'string' &&
+      info?.publicReady === true
+    ))
     .catch(() => callback(false));
 }
 
@@ -75,16 +72,19 @@ function refreshAllConnectivity() {
 
     if (!apiUrl || !connectivityCell) return;
 
-    const testUrl = apiUrl.replace(/\/+$/, '') + '/getFolders.asp';
+    const testUrl = apiUrl.replace(/\/+$/, '') + '/node-info.asp';
 
     fetch(testUrl)
-      .then(res => res.text())
-      .then(text => {
-        try {
-          JSON.parse(text); // 尝试解析为 JSON
+      .then(res => res.json())
+      .then(info => {
+        if (
+          info?.protocol === 'webwindows-cloud-resource' &&
+          typeof info?.version === 'string' &&
+          info?.publicReady === true
+        ) {
           connectivityCell.textContent = '可访问 ✅';
           connectivityCell.className = 'p-2 border connectivity-cell text-green-600';
-        } catch {
+        } else {
           connectivityCell.textContent = '响应异常 ⚠️';
           connectivityCell.className = 'p-2 border connectivity-cell text-yellow-600';
         }
@@ -103,15 +103,18 @@ function checkEndpoint() {
     return;
   }
 
-  const testUrl = baseUrl.replace(/\/+$/, '') + '/getFolders.asp';
+  const testUrl = baseUrl.replace(/\/+$/, '') + '/node-info.asp';
 
   fetch(testUrl)
-    .then(res => res.text())
-    .then(text => {
-      try {
-        JSON.parse(text); // 尝试解析为 JSON
+    .then(res => res.json())
+    .then(info => {
+      if (
+        info?.protocol === 'webwindows-cloud-resource' &&
+        typeof info?.version === 'string' &&
+        info?.publicReady === true
+      ) {
         alert('接口可访问 ✅');
-      } catch (e) {
+      } else {
         alert('接口响应格式异常 ❌');
       }
     })

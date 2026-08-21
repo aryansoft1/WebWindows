@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hello WebWindows</title>
+  <style>
+    :root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#172033;background:#edf5ff}*{box-sizing:border-box}body{display:grid;place-items:center;min-height:100vh;margin:0;padding:24px}.card{width:min(560px,100%);padding:32px;border:1px solid #d7e5f5;border-radius:20px;background:#fff;box-shadow:0 18px 48px rgba(16,62,110,.15)}.mark{display:grid;place-items:center;width:58px;height:58px;border-radius:15px;background:linear-gradient(145deg,#278af0,#0759b5);color:#fff;font-size:26px;font-weight:800}h1{margin:18px 0 6px;font-size:30px}p{color:#667085}button{margin-top:14px;padding:10px 16px;border:0;border-radius:9px;background:#0b6fde;color:#fff;font:inherit;cursor:pointer}output{display:block;min-height:24px;margin-top:16px;color:#067647;font-weight:600}
+  </style>
+</head>
+<body>
+  <main class="card"><div class="mark">W</div><h1>Hello WebWindows</h1><p>这是一个完全离线、没有外部依赖的功能包样例。</p><button id="hello" type="button">测试功能</button><output id="result" aria-live="polite"></output></main>
+  <script>
+    document.getElementById("hello").onclick = function () {
+      document.getElementById("result").textContent = "运行成功：" + new Date().toLocaleTimeString();
+    };
+  </script>
+</body>
+</html>

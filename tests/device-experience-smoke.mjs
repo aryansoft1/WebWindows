@@ -1,0 +1,87 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
+const index = read("index.html");
+const settings = read("settings.html");
+const deviceApi = read("assets/js/device-api.js");
+const controls = read("assets/js/device-controls.js");
+const taskbar = read("assets/js/taskbar-experience.js");
+const speed = read("assets/js/network-speed.js");
+const main = read("assets/js/main.js");
+const mainCss = read("assets/css/main.css");
+
+assert.match(index, /device-storage-provider\.js\?v=20260809-storage-1/);
+assert.match(index, /device-api\.js\?v=20260809-storage-1/);
+assert.match(index, /device-controls\.js\?v=20260808-device-api-1/);
+assert.match(index, /vendor\/html2canvas\.min\.js\?v=1\.4\.1/);
+assert.match(index, /taskbar-experience\.js\?v=20260809-snapshot-1/);
+assert.equal(fs.existsSync(path.join(root, "assets/js/vendor/html2canvas.min.js")), true);
+assert.match(index, /dist-window\/window-manager-widget\.js\?v=20260809-device-storage-1/);
+assert.equal(fs.existsSync(path.join(root, "dist-window/window-manager-widget.js")), true);
+assert.match(index, /id="ww-battery-indicator"[^>]*hidden/);
+assert.match(index, /id="volume-range"[^>]*type="range"/);
+assert.match(index, /id="task-view-button"/);
+assert.match(settings, /id="masterVolume"[^>]*type="range"/);
+assert.match(settings, /id="visualBrightness"[^>]*type="range"/);
+assert.match(settings, /data-settings-tab="soundTab"/);
+assert.match(settings, /data-settings-tab="powerTab"/);
+assert.match(settings, /id="power-ac-connected"/);
+assert.match(settings, /id="networkSpeedStart"/);
+assert.match(settings, /id="networkSpeedCancel"[^>]*hidden/);
+
+assert.match(deviceApi, /class BrowserAdapter/);
+assert.match(deviceApi, /class AndroidAdapter extends BrowserAdapter/);
+assert.match(deviceApi, /global\.WebWindows\.device = device/);
+assert.match(deviceApi, /querySelectorAll\?\.\("audio,video"\)/);
+assert.match(deviceApi, /media\.volume = volume/);
+assert.match(deviceApi, /--webwindows-visual-brightness/);
+assert.doesNotMatch(deviceApi, /body\.style\.filter\s*=/);
+assert.match(deviceApi, /body\.style\?\.removeProperty\("filter"\)/);
+assert.doesNotMatch(mainCss, /body\.webwindows-visual-brightness\s*\{[^}]*filter\s*:/s);
+assert.match(mainCss, /body\.webwindows-visual-brightness::after/);
+assert.match(mainCss, /\.battery-indicator\.is-charging \.battery-indicator__body::before/);
+assert.doesNotMatch(controls, /WebWindowsNative/);
+assert.match(deviceApi, /const bridge = global\.WebWindowsNative/);
+assert.match(deviceApi, /webwindowsnativeavailable/);
+assert.match(deviceApi, /rawLevel > 1 \? rawLevel \/ 100/);
+assert.match(deviceApi, /this\.bridge\.setScreenBrightness\(nativeValue\)/);
+assert.match(deviceApi, /navigator\.getBattery/);
+assert.match(controls, /current\.present !== true/);
+assert.match(controls, /is-disconnected/);
+assert.match(main, /deviceAudio\?\.setVolume\(volume\)/);
+assert.match(main, /setVolume\(volume, false\)/);
+assert.match(main, /webwindows:volume-change/);
+
+assert.match(taskbar, /matchMedia\("\(hover: none\)"\)/);
+assert.match(taskbar, /setTimeout\(\(\) => \{ longPressTimer = null; openTaskView\(\); \}, 560\)/);
+assert.match(taskbar, /icon\.draggable = true/);
+assert.match(taskbar, /webwindows\.taskbarOrder/);
+assert.match(taskbar, /windowSummary\(icon\)/);
+assert.match(taskbar, /language !== "zh" && \/\[\\u3400-\\u9fff\]\//);
+assert.match(taskbar, /window\.html2canvas\(win/);
+assert.match(taskbar, /document\.createElement\("canvas"\)/);
+assert.match(taskbar, /context\.drawImage/);
+assert.match(taskbar, /thumbnail\.width = 280/);
+assert.match(taskbar, /thumbnail\.height = 176/);
+assert.doesNotMatch(taskbar, /cloneNode\(true\)/);
+assert.doesNotMatch(taskbar, /srcdoc/);
+
+assert.match(speed, /const MAX_BYTES = 2 \* 1024 \* 1024/);
+assert.match(speed, /new AbortController\(\)/);
+assert.match(speed, /controller\?\.abort\(\)/);
+assert.match(speed, /elements\(\)\.start\?\.addEventListener\("click", start\)/);
+assert.doesNotMatch(speed, /DOMContentLoaded[^]*\bstart\(\)/);
+assert.match(speed, /移动网络可能产生流量费用|最多约 2 MB/);
+assert.doesNotMatch(speed, /setInterval|setTimeout\([^)]*start/);
+
+const controlsContract = read("docs/DEVICE_STATUS_CONTROLS.md");
+assert.match(controlsContract, /cannot change the host operating system volume/);
+assert.match(controlsContract, /cannot change display backlight brightness/);
+assert.match(controlsContract, /top-level\s+trusted WebWindows document only/);
+assert.match(controlsContract, /Never\s+embed administrator, sudo, ADB, FTP, signing, or deployment credentials/);
+
+console.log("device experience smoke tests passed");

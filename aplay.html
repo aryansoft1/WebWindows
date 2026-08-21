@@ -35,6 +35,27 @@ href="data:image/svg+xml;utf8,
   .no-select{user-select:none;-webkit-user-drag:none}
   .shield{position:absolute;inset:0;z-index:10;background:transparent}
   .tab-active{background:#eef2ff;border-color:#c7d2fe;color:#1d4ed8}
+  @media (max-width:820px),(max-width:1000px) and (max-height:500px){
+    body>div.h-full>header{min-height:56px;height:auto;padding:6px 8px;gap:6px}
+    body>div.h-full>header button,
+    body>div.h-full>header label{min-width:44px;min-height:44px;padding-inline:8px}
+    body>div.h-full>header #subtitle,
+    body>div.h-full>header label span{display:none}
+    #switch-overseas{width:44px;height:44px}
+    body>div.h-full>main{min-width:0;flex-direction:column}
+    body>div.h-full>main>aside{width:100%;height:auto;flex:none;padding:6px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain}
+    body>div.h-full>main>aside>div{display:none}
+    body>div.h-full>main>aside nav{display:flex;gap:4px;white-space:nowrap}
+    body>div.h-full>main>aside .nav-btn{width:auto;min-width:76px;min-height:44px;flex:0 0 auto}
+    body>div.h-full>main>section{min-width:0;padding:12px}
+    #audio-footer{height:72px;padding:4px 8px;overflow:hidden}
+    #audio-footer>div{grid-template-columns:minmax(0,1fr);gap:0}
+    #audio-footer>div>div:first-child,
+    #audio-footer>div>div:last-child{display:none}
+    #audio-footer>div>div:nth-child(2){min-width:0;justify-content:center;gap:8px}
+    #audio-footer>div>div:nth-child(2)>div:first-child button{width:44px;height:44px}
+    #audio-footer>div>div:nth-child(2)>div:last-child{width:auto;min-width:0;flex:1}
+  }
 </style>
 </head>
 <body class="h-full bg-gray-50 text-gray-800 no-select">

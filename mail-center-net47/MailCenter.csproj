@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net462</TargetFramework>
+    <AssemblyName>WebWindows.MailCenter</AssemblyName>
+    <RootNamespace>WebWindows.MailCenter</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Web" />
+    <PackageReference Include="MailKit" Version="4.17.0" />
+    <PackageReference Include="MySql.Data" Version="9.4.0" />
+  </ItemGroup>
+</Project>

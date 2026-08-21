@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>开发者平台管理</title>
+  <link rel="stylesheet" href="assets/css/developer-platform-admin.css?v=20260729-2">
+  <script defer src="assets/js/developer-platform-admin.js?v=20260729-3"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>开发者平台</h1>
+        <p>审批开发者资格，检查隔离区中的 Manifest 和 ZIP 功能包，并将通过的版本发布到功能仓库。</p>
+      </div>
+      <button id="refreshPlatform" type="button">刷新</button>
+    </header>
+    <div id="platformStatus" class="status" role="status">正在读取开发者平台……</div>
+
+    <section id="developerContentBoundary">
+      <div class="section-title">
+        <h2>开发者内容发布</h2>
+        <span>第一阶段</span>
+      </div>
+      <p>开发者中心负责公开阅读；后台只负责文档、样例和公告的草稿、版本、发布与下线，不把官方文档藏在管理页。</p>
+      <ul>
+        <li>当前稳定基线：<code>/data/developer/content-v1.json</code></li>
+        <li>当前官方样例：<code>/developer-samples/hello-webwindows.zip</code></li>
+        <li>下一阶段：在此接入内容草稿、预览、发布、回滚和下线操作。</li>
+      </ul>
+    </section>
+    <section>
+      <div class="section-title">
+        <h2>开发者资格</h2>
+        <span id="developerCount">0</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>开发者</th><th>账户</th><th>API Key</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="developerRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title">
+        <h2>功能提交</h2>
+        <span id="submissionCount">0</span>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>功能与版本</th><th>开发者</th><th>功能包与完整性</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody id="submissionRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="manifestDialog">
+    <form method="dialog">
+      <h2 id="manifestTitle">Manifest</h2>
+      <pre id="manifestContent"></pre>
+      <footer><button value="close">关闭</button></footer>
+    </form>
+  </dialog>
+</body>
+</html>

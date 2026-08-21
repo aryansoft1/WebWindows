@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WebWindows DeskTalk Runtime Context",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "language", "environment", "capabilities", "network"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "webWindowsVersion": { "type": ["string", "null"], "maxLength": 40 },
+    "language": { "type": "string", "maxLength": 20 },
+    "environment": { "enum": ["browser", "android"] },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deviceApi", "storage"],
+      "properties": {
+        "deviceApi": { "type": "boolean" },
+        "storage": { "type": "boolean" }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["online"],
+      "properties": { "online": { "type": "boolean" } }
+    }
+  }
+}
+

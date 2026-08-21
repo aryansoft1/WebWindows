@@ -1,0 +1,30 @@
+{
+  "id": "com.example.hello",
+  "legacyIds": [],
+  "type": "application",
+  "name": "Hello WebWindows",
+  "description": "WebWindows 最小可运行功能样例。",
+  "category": "tools",
+  "version": "1.0.0",
+  "icon": "icon.svg",
+  "entry": "index.html",
+  "install": {
+    "defaultState": "available",
+    "source": "repository",
+    "uninstallable": true
+  },
+  "placement": {
+    "desktop": false,
+    "startMenu": true,
+    "startMenuGroup": "user",
+    "startMenuOrder": 100,
+    "allFunctions": true,
+    "taskbar": false
+  },
+  "window": {
+    "mode": "iframe",
+    "singleton": true,
+    "width": "760px",
+    "height": "520px"
+  }
+}

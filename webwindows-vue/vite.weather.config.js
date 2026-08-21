@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [vue()],
   build: {
-    outDir: 'dist-weather',
+    outDir: resolve(__dirname, '../dist-weather'),
     lib: {
       entry: resolve(__dirname, 'src/desktop/weather.vue'),
       name: 'WeatherTimeWidget',

@@ -1,0 +1,40 @@
+:root { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; color: #1f2937; background: #f3f6fa; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button { border: 1px solid #cfd7e3; border-radius: 8px; padding: 7px 10px; background: #fff; cursor: pointer; }
+button.primary { border-color: #1677db; background: #1677db; color: #fff; }
+button.danger { border-color: #f4b4ae; color: #b42318; }
+button:disabled { cursor: not-allowed; opacity: .5; }
+main { max-width: 1280px; margin: 0 auto; padding: 28px; }
+header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+h1, h2, p { margin: 0; }
+h1 { font-size: 25px; }
+header p { margin-top: 6px; color: #667085; font-size: 13px; }
+.status { min-height: 24px; padding: 13px 2px 7px; color: #667085; font-size: 12px; }
+.status.error { color: #b42318; }
+.status.success { color: #067647; }
+section { border: 1px solid #e1e6ee; border-radius: 13px; margin-top: 14px; padding: 17px; background: #fff; }
+.section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.section-title h2 { font-size: 17px; }
+.section-title span { border-radius: 999px; padding: 4px 8px; background: #eef2f7; color: #536074; font-size: 11px; }
+.table-scroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { border-top: 1px solid #eaecf0; padding: 11px 9px; text-align: left; vertical-align: middle; }
+th { color: #667085; font-weight: 600; }
+td strong, td small { display: block; }
+td small { margin-top: 3px; color: #7a8496; }
+.package-ready { color: #067647; }
+.package-missing { color: #b54708; }
+.badge { display: inline-block; border-radius: 999px; padding: 3px 7px; background: #eef2f7; color: #536074; font-size: 10px; }
+.badge.approved, .badge.published { background: #e7f8ef; color: #067647; }
+.badge.pending, .badge.submitted { background: #fff4e5; color: #b54708; }
+.badge.suspended, .badge.rejected, .badge.revoked { background: #fef0ef; color: #b42318; }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.actions button { padding: 5px 8px; font-size: 11px; }
+.empty { padding: 28px; color: #7a8496; text-align: center; }
+dialog { width: min(760px, calc(100vw - 30px)); border: 0; border-radius: 14px; padding: 0; box-shadow: 0 26px 70px rgba(16,24,40,.3); }
+dialog::backdrop { background: rgba(15,23,42,.42); }
+dialog form { padding: 20px; }
+pre { max-height: 60vh; overflow: auto; border-radius: 9px; padding: 13px; background: #111827; color: #d1fae5; font: 11px/1.5 Consolas, monospace; white-space: pre-wrap; word-break: break-word; }
+dialog footer { display: flex; justify-content: flex-end; }
+@media (max-width:720px){main{padding:16px}}

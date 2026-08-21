@@ -1,0 +1,13 @@
+:root { font-family:"Segoe UI","Microsoft YaHei",sans-serif; color:#253047; background:#f4f7fb; }
+* { box-sizing:border-box; }
+html,body,main { width:100%; height:100%; margin:0; }
+main { position:relative; overflow:hidden; }
+.runtime-state { position:absolute; inset:0; display:grid; place-content:center; justify-items:center; gap:9px; padding:24px; text-align:center; }
+.runtime-state h1,.runtime-state p { margin:0; }
+.runtime-state h1 { font-size:20px; }
+.runtime-state p { max-width:560px; color:#6b7587; font-size:12px; line-height:1.6; }
+.runtime-state.error h1 { color:#b42318; }
+.runtime-spinner { width:34px; height:34px; border:3px solid #dce7f4; border-top-color:#1677db; border-radius:50%; animation:spin .8s linear infinite; }
+.runtime-state.error .runtime-spinner { display:none; }
+#packageFrame { width:100%; height:100%; border:0; background:#fff; }
+@keyframes spin { to { transform:rotate(360deg); } }

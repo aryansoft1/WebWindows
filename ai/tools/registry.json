@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "status": "reserved",
+  "tools": [
+    { "name": "openFunction", "permission": "ui.navigation", "enabled": false },
+    { "name": "openSettings", "permission": "ui.navigation", "enabled": false },
+    { "name": "searchCloudFiles", "permission": "cloud.read.metadata", "enabled": false },
+    { "name": "listCloudFiles", "permission": "cloud.read.metadata", "enabled": false },
+    { "name": "openFile", "permission": "files.open", "enabled": false },
+    { "name": "getInstalledFunctions", "permission": "functions.read", "enabled": false },
+    { "name": "getDeviceStatus", "permission": "device.read", "enabled": false },
+    { "name": "setVolume", "permission": "device.audio.write", "enabled": false },
+    { "name": "setBrightness", "permission": "device.display.write", "enabled": false }
+  ]
+}
+

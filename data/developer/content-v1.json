@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "version": "2026.07.1",
+  "apiVersion": "v1",
+  "status": "published",
+  "updatedAt": "2026-07-29",
+  "channel": "stable",
+  "publisher": "WebWindows",
+  "documents": [
+    { "id": "getting-started", "title": "新手入门", "status": "published", "order": 10 },
+    { "id": "developer-api-v1", "title": "Developer API v1", "status": "published", "order": 20 },
+    { "id": "manifest-v1", "title": "Manifest v1", "status": "published", "order": 30 }
+  ],
+  "samples": [
+    { "id": "hello-webwindows", "title": "Hello WebWindows", "version": "1.0.0", "status": "published", "sourceUrl": "developer-samples/hello-webwindows.zip", "saveMode": "private-cloud" }
+  ],
+  "publishingBoundary": {
+    "publicFrontend": ["published-documents", "published-samples", "published-announcements", "developer-actions"],
+    "adminBackend": ["drafts", "versioning", "publish", "unpublish", "sample-configuration", "announcements", "review"],
+    "rule": "Developer documentation is read in the public developer center; administration only controls its lifecycle."
+  }
+}

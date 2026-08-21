@@ -1,48 +1,60 @@
+<%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
+<!--#include file="node-config.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
+Response.CodePage = 65001
 
-Dim fs, baseDir, fullPath, path, name, username
-Set fs = Server.CreateObject("Scripting.FileSystemObject")
-
-' 获取登录用户
-username = Server.URLDecode(Request.Cookies("webwindows_user"))
-If IsEmpty(username) Then
-  Response.Write "{""success"":false,""message"":""未登录或会话超时""}"
-  Response.End
+If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "POST" Then
+  CloudJsonError "405 Method Not Allowed", "METHOD_NOT_ALLOWED", "只允许 POST 请求"
+End If
+If Not CloudIsAdminRequest() Then
+  CloudJsonError "401 Unauthorized", "ADMIN_REQUIRED", "需要云资源节点管理权限"
+End If
+If CloudUsesLegacyPublicRoot() Then
+  CloudJsonError "409 Conflict", "LEGACY_PUBLIC_ROOT_READ_ONLY", "旧版公共区域仅兼容读取，请先迁移到 Public"
 End If
 
-path = Request("path")
-If path = "" Then path = ""
-path = Replace(path, "\", "/")
-If Left(path, 1) = "/" Then path = Mid(path, 2)
-
-name = Trim(Request("name"))
-If name = "" Then
-  Response.Write "{""success"":false,""message"":""文件夹名称不能为空""}"
-  Response.End
+Dim parentPath, folderName, normalizedName, parentPhysical, newRelativePath
+Dim newPhysicalPath, fso
+If Not CloudTryNormalizePath(Request.Form("path"), parentPath) Then
+  CloudJsonError "400 Bad Request", "INVALID_PATH", "资料位置无效"
 End If
 
-baseDir = Server.MapPath("cloud/file/" & username & "/")
-fullPath = baseDir
-If path <> "" Then
-  fullPath = baseDir & path & "\"
+folderName = Trim(CStr(Request.Form("name")))
+If folderName = "" Or Not CloudTryNormalizePath(folderName, normalizedName) Or _
+   normalizedName <> folderName Or InStr(normalizedName, "/") > 0 Then
+  CloudJsonError "400 Bad Request", "INVALID_NAME", "资料夹名称无效"
 End If
 
-' 检查越权访问
-If InStr(fullPath, baseDir) <> 1 Then
-  Response.Write "{""success"":false,""message"":""非法路径访问""}"
-  Response.End
+parentPhysical = CloudPhysicalPath(parentPath)
+newRelativePath = CloudJoinPath(parentPath, folderName)
+newPhysicalPath = CloudPhysicalPath(newRelativePath)
+
+Set fso = Server.CreateObject("Scripting.FileSystemObject")
+If Not fso.FolderExists(parentPhysical) Then
+  Set fso = Nothing
+  CloudJsonError "404 Not Found", "PARENT_NOT_FOUND", "上级资料夹不存在"
+End If
+If fso.FolderExists(newPhysicalPath) Or fso.FileExists(newPhysicalPath) Then
+  Set fso = Nothing
+  CloudJsonError "409 Conflict", "NAME_CONFLICT", "已存在同名资料"
 End If
 
-Dim newFolderPath
-newFolderPath = fullPath & name
-
-If fs.FolderExists(newFolderPath) Then
-  Response.Write "{""success"":false,""message"":""文件夹已存在""}"
-  Response.End
+On Error Resume Next
+fso.CreateFolder newPhysicalPath
+If Err.Number <> 0 Then
+  Dim errorDescription
+  errorDescription = Err.Description
+  Err.Clear
+  On Error GoTo 0
+  Set fso = Nothing
+  CloudJsonError "500 Internal Server Error", "CREATE_FAILED", "建立资料夹失败：" & errorDescription
 End If
+On Error GoTo 0
+Set fso = Nothing
 
-fs.CreateFolder(newFolderPath)
-Response.Write "{""success"":true}"
+Response.Write "{""ok"":true,""item"":{""name"":""" & CloudJson(folderName) & _
+  """,""displayName"":""" & CloudJson(CloudDisplayName(folderName, CloudRequestLanguage())) & _
+  """,""path"":""" & CloudJson(newRelativePath) & """,""kind"":""folder""}}"
 %>

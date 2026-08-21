@@ -1,0 +1,417 @@
+:root {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #1f2937;
+  background: #f3f6fa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 1px solid #cfd7e3;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #344054;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #f8fafc;
+}
+
+button.primary,
+#newFunction {
+  border-color: #1677db;
+  background: #1677db;
+  color: #fff;
+}
+
+button.danger {
+  border-color: #f4b4ae;
+  color: #b42318;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.admin-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.page-header h1,
+.page-header p {
+  margin: 0;
+}
+
+.page-header h1 {
+  font-size: 25px;
+}
+
+.page-header p {
+  margin-top: 6px;
+  color: #667085;
+  font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0;
+}
+
+.summary-grid article {
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  padding: 15px 17px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(16, 24, 40, 0.035);
+}
+
+.summary-grid strong,
+.summary-grid span {
+  display: block;
+}
+
+.summary-grid strong {
+  color: #155fa8;
+  font-size: 24px;
+}
+
+.summary-grid span {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.catalog-panel {
+  border: 1px solid #e1e6ee;
+  border-radius: 13px;
+  padding: 17px;
+  background: #fff;
+}
+
+.catalog-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 150px auto;
+  gap: 9px;
+  align-items: center;
+}
+
+.catalog-toolbar input,
+.catalog-toolbar select,
+.form-grid input,
+.form-grid select,
+.form-grid textarea,
+dialog > form > label input,
+dialog > form > label textarea,
+details textarea {
+  width: 100%;
+  border: 1px solid #d5dce7;
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+  background: #fff;
+}
+
+.catalog-toolbar input:focus,
+.catalog-toolbar select:focus,
+.form-grid input:focus,
+.form-grid select:focus,
+.form-grid textarea:focus,
+details textarea:focus {
+  border-color: #4b9cf4;
+  box-shadow: 0 0 0 3px rgba(48, 137, 235, 0.1);
+}
+
+#revisionInfo {
+  justify-self: end;
+  color: #667085;
+  font-size: 11px;
+}
+
+.admin-status {
+  min-height: 22px;
+  padding: 11px 2px 5px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.admin-status.error {
+  color: #b42318;
+}
+
+.admin-status.success {
+  color: #067647;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+th,
+td {
+  border-top: 1px solid #eaecf0;
+  padding: 11px 9px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+th {
+  color: #667085;
+  font-weight: 600;
+}
+
+.function-cell {
+  display: grid;
+  grid-template-columns: 36px minmax(150px, 1fr);
+  gap: 9px;
+  align-items: center;
+}
+
+.function-cell img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+.function-cell strong,
+.function-cell small {
+  display: block;
+}
+
+.function-cell small {
+  margin-top: 2px;
+  color: #7b8494;
+}
+
+.type-badge,
+.status-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #eef2f7;
+  color: #536074;
+  font-size: 10px;
+}
+
+.type-badge.system {
+  background: #e5f1ff;
+  color: #126ac4;
+}
+
+.status-badge.published {
+  background: #e7f8ef;
+  color: #067647;
+}
+
+.status-badge.disabled {
+  background: #fef0ef;
+  color: #b42318;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.row-actions button {
+  padding: 5px 8px;
+  font-size: 11px;
+}
+
+.empty-row {
+  padding: 32px;
+  color: #7a8496;
+  text-align: center;
+}
+
+dialog {
+  width: min(820px, calc(100vw - 30px));
+  max-height: calc(100vh - 30px);
+  border: 0;
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 26px 70px rgba(16, 24, 40, 0.3);
+}
+
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.42);
+}
+
+dialog form {
+  padding: 20px;
+}
+
+dialog header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+dialog h2,
+dialog header p {
+  margin: 0;
+}
+
+dialog header p {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 12px;
+}
+
+.icon-button {
+  border: 0;
+  padding: 2px 7px;
+  font-size: 22px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.form-grid label,
+.small-dialog label {
+  display: grid;
+  gap: 5px;
+  color: #475467;
+  font-size: 12px;
+}
+
+.form-grid .wide {
+  grid-column: 1 / -1;
+}
+
+fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  border: 1px solid #e2e7ef;
+  border-radius: 9px;
+  margin: 15px 0;
+  padding: 11px 13px;
+  color: #475467;
+  font-size: 12px;
+}
+
+fieldset legend {
+  padding: 0 5px;
+  font-weight: 600;
+}
+
+details {
+  border: 1px solid #e2e7ef;
+  border-radius: 9px;
+  padding: 10px;
+}
+
+details summary {
+  cursor: pointer;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+details textarea {
+  margin-top: 10px;
+  font-family: Consolas, monospace;
+  font-size: 11px;
+}
+
+dialog footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.small-dialog {
+  width: min(470px, calc(100vw - 30px));
+}
+
+.small-dialog h2,
+.small-dialog p {
+  margin-top: 0;
+}
+
+.small-dialog p {
+  color: #667085;
+  font-size: 12px;
+}
+
+.small-dialog label {
+  margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .admin-shell {
+    padding: 16px;
+  }
+
+  .page-header {
+    display: grid;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .catalog-toolbar,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid .wide {
+    grid-column: auto;
+  }
+
+  #revisionInfo {
+    justify-self: start;
+  }
+}

@@ -1,0 +1,18 @@
+<%
+RegisterKnowledge "overview", "webwindows|桌讯|系统是什么|是什么系统|web操作系统", "/ai/knowledge/overview.md"
+RegisterKnowledge "desktop", "桌面|开始菜单|任务栏|图标|壁纸", "/ai/knowledge/desktop.md"
+RegisterKnowledge "windows", "窗口|最小化|最大化|关闭窗口|拖动窗口|调整大小|任务栏预览", "/ai/knowledge/windows.md"
+RegisterKnowledge "functions", "功能是什么|什么是功能|应用|系统功能|我的功能", "/ai/knowledge/functions.md"
+RegisterKnowledge "function-center", "功能中心|安装|卸载|添加功能|移除功能|功能仓库", "/ai/knowledge/function-center.md"
+RegisterKnowledge "cloud-files", "云资料|我的云资料|公共资料|私人云资料|云文件", "/ai/knowledge/cloud-files.md"
+RegisterKnowledge "file-open", "打开文件|打开资料|文件怎么打开|保存文件|保存副本|预览文件", "/ai/knowledge/file-open.md"
+RegisterKnowledge "local-device-storage", "此设备|本地设备|本地文件|本地文件夹|选择文件夹|目录授权|storage", "/ai/knowledge/local-device-storage.md"
+RegisterKnowledge "settings", "设置|语言|地区|壁纸|网络与连接|功能管理", "/ai/knowledge/settings.md"
+RegisterKnowledge "sound", "声音|音量|静音|扬声器", "/ai/knowledge/sound.md"
+RegisterKnowledge "display", "显示|亮度|缩放|分辨率|屏幕", "/ai/knowledge/display.md"
+RegisterKnowledge "power-battery", "电源|电池|充电|交流电|耗电", "/ai/knowledge/power-battery.md"
+RegisterKnowledge "account", "账户|账号|登录|退出|游客|同步", "/ai/knowledge/account.md"
+RegisterKnowledge "developer-center", "开发者中心|开发功能|manifest|功能包|zip|开发者资格|提交审核", "/ai/knowledge/developer-center.md"
+RegisterKnowledge "mobile-android", "mobile|android|安卓|手机|平板|android host|移动版", "/ai/knowledge/mobile-android.md"
+RegisterKnowledge "troubleshooting", "为什么|无法|不能|没有|失败|不可用|不显示|出错|问题", "/ai/knowledge/troubleshooting.md"
+%>

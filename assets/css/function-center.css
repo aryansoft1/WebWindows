@@ -1,0 +1,480 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #172033;
+  background: #f5f7fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.function-center-shell {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.function-center-sidebar {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid #e2e7ef;
+  padding: 22px 14px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.function-center-brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px 22px;
+}
+
+.function-center-brand img {
+  width: 42px;
+  height: 42px;
+}
+
+.function-center-brand h1,
+.function-center-brand p {
+  margin: 0;
+}
+
+.function-center-brand h1 {
+  font-size: 19px;
+}
+
+.function-center-brand p {
+  margin-top: 3px;
+  color: #7a8496;
+  font-size: 11px;
+}
+
+.function-center-sidebar nav {
+  display: grid;
+  gap: 5px;
+}
+
+.function-center-sidebar nav button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: transparent;
+  color: #465168;
+  cursor: pointer;
+  text-align: left;
+}
+
+.function-center-sidebar nav button:hover {
+  background: #f0f4fa;
+}
+
+.function-center-sidebar nav button.active {
+  background: #e2efff;
+  color: #0867c9;
+  font-weight: 650;
+}
+
+.repository-state {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr);
+  gap: 9px;
+  align-items: start;
+  margin-top: auto;
+  border-top: 1px solid #edf0f5;
+  padding: 17px 8px 0;
+}
+
+.repository-state > span {
+  width: 9px;
+  height: 9px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: #98a2b3;
+}
+
+.repository-state > span.online {
+  background: #12b76a;
+}
+
+.repository-state > span.fallback {
+  background: #f79009;
+}
+
+.repository-state strong,
+.repository-state small {
+  display: block;
+}
+
+.repository-state strong {
+  font-size: 12px;
+}
+
+.repository-state small {
+  margin-top: 3px;
+  color: #7a8496;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.function-center-main {
+  min-width: 0;
+  padding: 26px 30px 34px;
+}
+
+.function-center-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.function-center-header h2,
+.function-center-header p {
+  margin: 0;
+}
+
+.function-center-header h2 {
+  font-size: 25px;
+}
+
+.function-center-header p {
+  margin-top: 6px;
+  color: #6b7587;
+  font-size: 13px;
+}
+
+.account-scope {
+  border: 1px solid #d7deea;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #596579;
+  font-size: 11px;
+}
+
+.function-center-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.function-center-header-actions button {
+  border: 1px solid #b9d6f5;
+  border-radius: 9px;
+  padding: 7px 11px;
+  background: #e7f2ff;
+  color: #0867c9;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+.function-center-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: 9px;
+  margin: 22px 0 12px;
+}
+
+.function-center-toolbar input {
+  width: 100%;
+  border: 1px solid #d6dde8;
+  border-radius: 10px;
+  padding: 10px 13px;
+  outline: none;
+  background: #fff;
+}
+
+.function-center-toolbar input:focus {
+  border-color: #4b9cf4;
+  box-shadow: 0 0 0 3px rgba(48, 137, 235, 0.12);
+}
+
+.function-center-toolbar button,
+.catalog-card-actions button {
+  border: 1px solid #cfd7e3;
+  border-radius: 9px;
+  padding: 8px 12px;
+  background: #fff;
+  color: #344054;
+  cursor: pointer;
+}
+
+.catalog-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.catalog-summary span {
+  border-radius: 999px;
+  padding: 5px 9px;
+  background: #e9edf4;
+  color: #536074;
+  font-size: 11px;
+}
+
+.catalog-status {
+  min-height: 20px;
+  margin: 10px 2px;
+  color: #697386;
+  font-size: 12px;
+}
+
+.catalog-status.error {
+  color: #b42318;
+}
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 13px;
+}
+
+.catalog-card {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 12px;
+  border: 1px solid rgba(21, 31, 48, 0.08);
+  border-radius: 14px;
+  padding: 15px;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(24, 39, 65, 0.04);
+}
+
+.catalog-card > img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.catalog-card h3,
+.catalog-card p {
+  margin: 0;
+}
+
+.catalog-card h3 {
+  overflow: hidden;
+  color: #202a3b;
+  font-size: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.catalog-card p {
+  min-height: 34px;
+  margin-top: 5px;
+  color: #717b8d;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.catalog-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.catalog-card-meta span {
+  border-radius: 999px;
+  padding: 3px 7px;
+  background: #f0f3f7;
+  color: #657083;
+  font-size: 10px;
+}
+
+.catalog-card-meta span.system {
+  background: #e7f1ff;
+  color: #126ac4;
+}
+
+.catalog-card-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+  padding-top: 3px;
+}
+
+.catalog-card-actions button.primary {
+  border-color: #1677db;
+  background: #1677db;
+  color: #fff;
+}
+
+.catalog-card-actions button.danger {
+  border-color: #f3b4ae;
+  color: #b42318;
+}
+
+.catalog-empty {
+  grid-column: 1 / -1;
+  border: 1px dashed #cfd7e3;
+  border-radius: 14px;
+  padding: 42px 20px;
+  color: #747f91;
+  text-align: center;
+}
+
+dialog {
+  width: min(430px, calc(100vw - 32px));
+  border: 0;
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 24px 60px rgba(16, 24, 40, 0.28);
+}
+
+dialog::backdrop {
+  background: rgba(15, 23, 42, 0.38);
+}
+
+dialog form {
+  padding: 20px;
+}
+
+dialog h3,
+dialog p {
+  margin-top: 0;
+}
+
+.remove-function-note {
+  border-radius: 9px;
+  padding: 10px;
+  background: #f2f4f7;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.dialog-actions button {
+  border: 1px solid #cfd5df;
+  border-radius: 8px;
+  padding: 8px 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.dialog-actions button.danger {
+  border-color: #d92d20;
+  background: #d92d20;
+  color: #fff;
+}
+
+@media (max-width: 820px), (max-width: 1000px) and (max-height: 500px) {
+  .function-center-shell {
+    display: block;
+    min-width: 0;
+  }
+
+  .function-center-sidebar {
+    position: sticky;
+    z-index: 20;
+    top: 0;
+    display: block;
+    border-right: 0;
+    border-bottom: 1px solid #e2e7ef;
+    padding: 8px;
+    backdrop-filter: blur(14px);
+  }
+
+  .function-center-main {
+    width: 100%;
+    padding: 16px 12px 28px;
+  }
+
+  .function-center-brand {
+    padding: 0 4px 8px;
+  }
+
+  .function-center-brand img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .function-center-brand h1 {
+    font-size: 16px;
+  }
+
+  .function-center-brand p,
+  .repository-state {
+    display: none;
+  }
+
+  .function-center-sidebar nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+
+  .function-center-sidebar nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .function-center-sidebar nav button {
+    flex: 0 0 auto;
+    min-height: 44px;
+    padding-inline: 14px;
+    text-align: center;
+  }
+
+  .function-center-header {
+    flex-direction: column;
+  }
+
+  .function-center-header-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .function-center-header-actions button,
+  .function-center-toolbar button,
+  .catalog-card-actions button,
+  .dialog-actions button {
+    min-height: 44px;
+  }
+
+  .function-center-toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-top: 16px;
+  }
+
+  .function-center-toolbar input {
+    min-width: 0;
+    min-height: 44px;
+  }
+
+  .catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .catalog-card-actions {
+    justify-content: stretch;
+  }
+
+  .catalog-card-actions button {
+    flex: 1 1 auto;
+  }
+}

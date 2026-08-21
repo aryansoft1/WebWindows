@@ -7,6 +7,7 @@
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://unpkg.com/lucide-static@latest/font/lucide.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/lucide@latest"></script>
+  <script defer src="assets/js/admin-shell.js?v=20260729-1"></script>
 </head>
 <body class="flex h-screen overflow-hidden">
   <!-- 左侧导航栏 -->
@@ -17,11 +18,19 @@
       <a href="users.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">👥 用户管理</a>
       <a href="files.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">📁 云资料管理</a>
       <a href="news.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">📰 新闻管理</a>
+      <a href="functions.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">🧩 功能仓库</a>
+      <a href="developer-platform.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">🛠️ 开发者平台</a>
       <a href="feedback.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">📬 咨询反馈</a>
       <a href="datacenter.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">🌐 数据中心</a>
       <a href="settings.html" target="mainFrame" class="block px-3 py-2 rounded hover:bg-gray-700">⚙️ 系统设置</a>
     </nav>
-    <div class="border-t border-gray-700 p-3 text-sm text-gray-400">© 2025 AryanSoft</div>
+    <div class="border-t border-gray-700 p-3 text-sm text-gray-400">
+      <div class="flex items-center justify-between mb-2">
+        <span id="adminSessionName">admin</span>
+        <button type="button" onclick="adminLogout()" class="text-gray-300 hover:text-white">退出</button>
+      </div>
+      © 2025 AryanSoft
+    </div>
   </aside>
 
   <!-- 主内容区域 -->

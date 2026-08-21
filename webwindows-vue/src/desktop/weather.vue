@@ -32,7 +32,7 @@ export default {
       weatherIcon: "https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg",
       weatherLocation: "定位中...",
       touchOffset: { x: 0, y: 0 },
-      lang: (navigator.language || "zh").slice(0, 2),
+      lang: ({ jp: "ja", tw: "zh" }[localStorage.getItem("lang")] || localStorage.getItem("lang") || (navigator.language || "zh").slice(0, 2)),
       refreshTimer: null,
       isVisible: true,
       hasDragged: false,
@@ -55,6 +55,12 @@ export default {
     // 鼠标移动和松开事件绑定到document，支持拖拽
     document.addEventListener("mousemove", this.onMouseMove);
     document.addEventListener("mouseup", this.onMouseUp);
+    this.onLanguageChanged = (event) => {
+      const selected = event.detail?.language || localStorage.getItem("lang") || "zh";
+      this.lang = ({ jp: "ja", tw: "zh" }[selected] || selected);
+      this.loadWeather();
+    };
+    window.addEventListener("webwindows:language-changed", this.onLanguageChanged);
 
     // 初始化加载天气
     this.loadWeather();
@@ -67,6 +73,7 @@ export default {
   beforeUnmount() {
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mouseup", this.onMouseUp);
+    window.removeEventListener("webwindows:language-changed", this.onLanguageChanged);
     clearInterval(this.refreshTimer);
   },
   methods: {

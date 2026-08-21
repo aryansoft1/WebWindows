@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>功能仓库管理</title>
+  <link rel="stylesheet" href="assets/css/function-catalog-admin.css?v=20260729-1">
+  <script defer src="assets/js/function-catalog-admin.js?v=20260729-1"></script>
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="page-header">
+      <div>
+        <h1>功能仓库管理</h1>
+        <p>管理系统功能、预装功能、普通功能及当前发布目录。</p>
+      </div>
+      <div class="header-actions">
+        <button id="reloadCatalog" type="button" class="secondary">重新读取</button>
+        <button id="newFunction" type="button">新建功能</button>
+        <button id="publishCatalog" type="button" class="primary">发布目录</button>
+      </div>
+    </header>
+
+    <section class="summary-grid">
+      <article><strong id="totalCount">—</strong><span>目录功能</span></article>
+      <article><strong id="systemCount">—</strong><span>系统功能</span></article>
+      <article><strong id="preinstalledCount">—</strong><span>默认预装</span></article>
+      <article><strong id="optionalCount">—</strong><span>普通功能</span></article>
+    </section>
+
+    <section class="catalog-panel">
+      <div class="catalog-toolbar">
+        <input id="catalogSearch" type="search" placeholder="搜索名称或功能 ID">
+        <select id="catalogFilter">
+          <option value="all">全部类型</option>
+          <option value="system">系统功能</option>
+          <option value="preinstalled">默认预装</option>
+          <option value="optional">普通功能</option>
+          <option value="disabled">已下架</option>
+        </select>
+        <span id="revisionInfo">尚未读取发布版本</span>
+      </div>
+      <div id="adminStatus" class="admin-status" role="status">正在读取功能目录……</div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>功能</th>
+              <th>类型</th>
+              <th>版本</th>
+              <th>入口</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="catalogRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="functionEditor">
+    <form method="dialog" id="functionForm">
+      <header>
+        <div>
+          <h2 id="editorTitle">编辑功能</h2>
+          <p>修改将在点击“发布目录”后对 WebWindows 生效。</p>
+        </div>
+        <button value="cancel" class="icon-button" aria-label="关闭">×</button>
+      </header>
+
+      <div class="form-grid">
+        <label class="wide">功能 ID
+          <input id="functionId" required pattern="[a-z0-9]+([._-][a-z0-9]+)+">
+        </label>
+        <label>显示名称
+          <input id="functionName" required>
+        </label>
+        <label>版本
+          <input id="functionVersion" value="1.0.0" required>
+        </label>
+        <label class="wide">说明
+          <textarea id="functionDescription" rows="2"></textarea>
+        </label>
+        <label>分发类型
+          <select id="functionDistribution">
+            <option value="system">系统功能</option>
+            <option value="preinstalled">默认预装</option>
+            <option value="optional">普通可添加</option>
+          </select>
+        </label>
+        <label>目录状态
+          <select id="functionStatus">
+            <option value="published">上架</option>
+            <option value="disabled">下架</option>
+          </select>
+        </label>
+        <label class="wide">入口地址
+          <input id="functionEntry" required placeholder="example.html">
+        </label>
+        <label class="wide">图标地址
+          <input id="functionIcon" required placeholder="assets/icons/example.png">
+        </label>
+        <label>分类
+          <input id="functionCategory" placeholder="office">
+        </label>
+        <label>窗口模式
+          <select id="windowMode">
+            <option value="iframe">iframe</option>
+            <option value="native">原生窗口</option>
+            <option value="shell">系统适配器</option>
+          </select>
+        </label>
+        <label>窗口宽度
+          <input id="windowWidth" value="900px">
+        </label>
+        <label>窗口高度
+          <input id="windowHeight" value="640px">
+        </label>
+        <label>开始菜单排序
+          <input id="startMenuOrder" type="number" min="0" value="100">
+        </label>
+        <label>文件扩展名
+          <input id="fileExtensions" placeholder=".docx, .doc">
+        </label>
+      </div>
+
+      <fieldset>
+        <legend>桌面集成</legend>
+        <label><input id="showStartMenu" type="checkbox" checked> 开始菜单显示</label>
+        <label><input id="showDesktop" type="checkbox"> 默认显示桌面图标</label>
+        <label><input id="singletonWindow" type="checkbox" checked> 单一窗口</label>
+      </fieldset>
+
+      <details>
+        <summary>高级定义 JSON</summary>
+        <textarea id="advancedDefinition" rows="12" spellcheck="false"></textarea>
+      </details>
+
+      <footer>
+        <button value="cancel" class="secondary">取消</button>
+        <button id="saveFunctionDraft" value="default" class="primary">保存到待发布目录</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <dialog id="publishDialog" class="small-dialog">
+    <form method="dialog">
+      <h2>发布功能目录</h2>
+      <p>发布后，WebWindows 将从服务器 API 读取这个版本。</p>
+      <label>目录版本
+        <input id="publishVersion" required>
+      </label>
+      <label>发布说明
+        <textarea id="publishNote" rows="3" placeholder="说明本次变更"></textarea>
+      </label>
+      <footer>
+        <button value="cancel" class="secondary">取消</button>
+        <button id="confirmPublish" value="default" class="primary">确认发布</button>
+      </footer>
+    </form>
+  </dialog>
+</body>
+</html>

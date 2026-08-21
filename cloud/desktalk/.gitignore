@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+bigmodel.env
+bigmodel.env.*
+!bigmodel.env.example

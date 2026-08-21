@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="WebWindows 官方开发者文档、功能包样例和提交入口。">
+  <title>WebWindows 开发者中心</title>
+  <script src="assets/js/locale-region.js?v=20260802-1"></script>
+  <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
+  <link rel="stylesheet" href="assets/css/developer-center.css?v=20260729-mobile-2">
+  <script defer src="assets/js/cloud-file-dialog.js?v=20260729-1"></script>
+  <script defer src="assets/js/developer-center.js?v=20260729-8"></script>
+</head>
+<body>
+<header class="site-header"><a class="brand" href="#overview"><img src="assets/icons/logo_large.png" alt=""><span><strong>WebWindows</strong><small>开发者中心</small></span></a><nav><a href="#quickstart">新手入门</a><a href="#api-reference">API</a><a href="#manifest-reference">Manifest</a><a href="#samples">样例</a><a href="#submit">发布功能</a></nav><a id="returnWebWindows" class="back-link" href="/">返回 WebWindows</a></header>
+<div class="page-shell">
+<aside class="side-nav"><strong>开始开发</strong><a href="#overview">开发者中心介绍</a><a href="#learning-path">新手路线</a><a href="#quickstart">5 分钟开始</a><strong>官方参考</strong><a href="#api-reference">Developer API v1</a><a href="#errors">错误码</a><a href="#manifest-reference">Manifest</a><a href="#samples">默认样例</a><strong>账户与发布</strong><a href="#developer-account">开发者资格</a><a href="#submit">提交功能包</a><a href="#content-policy">发布边界</a></aside>
+<main>
+<section id="overview" class="hero"><div><span class="eyebrow">WebWindows Developer</span><h1>把一个网页，变成可安装的 WebWindows 功能</h1><p>不需要开发桌面客户端。准备一个离线网页、一个 Manifest，再打包成 ZIP，即可提交功能仓库审核。</p><div class="actions"><a class="button primary" href="#quickstart">从零开始</a><button class="button" type="button" data-save-sample>保存样例到云资料</button></div></div><pre>hello-webwindows.zip
+├─ manifest.json
+├─ index.html
+└─ icon.svg</pre></section>
+<div id="contentRelease" class="release-banner" role="status">正在读取官方文档版本……</div><div id="sampleCloudStatus" class="status sample-save-status" role="status" aria-live="polite"></div>
+<section id="learning-path"><header class="section-title"><span>01</span><div><h2>第一次开发，按这条路线走</h2><p>先跑通最小样例，再逐步增加能力。</p></div></header><ol class="learning-grid"><li><b>下载样例</b><small>解压并打开 index.html。</small></li><li><b>修改网页</b><small>把依赖全部放进包内。</small></li><li><b>修改 Manifest</b><small>更换 ID、名称和版本。</small></li><li><b>重新压缩</b><small>Manifest 位于 ZIP 根目录。</small></li><li><b>上传云资料</b><small>放入自己的私人文件。</small></li><li><b>提交审核</b><small>从开发者中心选择 ZIP。</small></li></ol></section>
+<section id="quickstart"><header class="section-title"><span>02</span><div><h2>5 分钟快速开始</h2><p>当前运行模型是 browser-zip-sandbox-v1。</p></div></header><div class="callout"><b>沙箱边界</b><span>不允许外部网络、同源权限或 ES Module；使用普通脚本并把依赖放入 ZIP。</span></div><div class="code-card"><header><b>index.html</b><button type="button" data-copy-target="quickstartCode">复制</button></header><pre id="quickstartCode">&lt;!doctype html&gt;
+&lt;meta charset="utf-8"&gt;
+&lt;button id="hello"&gt;你好，WebWindows&lt;/button&gt;
+&lt;p id="result"&gt;&lt;/p&gt;
+&lt;script&gt;
+document.getElementById("hello").onclick = function () {
+  document.getElementById("result").textContent = "功能正在运行";
+};
+&lt;/script&gt;</pre></div></section>
+<section id="api-reference"><header class="section-title"><span>03</span><div><h2>Developer API v1</h2><p>资格、API Key、Manifest、ZIP 上传和审核状态。</p></div></header>
+<h3>认证</h3><div class="reference-grid"><article><b>所有请求</b><code>X-WebWindows-Developer-Request: v1</code><p>缺失时返回 403。</p></article><article><b>登录会话</b><code>profile / enroll / rotate-key</code><p>使用当前 WebWindows 会话。</p></article><article><b>开发者 Key</b><code>X-WebWindows-Developer-Key: wwdev_…</code><p>提交、上传、查询使用；只显示一次。</p></article></div>
+<h3 id="endpoints">端点</h3><div class="endpoint-table"><div class="endpoint-row head"><b>方法</b><b>操作</b><b>认证</b><b>用途</b></div><div class="endpoint-row"><b>GET</b><code>?action=spec</code><span>请求标识</span><span>API 能力和限制</span></div><div class="endpoint-row"><b>GET</b><code>?action=profile</code><span>会话</span><span>当前开发者资格</span></div><div class="endpoint-row"><b>POST</b><code>?action=enroll</code><span>会话</span><span>申请资格</span></div><div class="endpoint-row"><b>POST</b><code>?action=rotate-key</code><span>会话</span><span>轮换 Key</span></div><div class="endpoint-row"><b>POST</b><code>?action=submit</code><span>Key</span><span>登记 Manifest</span></div><div class="endpoint-row"><b>POST</b><code>?action=upload-package&amp;submissionId=…</code><span>Key</span><span>上传原始 ZIP</span></div><div class="endpoint-row"><b>GET</b><code>?action=submissions</code><span>Key</span><span>最近 100 条提交</span></div></div>
+<h3 id="errors">响应与错误码</h3><p>成功：<code>{"ok":true}</code>；失败：<code>{"ok":false,"code":"…","message":"…"}</code>。</p><div class="error-grid"><article><code>LOGIN_REQUIRED</code><b>401</b><small>需要登录会话</small></article><article><code>API_KEY_REQUIRED / API_KEY_INVALID</code><b>401</b><small>Key 缺失或无效</small></article><article><code>DEVELOPER_REQUEST_REQUIRED</code><b>403</b><small>缺少 v1 请求标识</small></article><article><code>DEVELOPER_NOT_APPROVED</code><b>403</b><small>资格未批准</small></article><article><code>APP_ID_INVALID / VERSION_INVALID</code><b>400</b><small>ID 或版本无效</small></article><article><code>MANIFEST_INVALID</code><b>400</b><small>Manifest 无效或 ID 不一致</small></article><article><code>PACKAGE_SIZE_INVALID / PACKAGE_SIGNATURE_INVALID</code><b>400</b><small>ZIP 大小或签名无效</small></article><article><code>PACKAGE_INTEGRITY_MISMATCH</code><b>400</b><small>SHA-256 不一致</small></article><article><code>APP_ID_OWNED / PACKAGE_UPLOAD_LOCKED</code><b>409</b><small>ID 被占用或状态锁定</small></article><article><code>SUBMISSION_RATE_LIMIT</code><b>429</b><small>每小时最多 30 个版本</small></article></div>
+<h3 id="versioning">版本与安全</h3><ul class="rules"><li>当前稳定 API 为 v1；破坏兼容性的变化使用新版本。</li><li>功能版本使用 1.0.0 形式，已发布版本不原地替换。</li><li>浏览器和服务器分别计算 ZIP SHA-256。</li><li>沙箱无同源、无网络，最多 500 个文件、30 MB 解压体积。</li><li>暂停开发者会撤销 Key；功能下架不应删除用户数据。</li></ul></section>
+<section id="manifest-reference"><header class="section-title"><span>04</span><div><h2>Manifest 参考</h2><p>描述身份、入口、安装、摆放和窗口参数。</p></div></header><div class="manifest-layout"><div class="code-card"><header><b>manifest.json</b><button type="button" data-copy-target="manifestExample">复制</button></header><pre id="manifestExample">{
+  "id": "com.example.hello",
+  "legacyIds": [],
+  "type": "application",
+  "name": "Hello WebWindows",
+  "description": "最小可运行功能样例。",
+  "category": "tools",
+  "version": "1.0.0",
+  "icon": "icon.svg",
+  "entry": "index.html",
+  "install": { "defaultState": "available", "source": "repository", "uninstallable": true },
+  "placement": { "desktop": false, "startMenu": true, "startMenuGroup": "user", "startMenuOrder": 100, "allFunctions": true, "taskbar": false },
+  "window": { "mode": "iframe", "singleton": true, "width": "760px", "height": "520px" }
+}</pre></div><dl><div><dt>id</dt><dd>全局唯一，推荐 com.company.product。</dd></div><div><dt>type</dt><dd>第三方使用 application；system 保留给系统。</dd></div><div><dt>entry / icon</dt><dd>ZIP 内安全相对路径。</dd></div><div><dt>install</dt><dd>仓库功能通常 available 且可移除关联。</dd></div><div><dt>placement</dt><dd>开始菜单、桌面和任务栏默认位置。</dd></div><div><dt>window</dt><dd>第三方包当前使用隔离 iframe。</dd></div></dl></div></section>
+<section id="samples"><header class="section-title"><span>05</span><div><h2>默认功能样例</h2><p>先复制能运行的最小包，再改成自己的功能。</p></div></header><div class="sample-card"><i>W</i><div><h3>Hello WebWindows</h3><p>纯 HTML/CSS/JavaScript、无网络、无外部依赖，含完整 Manifest 和图标。</p></div><div class="sample-actions"><button class="button primary" type="button" data-save-sample>保存到云资料</button><a class="button" href="developer-samples/hello-webwindows/index.html" target="_blank" rel="noopener">预览</a><a href="developer-samples/hello-webwindows/manifest.json" target="_blank" rel="noopener">查看 Manifest</a></div></div></section>
+<section id="developer-account"><header class="section-title"><span>06</span><div><h2>开发者资格</h2><p>API Key 是发布凭证，不要放进功能包。</p></div></header><div id="developerStatus" class="status" role="status">正在读取开发者状态……</div><div class="profile-card"><div><h3>当前资格</h3><p id="profileDescription">需要登录 WebWindows 后申请。</p></div><div class="profile-actions"><input id="developerDisplayName" aria-label="开发者或团队显示名称" placeholder="开发者或团队显示名称"><button id="enrollDeveloper" type="button" class="primary">申请开发者资格</button><button id="rotateDeveloperKey" type="button">生成/更换 API Key</button></div><div id="apiKeyResult" class="api-key-result" hidden><strong>新的 API Key（只显示一次）</strong><code id="apiKeyValue"></code><button id="copyApiKey" type="button">复制</button></div></div></section>
+<section id="submit"><header class="section-title"><span>07</span><div><h2>提交功能包</h2><p>ZIP 从私人云资料读取，Manifest 与包进入隔离审核区。</p></div></header><form id="manifestSubmissionForm"><label>API Key<input id="submissionApiKey" type="password" autocomplete="off" required></label><div class="two-columns"><label>功能 ID<input id="submissionAppId" required value="com.example.hello"></label><label>版本<input id="submissionVersion" required value="1.0.0"></label></div><div class="cloud-package-field"><span>云资料中的 ZIP（最大 10 MB）</span><div><button id="chooseCloudPackage" type="button">从云资料选择</button><output id="cloudPackageSummary">尚未选择云资料</output></div></div><label>包 SHA-256<input id="submissionIntegrity" maxlength="64" readonly placeholder="由浏览器或服务器计算"></label><label>Manifest JSON<textarea id="submissionManifest" rows="20" spellcheck="false"></textarea></label><button id="submitPackage" type="submit" class="primary">提交 Manifest 与功能包</button></form></section>
+<section id="content-policy"><header class="section-title"><span>08</span><div><h2>文档、后台与未来社区的边界</h2><p>后台负责发布，开发者中心负责阅读和操作。</p></div></header><div class="boundary-grid"><article><b>开发者中心前台</b><p>公开教程、API、Manifest、样例、公告，以及登录后的资格与提交。</p></article><article><b>后台管理</b><p>文档草稿、版本、发布/下线、样例、公告，以及资格和功能包审核。</p></article><article><b>未来交流平台</b><p>讨论、问答、样例分享和反馈；引用官方文档但不替代规范。</p></article></div></section>
+</main></div>
+<footer><span>WebWindows Developer Documentation</span><a href="#overview">返回顶部</a></footer>
+</body></html>

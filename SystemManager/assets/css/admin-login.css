@@ -1,0 +1,52 @@
+:root {
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  color: #1d2939;
+  background: linear-gradient(145deg, #eef5ff, #f8f9fc 55%, #e8edff);
+}
+* { box-sizing: border-box; }
+body { display: grid; min-height: 100vh; margin: 0; place-items: center; }
+button, input { font: inherit; }
+.login-card {
+  width: min(420px, calc(100vw - 32px));
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 24px 70px rgba(31, 50, 81, 0.16);
+  backdrop-filter: blur(18px);
+}
+.login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+.login-mark {
+  display: grid; width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(145deg, #2d9cf4, #5857dc);
+  color: #fff; font-size: 23px; font-weight: 750; place-items: center;
+}
+.login-brand h1, .login-brand p { margin: 0; }
+.login-brand h1 { font-size: 20px; }
+.login-brand p { margin-top: 4px; color: #667085; font-size: 12px; }
+form, label { display: grid; }
+form { gap: 14px; }
+label { gap: 6px; color: #475467; font-size: 12px; }
+input {
+  width: 100%; border: 1px solid #d3dae6; border-radius: 9px;
+  padding: 10px 11px; outline: none; background: #fff;
+}
+input:focus { border-color: #4598ef; box-shadow: 0 0 0 3px rgba(45, 132, 224, 0.12); }
+.captcha-row { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 8px; }
+#captchaQuestion {
+  border: 1px solid #cbd5e1; border-radius: 9px;
+  background: repeating-linear-gradient(-35deg, #f1f5f9, #f1f5f9 8px, #e7eef7 8px, #e7eef7 16px);
+  color: #25476c; cursor: pointer; font-weight: 700; letter-spacing: 1px;
+}
+.primary {
+  border: 0; border-radius: 9px; padding: 11px; background: #1677db;
+  color: #fff; cursor: pointer; font-weight: 650;
+}
+.primary:disabled { cursor: wait; opacity: 0.6; }
+.login-status { min-height: 18px; color: #667085; font-size: 12px; }
+.login-status.error { color: #b42318; }
+.login-status.success { color: #067647; }
+.back-link {
+  display: block; margin-top: 18px; color: #667085;
+  font-size: 12px; text-align: center; text-decoration: none;
+}

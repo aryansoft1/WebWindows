@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; connect-src 'self'; frame-src 'self'; img-src 'self' data:; font-src data:; media-src data:; object-src 'none'; base-uri 'none'">
+  <title>WebWindows 功能运行环境</title>
+  <link rel="stylesheet" href="assets/css/package-runtime.css?v=20260729-1">
+  <script defer src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script defer src="assets/js/package-runtime.js?v=20260729-1"></script>
+</head>
+<body>
+  <main>
+    <div id="runtimeState" class="runtime-state">
+      <div class="runtime-spinner" aria-hidden="true"></div>
+      <h1>正在准备功能</h1>
+      <p id="runtimeMessage">正在读取已发布的功能包……</p>
+    </div>
+    <iframe id="packageFrame"
+            title="第三方功能沙箱"
+            sandbox="allow-scripts allow-forms allow-modals allow-downloads"
+            referrerpolicy="no-referrer"
+            hidden></iframe>
+  </main>
+</body>
+</html>

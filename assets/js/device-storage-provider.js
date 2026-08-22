@@ -9,15 +9,73 @@
     return { supported: false, source: "unsupported", reason: reason || "unsupported" };
   }
 
+  function storageError(code) {
+    const error = new Error(code);
+    error.code = code;
+    return error;
+  }
+
   function normalizePath(path) {
-    const parts = Array.isArray(path) ? path : (typeof path === "string" ? path.split("/") : []);
-    return parts.filter(Boolean).map((part) => {
-      const value = String(part);
-      if (value === "." || value === ".." || value.includes("/") || value.includes("\\")) {
-        throw new Error("invalid-storage-path");
+    if (path == null || path === "") return [];
+    if (typeof path === "string" && (path.startsWith("/") || path.endsWith("/") || path.includes("\\"))) {
+      throw storageError("invalid-storage-path");
+    }
+    const parts = Array.isArray(path) ? path : (typeof path === "string" ? path.split("/") : null);
+    if (!parts) throw storageError("invalid-storage-path");
+    return parts.map((part) => {
+      if (typeof part !== "string" || !part || part === "." || part === ".." || part.includes("/")
+          || part.includes("\\") || part.includes("\0") || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(part)) {
+        throw storageError("invalid-storage-path");
       }
-      return value;
+      return part;
     });
+  }
+
+  function normalizePickerOptions(options) {
+    if (options == null) return {};
+    if (typeof options !== "object" || Array.isArray(options)) throw storageError("invalid-storage-params");
+    if (Object.prototype.hasOwnProperty.call(options, "writable") && typeof options.writable !== "boolean") {
+      throw storageError("invalid-storage-params");
+    }
+    if (Object.prototype.hasOwnProperty.call(options, "replaceVolumeId")
+        && options.replaceVolumeId != null && typeof options.replaceVolumeId !== "string") {
+      throw storageError("invalid-storage-params");
+    }
+    return options;
+  }
+
+  function normalizeCancellation(error) {
+    if (error?.name === "AbortError" || error?.code === "storage-picker-cancelled"
+        || error?.message === "storage-picker-cancelled") return storageError("user-cancelled");
+    return error;
+  }
+
+  function validatePermission(value) {
+    const states = new Set(["granted", "prompt", "denied", "revoked", "unsupported"]);
+    if (!value || typeof value !== "object" || !states.has(value.state)
+        || typeof value.readable !== "boolean" || typeof value.writable !== "boolean"
+        || typeof value.persisted !== "boolean" || typeof value.revoked !== "boolean") {
+      throw storageError("invalid-response");
+    }
+    return value;
+  }
+
+  function validateNativeVolume(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)
+        || typeof value.id !== "string" || !/^saf-[A-Za-z0-9-]{8,}$/.test(value.id)
+        || value.id.includes("://") || typeof value.name !== "string" || !value.name
+        || value.kind !== "directory" || value.source !== "android-saf") {
+      throw storageError("invalid-response");
+    }
+    validatePermission(value.permission);
+    return value;
+  }
+
+  function requireNativeVolumeId(value) {
+    if (typeof value !== "string" || !/^saf-[A-Za-z0-9-]{8,}$/.test(value)) {
+      throw storageError("storage-volume-not-found");
+    }
+    return value;
   }
 
   function randomId(prefix) {
@@ -136,7 +194,7 @@
           directoryPicker: { supported: pickerSupported, source: pickerSupported ? "file-system-access-api" : "unsupported" },
           persistentHandles: { supported: pickerSupported && Boolean(global.indexedDB), source: "indexeddb" },
           read: { supported: pickerSupported, source: pickerSupported ? "file-system-access-api" : "unsupported" },
-          write: { supported: pickerSupported, source: pickerSupported ? "file-system-access-api" : "unsupported" }
+          write: { supported: false, source: "unsupported" }
         };
       },
       async listVolumes() {
@@ -152,8 +210,17 @@
       },
       async pickDirectory(options) {
         if (!pickerSupported) return unsupported("directory-picker-unavailable");
-        const handle = await global.showDirectoryPicker({ mode: options?.writable ? "readwrite" : "read" });
-        const id = randomId("browser-dir");
+        const normalizedOptions = normalizePickerOptions(options);
+        const replacementId = normalizedOptions.replaceVolumeId || "";
+        await loadHandles();
+        if (replacementId && !memoryHandles.has(replacementId)) throw storageError("storage-volume-not-found");
+        let handle;
+        try {
+          handle = await global.showDirectoryPicker({ mode: normalizedOptions.writable ? "readwrite" : "read" });
+        } catch (error) {
+          throw normalizeCancellation(error);
+        }
+        const id = replacementId || randomId("browser-dir");
         await persistHandle({ id, name: handle.name, handle });
         const record = memoryHandles.get(id);
         const result = { id, name: handle.name, kind: "directory", permission: await permissionFor(handle, "read", record?.persisted), source: "file-system-access-api" };
@@ -203,28 +270,49 @@
         directoryPicker: { supported: true, source: "android-saf" },
         persistentHandles: { supported: true, source: "android-saf" },
         read: { supported: true, source: "android-saf" },
-        write: { supported: true, source: "android-saf" }
+        write: { supported: false, source: "unsupported" }
       }),
-      listVolumes: () => call("storageListVolumes"),
+      async listVolumes() {
+        const result = await call("storageListVolumes");
+        if (!Array.isArray(result)) throw storageError("invalid-response");
+        return result.map(validateNativeVolume);
+      },
       async pickDirectory(options) {
-        const result = await call("storagePickDirectory", { writable: options?.writable !== false });
+        const normalizedOptions = normalizePickerOptions(options);
+        const replacementId = normalizedOptions.replaceVolumeId == null ? null : requireNativeVolumeId(normalizedOptions.replaceVolumeId);
+        let result;
+        try {
+          result = await call("storagePickDirectory", {
+            writable: normalizedOptions.writable !== false,
+            replaceVolumeId: replacementId
+          });
+        } catch (error) {
+          throw normalizeCancellation(error);
+        }
+        validateNativeVolume(result);
         emit?.("webwindows:storage-change", { reason: "directory-picked", volume: result });
         return result;
       },
       requestPermission: async (volumeId) => {
+        requireNativeVolumeId(volumeId);
         const volumes = await call("storageListVolumes");
+        if (!Array.isArray(volumes)) throw storageError("invalid-response");
+        volumes.forEach(validateNativeVolume);
         return volumes.find((volume) => volume.id === volumeId)?.permission || { state: "revoked", readable: false, writable: false, persisted: false, revoked: true };
       },
       async listDirectory(volumeId, path) {
+        requireNativeVolumeId(volumeId);
         const basePath = normalizePath(path);
         const entries = await call("storageListDirectory", { volumeId, path: basePath });
+        if (!Array.isArray(entries)) throw storageError("invalid-response");
         return entries.map((entry) => Object.assign({}, entry, { path: [...basePath, entry.name] }));
       },
       async openFile(volumeId, path) {
+        requireNativeVolumeId(volumeId);
         const result = await call("storageOpenFile", { volumeId, path: normalizePath(path) });
         return { metadata: result.metadata, data: decodeBase64(result.base64) };
       },
-      getMetadata: (volumeId, path) => call("storageGetMetadata", { volumeId, path: normalizePath(path) })
+      getMetadata: (volumeId, path) => call("storageGetMetadata", { volumeId: requireNativeVolumeId(volumeId), path: normalizePath(path) })
     };
   }
 

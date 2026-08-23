@@ -1236,9 +1236,6 @@ body.webwindows-visual-brightness::after {
     clip-path: polygon(55% 0, 8% 56%, 43% 56%, 30% 100%, 92% 40%, 57% 40%);
     filter: drop-shadow(0 0 1px rgba(0, 0, 0, .75));
 }
-.battery-indicator.is-disconnected { color: #ffb4ab; }
-.battery-indicator.is-disconnected .battery-indicator__level { width: 0; }
-
 .volume-range { width: 180px; margin: 16px 0 8px; accent-color: #1688d4; }
 
 .taskbar-window-preview {

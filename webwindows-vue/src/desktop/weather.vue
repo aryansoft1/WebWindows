@@ -1,6 +1,7 @@
 <template>
-  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle" @mousedown="onMouseDown"
-    @touchstart.prevent="onTouchStart">
+  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle"
+    @pointerdown="onPointerDown" @pointermove="onPointerMove"
+    @pointerup="onPointerEnd" @pointercancel="onPointerEnd">
     <!-- 顶部：城市在左，关闭在右 -->
     <div class="weather-header">
       <div id="weather-location" class="weather-location">{{ weatherLocation }}</div>
@@ -27,11 +28,11 @@ export default {
       position: { x: 100, y: 100 }, // 初始位置，可根据需要调整
       isDragging: false,
       dragOffset: { x: 0, y: 0 },
+      activePointerId: null,
       weatherTemp: "--°C",
       weatherDesc: "加载中...",
       weatherIcon: "https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg",
       weatherLocation: "定位中...",
-      touchOffset: { x: 0, y: 0 },
       lang: (navigator.language || "zh").slice(0, 2),
       refreshTimer: null,
       geoWatchId: null,
@@ -54,10 +55,6 @@ export default {
     }
   },
   mounted() {
-    // 鼠标移动和松开事件绑定到document，支持拖拽
-    document.addEventListener("mousemove", this.onMouseMove);
-    document.addEventListener("mouseup", this.onMouseUp);
-
     // 初始化加载天气
     this.loadWeather();
 
@@ -67,61 +64,43 @@ export default {
     }, 3600000);
   },
   beforeUnmount() {
-    document.removeEventListener("mousemove", this.onMouseMove);
-    document.removeEventListener("mouseup", this.onMouseUp);
     clearInterval(this.refreshTimer);
     if (this.geoWatchId != null) navigator.geolocation?.clearWatch(this.geoWatchId);
     clearTimeout(this.geoWatchStopTimer);
   },
   methods: {
-    onMouseDown(e) {
-      if (e.button !== 0 || e.target.closest("button")) return;
+    onPointerDown(e) {
+      if (e.isPrimary === false || (e.pointerType === "mouse" && e.button !== 0) || e.target.closest("button")) return;
       const rect = e.currentTarget.getBoundingClientRect();
       this.isDragging = true;
       this.hasDragged = true;
+      this.activePointerId = e.pointerId;
       this.position.x = rect.left;
       this.position.y = rect.top;
       this.dragOffset.x = e.clientX - rect.left;
       this.dragOffset.y = e.clientY - rect.top;
+      e.currentTarget.setPointerCapture?.(e.pointerId);
       e.preventDefault();
     },
-    onMouseMove(e) {
-      if (!this.isDragging) return
+    onPointerMove(e) {
+      if (!this.isDragging || e.pointerId !== this.activePointerId) return
       this.moveTo(e.clientX, e.clientY, this.dragOffset)
+      e.preventDefault();
     },
-    onMouseUp() {
+    onPointerEnd(e) {
+      if (e.pointerId !== this.activePointerId) return;
+      if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
       this.isDragging = false;
-    },
-    onTouchStart(e) {
-      const touch = e.touches[0];
-      if (!touch || e.target.closest("button")) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      this.hasDragged = true;
-      this.position.x = rect.left;
-      this.position.y = rect.top;
-      this.touchOffset.x = touch.clientX - rect.left;
-      this.touchOffset.y = touch.clientY - rect.top;
-
-      const onTouchMove = (e) => {
-        const touch = e.touches[0];
-        this.moveTo(touch.clientX, touch.clientY, this.touchOffset);
-        e.preventDefault(); // 禁止默认滚动
-      };
-
-      const onTouchEnd = () => {
-        document.removeEventListener("touchmove", onTouchMove);
-        document.removeEventListener("touchend", onTouchEnd);
-      };
-
-      document.addEventListener("touchmove", onTouchMove, { passive: false });
-      document.addEventListener("touchend", onTouchEnd);
+      this.activePointerId = null;
     },
     moveTo(clientX, clientY, offset) {
       const element = this.$el;
       const width = element?.offsetWidth || 160;
       const height = element?.offsetHeight || 100;
-      this.position.x = Math.max(0, Math.min(window.innerWidth - width, clientX - offset.x));
-      this.position.y = Math.max(0, Math.min(window.innerHeight - height, clientY - offset.y));
+      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+      const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
+      this.position.x = Math.max(0, Math.min(viewportWidth - width, clientX - offset.x));
+      this.position.y = Math.max(0, Math.min(viewportHeight - height, clientY - offset.y));
     },
 
     // ========= 仅替换为 Open-Meteo 的实现，其他逻辑尽量不动 =========

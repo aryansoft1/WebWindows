@@ -21,7 +21,7 @@ assert.match(translations, /localStorage\.getItem\("lang"\)[\s\S]*!== language\)
 assert.match(translations, /applyTo: \(element,[\s\S]*applyLanguage\(language, element\)/);
 assert.match(index, /main\.js\?v=20260820-boot-language-1/);
 assert.match(index, /locale-region\.js\?v=20260819-language-source-1/);
-assert.match(index, /tw\.js\?v=20260820-boot-language-1/);
+assert.match(index, /tw\.js\?v=20260823-mobile-parity-1/);
 assert.match(main, /data-boot-status[\s\S]*正在启动 WebWindows…/,
   "the startup welcome screen must contain a stable Simplified Chinese source string");
 assert.match(main, /i18n\.applyTo\(loader, i18n\.getLanguage\(\)\)/,

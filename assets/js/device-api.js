@@ -48,6 +48,7 @@
       present: null,
       level: null,
       charging: null,
+      acConnected: null,
       connected: null,
       source: "unsupported"
     };
@@ -89,12 +90,19 @@
     const rawLevel = Number(raw.level);
     const level = Number.isFinite(rawLevel) ? (rawLevel > 1 ? rawLevel / 100 : rawLevel) : null;
     const present = typeof raw.present === "boolean" ? raw.present : true;
+    const acConnected = typeof raw.acConnected === "boolean" ? raw.acConnected :
+      (typeof raw.connected === "boolean" ? raw.connected :
+        (typeof raw.charging === "boolean" ? raw.charging : null));
     return {
       supported: true,
       present,
       level: present && level !== null ? clamp(level, 0, 1) : null,
       charging: present && typeof raw.charging === "boolean" ? raw.charging : null,
-      connected: typeof raw.connected === "boolean" ? raw.connected : true,
+      acConnected,
+      // `connected` means that battery telemetry is available. Native hosts
+      // historically used this field for AC connection; preserve that value
+      // separately as `acConnected` so unplugging cannot erase the level bar.
+      connected: present,
       source
     };
   }
@@ -153,7 +161,7 @@
           present: true,
           level: batteryManager.level,
           charging: batteryManager.charging,
-          connected: true
+          acConnected: batteryManager.charging
         }, "battery-status-api");
       } catch (_) {
         return unsupportedBattery();
@@ -280,7 +288,7 @@
       return { supported: false, source: "unknown", acConnected: null, batteryPresent: null };
     }
     const acConnected = adapter?.id === "android"
-      ? batteryState.connected
+      ? batteryState.acConnected
       : (batteryState.charging === true ? true : batteryState.charging === false ? false : null);
     return {
       supported: true,

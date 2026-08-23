@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.20.1",
-  "catalogVersion": "2026.08.20.1",
-  "generatedAt": "2026-08-20T10:55:38.183Z",
+  "releaseVersion": "2026.08.23.1",
+  "catalogVersion": "2026.08.23.1",
+  "generatedAt": "2026-08-23T01:04:10.802Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -173,18 +173,18 @@
     "api/dt_presence_mem.asp",
     "api/dt_discovery.asp"
   ],
-  "previousReleaseVersion": "2026.08.19.5",
+  "previousReleaseVersion": "2026.08.20.1",
   "integrity": {
     "index.html": {
-      "sha256": "440368687fa7677d037d7b98e73b9ea8e85b0912bce9ef8c9398f658495d0380",
-      "size": 33721
+      "sha256": "cbdcb424d8edac9a78b6c9f5af59e62b8bfba0accdf039860e48d5adb717443c",
+      "size": 33733
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "7548bc9b28f1fca1aebfec9285e8a388d5ad51fe302ef1344d0dac2f21d217eb",
+      "sha256": "dad9ac0829b55ae05572b4a0714b29b73966364d2c824ded6c607c081ee4960c",
       "size": 13452
     },
     "assets/js/app-registry.js": {
@@ -192,8 +192,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "c380e8962e8118db437c8c2aa91e38b5893fe7c95fcbccbe03b7cc60f1a5766b",
-      "size": 67241
+      "sha256": "5ec0ea9be370357f711332b6ce6a8f2c002e9e4705edd69244787313a2ddf83c",
+      "size": 67344
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -244,12 +244,12 @@
       "size": 5673
     },
     "assets/js/device-api.js": {
-      "sha256": "67251e6d514fb913f684ad9597e05de5619b1a641a76e778920330494e65cbf0",
-      "size": 18898
+      "sha256": "8ad1d8f833e0d3c4470a7ae0471db19bd234fefe1f0c3ff4f5b83e0c9a5a649c",
+      "size": 19357
     },
     "assets/js/device-controls.js": {
-      "sha256": "2d34b5a2685bd59918571663139a392a49cbc38d556031ba016391a3df088592",
-      "size": 3540
+      "sha256": "322818e1b37468c17f633603f04005b905e855c1bb87754e941ebe4463e63fd6",
+      "size": 3461
     },
     "assets/js/device-storage-provider.js": {
       "sha256": "77ccc37ed4bc1e60e231916b31dab9addec1a8be723f68106549e39efd65480a",
@@ -328,8 +328,8 @@
       "size": 5128
     },
     "assets/css/main.css": {
-      "sha256": "16180e613b1dd30dc42b9f0cf2344b26c1d34b642bf229d58b26eb8a30a231aa",
-      "size": 31874
+      "sha256": "5e4f790f66f7e12a8a9637cef0eb4f9512b0fb24efb2874494c4d3e01dcc0aa2",
+      "size": 31739
     },
     "assets/css/sysinfo.css": {
       "sha256": "5fcb411d4eabafc7548a7cea9352c2956eb57b39091577ad29de24940f673b14",
@@ -768,15 +768,15 @@
       "size": 87423
     },
     "dist-weather/weather-widget.umd.js": {
-      "sha256": "70c6fb9c3d1548ff5950a8b3a9ff069e381a3553b38cc0adda7481905d01cefd",
-      "size": 15417
+      "sha256": "7cd0ee68176dba9a983600b7f2b366595f98bf822524b114bd0d4877461c723d",
+      "size": 15205
     },
     "dist-weather/weather-widget.global.js": {
-      "sha256": "71f75f3634f325edb0151664a25719acbd8d182c673f62abff6b1692f195e6eb",
-      "size": 15214
+      "sha256": "c667de461accf25b8cc7dfb8a1161d2065b2001a10971abe845c0fd176ab5bf1",
+      "size": 15002
     },
     "dist-weather/weather-widget.css": {
-      "sha256": "60e85bd0a173bbbf5017f8402dce43e58ccf1cf3d81036c2e0dceca7b4c12397",
+      "sha256": "e849663cfe1f9f5fbb08ea5f3e4dd621bb68e0268508b13bbd06654001a26021",
       "size": 915
     },
     "cloud/browser/openResource.asp": {
@@ -842,9 +842,13 @@
   },
   "uploadFiles": [
     "index.html",
-    "settings.html",
-    "assets/js/main.js",
+    "assets/css/main.css",
+    "assets/js/device-api.js",
+    "assets/js/device-controls.js",
     "assets/js/tw.js",
+    "dist-weather/weather-widget.css",
+    "dist-weather/weather-widget.umd.js",
+    "dist-weather/weather-widget.global.js",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

@@ -32,8 +32,8 @@
 
   function batteryTitle(current) {
     const percent = Number.isFinite(current.level) ? `${Math.round(current.level * 100)}%` : "电量未知";
-    if (current.connected === false) return "电池状态不可用";
     if (current.charging === true) return `${percent} · 正在充电`;
+    if (current.acConnected === true) return `${percent} · 已接电源`;
     return `${percent} · 使用电池`;
   }
 
@@ -45,7 +45,6 @@
       return;
     }
     indicator.hidden = false;
-    indicator.classList.toggle("is-disconnected", current.connected === false);
     indicator.classList.toggle("is-charging", current.charging === true);
     const percent = Number.isFinite(current.level) ? Math.round(clamp(current.level, 0, 1) * 100) : 0;
     indicator.style.setProperty("--battery-level", `${percent}%`);

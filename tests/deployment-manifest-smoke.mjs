@@ -37,10 +37,20 @@ assert.notEqual(manifest.previousReleaseVersion, manifest.releaseVersion);
 assert.ok(manifest.releaseVersion.localeCompare(manifest.previousReleaseVersion, undefined, { numeric: true }) > 0,
   "the release version must advance beyond the production version");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-assert.ok(uploadFiles.includes("index.html") && uploadFiles.includes("settings.html") &&
-  uploadFiles.includes("assets/js/main.js") && uploadFiles.includes("assets/js/tw.js") &&
-  uploadFiles.includes("data/apps/system-apps.json"),
-  "the localized startup screen and all of its cache-busting entries must deploy together");
+for (const mobileParityFile of [
+  "index.html",
+  "assets/css/main.css",
+  "assets/js/device-api.js",
+  "assets/js/device-controls.js",
+  "assets/js/tw.js",
+  "dist-weather/weather-widget.css",
+  "dist-weather/weather-widget.umd.js",
+  "dist-weather/weather-widget.global.js",
+  "data/apps/system-apps.json",
+]) {
+  assert.ok(uploadFiles.includes(mobileParityFile),
+    `mobile parity release must deploy its cache-busted runtime together: ${mobileParityFile}`);
+}
 for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
   assert.ok(manifest.requiredFiles.includes(realtimeDependency),
     `DeskTalk real-time dependency must remain managed: ${realtimeDependency}`);

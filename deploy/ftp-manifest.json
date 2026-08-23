@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.23.2",
-  "catalogVersion": "2026.08.23.2",
-  "generatedAt": "2026-08-23T05:02:51.740Z",
+  "releaseVersion": "2026.08.23.3",
+  "catalogVersion": "2026.08.23.3",
+  "generatedAt": "2026-08-23T07:53:48.366Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -172,9 +172,10 @@
     "api/dt_fetch_links.asp",
     "api/dt_presence_mem.asp",
     "api/dt_discovery.asp",
-    "api/release-version.asp"
+    "api/release-version.asp",
+    "api/mobile-version.asp"
   ],
-  "previousReleaseVersion": "2026.08.23.1",
+  "previousReleaseVersion": "2026.08.23.2",
   "integrity": {
     "index.html": {
       "sha256": "cbdcb424d8edac9a78b6c9f5af59e62b8bfba0accdf039860e48d5adb717443c",
@@ -185,7 +186,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "53414aaa0aecfdffbf348a204a93d7d00cb6c035b2ecb8f1b14c902ff1148083",
+      "sha256": "fddcf321de9adf53aac2b7faedfafcd8a130a6806da0c67d683a0a2c1a5592bf",
       "size": 13462
     },
     "assets/js/app-registry.js": {
@@ -843,12 +844,17 @@
     "api/release-version.asp": {
       "sha256": "1d4b46490a58fd97b390a4de840f327c5fb29ce524b65596866062c688eafd01",
       "size": 1051
+    },
+    "api/mobile-version.asp": {
+      "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
+      "size": 1495
     }
   },
   "uploadFiles": [
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",
+    "api/mobile-version.asp",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

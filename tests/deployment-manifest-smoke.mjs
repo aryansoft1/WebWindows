@@ -41,6 +41,7 @@ for (const onlineReleaseFile of [
   "sysinfo.html",
   "assets/js/sysinfo.js",
   "api/release-version.asp",
+  "api/mobile-version.asp",
   "data/apps/system-apps.json",
 ]) {
   assert.ok(uploadFiles.includes(onlineReleaseFile),

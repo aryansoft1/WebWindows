@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.23.5",
-  "catalogVersion": "2026.08.23.5",
-  "generatedAt": "2026-08-23T11:51:43.862Z",
+  "releaseVersion": "2026.08.23.6",
+  "catalogVersion": "2026.08.23.6",
+  "generatedAt": "2026-08-23T12:45:22.984Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -173,20 +173,21 @@
     "api/dt_presence_mem.asp",
     "api/dt_discovery.asp",
     "api/release-version.asp",
-    "api/mobile-version.asp"
+    "api/mobile-version.asp",
+    "dist-window/window-manager-widget.umd.js"
   ],
-  "previousReleaseVersion": "2026.08.23.4",
+  "previousReleaseVersion": "2026.08.23.5",
   "integrity": {
     "index.html": {
-      "sha256": "1b37f4d538d79ec5986b4a78689da58d15ee56b8ee15edc07ccec7bf345a0e44",
-      "size": 33731
+      "sha256": "6c88c2f054b1cfc18f1c13ceb33f65b970867988cf6fe07274e46dc8e18f635e",
+      "size": 33722
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "52575f5ac7d8dcce4c2a5764dd59ab4f7ab3dd7a3801ab5dfae63ca4729ff5ff",
+      "sha256": "0c18a2c32c8f95a5a16a77978a35023ba3db0036af13ef608311228650dd64e1",
       "size": 13462
     },
     "assets/js/app-registry.js": {
@@ -762,12 +763,12 @@
       "size": 969
     },
     "dist-window/window-manager-widget.css": {
-      "sha256": "0c9e5f7ccbd2a51f6ab183f2834a1f470233d28159e476934a7d39bc687da495",
-      "size": 3625
+      "sha256": "a079ba5515895bfde851d21b788150b89ac187334967c005b8f0c873f54f0906",
+      "size": 3634
     },
     "dist-window/window-manager-widget.js": {
-      "sha256": "01d3e0726bfbd1eec37ab5ce1b717d5da9db8940f458b9363127ce58b90971e8",
-      "size": 87423
+      "sha256": "3a2ca33018cc6d05b75b782f7197a50da8085111ee061a487a83541450b01d95",
+      "size": 86989
     },
     "dist-weather/weather-widget.umd.js": {
       "sha256": "9f7b7a07ef084e13dc352271375aca2395cec5b26e8e2391ebcc1575786a0c99",
@@ -848,13 +849,17 @@
     "api/mobile-version.asp": {
       "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
       "size": 1495
+    },
+    "dist-window/window-manager-widget.umd.js": {
+      "sha256": "1756a3f749a0b2d6cd6ea31aa05c9faf3657f0c69442a445bd936194434cd912",
+      "size": 87058
     }
   },
   "uploadFiles": [
     "index.html",
-    "dist-weather/weather-widget.css",
-    "dist-weather/weather-widget.umd.js",
-    "dist-weather/weather-widget.global.js",
+    "dist-window/window-manager-widget.css",
+    "dist-window/window-manager-widget.js",
+    "dist-window/window-manager-widget.umd.js",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",

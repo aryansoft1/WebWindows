@@ -9,112 +9,411 @@ import Taskbar from './Taskbar.vue'
 // === 平行搬运的“旧行为绑定” ===
 // 说明：这段里只“查找现有 .window”，然后按你 main.js 的旧逻辑给它们加事件。
 // 选择器/类名/按钮名保持不变；你可以把 main.js 里的对应代码块原封不动粘进来。
-function bindLegacyWindowBehaviors() {
-  const wins = document.querySelectorAll('.window')
-  wins.forEach(win => {
-    const header = win.querySelector('.window-header'); if (!header) return;
+const ICON_POSITIONS_KEY = 'webwindows.desktop.iconPositions'
+const MOBILE_ICON_POSITIONS_KEY = 'webwindows.mobile.iconPositions'
+const ICON_GRID_GAP_X = 20
+const ICON_GRID_GAP_Y = 20
+const ICON_DRAG_THRESHOLD = 5
+const desktopIconCleanup = []
+let desktopLayoutResizeTimer = null
+let desktopLayoutObserver = null
+let desktopIconObserver = null
 
-    let isDragging = false, offsetX = 0, offsetY = 0;
-    // 如果你旧代码里有 isMaximized/prev/toggleMaximize/minimize/close 之类，直接原样搬过来：
-    let isMaximized = false;
-    let prev = {};
+function updateWindowViewportMetrics() {
+  const viewportHeight = window.visualViewport?.height || window.innerHeight
+  const taskbarHeight = document.querySelector('.taskbar')?.offsetHeight || 43
+  document.documentElement.style.setProperty('--ww-viewport-height', `${viewportHeight}px`)
+  document.documentElement.style.setProperty('--ww-taskbar-height', `${taskbarHeight}px`)
+}
 
-    function toggleMaximize() {
-      if (!isMaximized) {
-        prev = { left: win.style.left, top: win.style.top, width: win.style.width, height: win.style.height };
-        win.style.left = '0px';
-        win.style.top = '0px';
-        win.style.width = (window.innerWidth) + 'px';
-        win.style.height = (window.innerHeight - (document.querySelector('.taskbar')?.offsetHeight || 0)) + 'px';
-        isMaximized = true;
-      } else {
-        win.style.left = prev.left; win.style.top = prev.top; win.style.width = prev.width; win.style.height = prev.height;
-        isMaximized = false;
-      }
-    }
+function isCompactDesktopLayout() {
+  return window.matchMedia(
+    '(max-width: 820px), (max-width: 1000px) and (max-height: 500px)'
+  ).matches
+}
 
-    const maximizeBtn = win.querySelector('.btn-maximize, .btn[title="最大化"], .btn-max'); // 按你的旧选择器改
-    const minimizeBtn = win.querySelector('.btn-minimize, .btn[title="最小化"], .btn-min');
-    const closeBtn = win.querySelector('.btn-close, .btn[title="关闭"], .btn.close');
+function iconPositionsKey() {
+  return isCompactDesktopLayout() ? MOBILE_ICON_POSITIONS_KEY : ICON_POSITIONS_KEY
+}
 
-    header.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      offsetX = e.clientX - win.offsetLeft;
-      offsetY = e.clientY - win.offsetTop;
-      win.style.zIndex = 9998; // bring to front（与旧值一致）
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      let x = e.clientX - offsetX;
-      let y = e.clientY - offsetY;
-      const snap = 20;
-      const maxW = window.innerWidth - win.offsetWidth;
-      const maxH = window.innerHeight - win.offsetHeight;
-      if (Math.abs(x) < snap) x = 0;
-      if (Math.abs(x - maxW) < snap) x = maxW;
-      if (Math.abs(y) < snap) y = 0;
-      if (Math.abs(y - maxH) < snap) y = maxH;
-      win.style.left = x + 'px';
-      win.style.top = y + 'px';
-    });
-    document.addEventListener('mouseup', () => isDragging = false);
+function readIconPositions() {
+  try {
+    const positions = JSON.parse(localStorage.getItem(iconPositionsKey()) || '{}')
+    return positions && typeof positions === 'object' ? positions : {}
+  } catch (_) {
+    return {}
+  }
+}
 
-    header.addEventListener('dblclick', () => toggleMaximize());
-    maximizeBtn?.addEventListener('click', () => toggleMaximize());
-    minimizeBtn?.addEventListener('click', () => {
-      win.style.display = 'none';
-      // 保持旧任务栏 API 不变
-      window.updateTaskbarActive && window.updateTaskbarActive(win.id.replace('win-', ''), false);
-      window.updateTaskbarActive && window.updateTaskbarActive(win.id, false);
-    });
-    closeBtn?.addEventListener('click', () => {
-      // 按你的旧逻辑：移除任务栏图标、清理 iframe 等
-      const id = win.id.replace('win-', '');
-      try { window.removeTaskbarIcon && window.removeTaskbarIcon('win-' + id) } catch (e) { }
-      win.remove();
-    });
+function hasSavedIconPositions() {
+  return Object.keys(readIconPositions()).length > 0
+}
 
-    // 如有右键菜单等，也按旧逻辑搬过来（选择器/函数名不变）
-    // header.addEventListener('contextmenu', (e)=>{ ... showWindowContextMenu(e, win.id) ... })
+function restoreIconPositions() {
+  normalizeDesktopIconLayout(false)
+}
+
+function writeIconPositions(positions) {
+  localStorage.setItem(iconPositionsKey(), JSON.stringify(positions))
+}
+
+function debugDesktopLayout(grid, savedCount, persisted) {
+  if (localStorage.getItem('webwindows.debug.desktopLayout') !== '1') return
+  console.debug('[DesktopLayout]', {
+    viewport: { width: grid.icons[0]?.parentElement?.clientWidth || 0, height: grid.icons[0]?.parentElement?.clientHeight || 0 },
+    rows: grid.rows,
+    columns: grid.columns,
+    icons: grid.icons.length,
+    saved: savedCount,
+    persisted
   })
 }
-function makeDesktopIconsDraggable() {
-    const icons = document.querySelectorAll('.desktop .icon');
-    icons.forEach(icon => {
-        icon.draggable = true;
 
-        icon.addEventListener('dragstart', e => {
-            e.dataTransfer.setData("text/plain", icon.id);
-            icon.classList.add('dragging');
-        });
+function getDesktopGrid(desktop) {
+  const icons = Array.from(desktop.querySelectorAll('.icon[id]'))
+    .filter(icon => icon.style.display !== 'none' && getComputedStyle(icon).display !== 'none')
+  const desktopStyle = getComputedStyle(desktop)
+  const originX = parseFloat(desktopStyle.paddingLeft) || 20
+  const originY = parseFloat(desktopStyle.paddingTop) || 20
+  const paddingRight = parseFloat(desktopStyle.paddingRight) || 20
+  const paddingBottom = parseFloat(desktopStyle.paddingBottom) || 20
+  const iconWidth = Math.max(1, ...icons.map(icon => icon.offsetWidth || 76))
+  const iconHeight = Math.max(1, ...icons.map(icon => icon.offsetHeight || 97))
+  const stepX = iconWidth + ICON_GRID_GAP_X
+  const stepY = iconHeight + ICON_GRID_GAP_Y
+  const rows = Math.max(1, Math.floor(
+    (desktop.clientHeight - originY - paddingBottom - iconHeight) / stepY
+  ) + 1)
+  const visibleColumns = Math.max(1, Math.floor(
+    (desktop.clientWidth - originX - paddingRight - iconWidth) / stepX
+  ) + 1)
+  const columns = Math.max(visibleColumns, Math.ceil(icons.length / rows))
 
-        icon.addEventListener('dragend', () => {
-            icon.classList.remove('dragging');
-        });
-    });
-
-    const desktop = document.querySelector('.desktop');
-    desktop.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
-
-    desktop.addEventListener('drop', e => {
-        e.preventDefault();
-        const id = e.dataTransfer.getData("text/plain");
-        const icon = document.getElementById(id);
-        if (icon) {
-            // 将图标移动到 drop 位置的“最近网格”
-            const gridX = Math.floor(e.offsetX / 116) * 116;
-            const gridY = Math.floor(e.offsetY / 116) * 116;
-            icon.style.position = 'absolute';
-            icon.style.left = gridX + 'px';
-            icon.style.top = gridY + 'px';
-            icon.style.zIndex = Date.now();
-        }
-    });
+  return {
+    icons,
+    originX,
+    originY,
+    iconWidth,
+    iconHeight,
+    stepX,
+    stepY,
+    rows,
+    columns,
+    slotCount: rows * columns
+  }
 }
-onMounted(() => { bindLegacyWindowBehaviors(), makeDesktopIconsDraggable() })
-onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 */ })
+
+function slotToPosition(slot, grid) {
+  const column = Math.floor(slot / grid.rows)
+  const row = slot % grid.rows
+  return {
+    x: grid.originX + column * grid.stepX,
+    y: grid.originY + row * grid.stepY
+  }
+}
+
+function positionToSlot(x, y, grid) {
+  const column = Math.max(0, Math.min(
+    grid.columns - 1,
+    Math.round((x - grid.originX) / grid.stepX)
+  ))
+  const row = Math.max(0, Math.min(
+    grid.rows - 1,
+    Math.round((y - grid.originY) / grid.stepY)
+  ))
+  return column * grid.rows + row
+}
+
+function findNearestFreeSlot(desiredSlot, occupied, grid) {
+  const desiredColumn = Math.floor(desiredSlot / grid.rows)
+  const desiredRow = desiredSlot % grid.rows
+  let bestSlot = null
+  let bestDistance = Infinity
+
+  for (let slot = 0; slot < grid.slotCount; slot += 1) {
+    if (occupied.has(slot)) continue
+    const column = Math.floor(slot / grid.rows)
+    const row = slot % grid.rows
+    const distance = ((column - desiredColumn) ** 2) + ((row - desiredRow) ** 2)
+    if (distance < bestDistance || (distance === bestDistance && (bestSlot == null || slot < bestSlot))) {
+      bestSlot = slot
+      bestDistance = distance
+    }
+  }
+  return bestSlot
+}
+
+function applyIconSlot(icon, slot, grid, positions) {
+  if (slot == null) return
+  const position = slotToPosition(slot, grid)
+  icon.style.position = 'absolute'
+  icon.style.left = `${position.x}px`
+  icon.style.top = `${position.y}px`
+  icon.style.zIndex = ''
+  icon.dataset.wwGridSlot = String(slot)
+  positions[icon.id] = position
+}
+
+function normalizeDesktopIconLayout(forceDomOrder = false, persist = false) {
+  const desktop = document.querySelector('.desktop')
+  if (!desktop) return
+  const grid = getDesktopGrid(desktop)
+  const positions = readIconPositions()
+  const normalizedPositions = {}
+  const occupied = new Set()
+
+  const entries = grid.icons.map((icon, index) => ({ icon, index, saved: positions[icon.id] }))
+  if (!forceDomOrder) {
+    // Reserve every existing user's saved slot before placing a newly installed icon.
+    entries.sort((a, b) => Number(Boolean(b.saved)) - Number(Boolean(a.saved)) || a.index - b.index)
+  }
+
+  entries.forEach(({ icon, index, saved }) => {
+    const desiredSlot = !forceDomOrder && saved &&
+      Number.isFinite(saved.x) && Number.isFinite(saved.y)
+      ? positionToSlot(saved.x, saved.y, grid)
+      : Math.min(index, grid.slotCount - 1)
+    const slot = findNearestFreeSlot(desiredSlot, occupied, grid)
+    if (slot == null) return
+    occupied.add(slot)
+    applyIconSlot(icon, slot, grid, normalizedPositions)
+  })
+  if (persist) writeIconPositions(normalizedPositions)
+  debugDesktopLayout(grid, Object.keys(positions).length, persist)
+  return normalizedPositions
+}
+
+function autoArrangeDesktopIcons() {
+  normalizeDesktopIconLayout(true, true)
+}
+
+function updateIconPositionState(id, x, y, options = {}) {
+  if (!id || !Number.isFinite(x) || !Number.isFinite(y)) return
+  if (options.userInitiated !== true && !hasSavedIconPositions()) return
+
+  const positions = readIconPositions()
+  positions[id] = { x, y }
+  writeIconPositions(positions)
+}
+
+function handleDesktopLayoutResize() {
+  clearTimeout(desktopLayoutResizeTimer)
+  desktopLayoutResizeTimer = window.setTimeout(() => {
+    normalizeDesktopIconLayout(false, false)
+  }, 160)
+}
+
+function persistCurrentDesktopLayout(desktop) {
+  const positions = {}
+  getDesktopGrid(desktop).icons.forEach(icon => {
+    const x = parseFloat(icon.style.left)
+    const y = parseFloat(icon.style.top)
+    if (Number.isFinite(x) && Number.isFinite(y)) positions[icon.id] = { x, y }
+  })
+  writeIconPositions(positions)
+  return positions
+}
+
+async function stabilizeInitialDesktopLayout() {
+  await document.fonts?.ready
+  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  normalizeDesktopIconLayout(false, false)
+}
+
+function setWallpaperByPath(path) {
+    document.body.style.backgroundImage = `url('${path}')`;
+    document.body.style.backgroundSize = 'cover';
+    document.body.style.backgroundRepeat = 'no-repeat';
+    document.body.style.backgroundPosition = 'center center';
+    document.body.style.backgroundAttachment = 'fixed';
+}
+document.addEventListener("DOMContentLoaded", () => {
+    // 其他已有代码...
+
+    // ✅ 加载保存的壁纸路径
+    const savedWallpaper = localStorage.getItem("selectedWallpaper");
+    if (savedWallpaper) {
+        setWallpaperByPath(savedWallpaper);
+    }
+});
+function makeDesktopIconsDraggable() {
+  const desktop = document.querySelector('.desktop')
+  if (!desktop) return
+
+  const icons = Array.from(desktop.querySelectorAll('.icon[id]'))
+  icons.forEach(icon => {
+    if (icon.dataset.wwPointerDragBound === '1') return
+    icon.dataset.wwPointerDragBound = '1'
+    icon.draggable = false
+    icon.querySelectorAll('img').forEach(image => {
+      image.draggable = false
+    })
+
+    let pointerId = null
+    let startClientX = 0
+    let startClientY = 0
+    let startLeft = 0
+    let startTop = 0
+    let startSlot = null
+    let dragging = false
+    let suppressClickUntil = 0
+
+    const finishDrag = (event) => {
+      if (pointerId == null) return
+      if (event?.pointerId != null && event.pointerId !== pointerId) return
+      const finishedPointerId = pointerId
+      pointerId = null
+      window.removeEventListener('pointermove', moveDrag, true)
+      window.removeEventListener('pointerup', finishDrag, true)
+      window.removeEventListener('pointercancel', finishDrag, true)
+      window.removeEventListener('blur', finishDrag)
+
+      if (dragging) {
+        const grid = getDesktopGrid(desktop)
+        const desiredSlot = positionToSlot(
+          parseFloat(icon.style.left) || grid.originX,
+          parseFloat(icon.style.top) || grid.originY,
+          grid
+        )
+        const positions = persistCurrentDesktopLayout(desktop)
+        const targetIcon = grid.icons.find(other =>
+          other !== icon && Number(other.dataset.wwGridSlot) === desiredSlot
+        )
+
+        // 目标格已占用时交换位置，保持 Windows 式网格排列，
+        // 同时避免寻找远处空位造成横向拖动却纵向跳位。
+        if (
+          targetIcon &&
+          Number.isFinite(startSlot) &&
+          startSlot >= 0 &&
+          startSlot < grid.slotCount &&
+          startSlot !== desiredSlot
+        ) {
+          applyIconSlot(targetIcon, startSlot, grid, positions)
+          applyIconSlot(icon, desiredSlot, grid, positions)
+        } else {
+          const occupied = new Set(
+            grid.icons
+              .filter(other => other !== icon)
+              .map(other => Number(other.dataset.wwGridSlot))
+              .filter(Number.isFinite)
+          )
+          const slot = findNearestFreeSlot(desiredSlot, occupied, grid)
+          applyIconSlot(icon, slot, grid, positions)
+        }
+        writeIconPositions(positions)
+        suppressClickUntil = Date.now() + 350
+      }
+
+      dragging = false
+      startSlot = null
+      icon.classList.remove('dragging')
+      try {
+        if (icon.hasPointerCapture(finishedPointerId)) {
+          icon.releasePointerCapture(finishedPointerId)
+        }
+      } catch (_) {}
+    }
+
+    const moveDrag = (event) => {
+      if (event.pointerId !== pointerId) return
+      const deltaX = event.clientX - startClientX
+      const deltaY = event.clientY - startClientY
+      if (!dragging && Math.hypot(deltaX, deltaY) < ICON_DRAG_THRESHOLD) return
+
+      dragging = true
+      event.preventDefault()
+      icon.classList.add('dragging')
+      const grid = getDesktopGrid(desktop)
+      const maxLeft = Math.max(grid.originX, desktop.clientWidth - grid.iconWidth - grid.originX)
+      const maxTop = Math.max(grid.originY, desktop.clientHeight - grid.iconHeight - grid.originY)
+      icon.style.left = `${Math.max(grid.originX, Math.min(maxLeft, startLeft + deltaX))}px`
+      icon.style.top = `${Math.max(grid.originY, Math.min(maxTop, startTop + deltaY))}px`
+      icon.style.zIndex = '2'
+    }
+
+    const startDrag = (event) => {
+      if (isCompactDesktopLayout() || event.button !== 0 || pointerId != null) return
+      const desktopRect = desktop.getBoundingClientRect()
+      const iconRect = icon.getBoundingClientRect()
+      pointerId = event.pointerId
+      startClientX = event.clientX
+      startClientY = event.clientY
+      startLeft = iconRect.left - desktopRect.left + desktop.scrollLeft
+      startTop = iconRect.top - desktopRect.top + desktop.scrollTop
+      startSlot = Number(icon.dataset.wwGridSlot)
+      dragging = false
+      try { icon.setPointerCapture(pointerId) } catch (_) {}
+      window.addEventListener('pointermove', moveDrag, true)
+      window.addEventListener('pointerup', finishDrag, true)
+      window.addEventListener('pointercancel', finishDrag, true)
+      window.addEventListener('blur', finishDrag)
+    }
+
+    const suppressDraggedClick = (event) => {
+      if (Date.now() >= suppressClickUntil) return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    }
+
+    const preventNativeDrag = (event) => event.preventDefault()
+    icon.addEventListener('pointerdown', startDrag)
+    icon.addEventListener('click', suppressDraggedClick, true)
+    icon.addEventListener('dragstart', preventNativeDrag)
+    desktopIconCleanup.push(() => {
+      finishDrag()
+      icon.removeEventListener('pointerdown', startDrag)
+      icon.removeEventListener('click', suppressDraggedClick, true)
+      icon.removeEventListener('dragstart', preventNativeDrag)
+      delete icon.dataset.wwPointerDragBound
+    })
+  })
+}
+onMounted(() => {
+  restoreIconPositions()
+  window.updateIconPositionState = updateIconPositionState
+  window.autoArrangeDesktopIcons = autoArrangeDesktopIcons
+  makeDesktopIconsDraggable()
+  updateWindowViewportMetrics()
+  window.addEventListener('resize', handleDesktopLayoutResize)
+  window.addEventListener('resize', updateWindowViewportMetrics)
+  window.addEventListener('orientationchange', updateWindowViewportMetrics)
+  window.visualViewport?.addEventListener('resize', updateWindowViewportMetrics)
+  window.visualViewport?.addEventListener('resize', handleDesktopLayoutResize)
+  const desktop = document.querySelector('.desktop')
+  if (desktop && typeof ResizeObserver === 'function') {
+    desktopLayoutObserver = new ResizeObserver(handleDesktopLayoutResize)
+    desktopLayoutObserver.observe(desktop)
+  }
+  if (desktop && typeof MutationObserver === 'function') {
+    desktopIconObserver = new MutationObserver(mutations => {
+      if (!mutations.some(mutation => mutation.addedNodes.length)) return
+      makeDesktopIconsDraggable()
+      handleDesktopLayoutResize()
+    })
+    desktopIconObserver.observe(desktop, { childList: true })
+  }
+  stabilizeInitialDesktopLayout().catch(error => console.warn('[DesktopLayout] stabilization failed', error))
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleDesktopLayoutResize)
+  window.removeEventListener('resize', updateWindowViewportMetrics)
+  window.removeEventListener('orientationchange', updateWindowViewportMetrics)
+  window.visualViewport?.removeEventListener('resize', updateWindowViewportMetrics)
+  window.visualViewport?.removeEventListener('resize', handleDesktopLayoutResize)
+  desktopLayoutObserver?.disconnect()
+  desktopIconObserver?.disconnect()
+  desktopLayoutObserver = null
+  desktopIconObserver = null
+  clearTimeout(desktopLayoutResizeTimer)
+  desktopIconCleanup.splice(0).forEach(cleanup => cleanup())
+  if (window.updateIconPositionState === updateIconPositionState) {
+    delete window.updateIconPositionState
+  }
+  if (window.autoArrangeDesktopIcons === autoArrangeDesktopIcons) {
+    delete window.autoArrangeDesktopIcons
+  }
+})
 </script>
 <style>
 :root{
@@ -126,17 +425,19 @@ onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 *
 .window {
   position: absolute;
   background: transparent;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   border-radius: 12px;
   border: 1px solid #ccc;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  isolation: isolate;
   overflow: hidden;
   transition: all 0.3s ease;
 }
 
 .window-header {
     height: 36px;
-    background: #ccc;
+    background: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -167,15 +468,27 @@ onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 *
 
 
 .window {
-  will-change: top, left;
+  will-change: auto;
   transition: none !important;
 }
 
+.window.is-dragging,
+.window.is-resizing {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+
+.window.is-dragging .window-header,
+.window.is-resizing .window-header {
+  background: rgba(80, 190, 232, 0.72);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 .window-header {
   height: 36px;
   background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
@@ -183,6 +496,7 @@ onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 *
   padding: 0 12px;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
+  touch-action: none;
 }
 
 .window-header .title {
@@ -266,5 +580,54 @@ onBeforeUnmount(() => { /* 如有全局事件需要解绑，可在这里处理 *
 
 .window.active {
   z-index: 1000;
+}
+
+@media (max-width: 820px), (max-width: 1000px) and (max-height: 500px) {
+  .window {
+    box-sizing: border-box;
+    position: fixed !important;
+    inset: env(safe-area-inset-top) env(safe-area-inset-right)
+      calc(var(--ww-taskbar-height, 43px) + env(safe-area-inset-bottom))
+      env(safe-area-inset-left) !important;
+    width: auto !important;
+    height: calc(var(--ww-viewport-height, 100dvh) - var(--ww-taskbar-height, 43px) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: none !important;
+    max-height: none !important;
+    border-radius: 0;
+  }
+
+  .window-content,
+  .window-iframe {
+    min-width: 0 !important;
+    min-height: 0 !important;
+    max-width: 100% !important;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .window-content > iframe,
+  .window-iframe > iframe {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .window-header {
+    min-height: 48px;
+    height: 48px;
+    padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
+    touch-action: none;
+  }
+
+  .window-header .button {
+    width: 44px;
+    height: 44px;
+    margin-left: 0;
+  }
+
+  .window > .resizer {
+    display: none;
+  }
 }
 </style>

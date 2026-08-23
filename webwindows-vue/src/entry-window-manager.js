@@ -21,6 +21,7 @@ Object.assign(window, {
   bindWindowBehavior     : legacy.bindWindowBehavior,
   showWindowContextMenu  : legacy.showWindowContextMenu,
   hideWindowContextMenu  : legacy.hideWindowContextMenu,
+  removeTaskbarIcon      : legacy.removeTaskbarIcon,
 
   // 若你有 WW.windows 的历史依赖，可以先不暴露；等一切恢复再决定是否接入 store
   // WW: { ...(window.WW || {}), windows: store },

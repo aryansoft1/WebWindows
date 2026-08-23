@@ -89,7 +89,7 @@ for (const file of [
   "dist-weather/weather-widget.umd.js",
   "dist-weather/weather-widget.global.js",
 ]) {
-  assert.ok((manifest.uploadFiles || []).includes(file), `weather release must upload ${file}`);
+  assert.ok((manifest.requiredFiles || []).includes(file), `deployment manifest must continue managing ${file}`);
 }
 
 console.log("Weather drag coordinate smoke tests passed");

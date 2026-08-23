@@ -54,29 +54,104 @@ function padTitleBarTouch(winEl, headerEl){ /* 若你有实现可填入 */ }
 
 /* ---------- 3) 绑定行为（拖拽 / 三键 / 激活 / 右键 / 8向缩放） ---------- */
 function bindWindowBehavior(winEl){
+  if (!winEl || winEl.dataset.wwWindowBehaviorBound === '1') return;
+  winEl.dataset.wwWindowBehaviorBound = '1';
   const header = winEl.querySelector('.window-header');
+  const isCompactWindowLayout = () => window.matchMedia(
+    '(max-width: 820px), (max-width: 1000px) and (max-height: 500px)'
+  ).matches;
 
-  // ------- 拖拽 -------
-  let moving = false, dx = 0, dy = 0;
-  header?.addEventListener('mousedown', (e) => {
-    if (winEl.classList.contains('maximized')) return; // 最大化时不允许拖拽
+  // iframe 会覆盖窗口内容区的鼠标命中，必须提供位于最上层的独立缩放手柄。
+  // 使用现有 .resizer 样式，同时为事件处理保存明确的缩放方向。
+  if (winEl.dataset.wwResizeHandles !== '1') {
+    ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'].forEach((resizeDir) => {
+      const handle = document.createElement('div');
+      handle.className = `resizer ${resizeDir}`;
+      handle.dataset.resizeDir = resizeDir;
+      handle.setAttribute('aria-hidden', 'true');
+      winEl.appendChild(handle);
+    });
+    winEl.dataset.wwResizeHandles = '1';
+  }
+
+  const renderedScale = (element = winEl, rect = element?.getBoundingClientRect?.()) => {
+    const scaleX = rect?.width && element?.offsetWidth ? rect.width / element.offsetWidth : 1;
+    const scaleY = rect?.height && element?.offsetHeight ? rect.height / element.offsetHeight : 1;
+    return {
+      x: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
+      y: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
+    };
+  };
+
+  const availableBounds = (scale = { x: 1, y: 1 }) => {
+    const viewport = window.visualViewport;
+    const taskbarHeight = document.querySelector('.taskbar')?.offsetHeight || 43;
+    return {
+      width: Math.max(0, (viewport?.width || window.innerWidth) / scale.x),
+      height: Math.max(0, (viewport?.height || window.innerHeight) / scale.y - taskbarHeight),
+    };
+  };
+
+  // ------- 拖拽：Pointer Events 同时覆盖鼠标、触控笔与触摸设备 -------
+  // 手机/窄屏由 CSS 固定为工作区全屏，避免手指拖动把窗口甩出可视区域。
+  let moving = false, movePointerId = null;
+  let moveStart = { pointerX: 0, pointerY: 0, left: 0, top: 0, scaleX: 1, scaleY: 1 };
+  let moveHandler = null, stopMove = null;
+  header?.addEventListener('pointerdown', (e) => {
+    if (isCompactWindowLayout() || e.button !== 0 || e.target.closest('.buttons') || winEl.classList.contains('maximized')) return;
+    e.preventDefault();
     moving = true;
-    dx = e.clientX - winEl.offsetLeft;
-    dy = e.clientY - winEl.offsetTop;
+    movePointerId = e.pointerId;
+    winEl.classList.add('is-dragging');
+    const rect = winEl.getBoundingClientRect();
+    const scale = renderedScale(winEl, rect);
+    moveStart = {
+      pointerX: e.clientX,
+      pointerY: e.clientY,
+      left: rect.left / scale.x,
+      top: rect.top / scale.y,
+      scaleX: scale.x,
+      scaleY: scale.y,
+    };
+    winEl.style.left = moveStart.left + 'px';
+    winEl.style.top = moveStart.top + 'px';
     focusTargetWindow(winEl);
+    try { header.setPointerCapture(movePointerId); } catch (_) {}
 
-    const mm = (ev) => {
-      if (!moving) return;
-      winEl.style.left = (ev.clientX - dx) + 'px';
-      winEl.style.top  = (ev.clientY - dy) + 'px';
+    moveHandler = (ev) => {
+      if (!moving || ev.pointerId !== movePointerId) return;
+      if (ev.pointerType === 'mouse' && (ev.buttons & 1) === 0) {
+        stopMove(ev);
+        return;
+      }
+      ev.preventDefault();
+      const scale = { x: moveStart.scaleX, y: moveStart.scaleY };
+      const bounds = availableBounds(scale);
+      const maxLeft = Math.max(0, bounds.width - winEl.offsetWidth);
+      const maxTop = Math.max(0, bounds.height - (header.offsetHeight || 40));
+      const nextLeft = moveStart.left + (ev.clientX - moveStart.pointerX) / scale.x;
+      const nextTop = moveStart.top + (ev.clientY - moveStart.pointerY) / scale.y;
+      winEl.style.left = Math.max(0, Math.min(maxLeft, nextLeft)) + 'px';
+      winEl.style.top = Math.max(0, Math.min(maxTop, nextTop)) + 'px';
     };
-    const mu = () => {
+    stopMove = (ev) => {
+      if (!moving || (ev?.pointerId != null && ev.pointerId !== movePointerId)) return;
+      const pointerId = movePointerId;
       moving = false;
-      document.removeEventListener('mousemove', mm);
-      document.removeEventListener('mouseup', mu);
+      movePointerId = null;
+      winEl.classList.remove('is-dragging');
+      window.removeEventListener('pointermove', moveHandler, true);
+      window.removeEventListener('pointerup', stopMove, true);
+      window.removeEventListener('pointercancel', stopMove, true);
+      header.removeEventListener('lostpointercapture', stopMove);
+      window.removeEventListener('blur', stopMove);
+      try { if (header.hasPointerCapture(pointerId)) header.releasePointerCapture(pointerId); } catch (_) {}
     };
-    document.addEventListener('mousemove', mm);
-    document.addEventListener('mouseup', mu);
+    window.addEventListener('pointermove', moveHandler, true);
+    window.addEventListener('pointerup', stopMove, true);
+    window.addEventListener('pointercancel', stopMove, true);
+    header.addEventListener('lostpointercapture', stopMove);
+    window.addEventListener('blur', stopMove);
   });
 
   // ------- 8向缩放（边缘命中；最大化时禁用） -------
@@ -104,34 +179,57 @@ function bindWindowBehavior(winEl){
     winEl.style.cursor = map[d] || '';
   }
 
-  winEl.addEventListener('mousemove', (e)=>{
+  winEl.addEventListener('pointermove', (e)=>{
     if (resizing || moving || winEl.classList.contains('maximized')) return;
     updateCursor(hitTest(e));
   });
 
-  winEl.addEventListener('mousedown', (e)=>{
-    if (winEl.classList.contains('maximized')) return;
-    const d = hitTest(e);
+  let resizePointerId = null;
+  let resizeMove = null;
+  let stopResize = null;
+  let resizeIframeStates = [];
+
+  winEl.addEventListener('pointerdown', (e)=>{
+    if (isCompactWindowLayout() || e.button !== 0 || winEl.classList.contains('maximized')) return;
+    const resizeHandle = e.target.closest?.('.resizer[data-resize-dir]');
+    const d = resizeHandle?.dataset.resizeDir || hitTest(e);
     if (!d) return;
     e.preventDefault();
+    e.stopPropagation();
     focusTargetWindow(winEl);
 
     resizing = true;
+    winEl.classList.add('is-resizing');
     dir = d;
     startX = e.clientX; startY = e.clientY;
     startL = winEl.offsetLeft; startT = winEl.offsetTop;
     startW = winEl.offsetWidth; startH = winEl.offsetHeight;
+    const resizeScale = renderedScale(winEl);
+    resizePointerId = e.pointerId;
+    resizeIframeStates = Array.from(winEl.querySelectorAll('iframe')).map((iframe) => {
+      const previousPointerEvents = iframe.style.pointerEvents;
+      iframe.style.pointerEvents = 'none';
+      return [iframe, previousPointerEvents];
+    });
+    try { winEl.setPointerCapture(resizePointerId); } catch {}
 
-    const mm = (ev)=>{
-      if (!resizing) return;
+    resizeMove = (ev)=>{
+      if (!resizing || ev.pointerId !== resizePointerId) return;
+      if (ev.pointerType === 'mouse' && (ev.buttons & 1) === 0) {
+        stopResize(ev);
+        return;
+      }
       let newL = startL, newT = startT, newW = startW, newH = startH;
-      const dx = ev.clientX - startX;
-      const dy = ev.clientY - startY;
+      const dx = (ev.clientX - startX) / resizeScale.x;
+      const dy = (ev.clientY - startY) / resizeScale.y;
+      const bounds = availableBounds(resizeScale);
+      const minW = Math.min(MIN_W, bounds.width);
+      const minH = Math.min(MIN_H, bounds.height);
 
-      if (dir.includes('e')) newW = Math.max(MIN_W, startW + dx);
-      if (dir.includes('s')) newH = Math.max(MIN_H, startH + dy);
-      if (dir.includes('w')) { newW = Math.max(MIN_W, startW - dx); newL = startL + Math.min(dx, startW - MIN_W); }
-      if (dir.includes('n')) { newH = Math.max(MIN_H, startH - dy); newT = startT + Math.min(dy, startH - MIN_H); }
+      if (dir.includes('e')) newW = Math.max(minW, Math.min(bounds.width - startL, startW + dx));
+      if (dir.includes('s')) newH = Math.max(minH, Math.min(bounds.height - startT, startH + dy));
+      if (dir.includes('w')) { newW = Math.max(minW, Math.min(bounds.width, startW - dx)); newL = Math.max(0, startL + startW - newW); }
+      if (dir.includes('n')) { newH = Math.max(minH, Math.min(bounds.height, startH - dy)); newT = Math.max(0, startT + startH - newH); }
 
       winEl.style.left = newL + 'px';
       winEl.style.top  = newT + 'px';
@@ -139,14 +237,36 @@ function bindWindowBehavior(winEl){
       winEl.style.height = newH + 'px';
       _layout(winEl); // 内容自适应
     };
-    const mu = ()=>{
+
+    stopResize = (ev)=>{
+      if (!resizing) return;
+      if (ev?.pointerId != null && ev.pointerId !== resizePointerId) return;
       resizing = false; dir = '';
+      winEl.classList.remove('is-resizing');
       updateCursor('');
-      document.removeEventListener('mousemove', mm);
-      document.removeEventListener('mouseup', mu);
+      const pointerId = resizePointerId;
+      resizePointerId = null;
+      window.removeEventListener('pointermove', resizeMove, true);
+      window.removeEventListener('pointerup', stopResize, true);
+      window.removeEventListener('pointercancel', stopResize, true);
+      winEl.removeEventListener('lostpointercapture', stopResize);
+      window.removeEventListener('blur', stopResize);
+      resizeIframeStates.forEach(([iframe, previousPointerEvents]) => {
+        iframe.style.pointerEvents = previousPointerEvents;
+      });
+      resizeIframeStates = [];
+      try {
+        if (pointerId != null && winEl.hasPointerCapture(pointerId)) {
+          winEl.releasePointerCapture(pointerId);
+        }
+      } catch {}
     };
-    document.addEventListener('mousemove', mm);
-    document.addEventListener('mouseup', mu);
+
+    window.addEventListener('pointermove', resizeMove, true);
+    window.addEventListener('pointerup', stopResize, true);
+    window.addEventListener('pointercancel', stopResize, true);
+    winEl.addEventListener('lostpointercapture', stopResize);
+    window.addEventListener('blur', stopResize);
   });
 
   // ------- 三个按钮（旧类名） -------
@@ -158,7 +278,7 @@ function bindWindowBehavior(winEl){
   btnClose?.addEventListener('click', () => closeTargetWindow   (winEl.id.replace(/^win-/, '')));
 
   // ------- 激活 -------
-  winEl.addEventListener('mousedown', () => focusTargetWindow(winEl));
+  winEl.addEventListener('pointerdown', () => focusTargetWindow(winEl));
 
   // ------- 右键：仅转发到你的旧实现 -------
   winEl.addEventListener('contextmenu', (e) => {
@@ -180,8 +300,19 @@ function createTaskbarIcon(id, title, iconUrl) {
     const existing = document.querySelector('.taskbar-app[data-id="win-' + id + '"]');
     if (existing) return;
     const taskbar = document.querySelector('.taskbar');
+    if (!taskbar) return;
+    let appStrip = taskbar.querySelector('.taskbar-app-strip');
+    if (!appStrip) {
+        appStrip = document.createElement('div');
+        appStrip.className = 'taskbar-app-strip';
+        appStrip.setAttribute('role', 'list');
+        appStrip.setAttribute('aria-label', '已打开的窗口');
+        taskbar.appendChild(appStrip);
+    }
     const icon = document.createElement('div');
     icon.className = 'taskbar-app';
+    icon.setAttribute('role', 'listitem');
+    icon.tabIndex = 0;
     icon.dataset.id = 'win-' + id;
     icon.title = title;
     icon.style.display = 'flex';
@@ -211,7 +342,7 @@ function createTaskbarIcon(id, title, iconUrl) {
 
     icon.appendChild(img);
     icon.appendChild(text);
-    taskbar.appendChild(icon);
+    appStrip.appendChild(icon);
     updateTaskbarActive(id, true);
 
     icon.addEventListener('click', () => {
@@ -222,6 +353,11 @@ function createTaskbarIcon(id, title, iconUrl) {
             updateTaskbarActive(id, !isVisible);
             if (!isVisible) win.style.zIndex = 9998;
         }
+    });
+    icon.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        icon.click();
     });
 }
 function updateTaskbarActive(id, isActive) {
@@ -310,8 +446,9 @@ function maximizeTargetWindow(id){
     el.classList.add('maximized');
     el.style.left = '0px';
     el.style.top  = '0px';
+    const taskbarHeight = document.querySelector('.taskbar')?.offsetHeight || 0;
     el.style.width  = '100vw';
-    el.style.height = '100vh';
+    el.style.height = `calc(100dvh - ${taskbarHeight}px)`;
   } else {
     // 还原
     el.classList.remove('maximized');
@@ -392,7 +529,7 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
 
     // 根节点（旧类名）
     const win = document.createElement('div');
-    win.className = 'window';
+    win.className = type ? `window ${type}` : 'window';
     win.id = 'win-' + id;
     win.style.left   = '120px';
     win.style.top    = '100px';
@@ -481,7 +618,7 @@ function openCloudWindow() {
 
     padTitleBarTouch(win, titleBar);
 
-    content.src = 'https://www.aryansoft.cn/jpshop/';
+    content.src = 'https://y0.hk/jpshop/';
     content.style.width = "100%";
     content.style.height = 'calc(100vh - 46px)';
     content.style.border = "none";
@@ -528,7 +665,7 @@ export {
   closeTargetWindow, minimizeTargetWindow, maximizeTargetWindow,
   bindWindowBehavior, padTitleBarTouch,
   showWindowContextMenu, hideWindowContextMenu,
-  createTaskbarIcon, updateTaskbarActive,
+  createTaskbarIcon, updateTaskbarActive, removeTaskbarIcon,
   clearAspSessionCookies, focusTargetWindow, openCloudWindow
 };
 
@@ -544,6 +681,7 @@ export {
   g.showWindowContextMenu = showWindowContextMenu;
   g.hideWindowContextMenu = hideWindowContextMenu;
   if (g.openCloudWindow == null) g.openCloudWindow = openCloudWindow;
+  if (g.removeTaskbarIcon == null) g.removeTaskbarIcon = removeTaskbarIcon;
   // 任务栏通常由旧脚本提供，不在此覆盖：
   // if (g.createTaskbarIcon   == null) g.createTaskbarIcon   = createTaskbarIcon;
   // if (g.updateTaskbarActive == null) g.updateTaskbarActive = updateTaskbarActive;

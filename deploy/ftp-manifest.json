@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.23.3",
-  "catalogVersion": "2026.08.23.3",
-  "generatedAt": "2026-08-23T07:53:48.366Z",
+  "releaseVersion": "2026.08.23.4",
+  "catalogVersion": "2026.08.23.4",
+  "generatedAt": "2026-08-23T09:02:00.964Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -175,18 +175,18 @@
     "api/release-version.asp",
     "api/mobile-version.asp"
   ],
-  "previousReleaseVersion": "2026.08.23.2",
+  "previousReleaseVersion": "2026.08.23.3",
   "integrity": {
     "index.html": {
-      "sha256": "cbdcb424d8edac9a78b6c9f5af59e62b8bfba0accdf039860e48d5adb717443c",
-      "size": 33733
+      "sha256": "85d509bd191979fc2e80cb9165a7c0c42ae6f109005c4c7d5d558b6f2a35277a",
+      "size": 33731
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "fddcf321de9adf53aac2b7faedfafcd8a130a6806da0c67d683a0a2c1a5592bf",
+      "sha256": "67b53d76081b74045da58d778be73e2ce01db77af9cd9175bead09511579f076",
       "size": 13462
     },
     "assets/js/app-registry.js": {
@@ -770,16 +770,16 @@
       "size": 87423
     },
     "dist-weather/weather-widget.umd.js": {
-      "sha256": "7cd0ee68176dba9a983600b7f2b366595f98bf822524b114bd0d4877461c723d",
-      "size": 15205
+      "sha256": "a2ed2ac08e5bf5e9997304024b438175faa2d69b19289c2fb4b93fe7bcaa753c",
+      "size": 15337
     },
     "dist-weather/weather-widget.global.js": {
-      "sha256": "c667de461accf25b8cc7dfb8a1161d2065b2001a10971abe845c0fd176ab5bf1",
-      "size": 15002
+      "sha256": "40605954d3f9b201695f746bfc121c1a3651fcb261d4057cd852453dad3b314e",
+      "size": 15134
     },
     "dist-weather/weather-widget.css": {
-      "sha256": "e849663cfe1f9f5fbb08ea5f3e4dd621bb68e0268508b13bbd06654001a26021",
-      "size": 915
+      "sha256": "1fd2210678d0868ab4243efcb5cf053b59f2fc11e93bb8915b6e9bf8a43f1d80",
+      "size": 912
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
@@ -851,6 +851,10 @@
     }
   },
   "uploadFiles": [
+    "index.html",
+    "dist-weather/weather-widget.css",
+    "dist-weather/weather-widget.umd.js",
+    "dist-weather/weather-widget.global.js",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",

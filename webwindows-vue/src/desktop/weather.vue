@@ -27,7 +27,7 @@ export default {
     return {
       position: { x: 100, y: 100 }, // 初始位置，可根据需要调整
       isDragging: false,
-      dragOffset: { x: 0, y: 0 },
+      dragStart: { pointerX: 0, pointerY: 0, x: 0, y: 0 },
       activePointerId: null,
       weatherTemp: "--°C",
       weatherDesc: "加载中...",
@@ -45,7 +45,7 @@ export default {
   },
   computed: {
     rootStyle() {
-      const base = { position: 'absolute', cursor: this.isDragging ? 'move' : 'default' }
+      const base = { position: 'fixed', cursor: this.isDragging ? 'move' : 'default' }
       if (this.hasDragged) {
         base.left = this.position.x + 'px'
         base.top = this.position.y + 'px'
@@ -77,14 +77,16 @@ export default {
       this.activePointerId = e.pointerId;
       this.position.x = rect.left;
       this.position.y = rect.top;
-      this.dragOffset.x = e.clientX - rect.left;
-      this.dragOffset.y = e.clientY - rect.top;
+      this.dragStart.pointerX = e.clientX;
+      this.dragStart.pointerY = e.clientY;
+      this.dragStart.x = rect.left;
+      this.dragStart.y = rect.top;
       e.currentTarget.setPointerCapture?.(e.pointerId);
       e.preventDefault();
     },
     onPointerMove(e) {
       if (!this.isDragging || e.pointerId !== this.activePointerId) return
-      this.moveTo(e.clientX, e.clientY, this.dragOffset)
+      this.moveTo(e.clientX, e.clientY)
       e.preventDefault();
     },
     onPointerEnd(e) {
@@ -93,14 +95,16 @@ export default {
       this.isDragging = false;
       this.activePointerId = null;
     },
-    moveTo(clientX, clientY, offset) {
+    moveTo(clientX, clientY) {
       const element = this.$el;
       const width = element?.offsetWidth || 160;
       const height = element?.offsetHeight || 100;
       const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
       const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
-      this.position.x = Math.max(0, Math.min(viewportWidth - width, clientX - offset.x));
-      this.position.y = Math.max(0, Math.min(viewportHeight - height, clientY - offset.y));
+      const nextX = this.dragStart.x + (clientX - this.dragStart.pointerX);
+      const nextY = this.dragStart.y + (clientY - this.dragStart.pointerY);
+      this.position.x = Math.max(0, Math.min(viewportWidth - width, nextX));
+      this.position.y = Math.max(0, Math.min(viewportHeight - height, nextY));
     },
 
     // ========= 仅替换为 Open-Meteo 的实现，其他逻辑尽量不动 =========
@@ -429,7 +433,7 @@ export default {
 
 <style scoped>
 .weather-widget {
-  position: absolute;
+  position: fixed;
   top: 20px;
   /* ★ 初始默认：右上角 */
   right: 20px;

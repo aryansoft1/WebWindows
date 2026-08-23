@@ -710,3 +710,32 @@ separate Web platform feature.
   `device.ready()`;
 - common Bridge timeout, duplicate/unknown response ID, malformed response, and
   navigation tests remain centralized in the bootstrap suite.
+
+## 17. Phase 2 data contract hardening
+
+Phase 2 status: **Storage Capability v1 Frozen Candidate**. Final/Frozen status
+still requires the remaining lifecycle/compatibility phases and real-device SAF
+verification.
+
+Phase 2 freezes the five existing Native methods without adding a method or
+changing Native Bridge v1. Native Volume, Permission, Directory Entry, Metadata,
+and open-file results are validated as structured data and rebuilt from public
+fields before page use; one malformed entry rejects the whole response as
+`invalid-response`.
+
+Permission state is `granted`, `prompt`, `denied`, `revoked`, `unknown`, or
+`unsupported`. The booleans describe current grant facts. In particular,
+`writable: true` does not advertise a write API, and detailed Storage write
+capability remains unsupported.
+
+Entry kinds are `file`, `directory`, and `unknown`. Public paths are safe
+volume-relative segment arrays constructed from the requested parent plus the
+validated child name. Metadata uses non-negative safe integers for known size
+and timestamps; `0` is a real zero-byte size and unavailable values are `null`.
+
+The private Android open-file result remains `{ metadata, base64 }`; the public
+result remains `{ metadata, data: ArrayBuffer }`. Base64 must be canonical
+`NO_WRAP` data with no whitespace or data-URI prefix. Both Native actual-stream
+reading and the Web decoder enforce a raw maximum of `8 * 1024 * 1024` bytes.
+When metadata size is known it must equal the actual payload size. Storage v1
+remains whole-file and read-only, with no streaming, range, or write operation.

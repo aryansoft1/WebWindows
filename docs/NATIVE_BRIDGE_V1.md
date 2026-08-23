@@ -279,6 +279,33 @@ The set result has the same shape as the get result and reflects the normalized 
 - BrowserAdapter keeps `scope: "page"` and applies the value only to WebWindows-managed same-origin `audio` and `video` elements. NativeAdapter uses public `scope: "native"`; its concrete Android scope is the fixed media stream.
 - No Native Bridge event is added. The public `audio.refresh()` reads current Native state when invoked, including when Settings opens. A successful public set updates page media, cache, persistence, and the existing `webwindows:volume-change` page event. Failed or malformed writes leave the previous cache unchanged.
 
+## Storage capability
+
+Storage v1 is a read-oriented capability implemented by the existing private
+methods `storageListVolumes`, `storagePickDirectory`, `storageListDirectory`,
+`storageGetMetadata`, and `storageOpenFile`. They use the frozen v1 envelopes,
+IDs, errors, timeout machinery, navigation lifecycle, and trust model without a
+Storage event or wire-protocol extension.
+
+- Volume results contain only opaque `id`, display `name`, `kind`, public
+  permission state, and `source`. Exact-origin ownership and Android SAF tokens
+  remain Runtime-private.
+- Directory entry/metadata results contain `supported`, safe `name`, `kind`
+  (`file`, `directory`, or `unknown`), nullable non-negative integer `size`,
+  nullable MIME `type`, nullable timestamp `lastModified`, strict `readable` and
+  `writable` booleans, and `source`. Public relative `path` is constructed by
+  the Device provider rather than trusted from Native data.
+- `storageOpenFile` returns private `{ metadata, base64 }`. Base64 is canonical,
+  unwrapped, and limited to exactly `8 * 1024 * 1024` decoded bytes. The public
+  API exposes `{ metadata, data: ArrayBuffer }`; known metadata size must equal
+  the decoded byte length.
+- Malformed Native Storage data is `invalid-response`. Capability errors retain
+  the existing Storage-prefixed internal codes for compatibility and do not
+  expose URI, provider authority, absolute path, or platform exception text.
+- `RuntimeInfo.capabilities.storage: true` means the Runtime implements this
+  complete read-oriented method set. It does not mean a grant exists, the
+  picker is idle, writes are supported, or file size is unlimited.
+
 ## Failure and compatibility behavior
 
 - Missing bridges, timeouts, rejected Promises, incompatible versions, and malformed runtime responses fall back to BrowserAdapter.

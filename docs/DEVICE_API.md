@@ -81,13 +81,24 @@ and filesystem paths are never returned to page code.
 - `listVolumes()` returns known directory grants and their current permission state.
 - `pickDirectory({ writable, replaceVolumeId })` must be called from a user gesture. Passing a known opaque volume ID replaces that grant in place for reauthorization without changing the business-layer `device://` address.
 - `requestPermission(volumeId, "read"|"readwrite")` reports or requests browser permission. Revoked Android grants require picking the directory again.
-- `listDirectory(volumeId, path)` returns directory/file metadata.
-- `getMetadata(volumeId, path)` returns one entry's metadata.
-- `openFile(volumeId, path)` returns `{ metadata, data: ArrayBuffer }`. The Android bridge limits one read to 8 MiB.
+- `listDirectory(volumeId, path)` returns deterministic entry objects. `path` is
+  an array of safe volume-relative segments; platform URI/path fields are never
+  exposed.
+- `getMetadata(volumeId, path)` returns `{ supported, name, kind, size, type,
+  lastModified, readable, writable, path, source }`. `size: 0` is a real
+  zero-byte value; unknown size/timestamp/type uses `null`.
+- `openFile(volumeId, path)` returns `{ metadata, data: ArrayBuffer }`. Storage
+  v1 is whole-file read-only and limits raw data to exactly `8 * 1024 * 1024`
+  bytes. Base64 exists only inside the private Native transport.
 
 Permission objects contain `state`, `readable`, `writable`, `persisted`, and
-`revoked`. Unsupported browsers return an explicit unsupported result; they do
-not throw merely because the picker API is absent.
+`revoked`. `state` is `granted`, `prompt`, `denied`, `revoked`, `unknown`, or
+`unsupported`. `writable: true` describes an underlying grant only;
+`getCapabilities().write.supported` remains `false` because Storage v1 has no
+public write method. Revoked volumes remain listable for explicit
+reauthorization, while reads fail rather than returning empty data. Unsupported
+browsers return an explicit unsupported result; they do not throw merely
+because the picker API is absent.
 
 Battery and power deliberately use separate semantics:
 

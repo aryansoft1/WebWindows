@@ -16,11 +16,11 @@ assert.match(client, /getCapabilities/);
 assert.match(client, /function activateTab/);
 assert.match(client, /aria-selected/);
 assert.match(html, /tw\.js\?v=20260819-sysinfo-i18n-1/);
-assert.match(html, /sysinfo\.js\?v=20260819-sysinfo-i18n-1/);
+assert.match(html, /sysinfo\.js\?v=20260823-online-release-1/);
 assert.match(html, /sysinfo\.css\?v=20260814-quota-1/);
 const catalog = JSON.parse(await readFile(new URL("../data/apps/system-apps.json", import.meta.url), "utf8"));
 const sysinfoApp = catalog.apps.find((app) => app.id === "webwindows.system.info");
-assert.match(sysinfoApp?.entry || "", /sysinfo\.html\?v=20260819-i18n-5/,
+assert.match(sysinfoApp?.entry || "", /sysinfo\.html\?v=20260823-online-release-1/,
   "the system information app must reopen with the shared language layer");
 assert.match(client, /WebWindowsI18n\?\.getLocale/,
   "dates must use the WebWindows locale instead of the browser default");

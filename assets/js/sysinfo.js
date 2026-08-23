@@ -3,6 +3,7 @@
   const byId = (id) => document.getElementById(id);
   const setText = (id, value) => { const element = byId(id); if (element) element.textContent = value ?? "不可用"; };
   const unavailable = "不可用";
+  const ONLINE_RELEASE_URL = "https://www.y0.hk/api/release-version.asp";
 
   document.addEventListener("contextmenu", (event) => event.preventDefault());
 
@@ -76,17 +77,37 @@
   }
 
   async function loadRelease() {
-    try {
-      const response = await fetch("deploy/ftp-manifest.json", { cache: "no-store", credentials: "same-origin" });
-      const release = await response.json();
-      if (!response.ok || !release.releaseVersion) throw new Error("release-unavailable");
-      setText("releaseVersion", release.releaseVersion);
-      setText("buildDate", formatDate(release.generatedAt));
-      setText("previousVersion", release.previousReleaseVersion || unavailable);
-    } catch (_) {
-      setText("releaseVersion", unavailable); setText("buildDate", unavailable);
-      setText("releaseSource", "部署清单当前不可读取；未显示推测版本。");
+    const sources = ["deploy/ftp-manifest.json", ONLINE_RELEASE_URL + "?v=" + Date.now()];
+    for (const source of sources) {
+      const controller = typeof AbortController === "function" ? new AbortController() : null;
+      const timeout = setTimeout(() => controller?.abort(), 10000);
+      try {
+        const target = new URL(source, location.href);
+        const sameOrigin = target.origin === location.origin;
+        const response = await fetch(target.href, {
+          cache: "no-store",
+          credentials: sameOrigin ? "same-origin" : "omit",
+          signal: controller?.signal
+        });
+        const release = await response.json();
+        if (!response.ok || !release.releaseVersion) throw new Error("release-unavailable");
+        setText("releaseVersion", release.releaseVersion);
+        setText("buildDate", formatDate(release.generatedAt));
+        setText("previousVersion", release.previousReleaseVersion || unavailable);
+        setText("releaseSource", sameOrigin
+          ? "版本数据来自部署清单，不另行维护副本。"
+          : "线上版本数据来自 WebWindows 正式发布清单。");
+        return;
+      } catch (_) {
+        // Android Host may load this page from a local/appassets origin. In
+        // that case the relative manifest fails and the public read-only
+        // release endpoint below remains available without credentials.
+      } finally {
+        clearTimeout(timeout);
+      }
     }
+    setText("releaseVersion", unavailable); setText("buildDate", unavailable);
+    setText("releaseSource", "线上部署清单当前不可读取；未显示推测版本。");
   }
 
   function renderCapabilities(capabilities) {

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.23.1",
-  "catalogVersion": "2026.08.23.1",
-  "generatedAt": "2026-08-23T01:04:10.802Z",
+  "releaseVersion": "2026.08.23.2",
+  "catalogVersion": "2026.08.23.2",
+  "generatedAt": "2026-08-23T05:02:51.740Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -171,9 +171,10 @@
     "news_view.html",
     "api/dt_fetch_links.asp",
     "api/dt_presence_mem.asp",
-    "api/dt_discovery.asp"
+    "api/dt_discovery.asp",
+    "api/release-version.asp"
   ],
-  "previousReleaseVersion": "2026.08.20.1",
+  "previousReleaseVersion": "2026.08.23.1",
   "integrity": {
     "index.html": {
       "sha256": "cbdcb424d8edac9a78b6c9f5af59e62b8bfba0accdf039860e48d5adb717443c",
@@ -184,8 +185,8 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "dad9ac0829b55ae05572b4a0714b29b73966364d2c824ded6c607c081ee4960c",
-      "size": 13452
+      "sha256": "53414aaa0aecfdffbf348a204a93d7d00cb6c035b2ecb8f1b14c902ff1148083",
+      "size": 13462
     },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
@@ -224,8 +225,8 @@
       "size": 198690
     },
     "assets/js/sysinfo.js": {
-      "sha256": "ddfe90c4c0137b9ac9c5d3fdd7a01a10bb05ad8271cc30128c8b1dc7434ac245",
-      "size": 11915
+      "sha256": "9d27cab5c7351020d23e53c38643522532a400f4215cd14bd9f9697eeb2ae544",
+      "size": 12958
     },
     "assets/js/auth-session.js": {
       "sha256": "1310531e22ec40ee178dee90f2839fee5c43389ba3981aa94e3eecf156448b07",
@@ -548,8 +549,8 @@
       "size": 5614
     },
     "sysinfo.html": {
-      "sha256": "98c73db8ee5374d89388a418ff02c1d7b3e670d92b41f87da04bf0721e64d112",
-      "size": 4953
+      "sha256": "58530ac0eb2e073bca1cbddcbfc69a356d4ea9121e66f83824bd446db14bbe2e",
+      "size": 4955
     },
     "login.html": {
       "sha256": "dfcf39d4670cf62a79b0d5f4908eadb7a4321e28772d53b20f51703f26678aa8",
@@ -838,17 +839,16 @@
     "api/dt_discovery.asp": {
       "sha256": "e3b5fb37e6418a0c2bc121d67c020fcbc3fecce7fc785baaa3e9733d79172659",
       "size": 4266
+    },
+    "api/release-version.asp": {
+      "sha256": "1d4b46490a58fd97b390a4de840f327c5fb29ce524b65596866062c688eafd01",
+      "size": 1051
     }
   },
   "uploadFiles": [
-    "index.html",
-    "assets/css/main.css",
-    "assets/js/device-api.js",
-    "assets/js/device-controls.js",
-    "assets/js/tw.js",
-    "dist-weather/weather-widget.css",
-    "dist-weather/weather-widget.umd.js",
-    "dist-weather/weather-widget.global.js",
+    "sysinfo.html",
+    "assets/js/sysinfo.js",
+    "api/release-version.asp",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

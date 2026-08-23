@@ -3,6 +3,10 @@
 
   const DB_NAME = "webwindows-device-storage";
   const STORE_NAME = "directory-handles";
+  const MAX_FILE_BYTES = 8 * 1024 * 1024;
+  const MAX_BASE64_LENGTH = Math.ceil(MAX_FILE_BYTES / 3) * 4;
+  const PERMISSION_STATES = new Set(["granted", "prompt", "denied", "revoked", "unknown", "unsupported"]);
+  const ENTRY_KINDS = new Set(["file", "directory", "unknown"]);
   const memoryHandles = new Map();
 
   function unsupported(reason) {
@@ -15,6 +19,18 @@
     return error;
   }
 
+  function isStructuredObject(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const prototype = Object.getPrototypeOf(value);
+    return prototype === Object.prototype || prototype === null;
+  }
+
+  function isSafePathPart(value) {
+    return typeof value === "string" && Boolean(value) && value !== "." && value !== ".."
+      && !value.includes("/") && !value.includes("\\") && !value.includes("\0")
+      && !/^[A-Za-z][A-Za-z0-9+.-]*:/.test(value);
+  }
+
   function normalizePath(path) {
     if (path == null || path === "") return [];
     if (typeof path === "string" && (path.startsWith("/") || path.endsWith("/") || path.includes("\\"))) {
@@ -23,8 +39,7 @@
     const parts = Array.isArray(path) ? path : (typeof path === "string" ? path.split("/") : null);
     if (!parts) throw storageError("invalid-storage-path");
     return parts.map((part) => {
-      if (typeof part !== "string" || !part || part === "." || part === ".." || part.includes("/")
-          || part.includes("\\") || part.includes("\0") || /^[A-Za-z][A-Za-z0-9+.-]*:/.test(part)) {
+      if (!isSafePathPart(part)) {
         throw storageError("invalid-storage-path");
       }
       return part;
@@ -51,24 +66,66 @@
   }
 
   function validatePermission(value) {
-    const states = new Set(["granted", "prompt", "denied", "revoked", "unsupported"]);
-    if (!value || typeof value !== "object" || !states.has(value.state)
+    if (!isStructuredObject(value) || !PERMISSION_STATES.has(value.state)
         || typeof value.readable !== "boolean" || typeof value.writable !== "boolean"
         || typeof value.persisted !== "boolean" || typeof value.revoked !== "boolean") {
       throw storageError("invalid-response");
     }
-    return value;
+    return {
+      state: value.state,
+      readable: value.readable,
+      writable: value.writable,
+      persisted: value.persisted,
+      revoked: value.revoked
+    };
   }
 
   function validateNativeVolume(value) {
-    if (!value || typeof value !== "object" || Array.isArray(value)
+    if (!isStructuredObject(value)
         || typeof value.id !== "string" || !/^saf-[A-Za-z0-9-]{8,}$/.test(value.id)
         || value.id.includes("://") || typeof value.name !== "string" || !value.name
         || value.kind !== "directory" || value.source !== "android-saf") {
       throw storageError("invalid-response");
     }
-    validatePermission(value.permission);
+    return {
+      id: value.id,
+      name: value.name,
+      kind: "directory",
+      permission: validatePermission(value.permission),
+      source: "android-saf"
+    };
+  }
+
+  function validateFiniteInteger(value, nullable) {
+    if (nullable && value === null) return null;
+    if (!Number.isSafeInteger(value) || value < 0) throw storageError("invalid-response");
     return value;
+  }
+
+  function validateNativeMetadata(value, path, expectedKind) {
+    if (!isStructuredObject(value) || value.supported !== true || !isSafePathPart(value.name)
+        || (path.length > 0 && value.name !== path[path.length - 1])
+        || !ENTRY_KINDS.has(value.kind) || (expectedKind && value.kind !== expectedKind)
+        || (value.type !== null && (typeof value.type !== "string" || !value.type))
+        || typeof value.readable !== "boolean" || typeof value.writable !== "boolean"
+        || value.source !== "android-saf") {
+      throw storageError("invalid-response");
+    }
+    const size = validateFiniteInteger(value.size, true);
+    const lastModified = validateFiniteInteger(value.lastModified, true);
+    if (value.kind !== "file" && (size !== null || value.type !== null)) throw storageError("invalid-response");
+    return {
+      supported: true,
+      name: value.name,
+      kind: value.kind,
+      size,
+      type: value.type,
+      lastModified,
+      readable: value.readable,
+      writable: value.writable,
+      path: [...path],
+      source: "android-saf"
+    };
   }
 
   function requireNativeVolumeId(value) {
@@ -119,7 +176,12 @@
     if (memoryHandles.size) return [...memoryHandles.values()];
     try {
       const records = await databaseRequest("readonly", (store) => store.getAll()) || [];
-      records.forEach((record) => memoryHandles.set(record.id, record));
+      records.forEach((record) => {
+        if (isStructuredObject(record) && typeof record.id === "string"
+            && /^browser-dir-[A-Za-z0-9-]{8,}$/.test(record.id)
+            && record.handle?.kind === "directory" && typeof record.handle.name === "string"
+            && record.handle.name) memoryHandles.set(record.id, record);
+      });
     } catch (_) {}
     return [...memoryHandles.values()];
   }
@@ -127,32 +189,37 @@
   async function permissionFor(handle, mode, persisted) {
     if (!handle) return { state: "revoked", readable: false, writable: false, persisted: false, revoked: true };
     const descriptor = { mode: mode === "readwrite" ? "readwrite" : "read" };
-    let state = "prompt";
+    let state = "unknown";
     try { state = await handle.queryPermission(descriptor); } catch (_) {}
+    if (!PERMISSION_STATES.has(state)) state = "unknown";
     let writeState = state;
     if (descriptor.mode === "read") {
-      try { writeState = await handle.queryPermission({ mode: "readwrite" }); } catch (_) { writeState = "prompt"; }
+      try { writeState = await handle.queryPermission({ mode: "readwrite" }); } catch (_) { writeState = "unknown"; }
+      if (!PERMISSION_STATES.has(writeState)) writeState = "unknown";
     }
     return {
       state,
       readable: state === "granted",
       writable: writeState === "granted",
       persisted: Boolean(persisted),
-      revoked: state === "denied"
+      revoked: state === "denied" || state === "revoked"
     };
   }
 
   async function browserRecord(id) {
     await loadHandles();
     const record = memoryHandles.get(id);
-    if (!record?.handle) throw new Error("storage-volume-not-found");
+    if (!record?.handle) throw storageError("storage-volume-not-found");
+    if (record.handle.kind !== "directory" || typeof record.handle.name !== "string" || !record.handle.name) {
+      throw storageError("storage-unavailable");
+    }
     return record;
   }
 
   async function resolveBrowserHandle(volumeId, path) {
     const record = await browserRecord(volumeId);
     const permission = await permissionFor(record.handle, "read");
-    if (!permission.readable) throw new Error(permission.revoked ? "storage-permission-revoked" : "storage-permission-required");
+    if (!permission.readable) throw storageError(permission.revoked ? "storage-permission-revoked" : "storage-permission-required");
     const parts = normalizePath(path);
     let handle = record.handle;
     for (let index = 0; index < parts.length; index += 1) {
@@ -160,25 +227,67 @@
       if (index === parts.length - 1) {
         try { handle = await handle.getFileHandle(name); continue; } catch (_) {}
       }
-      handle = await handle.getDirectoryHandle(name);
+      try { handle = await handle.getDirectoryHandle(name); }
+      catch (_) { throw storageError("storage-entry-not-found"); }
     }
     return { record, handle, parts };
   }
 
-  function browserMetadata(handle, file) {
+  function browserMetadata(handle, file, permission, path) {
+    if (!handle || !isSafePathPart(handle.name) || !ENTRY_KINDS.has(handle.kind)) {
+      throw storageError("storage-unavailable");
+    }
+    if (path.length > 0 && path[path.length - 1] !== handle.name) throw storageError("storage-unavailable");
     return {
       supported: true,
       name: handle.name,
       kind: handle.kind,
-      size: file ? file.size : null,
+      size: file ? validateFiniteInteger(file.size, false) : null,
       type: file ? (file.type || "application/octet-stream") : null,
-      lastModified: file ? file.lastModified : null,
+      lastModified: file ? validateFiniteInteger(file.lastModified, false) : null,
+      readable: permission.readable,
+      writable: permission.writable,
+      path: [...path],
       source: "file-system-access-api"
     };
   }
 
   function decodeBase64(value) {
-    const binary = global.atob(String(value || ""));
+    if (typeof value !== "string" || value.length > MAX_BASE64_LENGTH || value.length % 4 !== 0) {
+      throw storageError("invalid-response");
+    }
+    let padding = 0;
+    if (value.endsWith("==")) padding = 2;
+    else if (value.endsWith("=")) padding = 1;
+    const contentLength = value.length - padding;
+    if ((padding === 1 && contentLength % 4 !== 3) || (padding === 2 && contentLength % 4 !== 2)) {
+      throw storageError("invalid-response");
+    }
+    for (let index = 0; index < contentLength; index += 1) {
+      const code = value.charCodeAt(index);
+      const valid = code >= 65 && code <= 90 || code >= 97 && code <= 122
+        || code >= 48 && code <= 57 || code === 43 || code === 47;
+      if (!valid) throw storageError("invalid-response");
+    }
+    for (let index = contentLength; index < value.length; index += 1) {
+      if (value.charCodeAt(index) !== 61) throw storageError("invalid-response");
+    }
+    function base64Value(code) {
+      if (code >= 65 && code <= 90) return code - 65;
+      if (code >= 97 && code <= 122) return code - 71;
+      if (code >= 48 && code <= 57) return code + 4;
+      return code === 43 ? 62 : 63;
+    }
+    if (padding === 2 && (base64Value(value.charCodeAt(contentLength - 1)) & 15) !== 0) {
+      throw storageError("invalid-response");
+    }
+    if (padding === 1 && (base64Value(value.charCodeAt(contentLength - 1)) & 3) !== 0) {
+      throw storageError("invalid-response");
+    }
+    let binary;
+    try { binary = global.atob(value); }
+    catch (_) { throw storageError("invalid-response"); }
+    if (binary.length > MAX_FILE_BYTES) throw storageError("invalid-response");
     const bytes = new Uint8Array(binary.length);
     for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
     return bytes.buffer;
@@ -202,7 +311,7 @@
         const records = await loadHandles();
         return Promise.all(records.map(async (record) => ({
           id: record.id,
-          name: record.name || record.handle?.name || "已授权目录",
+          name: record.name || record.handle.name,
           kind: "directory",
           permission: await permissionFor(record.handle, "read", record.persisted),
           source: "file-system-access-api"
@@ -220,6 +329,7 @@
         } catch (error) {
           throw normalizeCancellation(error);
         }
+        if (!handle || handle.kind !== "directory" || !isSafePathPart(handle.name)) throw storageError("storage-unavailable");
         const id = replacementId || randomId("browser-dir");
         await persistHandle({ id, name: handle.name, handle });
         const record = memoryHandles.get(id);
@@ -229,34 +339,48 @@
       },
       async requestPermission(volumeId, mode) {
         const record = await browserRecord(volumeId);
+        if (mode != null && mode !== "read" && mode !== "readwrite") throw storageError("invalid-storage-params");
         const requestedMode = mode === "readwrite" ? "readwrite" : "read";
-        let state = await record.handle.queryPermission({ mode: requestedMode });
-        if (state === "prompt") state = await record.handle.requestPermission({ mode: requestedMode });
+        let state;
+        try {
+          state = await record.handle.queryPermission({ mode: requestedMode });
+          if (state === "prompt") state = await record.handle.requestPermission({ mode: requestedMode });
+        } catch (_) {
+          state = "unknown";
+        }
         const permission = await permissionFor(record.handle, requestedMode, record.persisted);
         emit?.("webwindows:storage-change", { reason: "permission", volumeId, permission });
         return permission;
       },
       async listDirectory(volumeId, path) {
         const resolved = await resolveBrowserHandle(volumeId, path);
-        if (resolved.handle.kind !== "directory") throw new Error("storage-not-a-directory");
+        if (resolved.handle.kind !== "directory") throw storageError("storage-not-a-directory");
         const entries = [];
         for await (const [name, handle] of resolved.handle.entries()) {
           let file = null;
           if (handle.kind === "file") file = await handle.getFile();
-          entries.push(Object.assign(browserMetadata(handle, file), { path: [...resolved.parts, name] }));
+          if (name !== handle.name || !isSafePathPart(name)) throw storageError("storage-unavailable");
+          entries.push(browserMetadata(handle, file, resolved.permission, [...resolved.parts, name]));
         }
         return entries.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "directory" ? -1 : 1));
       },
       async openFile(volumeId, path) {
         const resolved = await resolveBrowserHandle(volumeId, path);
-        if (resolved.handle.kind !== "file") throw new Error("storage-not-a-file");
+        if (resolved.handle.kind !== "file") throw storageError("storage-not-a-file");
         const file = await resolved.handle.getFile();
-        return { metadata: browserMetadata(resolved.handle, file), data: await file.arrayBuffer() };
+        if (file.size > MAX_FILE_BYTES) throw storageError("storage-file-too-large");
+        let data;
+        try { data = await file.arrayBuffer(); }
+        catch (_) { throw storageError("storage-read-failed"); }
+        if (!(data instanceof ArrayBuffer) || data.byteLength > MAX_FILE_BYTES || data.byteLength !== file.size) {
+          throw storageError("storage-read-failed");
+        }
+        return { metadata: browserMetadata(resolved.handle, file, resolved.permission, resolved.parts), data };
       },
       async getMetadata(volumeId, path) {
         const resolved = await resolveBrowserHandle(volumeId, path);
         const file = resolved.handle.kind === "file" ? await resolved.handle.getFile() : null;
-        return browserMetadata(resolved.handle, file);
+        return browserMetadata(resolved.handle, file, resolved.permission, resolved.parts);
       }
     };
   }
@@ -289,7 +413,7 @@
         } catch (error) {
           throw normalizeCancellation(error);
         }
-        validateNativeVolume(result);
+        result = validateNativeVolume(result);
         emit?.("webwindows:storage-change", { reason: "directory-picked", volume: result });
         return result;
       },
@@ -297,22 +421,34 @@
         requireNativeVolumeId(volumeId);
         const volumes = await call("storageListVolumes");
         if (!Array.isArray(volumes)) throw storageError("invalid-response");
-        volumes.forEach(validateNativeVolume);
-        return volumes.find((volume) => volume.id === volumeId)?.permission || { state: "revoked", readable: false, writable: false, persisted: false, revoked: true };
+        const validated = volumes.map(validateNativeVolume);
+        const volume = validated.find((candidate) => candidate.id === volumeId);
+        if (!volume) throw storageError("storage-volume-not-found");
+        return volume.permission;
       },
       async listDirectory(volumeId, path) {
         requireNativeVolumeId(volumeId);
         const basePath = normalizePath(path);
         const entries = await call("storageListDirectory", { volumeId, path: basePath });
         if (!Array.isArray(entries)) throw storageError("invalid-response");
-        return entries.map((entry) => Object.assign({}, entry, { path: [...basePath, entry.name] }));
+        return entries.map((entry) => validateNativeMetadata(entry, [...basePath, entry?.name]));
       },
       async openFile(volumeId, path) {
         requireNativeVolumeId(volumeId);
-        const result = await call("storageOpenFile", { volumeId, path: normalizePath(path) });
-        return { metadata: result.metadata, data: decodeBase64(result.base64) };
+        const normalizedPath = normalizePath(path);
+        const result = await call("storageOpenFile", { volumeId, path: normalizedPath });
+        if (!isStructuredObject(result)) throw storageError("invalid-response");
+        const metadata = validateNativeMetadata(result.metadata, normalizedPath, "file");
+        if (metadata.size !== null && metadata.size > MAX_FILE_BYTES) throw storageError("invalid-response");
+        const data = decodeBase64(result.base64);
+        if (metadata.size !== null && metadata.size !== data.byteLength) throw storageError("invalid-response");
+        return { metadata, data };
       },
-      getMetadata: (volumeId, path) => call("storageGetMetadata", { volumeId: requireNativeVolumeId(volumeId), path: normalizePath(path) })
+      async getMetadata(volumeId, path) {
+        const normalizedPath = normalizePath(path);
+        const result = await call("storageGetMetadata", { volumeId: requireNativeVolumeId(volumeId), path: normalizedPath });
+        return validateNativeMetadata(result, normalizedPath);
+      }
     };
   }
 

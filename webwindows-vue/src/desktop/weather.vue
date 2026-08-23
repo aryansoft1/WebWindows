@@ -27,7 +27,7 @@ export default {
     return {
       position: { x: 100, y: 100 }, // 初始位置，可根据需要调整
       isDragging: false,
-      dragStart: { pointerX: 0, pointerY: 0, x: 0, y: 0 },
+      dragStart: { pointerX: 0, pointerY: 0, x: 0, y: 0, scaleX: 1, scaleY: 1 },
       activePointerId: null,
       weatherTemp: "--°C",
       weatherDesc: "加载中...",
@@ -72,15 +72,18 @@ export default {
     onPointerDown(e) {
       if (e.isPrimary === false || (e.pointerType === "mouse" && e.button !== 0) || e.target.closest("button")) return;
       const rect = e.currentTarget.getBoundingClientRect();
+      const scale = this.getRenderedScale(e.currentTarget, rect);
       this.isDragging = true;
       this.hasDragged = true;
       this.activePointerId = e.pointerId;
-      this.position.x = rect.left;
-      this.position.y = rect.top;
+      this.position.x = rect.left / scale.x;
+      this.position.y = rect.top / scale.y;
       this.dragStart.pointerX = e.clientX;
       this.dragStart.pointerY = e.clientY;
-      this.dragStart.x = rect.left;
-      this.dragStart.y = rect.top;
+      this.dragStart.x = this.position.x;
+      this.dragStart.y = this.position.y;
+      this.dragStart.scaleX = scale.x;
+      this.dragStart.scaleY = scale.y;
       e.currentTarget.setPointerCapture?.(e.pointerId);
       e.preventDefault();
     },
@@ -95,14 +98,24 @@ export default {
       this.isDragging = false;
       this.activePointerId = null;
     },
+    getRenderedScale(element, rect = element?.getBoundingClientRect?.()) {
+      const scaleX = rect?.width && element?.offsetWidth ? rect.width / element.offsetWidth : 1;
+      const scaleY = rect?.height && element?.offsetHeight ? rect.height / element.offsetHeight : 1;
+      return {
+        x: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
+        y: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
+      };
+    },
     moveTo(clientX, clientY) {
       const element = this.$el;
       const width = element?.offsetWidth || 160;
       const height = element?.offsetHeight || 100;
-      const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-      const viewportHeight = document.documentElement.clientHeight || window.innerHeight;
-      const nextX = this.dragStart.x + (clientX - this.dragStart.pointerX);
-      const nextY = this.dragStart.y + (clientY - this.dragStart.pointerY);
+      const scaleX = this.dragStart.scaleX || 1;
+      const scaleY = this.dragStart.scaleY || 1;
+      const viewportWidth = (document.documentElement.clientWidth || window.innerWidth) / scaleX;
+      const viewportHeight = (document.documentElement.clientHeight || window.innerHeight) / scaleY;
+      const nextX = this.dragStart.x + (clientX - this.dragStart.pointerX) / scaleX;
+      const nextY = this.dragStart.y + (clientY - this.dragStart.pointerY) / scaleY;
       this.position.x = Math.max(0, Math.min(viewportWidth - width, nextX));
       this.position.y = Math.max(0, Math.min(viewportHeight - height, nextY));
     },

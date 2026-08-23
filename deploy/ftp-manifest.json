@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.23.4",
-  "catalogVersion": "2026.08.23.4",
-  "generatedAt": "2026-08-23T09:02:00.964Z",
+  "releaseVersion": "2026.08.23.5",
+  "catalogVersion": "2026.08.23.5",
+  "generatedAt": "2026-08-23T11:51:43.862Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -175,10 +175,10 @@
     "api/release-version.asp",
     "api/mobile-version.asp"
   ],
-  "previousReleaseVersion": "2026.08.23.3",
+  "previousReleaseVersion": "2026.08.23.4",
   "integrity": {
     "index.html": {
-      "sha256": "85d509bd191979fc2e80cb9165a7c0c42ae6f109005c4c7d5d558b6f2a35277a",
+      "sha256": "1b37f4d538d79ec5986b4a78689da58d15ee56b8ee15edc07ccec7bf345a0e44",
       "size": 33731
     },
     "api/function-catalog.asp": {
@@ -186,7 +186,7 @@
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "67b53d76081b74045da58d778be73e2ce01db77af9cd9175bead09511579f076",
+      "sha256": "52575f5ac7d8dcce4c2a5764dd59ab4f7ab3dd7a3801ab5dfae63ca4729ff5ff",
       "size": 13462
     },
     "assets/js/app-registry.js": {
@@ -770,15 +770,15 @@
       "size": 87423
     },
     "dist-weather/weather-widget.umd.js": {
-      "sha256": "a2ed2ac08e5bf5e9997304024b438175faa2d69b19289c2fb4b93fe7bcaa753c",
-      "size": 15337
+      "sha256": "9f7b7a07ef084e13dc352271375aca2395cec5b26e8e2391ebcc1575786a0c99",
+      "size": 15775
     },
     "dist-weather/weather-widget.global.js": {
-      "sha256": "40605954d3f9b201695f746bfc121c1a3651fcb261d4057cd852453dad3b314e",
-      "size": 15134
+      "sha256": "034be561038ef97a76778d96477f3958e5714567727b685e238d0b36978ecd2d",
+      "size": 15572
     },
     "dist-weather/weather-widget.css": {
-      "sha256": "1fd2210678d0868ab4243efcb5cf053b59f2fc11e93bb8915b6e9bf8a43f1d80",
+      "sha256": "02eccbbc296470b3e803af9bf7e676b6a0ace3e49daf1e8086ed60b7071e1e68",
       "size": 912
     },
     "cloud/browser/openResource.asp": {

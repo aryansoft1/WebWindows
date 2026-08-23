@@ -13,10 +13,18 @@ assert.match(source, /const base = \{ position: 'fixed'/,
   "weather must remain attached to the viewport in Android fullscreen mode");
 assert.match(source, /e\.currentTarget\.getBoundingClientRect\(\)/,
   "weather drag must preserve its rendered position before moving");
-assert.match(source, /dragStart\.x \+ \(clientX - this\.dragStart\.pointerX\)/,
-  "horizontal dragging must use pointer deltas instead of mixing coordinate origins");
-assert.match(source, /dragStart\.y \+ \(clientY - this\.dragStart\.pointerY\)/,
-  "vertical dragging must use pointer deltas instead of mixing coordinate origins");
+assert.match(source, /rect\.width \/ element\.offsetWidth/,
+  "weather drag must measure the rendered scale applied by Android body zoom");
+assert.match(source, /rect\.height \/ element\.offsetHeight/,
+  "weather drag must measure vertical rendering scale independently");
+assert.match(source, /rect\.left \/ scale\.x/,
+  "pointer down must convert the rendered position back to layout coordinates");
+assert.match(source, /rect\.top \/ scale\.y/,
+  "pointer down must not jump when the page is zoomed");
+assert.match(source, /dragStart\.x \+ \(clientX - this\.dragStart\.pointerX\) \/ scaleX/,
+  "horizontal pointer deltas must be converted through the rendered scale");
+assert.match(source, /dragStart\.y \+ \(clientY - this\.dragStart\.pointerY\) \/ scaleY/,
+  "vertical pointer deltas must be converted through the rendered scale");
 assert.doesNotMatch(source, /clientX - offset\.x|clientY - offset\.y/,
   "the legacy absolute-coordinate drag path must not return");
 assert.match(source, /@pointerdown="onPointerDown"[\s\S]*@pointermove="onPointerMove"[\s\S]*@pointercancel="onPointerEnd"/,
@@ -27,7 +35,28 @@ assert.doesNotMatch(source, /@touchstart|onTouchStart|touchOffset|@mousedown|onM
   "mobile and desktop drag must not drift into separate implementations");
 assert.doesNotMatch(source, /e\.offsetX|e\.offsetY|e\.pageX|e\.pageY/,
   "weather drag must not use child offsets or page coordinates");
+
+// Reproduce the physical tablet's Android WebView geometry: body zoom is 0.75,
+// while pointer coordinates and getBoundingClientRect() are rendered pixels.
+const tabletScale = 0.75;
+const renderedStart = { x: 718.5, y: 32.4375 };
+const layoutStart = { x: renderedStart.x / tabletScale, y: renderedStart.y / tabletScale };
+const pointerDelta = { x: -180, y: 145 };
+const layoutEnd = {
+  x: layoutStart.x + pointerDelta.x / tabletScale,
+  y: layoutStart.y + pointerDelta.y / tabletScale,
+};
+assert.deepEqual(
+  { x: layoutEnd.x * tabletScale, y: layoutEnd.y * tabletScale },
+  { x: renderedStart.x + pointerDelta.x, y: renderedStart.y + pointerDelta.y },
+  "a 0.75 body zoom must preserve the finger-to-widget rendered delta without an upper-left jump",
+);
+
 assert.match(source, /document\.documentElement\.clientWidth \|\| window\.innerWidth/);
+assert.match(source, /window\.innerWidth\) \/ scaleX/,
+  "horizontal drag bounds must use the zoom-adjusted layout viewport");
+assert.match(source, /window\.innerHeight\) \/ scaleY/,
+  "vertical drag bounds must use the zoom-adjusted layout viewport");
 assert.match(source, /Math\.min\(viewportWidth - width/,
   "weather drag must remain inside the visible desktop");
 assert.match(source, /enableHighAccuracy:\s*true/,
@@ -53,7 +82,7 @@ assert.match(productionBundle, /setPointerCapture/);
 assert.doesNotMatch(productionBundle, /onTouchStart|onMouseDown/);
 assert.match(productionCss, /position:fixed/);
 assert.match(productionCss, /touch-action:none/);
-assert.match(page, /weather-widget\.(?:css|umd\.js)\?v=20260823-weather-drag-2/g);
+assert.match(page, /weather-widget\.(?:css|umd\.js)\?v=20260823-weather-drag-3/g);
 for (const file of [
   "index.html",
   "dist-weather/weather-widget.css",

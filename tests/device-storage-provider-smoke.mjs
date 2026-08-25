@@ -194,5 +194,7 @@ androidBridge.storagePickDirectory = async () => ({ id: "saf-12345678", name: "D
 await assert.rejects(() => androidStorage.pickDirectory(), (error) => error.code === "invalid-response");
 androidBridge.storagePickDirectory = async () => { const error = new Error("storage-picker-cancelled"); error.code = "storage-picker-cancelled"; throw error; };
 await assert.rejects(() => androidStorage.pickDirectory(), (error) => error.code === "user-cancelled");
+androidBridge.storagePickDirectory = async () => { const error = new Error("storage-picker-busy"); error.code = "storage-picker-busy"; throw error; };
+await assert.rejects(() => androidStorage.pickDirectory(), (error) => error.code === "picker-busy");
 
 console.log("device storage provider smoke tests passed");

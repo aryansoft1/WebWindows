@@ -62,6 +62,9 @@
   function normalizeCancellation(error) {
     if (error?.name === "AbortError" || error?.code === "storage-picker-cancelled"
         || error?.message === "storage-picker-cancelled") return storageError("user-cancelled");
+    if (error?.code === "storage-picker-busy" || error?.message === "storage-picker-busy") {
+      return storageError("picker-busy");
+    }
     return error;
   }
 

@@ -233,7 +233,7 @@
       try { handle = await handle.getDirectoryHandle(name); }
       catch (_) { throw storageError("storage-entry-not-found"); }
     }
-    return { record, handle, parts };
+    return { record, handle, parts, permission };
   }
 
   function browserMetadata(handle, file, permission, path) {

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.26.1",
   "catalogVersion": "2026.08.26.1",
-  "generatedAt": "2026-08-26T00:44:28.926Z",
+  "generatedAt": "2026-08-26T01:05:36.410Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -179,8 +179,8 @@
   "previousReleaseVersion": "2026.08.23.6",
   "integrity": {
     "index.html": {
-      "sha256": "4733cfec3d01c5aabac6c7fb305071f4c092284faf27e5f0ca0a23c9bbc7f300",
-      "size": 33720
+      "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
+      "size": 33735
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
@@ -255,8 +255,8 @@
       "size": 3461
     },
     "assets/js/device-storage-provider.js": {
-      "sha256": "77ccc37ed4bc1e60e231916b31dab9addec1a8be723f68106549e39efd65480a",
-      "size": 10948
+      "sha256": "f08e943a940d40fb1070630d4457c7645f096516791e5c3d1ac05cb67562834e",
+      "size": 21567
     },
     "assets/js/function-sync.js": {
       "sha256": "98fab91c5f04245d99d3719813847063482133687aad23e919248244bafe8279",
@@ -861,6 +861,7 @@
     "news_view.html",
     "assets/js/news.js",
     "assets/js/news_view.js",
+    "assets/js/device-storage-provider.js",
     "data/apps/system-apps.json",
     "dist-window/window-manager-widget.css",
     "dist-window/window-manager-widget.js",

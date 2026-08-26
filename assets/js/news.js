@@ -48,7 +48,7 @@
       empty.textContent = "没有找到符合条件的新闻，请尝试其他关键词或分类。"; list.appendChild(empty); return;
     }
     visible.forEach(item => {
-      const link = document.createElement("a"); link.className = "news-article"; link.href = `news_view.html?id=${encodeURIComponent(item.id)}&v=20260819-news-feed-1`;
+      const link = document.createElement("a"); link.className = "news-article"; link.href = `news_view.html?id=${encodeURIComponent(item.id)}&v=20260826-news-nav-1`;
       const main = document.createElement("div"); main.className = "news-article-main";
       const icon = document.createElement("span"); icon.className = "news-article-icon"; icon.setAttribute("aria-hidden", "true"); icon.textContent = "▤";
       const copy = document.createElement("div"); copy.className = "news-article-copy";

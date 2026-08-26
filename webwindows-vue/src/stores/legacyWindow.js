@@ -49,6 +49,67 @@ function _layout(winEl){
   if (ifr) { ifr.style.width = '100%'; ifr.style.height = '100%'; ifr.style.border = '0'; }
 }
 
+function _isCompactWindowLayout(){
+  return window.matchMedia(
+    '(max-width: 820px), (max-width: 1000px) and (max-height: 500px)'
+  ).matches;
+}
+
+function _renderedWindowScale(winEl){
+  const rect = winEl?.getBoundingClientRect?.();
+  const scaleX = rect?.width && winEl?.offsetWidth ? rect.width / winEl.offsetWidth : 1;
+  const scaleY = rect?.height && winEl?.offsetHeight ? rect.height / winEl.offsetHeight : 1;
+  return {
+    x: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
+    y: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
+  };
+}
+
+function _availableWindowBounds(scale = { x: 1, y: 1 }){
+  const viewport = window.visualViewport;
+  const taskbarHeight = document.querySelector('.taskbar')?.offsetHeight || 43;
+  return {
+    width: Math.max(0, (viewport?.width || window.innerWidth) / scale.x),
+    height: Math.max(0, (viewport?.height || window.innerHeight) / scale.y - taskbarHeight),
+  };
+}
+
+function fitWindowToViewport(winEl){
+  if (!winEl || !winEl.isConnected || _isCompactWindowLayout() || winEl.classList.contains('maximized')) return;
+
+  const scale = _renderedWindowScale(winEl);
+  const bounds = _availableWindowBounds(scale);
+  const marginX = 12 / scale.x;
+  const marginY = 12 / scale.y;
+  const maxWidth = Math.max(0, bounds.width - marginX * 2);
+  const maxHeight = Math.max(0, bounds.height - marginY * 2);
+  const width = Math.min(winEl.offsetWidth || parseFloat(winEl.style.width) || maxWidth, maxWidth);
+  const height = Math.min(winEl.offsetHeight || parseFloat(winEl.style.height) || maxHeight, maxHeight);
+
+  winEl.style.width = Math.max(0, width) + 'px';
+  winEl.style.height = Math.max(0, height) + 'px';
+  const left = parseFloat(winEl.style.left) || 0;
+  const top = parseFloat(winEl.style.top) || 0;
+  winEl.style.left = Math.max(marginX, Math.min(bounds.width - width - marginX, left)) + 'px';
+  winEl.style.top = Math.max(marginY, Math.min(bounds.height - height - marginY, top)) + 'px';
+}
+
+let viewportFitTrackingBound = false;
+function ensureViewportFitTracking(){
+  if (viewportFitTrackingBound) return;
+  viewportFitTrackingBound = true;
+  let frame = 0;
+  const fitAllWindows = () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      document.querySelectorAll('.window').forEach(fitWindowToViewport);
+    });
+  };
+  window.addEventListener('resize', fitAllWindows);
+  window.addEventListener('orientationchange', fitAllWindows);
+  window.visualViewport?.addEventListener('resize', fitAllWindows);
+}
+
 /* ---------- 2) 触控优化（接口保留即可） ---------- */
 function padTitleBarTouch(winEl, headerEl){ /* 若你有实现可填入 */ }
 
@@ -57,9 +118,7 @@ function bindWindowBehavior(winEl){
   if (!winEl || winEl.dataset.wwWindowBehaviorBound === '1') return;
   winEl.dataset.wwWindowBehaviorBound = '1';
   const header = winEl.querySelector('.window-header');
-  const isCompactWindowLayout = () => window.matchMedia(
-    '(max-width: 820px), (max-width: 1000px) and (max-height: 500px)'
-  ).matches;
+  const isCompactWindowLayout = _isCompactWindowLayout;
 
   // iframe 会覆盖窗口内容区的鼠标命中，必须提供位于最上层的独立缩放手柄。
   // 使用现有 .resizer 样式，同时为事件处理保存明确的缩放方向。
@@ -83,14 +142,7 @@ function bindWindowBehavior(winEl){
     };
   };
 
-  const availableBounds = (scale = { x: 1, y: 1 }) => {
-    const viewport = window.visualViewport;
-    const taskbarHeight = document.querySelector('.taskbar')?.offsetHeight || 43;
-    return {
-      width: Math.max(0, (viewport?.width || window.innerWidth) / scale.x),
-      height: Math.max(0, (viewport?.height || window.innerHeight) / scale.y - taskbarHeight),
-    };
-  };
+  const availableBounds = _availableWindowBounds;
 
   // ------- 拖拽：Pointer Events 同时覆盖鼠标、触控笔与触摸设备 -------
   // 手机/窄屏由 CSS 固定为工作区全屏，避免手指拖动把窗口甩出可视区域。
@@ -468,7 +520,7 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
     if (id === 'yunmishu_root') {
         // 已存在就前置 & 退出
         const existed = document.getElementById('win-yunmishu_root');
-        if (existed) { existed.style.display=''; focusTargetWindow(existed); _layout(existed); return id; }
+        if (existed) { existed.style.display=''; focusTargetWindow(existed); fitWindowToViewport(existed); _layout(existed); return id; }
 
         const win      = document.createElement('div');
         const header   = document.createElement('div');
@@ -516,6 +568,8 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
         document.body.appendChild(win);
 
         // 行为 & 布局 & 任务栏
+        fitWindowToViewport(win);
+        ensureViewportFitTracking();
         _layout(win);                 // 让内容区顶满
         bindWindowBehavior(win);      // 拖拽/缩放/三键/右键
         createTaskbarIcon(id, title || '云秘书', iconUrl || 'assets/icons/cloud_secretary.png');
@@ -525,7 +579,7 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
 
     // 已存在 → 聚焦
     const existing = _winEl(id);
-    if (existing){ existing.style.display=''; focusTargetWindow(existing); _layout(existing); return id; }
+    if (existing){ existing.style.display=''; focusTargetWindow(existing); fitWindowToViewport(existing); _layout(existing); return id; }
 
     // 根节点（旧类名）
     const win = document.createElement('div');
@@ -585,6 +639,8 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
     document.body.appendChild(win);
 
     // 布局 & 行为
+    fitWindowToViewport(win);
+    ensureViewportFitTracking();
     _layout(win);
     bindWindowBehavior(win);
     createTaskbarIcon(id, title, iconUrl);
@@ -663,7 +719,7 @@ function removeTaskbarIcon(winId) {
 export {
   openWindow, closeWindow,
   closeTargetWindow, minimizeTargetWindow, maximizeTargetWindow,
-  bindWindowBehavior, padTitleBarTouch,
+  bindWindowBehavior, padTitleBarTouch, fitWindowToViewport,
   showWindowContextMenu, hideWindowContextMenu,
   createTaskbarIcon, updateTaskbarActive, removeTaskbarIcon,
   clearAspSessionCookies, focusTargetWindow, openCloudWindow

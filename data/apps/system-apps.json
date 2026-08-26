@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.08.23.6",
-    "updatedAt": "2026-08-23T22:05:00+09:00"
+    "catalogVersion": "2026.08.26.1",
+    "updatedAt": "2026-08-26T09:45:00+09:00"
   },
   "apps": [
     {
@@ -303,7 +303,7 @@
       "type": "system",
       "name": "新闻中心",
       "icon": "assets/icons/news.png",
-      "entry": "news.html?v=20260819-news-feed-1",
+      "entry": "news.html?v=20260826-news-nav-1",
       "install": {
         "defaultState": "installed",
         "uninstallable": false

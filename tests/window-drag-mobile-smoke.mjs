@@ -30,6 +30,12 @@ assert.match(source, /\(ev\.clientY - moveStart\.pointerY\) \/ scale\.y/,
   "vertical touch deltas must be converted through body zoom");
 assert.match(source, /\(ev\.clientX - startX\) \/ resizeScale\.x/,
   "window resizing must share the zoom conversion");
+assert.match(source, /function fitWindowToViewport\(winEl\)/,
+  "non-compact mobile viewports must clamp newly opened windows to the workspace");
+assert.match(source, /Math\.min\(winEl\.offsetWidth[\s\S]*?maxWidth\)/,
+  "oversized default window widths must be reduced before display");
+assert.match(source, /window\.visualViewport\?\.addEventListener\('resize', fitAllWindows\)/,
+  "window bounds must be recomputed after mobile viewport and keyboard changes");
 assert.match(styles, /\.window-header\s*\{[\s\S]*?touch-action:\s*none/,
   "the title bar must prevent Android WebView from stealing the drag gesture");
 
@@ -53,7 +59,7 @@ assert.match(bundle, /pointerX/);
 assert.match(bundle, /scaleX/,
   "the production bundle must contain zoom-aware delta-based window dragging");
 assert.match(bundleCss, /touch-action:none/);
-assert.match(page, /window-manager-widget\.(?:css|js)\?v=20260823-window-drag-2/g);
+assert.match(page, /window-manager-widget\.(?:css|js)\?v=20260826-window-fit-1/g);
 for (const file of [
   "index.html",
   "dist-window/window-manager-widget.css",

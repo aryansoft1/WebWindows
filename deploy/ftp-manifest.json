@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.23.6",
-  "catalogVersion": "2026.08.23.6",
-  "generatedAt": "2026-08-23T12:45:22.984Z",
+  "releaseVersion": "2026.08.26.1",
+  "catalogVersion": "2026.08.26.1",
+  "generatedAt": "2026-08-26T00:44:28.926Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -176,19 +176,19 @@
     "api/mobile-version.asp",
     "dist-window/window-manager-widget.umd.js"
   ],
-  "previousReleaseVersion": "2026.08.23.5",
+  "previousReleaseVersion": "2026.08.23.6",
   "integrity": {
     "index.html": {
-      "sha256": "6c88c2f054b1cfc18f1c13ceb33f65b970867988cf6fe07274e46dc8e18f635e",
-      "size": 33722
+      "sha256": "4733cfec3d01c5aabac6c7fb305071f4c092284faf27e5f0ca0a23c9bbc7f300",
+      "size": 33720
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
     "data/apps/system-apps.json": {
-      "sha256": "0c18a2c32c8f95a5a16a77978a35023ba3db0036af13ef608311228650dd64e1",
-      "size": 13462
+      "sha256": "ff0d453c960073041a86ae716571109ef86a4bab31ede34ee9abd551815705cb",
+      "size": 13461
     },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
@@ -275,8 +275,8 @@
       "size": 4301
     },
     "assets/js/news.js": {
-      "sha256": "26d6f41a293cc1922523134a3e829a46a00d593675774c53a7e23476c19f2e27",
-      "size": 5180
+      "sha256": "ca996cc0322cf1062eb70bf5a4ecd8ea793e9389fe91bf5acb7e9a5ba3dc9d77",
+      "size": 5179
     },
     "assets/js/network-speed.js": {
       "sha256": "2ca5e8ebcbbd44e6964dd401aa6d5431ee3cf931cdafac035da1f492c32590e4",
@@ -567,8 +567,8 @@
       "size": 46850
     },
     "news.html": {
-      "sha256": "0d730c53908680bc38d2559ceb5c75e969e11ec7d54350270a69e508806001e4",
-      "size": 2556
+      "sha256": "7e12bb5bc3f6411493f2bf6039438772cb3687e7a247628cf8ab0111cfa57fa8",
+      "size": 2554
     },
     "web.html": {
       "sha256": "51ddffe31d490810c139bf43ef581e542803de5d82072e6c97eeb77dfee0ab0c",
@@ -767,8 +767,8 @@
       "size": 3634
     },
     "dist-window/window-manager-widget.js": {
-      "sha256": "3a2ca33018cc6d05b75b782f7197a50da8085111ee061a487a83541450b01d95",
-      "size": 86989
+      "sha256": "fd2568a858e19dc88af9f24bffd580555c4d3584df01e795378a42181b159f6d",
+      "size": 88120
     },
     "dist-weather/weather-widget.umd.js": {
       "sha256": "9f7b7a07ef084e13dc352271375aca2395cec5b26e8e2391ebcc1575786a0c99",
@@ -823,12 +823,12 @@
       "size": 1504
     },
     "assets/js/news_view.js": {
-      "sha256": "fff7f3e0924d9e35481d3c5c2c277e146e115e34b82ec045e6865d90b5d95b60",
-      "size": 2772
+      "sha256": "5cc92f5088ccca212eb9d7c704f5c71023ac61a9524f59f9100095699181e4da",
+      "size": 2766
     },
     "news_view.html": {
-      "sha256": "5cbc1bf2ec0a9c7f3965e42a80d0f68657655bf557fef43cb5ec1990e54eb999",
-      "size": 2439
+      "sha256": "af88fa0da11f66ddba48299369e68c3f507c6240d1d9b382c3d15892e7bfae55",
+      "size": 2622
     },
     "api/dt_fetch_links.asp": {
       "sha256": "787b24649aa1a04d4365bb24030a2e0766a91221752fb7c62dec6ee3bd463c28",
@@ -851,12 +851,17 @@
       "size": 1495
     },
     "dist-window/window-manager-widget.umd.js": {
-      "sha256": "1756a3f749a0b2d6cd6ea31aa05c9faf3657f0c69442a445bd936194434cd912",
-      "size": 87058
+      "sha256": "a9b468d2cbd3ab224332da610ac0e228d9c8e7459e514f2431408a38ef72884c",
+      "size": 88189
     }
   },
   "uploadFiles": [
     "index.html",
+    "news.html",
+    "news_view.html",
+    "assets/js/news.js",
+    "assets/js/news_view.js",
+    "data/apps/system-apps.json",
     "dist-window/window-manager-widget.css",
     "dist-window/window-manager-widget.js",
     "dist-window/window-manager-widget.umd.js",
@@ -864,7 +869,6 @@
     "assets/js/sysinfo.js",
     "api/release-version.asp",
     "api/mobile-version.asp",
-    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]
 }

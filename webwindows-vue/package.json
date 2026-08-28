@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "build:window": "vite build --config vite.window.config.js",
+    "build:developer-studio": "npm --prefix .. run build:developer-studio",
     "preview": "vite preview"
   },
   "dependencies": {

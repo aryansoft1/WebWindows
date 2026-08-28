@@ -1,0 +1,139 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-function-permissions-v1",
+  "status": "draft-not-enforced",
+  "defaultDecision": "deny",
+  "denyUnknownPermissions": true,
+  "wildcardsAllowed": false,
+  "notes": [
+    "This is a Phase 0B design contract, not a statement that sandbox API access is currently implemented.",
+    "Permission grants application authority; Runtime capability reports implementation availability. Both are required and neither implies the other.",
+    "All broker targets are stable members of window.WebWindows described by webwindows-public-api-v1.d.ts."
+  ],
+  "baselineFacadeMethods": [
+    "device.ready",
+    "device.getCapabilities",
+    "device.on"
+  ],
+  "permissions": [
+    {
+      "id": "device.system-info.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.system.isSupported", "device.system.getCapabilities", "device.system.getInfo"]
+    },
+    {
+      "id": "device.runtime-info.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.runtime.isSupported", "device.runtime.getCapabilities", "device.runtime.getInfo", "device.runtime.getLastError", "device.runtime.refresh"]
+    },
+    {
+      "id": "device.network-status.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.network.isSupported", "device.network.getCapabilities", "device.network.getState", "device.network.refresh"]
+    },
+    {
+      "id": "device.battery-status.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.battery.isSupported", "device.battery.getCapabilities", "device.battery.getState", "device.battery.refresh"]
+    },
+    {
+      "id": "device.display-info.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.display.isSupported", "device.display.getCapabilities", "device.display.getInfo", "device.display.getBrightness", "device.display.refresh"]
+    },
+    {
+      "id": "device.display-brightness.write",
+      "risk": "medium",
+      "prompt": "runtime-confirmation",
+      "userGesture": true,
+      "publicApiTargets": ["device.display.setBrightness"]
+    },
+    {
+      "id": "device.audio-status.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.audio.isSupported", "device.audio.getCapabilities", "device.audio.getVolume", "device.audio.refresh"]
+    },
+    {
+      "id": "device.audio-volume.write",
+      "risk": "medium",
+      "prompt": "runtime-confirmation",
+      "userGesture": true,
+      "publicApiTargets": ["device.audio.setVolume"]
+    },
+    {
+      "id": "device.storage-estimate.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.storage.isSupported", "device.storage.getCapabilities", "device.storage.getState", "device.storage.refresh"]
+    },
+    {
+      "id": "device.storage-directory.pick",
+      "risk": "high",
+      "prompt": "host-owned-user-action",
+      "userGesture": true,
+      "publicApiTargets": ["device.storage.pickDirectory", "device.storage.requestPermission"]
+    },
+    {
+      "id": "device.storage-directory.list",
+      "risk": "high",
+      "prompt": "resource-grant",
+      "userGesture": false,
+      "publicApiTargets": ["device.storage.listVolumes", "device.storage.listDirectory", "device.storage.getMetadata"]
+    },
+    {
+      "id": "device.storage-file.read",
+      "risk": "high",
+      "prompt": "resource-grant",
+      "userGesture": false,
+      "publicApiTargets": ["device.storage.openFile"]
+    },
+    {
+      "id": "device.power-status.read",
+      "risk": "low",
+      "prompt": "install-review",
+      "userGesture": false,
+      "publicApiTargets": ["device.power.isSupported", "device.power.getCapabilities", "device.power.getState"]
+    },
+    {
+      "id": "cloud.files.open",
+      "risk": "high",
+      "prompt": "host-owned-user-action",
+      "userGesture": true,
+      "publicApiTargets": ["fileDialog.open"]
+    },
+    {
+      "id": "cloud.files.read-selected",
+      "risk": "high",
+      "prompt": "resource-grant",
+      "userGesture": false,
+      "publicApiTargets": ["fileDialog.read"]
+    },
+    {
+      "id": "cloud.files.save",
+      "risk": "high",
+      "prompt": "host-owned-user-action",
+      "userGesture": true,
+      "publicApiTargets": ["fileDialog.save", "fileDialog.saveBlob"]
+    },
+    {
+      "id": "cloud.files.write-selected",
+      "risk": "high",
+      "prompt": "resource-grant",
+      "userGesture": false,
+      "publicApiTargets": ["fileDialog.write"]
+    }
+  ]
+}

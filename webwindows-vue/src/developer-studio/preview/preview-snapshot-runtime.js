@@ -2,6 +2,7 @@ import { getSnapshotFile } from "../snapshot/project-snapshot.js";
 import { normalizeProjectPath } from "../project/path-policy.js";
 import { PREVIEW_CSP } from "./preview-protocol.js";
 import { createConsoleBootstrap } from "./preview-console-bootstrap.js";
+import { createPreviewSdkBootstrap } from "./preview-sdk-bootstrap.js";
 
 const MIME_TYPES = Object.freeze({
   ".css": "text/css;charset=utf-8", ".js": "text/javascript;charset=utf-8",
@@ -46,6 +47,13 @@ export function createPreviewDocument(snapshot, session, options = {}) {
   bootstrap.setAttribute("data-webwindows-preview-bootstrap", "v1");
   bootstrap.textContent = createConsoleBootstrap(session);
   documentNode.head.insertBefore(bootstrap, csp.nextSibling);
+  const sdkBootstrapSource = createPreviewSdkBootstrap(session, options.sdkLaunch);
+  if (sdkBootstrapSource) {
+    const sdkBootstrap = documentNode.createElement("script");
+    sdkBootstrap.setAttribute("data-webwindows-preview-sdk", "v1");
+    sdkBootstrap.textContent = sdkBootstrapSource;
+    documentNode.head.insertBefore(sdkBootstrap, bootstrap.nextSibling);
+  }
 
   documentNode.querySelectorAll("script[src]").forEach((node) => {
     const reference = node.getAttribute("src");

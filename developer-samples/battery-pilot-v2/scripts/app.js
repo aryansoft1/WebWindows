@@ -1,5 +1,15 @@
 const status = document.getElementById("status");
 
-// Phase 2B may exercise the declared Battery Pilot through the public SDK facade.
-// Phase 2A.5 deliberately does not inject or call a Capability Broker.
-status.textContent = "Manifest v2 permission declaration loaded; Broker Runtime remains disabled.";
+function render(label, state) {
+  status.textContent = `${label}: ${state.supported ? `${Math.round((state.level ?? 0) * 100)}%` : "unsupported"}`;
+}
+
+try {
+  render("Snapshot", window.WebWindows.device.battery.getState());
+  window.WebWindows.device.battery.refresh().then(
+    (state) => render("Refreshed", state),
+    (error) => { status.textContent = `${error.code || error.name}: ${error.message}`; }
+  );
+} catch (error) {
+  status.textContent = `${error.code || error.name}: ${error.message}`;
+}

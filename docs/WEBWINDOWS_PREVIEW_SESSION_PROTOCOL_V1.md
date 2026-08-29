@@ -1,6 +1,6 @@
 # WebWindows Preview Session Protocol v1
 
-状态：Phase 0B 设计草案；不写入 catalog 或安装关联
+状态：Phase 1C Safe Preview 已实现；Phase 2B Battery-only Broker Pilot 已实现；不写入 catalog 或安装关联
 
 ## 1. 目标
 
@@ -52,8 +52,8 @@ Controller 为每次 Run 创建：
 5. Studio 只向刚打开的精确 WindowProxy、可信 origin 发送 challenge response、session ID 和 secret；
 6. Host 向 Controller redeem；secret 立即失效并绑定 Host WindowProxy；
 7. Controller 返回 immutable snapshot 与 effective policy；
-8. Host 构造与 Production 同策略的 unique-origin iframe；
-9. Host 建立 Capability Broker MessagePort 和 Function Lifecycle `launch`。
+8. Host 构造 opaque-origin sandbox iframe；
+9. 对符合条件的 Manifest v2，Host 建立 session-scoped Battery Broker MessagePort；Manifest v1 不建立 SDK port。Function Lifecycle 仍属于后续契约接入。
 
 secret 不放 query、fragment、window name、日志或持久存储。重复 redeem、错误 WindowProxy、过期 challenge 或 policy mismatch 均拒绝。
 

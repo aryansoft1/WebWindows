@@ -6,9 +6,10 @@ import {
 } from "./preview-protocol.js";
 
 export class PreviewHostClient {
-  constructor({ onConsole, onState } = {}) {
+  constructor({ onConsole, onState, onBroker } = {}) {
     this.onConsole = onConsole || (() => {});
     this.onState = onState || (() => {});
+    this.onBroker = onBroker || null;
     this.port = null;
     this.hostNonce = null;
     this.requests = new Map();
@@ -31,14 +32,15 @@ export class PreviewHostClient {
     await this.#request("host.ping", {}, 5000);
   }
 
-  async start(session, documentHtml) {
+  async start(session, documentHtml, brokerLaunch = { facadeEnabled: false }) {
     const documentBytes = new TextEncoder().encode(documentHtml).byteLength;
     if (documentBytes > MAX_PREVIEW_DOCUMENT_BYTES) throw new Error("Preview document 超过 30 MB 上限。");
     return this.#request("preview.start", {
       session: publicSession(session),
       token: session.token,
       documentHtml,
-      documentBytes
+      documentBytes,
+      brokerLaunch
     }, 10000);
   }
 
@@ -87,6 +89,21 @@ export class PreviewHostClient {
     }
     if (message.type === "preview.state") {
       this.onState(message.payload);
+      return;
+    }
+    if (message.type === "preview.broker") {
+      const port = this.port;
+      const nonce = this.hostNonce;
+      Promise.resolve(this.onBroker?.(message.payload)).then((response) => {
+        if (!response || this.port !== port || this.hostNonce !== nonce) return;
+        port.postMessage({
+          protocol: PREVIEW_CONTROL_PROTOCOL,
+          version: 1,
+          type: "preview.broker.response",
+          hostNonce: nonce,
+          payload: response
+        });
+      }).catch(() => {});
       return;
     }
     if (message.type !== "host.response" || typeof message.requestId !== "string") return;

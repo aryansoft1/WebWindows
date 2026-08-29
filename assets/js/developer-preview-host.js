@@ -4,11 +4,14 @@
   const CONTROL_PROTOCOL = "webwindows-studio-preview-control-v1";
   const CONSOLE_PROTOCOL = "webwindows-studio-preview-console-v1";
   const CONSOLE_INIT_PROTOCOL = "webwindows-studio-preview-console-init-v1";
+  const SDK_INIT_PROTOCOL = "webwindows-studio-preview-sdk-init-v1";
+  const BROKER_PROTOCOL = "webwindows-capability-broker-v1";
   const SESSION_CONTRACT = "webwindows-studio-preview-session-v1";
   const SANDBOX = "allow-scripts allow-forms allow-modals allow-downloads";
   const REFERRER_POLICY = "no-referrer";
   const MAX_DOCUMENT_BYTES = 30 * 1024 * 1024;
   const MAX_CONSOLE_BYTES = 32 * 1024;
+  const MAX_BROKER_BYTES = 64 * 1024;
   const LEVELS = new Set(["log", "info", "warn", "error", "debug"]);
   const surface = document.getElementById("previewSurface");
   const stateNode = document.getElementById("previewState");
@@ -31,8 +34,12 @@
 
   async function handleControl(message) {
     if (!plain(message) || message.protocol !== CONTROL_PROTOCOL || message.version !== 1
-        || message.hostNonce !== hostNonce || typeof message.type !== "string"
-        || typeof message.requestId !== "string" || !plain(message.payload)) return;
+        || message.hostNonce !== hostNonce || typeof message.type !== "string") return;
+    if (message.type === "preview.broker.response") {
+      forwardBrokerResponse(message.payload);
+      return;
+    }
+    if (typeof message.requestId !== "string" || !plain(message.payload)) return;
     try {
       let payload = null;
       if (message.type === "host.ping") payload = { ready: true };
@@ -51,16 +58,30 @@
     if (!validSession(session) || typeof payload.token !== "string" || payload.token.length < 24
         || typeof payload.documentHtml !== "string" || !Number.isSafeInteger(payload.documentBytes)
         || payload.documentBytes !== byteLength(payload.documentHtml)
-        || payload.documentBytes > MAX_DOCUMENT_BYTES) throw new Error("Developer Preview start payload 无效。");
+        || payload.documentBytes > MAX_DOCUMENT_BYTES || !validBrokerLaunch(payload.brokerLaunch)) {
+      throw new Error("Developer Preview start payload 无效。");
+    }
     stopActive();
     const frame = document.createElement("iframe");
     frame.title = `Developer Preview ${session.snapshotId}`;
     frame.setAttribute("sandbox", SANDBOX);
     frame.setAttribute("referrerpolicy", REFERRER_POLICY);
     const consoleChannel = new MessageChannel();
-    active = { session, token: payload.token, frame, consolePort: consoleChannel.port1 };
+    const brokerChannel = payload.brokerLaunch.facadeEnabled ? new MessageChannel() : null;
+    active = {
+      session,
+      token: payload.token,
+      frame,
+      consolePort: consoleChannel.port1,
+      brokerPort: brokerChannel?.port1 || null,
+      brokerLaunch: payload.brokerLaunch
+    };
     active.consolePort.onmessage = (event) => forwardConsole(event.data, active);
     active.consolePort.start();
+    if (active.brokerPort) {
+      active.brokerPort.onmessage = (event) => forwardBroker(event.data, active);
+      active.brokerPort.start();
+    }
     frame.addEventListener("load", () => {
       if (!active || active.frame !== frame) return;
       frame.contentWindow.postMessage({
@@ -70,11 +91,20 @@
         snapshotId: session.snapshotId,
         token: payload.token
       }, "*", [consoleChannel.port2]);
+      if (brokerChannel) {
+        frame.contentWindow.postMessage({
+          protocol: SDK_INIT_PROTOCOL,
+          version: 1,
+          sessionId: session.sessionId,
+          snapshotId: session.snapshotId,
+          channelId: payload.brokerLaunch.channelId
+        }, "*", [brokerChannel.port2]);
+      }
       emitState("running", session);
     }, { once: true });
-    surface.replaceChildren(frame);
     identityNode.textContent = `${session.projectUuid} · ${short(session.snapshotId)}`;
     frame.srcdoc = payload.documentHtml;
+    surface.replaceChildren(frame);
     return { state: "created", sessionId: session.sessionId, snapshotId: session.snapshotId };
   }
 
@@ -100,6 +130,34 @@
       arguments: message.arguments
     };
     send({ type: "preview.console", payload: safeMessage });
+  }
+
+  function forwardBroker(message, binding) {
+    if (!active || binding !== active || !validBrokerEnvelope(message, binding)) return;
+    send({ type: "preview.broker", payload: message });
+  }
+
+  function forwardBrokerResponse(message) {
+    if (!active?.brokerPort || !validBrokerEnvelope(message, active) || message.type !== "response") return;
+    try { active.brokerPort.postMessage(message); } catch { /* revoked */ }
+  }
+
+  function validBrokerEnvelope(message, binding) {
+    if (!plain(message) || message.protocol !== BROKER_PROTOCOL || message.version !== 1
+        || message.sessionId !== binding.session.sessionId
+        || message.snapshotId !== binding.session.snapshotId
+        || message.channelId !== binding.brokerLaunch.channelId
+        || typeof message.requestId !== "string" || typeof message.method !== "string") return false;
+    try { return byteLength(JSON.stringify(message)) <= MAX_BROKER_BYTES; } catch { return false; }
+  }
+
+  function validBrokerLaunch(launch) {
+    if (!plain(launch) || typeof launch.facadeEnabled !== "boolean") return false;
+    if (!launch.facadeEnabled) return Object.keys(launch).length === 1;
+    return launch.protocol === BROKER_PROTOCOL && launch.version === 1
+      && typeof launch.channelId === "string" && launch.channelId.length >= 16
+      && Number.isSafeInteger(launch.refreshTimeoutMs) && launch.refreshTimeoutMs > 0
+      && plain(launch.handshake) && plain(launch.clientErrors);
   }
 
   function validConsole(message, binding) {
@@ -135,9 +193,11 @@
   function stopActive() {
     if (!active) return;
     active.consolePort.close();
+    active.brokerPort?.close();
     active.frame.removeAttribute("srcdoc");
     active.frame.remove();
     active.token = null;
+    active.brokerLaunch = null;
     active = null;
     identityNode.textContent = "No active session";
     setState("Run a validated Snapshot to start.");

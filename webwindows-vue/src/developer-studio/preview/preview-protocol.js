@@ -1,6 +1,7 @@
 export const PREVIEW_CONTROL_PROTOCOL = "webwindows-studio-preview-control-v1";
 export const PREVIEW_CONSOLE_PROTOCOL = "webwindows-studio-preview-console-v1";
 export const PREVIEW_CONSOLE_INIT_PROTOCOL = "webwindows-studio-preview-console-init-v1";
+export const PREVIEW_SDK_INIT_PROTOCOL = "webwindows-studio-preview-sdk-init-v1";
 export const PREVIEW_SESSION_CONTRACT = "webwindows-studio-preview-session-v1";
 export const PREVIEW_SANDBOX = "allow-scripts allow-forms allow-modals allow-downloads";
 export const PREVIEW_REFERRER_POLICY = "no-referrer";
@@ -9,6 +10,7 @@ export const PREVIEW_SESSION_STATES = Object.freeze(["created", "running", "relo
 export const PREVIEW_CONSOLE_LEVELS = Object.freeze(["log", "info", "warn", "error", "debug"]);
 export const MAX_PREVIEW_DOCUMENT_BYTES = 30 * 1024 * 1024;
 export const MAX_CONSOLE_EVENT_BYTES = 32 * 1024;
+export const MAX_BROKER_EVENT_BYTES = 64 * 1024;
 
 export function createOpaqueIdentity(prefix = "preview") {
   const cryptoObject = globalThis.crypto;

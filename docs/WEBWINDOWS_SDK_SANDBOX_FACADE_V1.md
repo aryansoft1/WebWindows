@@ -1,6 +1,6 @@
 # WebWindows SDK Sandbox Facade v1
 
-状态：Phase 2A shape freeze；尚未注入当前 Preview 或 Production package sandbox
+状态：Phase 2B Battery Pilot 已在 Developer Studio Preview 启用；Production package sandbox 仍未启用
 
 ## 1. Facade 目标
 
@@ -42,10 +42,10 @@ Facade 不用 SharedArrayBuffer、同步 XHR、阻塞 loop 或 parent property a
 
 ## 3. 权限与 capability 表现
 
-- 方法存在不表示已授权；未授权调用返回稳定 `permission-denied`；
+- 方法存在不表示已声明或已授权；缺少 Manifest v2 declaration 返回 `permission-not-declared`，policy/grant 分别返回 `policy-denied` / `permission-denied`；
 - `getCapabilities()` 返回当前 sandbox 的 effective capability，不直接复制 host 全局能力；
 - 未声明/未授权能力报告 `supported:false`，并使用公共、安全的 source/reason；
-- Runtime capability 支持但 permission denied 时仍不得调用；permission granted 但 capability unavailable 时返回 `capability-unavailable`；
+- Runtime capability 支持但 permission denied 时仍不得调用；permission granted 但 capability unavailable 时返回 `capability-unsupported`；
 - Facade 不允许枚举未公开 Host namespace。
 
 ## 4. 对象安全
@@ -59,7 +59,7 @@ Facade 不用 SharedArrayBuffer、同步 XHR、阻塞 loop 或 parent property a
 
 ## 5. Bootstrap 失败
 
-协议不兼容、session 失效或 policy hash 不匹配时，SDK 不创建半可用 facade；`ready()` reject 一个公共 `sdk-unavailable` 错误，Preview Host 显示诊断。禁止回退到 `parent.WebWindows` 或探测其他全局对象。
+Phase 2B 中，Manifest v1 不创建 facade；Manifest v2 + SDK API v1 创建 Battery-only facade。若 permission、policy 或 capability 不可用，handshake 不包含真实 Battery state，`getState()` 同步抛出对应稳定 `WebWindowsCapabilityError`，`refresh()` 仍经 Broker 返回同类错误。禁止回退到 `parent.WebWindows` 或探测其他全局对象。
 
 ## 6. 构建与类型
 

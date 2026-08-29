@@ -1,7 +1,7 @@
-import { c as h } from "./workers-D1fEi3BR.js";
-import { C as c, H as u, D as p, a as m, R as f, b as _, c as w, d as k, F as v, e as D, S as P, f as R, g as I } from "./lspLanguageFeatures-B3OlB4Zl.js";
-import { h as H, i as U, j as y, t as T, k as x } from "./lspLanguageFeatures-B3OlB4Zl.js";
-import { l as s } from "./monaco-runtime-BKpHSqn8.js";
+import { c as h } from "./workers-DLFj8iEZ.js";
+import { C as c, H as u, D as p, a as m, R as f, b as _, c as w, d as k, F as v, e as D, S as P, f as R, g as I } from "./lspLanguageFeatures-DIKBdx9t.js";
+import { h as H, i as U, j as y, t as T, k as x } from "./lspLanguageFeatures-DIKBdx9t.js";
+import { l as s } from "./monaco-runtime-Byn4_dO2.js";
 const C = 120 * 1e3;
 class A {
   constructor(n) {

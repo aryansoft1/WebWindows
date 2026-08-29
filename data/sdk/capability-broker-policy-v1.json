@@ -75,7 +75,9 @@
   },
   "modeDifferences": ["identity", "grantPersistence", "policyContext", "assetSource"],
   "manifestPermissionDeclaration": {
-    "status": "required-contract-gap",
-    "note": "Manifest v1 factual schema has no permissions field. No real project may receive Pilot access until a separately reviewed source declaration contract exists."
+    "status": "resolved-by-manifest-v2-contract-runtime-disabled",
+    "sourceManifestSchema": "data/sdk/manifest-v2.schema.json",
+    "permissionRegistry": "data/sdk/permissions-v1.json",
+    "note": "Manifest v2 now carries requested permissions. Broker Runtime remains disabled until a later phase implements all authorization steps."
   }
 }

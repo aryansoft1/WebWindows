@@ -12,10 +12,11 @@ Developer Studio、Developer Center、提交校验、审核后台、Package Runt
 | 共享资产 | 规范内容 | 当前权威来源 |
 | --- | --- | --- |
 | `data/sdk/manifest-v1.schema.json` | Source Manifest 字段、类型、required、路径形状；published 第三方条目的只读元数据形状 | Phase 0A Schema；语义解释见 `docs/WEBWINDOWS_MANIFEST_V1.md` |
+| `data/sdk/manifest-v2.schema.json` | 显式 Manifest 版本、SDK API v1 与 requested permissions；其余应用字段继承 v1 语义 | Phase 2A.5 Schema；语义解释见 `docs/WEBWINDOWS_MANIFEST_V2.md` |
 | `data/sdk/webwindows-public-api-v1.d.ts` | 当前稳定 `window.WebWindows` 公共 namespace 和类型 | Public API 实现 + 已发布 API 文档的交集 |
 | `data/sdk/runtime-compatibility-v1.json` | 已确认 package/host Runtime 与 capability 事实 | Runtime 实现和自动化测试 |
 | `assets/js/package-runtime.js` + policy tests | 当前 Package Runtime 的可执行安全策略 | Phase 0A 暂不重构；代码行为由回归测试冻结 |
-| `data/sdk/permissions-v1.json` | 新权限词汇、默认拒绝、与 capability 的映射 | Phase 0B 新契约；不是当前 Runtime 事实 |
+| `data/sdk/permissions-v1.json` | Manifest v2 可声明的权限 ID、风险、prompt 与 Public API target | Phase 0B registry + Phase 2A.5 declaration vocabulary；声明不等于 grant |
 | `data/sdk/capability-broker-v1.schema.json` | Preview/Production 共用 request/response/cancel/event wire schema | Phase 2A 冻结；尚未启用 Runtime |
 | `data/sdk/capability-broker-methods-v1.json` | method-level allowlist、permission/capability、参数/结果、timeout、availability | 未登记 method 默认拒绝，禁止 wildcard |
 | `data/sdk/capability-broker-errors-v1.json` | 第三方可见的稳定 Broker errors | 禁止透出 Native/adapter/stack/path |
@@ -28,9 +29,9 @@ Developer Studio、Developer Center、提交校验、审核后台、Package Runt
 
 | 消费者 | 必须消费 | 不应复制/推断 |
 | --- | --- | --- |
-| Studio validator | Manifest Schema、Runtime compatibility、未来 permissions；Package Runtime policy 的共享 validator/core | 手写字段列表、Native 方法、后台表单默认值 |
+| Studio validator | 按显式版本选择 Manifest Schema、permission registry、Runtime compatibility；Package Runtime policy 的共享 validator/core | 从 permissions 字段猜版本、手写权限列表、Native 方法、后台表单默认值 |
 | Developer Center | Manifest 文档/Schema 渲染、Public API 类型/文档、Runtime compatibility | 独立 Manifest 示例对象和独立版本矩阵 |
-| Server-side submission validator | Manifest Schema、Package Runtime policy、提交版本与包哈希规则 | 仅用字符串搜索判断 Manifest、仅在最终客户端解压检查 |
+| Server-side submission validator | ZIP 根 `manifest.json`、对应版本 Schema、permission registry、Package Runtime policy、提交版本与包哈希规则 | 外层第二份 Manifest authority、仅用字符串搜索判断 Manifest、仅在最终客户端解压检查 |
 | Admin review | Schema/包验证报告、permissions 风险说明、Runtime compatibility | 通过 UI 重新实现 validator 或授予系统适配器 |
 | Package Runtime | 已冻结 package policy；未来消费同版本 Runtime core 与 Broker policy | Developer Center 文案、Studio 的宽松预览规则 |
 | SDK language service | `webwindows-public-api-v1.d.ts`、Manifest Schema、Runtime compatibility、permissions | 从实现源码猜测私有对象或注册整个 Shell `window` |
@@ -45,6 +46,7 @@ Developer Studio、Developer Center、提交校验、审核后台、Package Runt
 5. Runtime compatibility 的 `conditional/unsupported/unspecified` 不得被 UI 转换成“已支持”。
 6. Studio Preview 与 Production Runtime 对同一项目必须使用相同版本的 Manifest/Package/Broker policy；允许的差异只有资产来源和开发日志。
 7. 自动生成文档时保留源文件链接和版本，不把生成结果反向编辑成新的权威来源。
+8. Source Manifest authority 始终是 Snapshot/ZIP 根目录的 `manifest.json`；Inspector、submit envelope 和审核 UI 只能消费或校验它，不能覆盖它。
 
 ## 建议流水线
 

@@ -1,4 +1,6 @@
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/permissions-v1.json",
   "schemaVersion": 1,
   "contract": "webwindows-function-permissions-v1",
   "status": "draft-not-enforced",
@@ -15,6 +17,21 @@
     "device.getCapabilities",
     "device.on"
   ],
+  "sourceDeclaration": {
+    "default": "not-declarable",
+    "declarablePermissionIds": [
+      "device.battery-status.read"
+    ],
+    "note": "Source-declarable means a Manifest v2 may request the permission. It never means granted, enabled, or capability-supported."
+  },
+  "$defs": {
+    "permissionId": {
+      "type": "string",
+      "enum": [
+        "device.battery-status.read"
+      ]
+    }
+  },
   "permissions": [
     {
       "id": "device.system-info.read",
@@ -39,6 +56,9 @@
     },
     {
       "id": "device.battery-status.read",
+      "displayName": "Battery status",
+      "description": "Read a sanitized battery presence, level, charging and connection state through the stable public API.",
+      "sourceDeclarable": true,
       "risk": "low",
       "prompt": "install-review",
       "userGesture": false,

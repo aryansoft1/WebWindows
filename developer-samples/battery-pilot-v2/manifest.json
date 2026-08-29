@@ -1,0 +1,37 @@
+{
+  "manifestVersion": 2,
+  "sdk": {
+    "apiVersion": "1"
+  },
+  "permissions": [
+    "device.battery-status.read"
+  ],
+  "id": "com.webwindows.samples.battery-pilot",
+  "legacyIds": [],
+  "type": "application",
+  "name": "Battery Broker Pilot",
+  "description": "Manifest v2 Battery permission contract fixture.",
+  "category": "tools",
+  "version": "1.0.0",
+  "icon": "assets/icon.svg",
+  "entry": "index.html",
+  "install": {
+    "defaultState": "available",
+    "source": "repository",
+    "uninstallable": true
+  },
+  "placement": {
+    "desktop": false,
+    "startMenu": false,
+    "startMenuGroup": "user",
+    "startMenuOrder": 100,
+    "allFunctions": true,
+    "taskbar": false
+  },
+  "window": {
+    "mode": "iframe",
+    "singleton": true,
+    "width": "640px",
+    "height": "420px"
+  }
+}

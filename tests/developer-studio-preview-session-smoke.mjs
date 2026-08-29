@@ -26,6 +26,8 @@ assert.match(host.starts[0].html, new RegExp(PREVIEW_CSP.replace(/[.*+?^${}()|[\
 assert.match(host.starts[0].html, /data-webwindows-preview-bootstrap|previewConsoleBootstrap/);
 assert.match(host.starts[0].html, /button\.addEventListener/);
 assert.match(host.starts[0].html, /data:image\/svg\+xml/);
+assert.equal(host.starts[0].launch.facadeEnabled, false);
+assert.doesNotMatch(host.starts[0].html, /data-webwindows-preview-sdk/);
 
 const runningContent = getSnapshotFile(controller.activeSession.snapshot, "scripts/app.js").content;
 await repository.writeTextFile(project.uuid, "scripts/app.js", "console.log('new workspace revision');\n");
@@ -77,6 +79,31 @@ await assert.rejects(
 assert.equal(failingController.activeSession, null);
 assert.equal(failingController.sessions.size, 0, "failed session credentials must be revoked");
 
+const v2Manifest = JSON.parse(await repository.readTextFile(project.uuid, "manifest.json"));
+v2Manifest.manifestVersion = 2;
+v2Manifest.sdk = { apiVersion: "1" };
+v2Manifest.permissions = ["device.battery-status.read"];
+await repository.writeTextFile(project.uuid, "manifest.json", `${JSON.stringify(v2Manifest, null, 2)}\n`);
+const v2Snapshot = await createProjectSnapshot(repository, project.uuid);
+const v2Host = new FakeHost();
+const publicCalls = { state: 0, refresh: 0 };
+const v2Controller = new PreviewSessionController({
+  hostClient: v2Host,
+  publicApiProvider: () => ({ device: { battery: {
+    getCapabilities: () => ({ status: { supported: true } }),
+    getState: () => { publicCalls.state += 1; return batteryState(); },
+    refresh: async () => { publicCalls.refresh += 1; return batteryState(); }
+  } } })
+});
+const v2Started = await v2Controller.run(v2Snapshot, { contracts, domParser: new FakeDOMParser() });
+assert.equal(v2Started.session.brokerEnabled, true);
+assert.equal(v2Host.starts[0].launch.facadeEnabled, true);
+assert.equal(v2Host.starts[0].launch.handshake.ok, true);
+assert.match(v2Host.starts[0].html, /webwindows-studio-preview-sdk-init-v1/);
+assert.match(v2Host.starts[0].html, /device\.battery\.refresh/);
+assert.equal(publicCalls.state, 1);
+await v2Controller.stop();
+
 const after = await repository.readProjectState(project.uuid);
 assert.equal(after.project.uuid, project.uuid);
 assert.equal(after.entries.some((entry) => entry.path === "manifest.json"), true);
@@ -86,10 +113,14 @@ console.log("developer studio preview session smoke test passed");
 function FakeHost() {
   this.starts = [];
   this.stops = [];
-  this.start = async (session, html) => {
-    this.starts.push({ session: { ...session }, html });
+  this.start = async (session, html, launch) => {
+    this.starts.push({ session: { ...session }, html, launch: structuredClone(launch) });
     return { state: "created" };
   };
   this.stop = async (session) => { this.stops.push({ ...session }); };
   this.disconnect = () => {};
+}
+
+function batteryState() {
+  return { supported: true, present: true, level: 0.6, charging: false, connected: false, source: "browser" };
 }

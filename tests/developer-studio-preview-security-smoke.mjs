@@ -6,18 +6,22 @@ import { createPreviewDocument, resolvePreviewPath, rewriteCss } from "../webwin
 import { FakeDOMParser } from "./helpers/fake-preview-dom.mjs";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [hostPage, hostSource, studioPage, runtimePage, runtimeSource, controllerSource] = await Promise.all([
+const [hostPage, hostSource, studioPage, runtimePage, runtimeSource, controllerSource, brokerSource, facadeSource] = await Promise.all([
   read("developer-preview-host.html"),
   read("assets/js/developer-preview-host.js"),
   read("developer-studio.html"),
   read("package-runtime.html"),
   read("assets/js/package-runtime.js"),
-  read("webwindows-vue/src/developer-studio/preview/preview-session-controller.js")
+  read("webwindows-vue/src/developer-studio/preview/preview-session-controller.js"),
+  read("webwindows-vue/src/developer-studio/broker/preview-battery-broker.js"),
+  read("webwindows-vue/src/developer-studio/preview/preview-sdk-bootstrap.js")
 ]);
 
 assert.match(studioPage, /frame-src 'self'/);
 assert.match(hostPage, /connect-src 'none'/);
 assert.match(hostPage, /frame-src 'self'/);
+assert.match(hostPage, /script-src 'self' 'unsafe-inline'/,
+  "srcdoc inherits the Preview Host CSP, so the Host policy must permit the child Snapshot bootstrap scripts");
 assert.doesNotMatch(hostPage, /allow-same-origin/);
 assert.match(hostSource, new RegExp(`SANDBOX = ${JSON.stringify(PREVIEW_SANDBOX)}`));
 assert.match(hostSource, new RegExp(`REFERRER_POLICY = ${JSON.stringify(PREVIEW_REFERRER_POLICY)}`));
@@ -28,12 +32,22 @@ assert.match(hostSource, /message\.token !== binding\.token/);
 assert.match(hostSource, /active\.consolePort\.close\(\)/);
 assert.match(hostSource, /active\.frame\.removeAttribute\("srcdoc"\)/);
 
-for (const source of [hostPage, hostSource, controllerSource]) {
+for (const source of [hostPage, hostSource, controllerSource, brokerSource, facadeSource]) {
   assert.doesNotMatch(source, /allow-same-origin/);
   assert.doesNotMatch(source, /\b(?:indexedDB|localStorage|sessionStorage)\b/);
   assert.doesNotMatch(source, /\b(?:install|uninstall|catalog|developer\s*api|admin)\b/i);
   assert.doesNotMatch(source, /WebWindowsNative|NativeAdapter|parent\.WebWindows|window\.WebWindows/);
 }
+
+for (const source of [brokerSource, facadeSource]) {
+  assert.doesNotMatch(source, /WebWindowsNative|NativeAdapter|BrowserAdapter|BatteryManager|android|dreama/i);
+  assert.doesNotMatch(source, /device\.(?:network|runtime|display|audio|storage)|fileDialog/);
+}
+assert.match(brokerSource, /publicApi\?\.device\?\.battery/);
+assert.match(brokerSource, /\.getState\(\)/);
+assert.match(brokerSource, /\.refresh\(\)/);
+assert.doesNotMatch(runtimePage, /webwindows-studio-preview-sdk-init|webwindows-capability-broker/);
+assert.doesNotMatch(runtimeSource, /webwindows-studio-preview-sdk-init|webwindows-capability-broker|PreviewBatteryBroker/);
 
 assert.match(PREVIEW_CSP, /default-src 'none'/);
 assert.match(PREVIEW_CSP, /connect-src 'none'/);

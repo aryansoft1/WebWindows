@@ -154,9 +154,13 @@ assert.match(monacoRuntime, /manifest-v1\.schema\.json/);
 assert.match(monacoRuntime, /manifest-v2\.schema\.json/);
 assert.match(monacoRuntime, /permissions-v1\.json/);
 assert.equal(brokerMethods.methods.every((method) => method.productionAvailability === "disabled"), true);
-assert.equal(brokerMethods.methods.every((method) => method.currentStatus === "pilot-contract-only"), true);
+assert.equal(brokerMethods.status, "preview-pilot-enabled-production-disabled");
+assert.equal(brokerMethods.methods.every((method) => method.currentStatus === "enabled"), true);
+assert.equal(brokerMethods.methods.every((method) => method.previewAvailability === "enabled"), true);
+assert.equal(brokerMethods.methods.every((method) => method.productionAvailability === "disabled"), true);
+assert.equal(brokerPolicy.status, "preview-pilot-enabled-production-disabled");
 assert.equal(brokerPolicy.defaultDecision, "deny");
-assert.equal(brokerPolicy.manifestPermissionDeclaration.status, "resolved-by-manifest-v2-contract-runtime-disabled");
+assert.equal(brokerPolicy.manifestPermissionDeclaration.status, "resolved-by-manifest-v2-contract-preview-pilot-enabled");
 
 console.log("Manifest v2 and permission declaration smoke test passed");
 

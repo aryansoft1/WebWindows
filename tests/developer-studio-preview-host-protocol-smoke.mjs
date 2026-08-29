@@ -58,7 +58,8 @@ assert.equal(response(received, "ping").ok, true);
 const sessionA = session("session-a", "snapshot-a");
 const htmlA = "<!doctype html><p>A</p>";
 controls.port1.postMessage(control("preview.start", "host-good", "start-a", {
-  session: sessionA, token: "token-a-opaque-identity-123456", documentHtml: htmlA, documentBytes: new TextEncoder().encode(htmlA).byteLength
+  session: sessionA, token: "token-a-opaque-identity-123456", documentHtml: htmlA,
+  documentBytes: new TextEncoder().encode(htmlA).byteLength, brokerLaunch: { facadeEnabled: false }
 }));
 await waitFor(() => response(received, "start-a") && frames[0]?.appPort);
 assert.equal(response(received, "start-a").ok, true);
@@ -79,13 +80,34 @@ const stalePort = frames[0].appPort;
 const sessionB = session("session-b", "snapshot-b");
 const htmlB = "<!doctype html><p>B</p>";
 controls.port1.postMessage(control("preview.start", "host-good", "start-b", {
-  session: sessionB, token: "token-b-opaque-identity-123456", documentHtml: htmlB, documentBytes: new TextEncoder().encode(htmlB).byteLength
+  session: sessionB, token: "token-b-opaque-identity-123456", documentHtml: htmlB,
+  documentBytes: new TextEncoder().encode(htmlB).byteLength, brokerLaunch: brokerLaunch()
 }));
 await waitFor(() => response(received, "start-b") && frames[1]?.appPort);
 stalePort.postMessage(consoleEvent(sessionA, "token-a-opaque-identity-123456", 4, ["stale"]));
 frames[1].appPort.postMessage(consoleEvent(sessionB, "token-b-opaque-identity-123456", 0, ["session B"]));
 await waitFor(() => received.filter((message) => message.type === "preview.console").length === 2);
 assert.deepEqual(received.filter((message) => message.type === "preview.console").map((message) => message.payload.arguments[0]), ["accepted", "session B"]);
+
+const brokerResponses = [];
+frames[1].brokerPort.on("message", (message) => brokerResponses.push(message));
+const batteryRequest = brokerEnvelope(sessionB, "battery-request-1", "request", { params: {} });
+frames[1].brokerPort.postMessage(batteryRequest);
+await waitFor(() => received.some((message) => message.type === "preview.broker"));
+const forwarded = received.find((message) => message.type === "preview.broker");
+assert.deepEqual(forwarded.payload.params, {});
+controls.port1.postMessage({
+  protocol: "webwindows-studio-preview-control-v1", version: 1, type: "preview.broker.response", hostNonce: "host-good",
+  payload: brokerEnvelope(sessionA, "battery-request-1", "response", { ok: true, result: batteryState() })
+});
+await new Promise((resolve) => setTimeout(resolve, 20));
+assert.equal(brokerResponses.length, 0, "a response from another session must not enter the active sandbox port");
+controls.port1.postMessage({
+  protocol: "webwindows-studio-preview-control-v1", version: 1, type: "preview.broker.response", hostNonce: "host-good",
+  payload: brokerEnvelope(sessionB, "battery-request-1", "response", { ok: true, result: batteryState() })
+});
+await waitFor(() => brokerResponses.length === 1);
+assert.equal(brokerResponses[0].result.level, 0.5);
 
 controls.port1.postMessage(control("preview.stop", "host-good", "bad-stop", { sessionId: sessionB.sessionId, token: "wrong" }));
 await waitFor(() => response(received, "bad-stop"));
@@ -99,7 +121,10 @@ assert.equal(frames[1].attributes.has("srcdoc"), false);
 controls.port1.close();
 wrong.port1.close();
 wrong.port2.close();
-for (const frame of frames) frame.appPort?.close();
+for (const frame of frames) {
+  frame.appPort?.close();
+  frame.brokerPort?.close();
+}
 console.log("developer studio preview host protocol smoke test passed");
 
 function element(tag) {
@@ -120,13 +145,15 @@ function createFrame() {
     contentWindow: {
       postMessage(data, targetOrigin, ports) {
         assert.equal(targetOrigin, "*");
-        assert.equal(data.protocol, "webwindows-studio-preview-console-init-v1");
-        frame.appPort = ports[0];
+        if (data.protocol === "webwindows-studio-preview-console-init-v1") frame.appPort = ports[0];
+        else if (data.protocol === "webwindows-studio-preview-sdk-init-v1") frame.brokerPort = ports[0];
+        else assert.fail(`unexpected iframe init protocol: ${data.protocol}`);
       }
     }
   };
   Object.defineProperty(frame, "srcdoc", {
     set(value) {
+      assert.equal(frame.isConnected, false, "srcdoc must be assigned before attachment so about:blank cannot consume the one-shot load binding");
       frame.attributes.set("srcdoc", value);
       queueMicrotask(() => listeners.get("load")?.());
     }
@@ -151,6 +178,27 @@ function consoleEvent(item, token, sequence, args) {
     sessionId: item.sessionId, snapshotId: item.snapshotId, token, sequence,
     timestamp: "2026-01-01T00:00:00.000Z", level: "log", arguments: args
   };
+}
+
+function brokerLaunch() {
+  return {
+    facadeEnabled: true, protocol: "webwindows-capability-broker-v1", version: 1,
+    channelId: "channel-battery-identity-0001", refreshTimeoutMs: 3000,
+    handshake: { ok: true, result: batteryState() },
+    clientErrors: { "request-timeout": { code: "request-timeout", message: "Timed out", retryable: true } }
+  };
+}
+
+function brokerEnvelope(item, requestId, type, extra) {
+  return {
+    protocol: "webwindows-capability-broker-v1", version: 1, type,
+    sessionId: item.sessionId, snapshotId: item.snapshotId, channelId: "channel-battery-identity-0001",
+    requestId, method: "device.battery.refresh", ...extra
+  };
+}
+
+function batteryState() {
+  return { supported: true, present: true, level: 0.5, charging: false, connected: false, source: "browser" };
 }
 
 function response(messages, requestId) {

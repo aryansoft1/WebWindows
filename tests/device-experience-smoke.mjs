@@ -14,7 +14,7 @@ const speed = read("assets/js/network-speed.js");
 const main = read("assets/js/main.js");
 const mainCss = read("assets/css/main.css");
 
-assert.match(index, /device-storage-provider\.js\?v=20260809-storage-1/);
+assert.match(index, /device-storage-provider\.js\?v=20260825-storage-2/);
 assert.match(index, /device-api\.js\?v=20260809-storage-1/);
 assert.match(index, /device-controls\.js\?v=20260808-device-api-1/);
 assert.match(index, /vendor\/html2canvas\.min\.js\?v=1\.4\.1/);

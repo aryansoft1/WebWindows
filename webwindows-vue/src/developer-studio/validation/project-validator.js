@@ -34,9 +34,10 @@ export async function validateProjectSnapshot(snapshot, options = {}) {
     validateEntry(snapshot, manifest, contracts.packagePolicy, add);
   }
   scanSources(snapshot, manifest, contracts, add);
-  diagnostics.sort(compareDiagnostics);
-  const errorCount = diagnostics.filter((item) => item.severity === "error").length;
-  const warningCount = diagnostics.filter((item) => item.severity === "warning").length;
+  const uniqueDiagnostics = [...new Map(diagnostics.map((item) => [diagnosticKey(item), item])).values()]
+    .sort(compareDiagnostics);
+  const errorCount = uniqueDiagnostics.filter((item) => item.severity === "error").length;
+  const warningCount = uniqueDiagnostics.filter((item) => item.severity === "warning").length;
   const entry = typeof manifest?.entry === "string" ? manifest.entry : null;
   return {
     contract: VALIDATION_REPORT_CONTRACT,
@@ -48,7 +49,7 @@ export async function validateProjectSnapshot(snapshot, options = {}) {
     passed: errorCount === 0,
     errorCount,
     warningCount,
-    diagnostics,
+    diagnostics: uniqueDiagnostics,
     packageFacts: {
       fileCount: snapshot.fileCount,
       unpackedBytes: snapshot.totalBytes,
@@ -321,4 +322,15 @@ function compareDiagnostics(left, right) {
     || String(left.path || "").localeCompare(String(right.path || ""))
     || (left.location?.line || 0) - (right.location?.line || 0)
     || left.message.localeCompare(right.message);
+}
+
+function diagnosticKey(diagnostic) {
+  return [
+    diagnostic.ruleId,
+    diagnostic.severity,
+    diagnostic.path || "",
+    diagnostic.location?.line || 0,
+    diagnostic.location?.column || 0,
+    diagnostic.message
+  ].join("\0");
 }

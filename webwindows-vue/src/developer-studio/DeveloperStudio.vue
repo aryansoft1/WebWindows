@@ -8,6 +8,9 @@ import { createHelloWebWindowsTemplate } from "./project/hello-template.js";
 import { childPath, ProjectRepository } from "./project/project-repository.js";
 import { normalizeProjectPath, parentProjectPath, projectPathName } from "./project/path-policy.js";
 import { buildProjectTree, languageForPath } from "./project/tree-model.js";
+import { createProjectSnapshot } from "./snapshot/project-snapshot.js";
+import { loadStudioPlatformContracts } from "./validation/platform-contracts.js";
+import { validateProjectSnapshot } from "./validation/project-validator.js";
 
 const repository = new ProjectRepository();
 const projects = ref([]);
@@ -20,6 +23,9 @@ const editorText = ref("");
 const dirtyFiles = ref(new Set());
 const manifestValue = ref(null);
 const manifestDiagnostics = ref([]);
+const validationReport = ref(null);
+const buildResult = ref(null);
+const taskBusy = ref(false);
 const status = ref("");
 const statusKind = ref("");
 const dialog = ref(null);
@@ -31,6 +37,12 @@ const tree = computed(() => buildProjectTree(entries.value));
 const activeEntry = computed(() => entries.value.find((entry) => entry.path === activeFile.value));
 const editorLanguage = computed(() => languageForPath(activeFile.value));
 const activeMarkers = computed(() => activeFile.value === "manifest.json" ? manifestDiagnostics.value : []);
+const displayedProblems = computed(() => validationReport.value?.diagnostics || manifestDiagnostics.value.map((problem) => ({
+  ruleId: "Manifest",
+  severity: problem.severity,
+  path: problem.path,
+  message: problem.message
+})));
 
 onMounted(async () => {
   try {
@@ -77,6 +89,7 @@ async function openProject(projectId) {
     ? state.activeFile : (openFiles.value[0] || "");
   selectedPath.value = activeFile.value;
   dirtyFiles.value = new Set();
+  invalidateBuildState();
   await loadActiveFile();
   await loadManifestFromRepository();
   await persistEditorState();
@@ -107,6 +120,7 @@ async function deleteProject() {
     activeFile.value = "";
     selectedPath.value = "";
     editorText.value = "";
+    invalidateBuildState();
     await refreshProjects();
     if (projects.value.length) await openProject(projects.value[0].uuid);
     showStatus("项目已删除。");
@@ -145,6 +159,7 @@ function updateEditor(value) {
   editorText.value = value;
   if (!activeFile.value) return;
   dirtyFiles.value = new Set(dirtyFiles.value).add(activeFile.value);
+  invalidateBuildState();
   if (activeFile.value === "manifest.json") refreshManifestDiagnostics(value).catch(showError);
   clearTimeout(saveTimer);
   saveTimer = window.setTimeout(() => flushSave().catch(showError), 700);
@@ -212,6 +227,7 @@ async function createEntry(kind) {
     const path = childPath(selectedParent(), name);
     if (kind === "directory") await repository.createDirectory(activeProject.value.uuid, path);
     else await repository.createFile(activeProject.value.uuid, path, "");
+    invalidateBuildState();
     entries.value = await repository.listEntries(activeProject.value.uuid);
     selectedPath.value = path;
     if (kind === "file") await openFile(path);
@@ -229,6 +245,7 @@ async function renameSelectedEntry() {
     await flushSave();
     const target = childPath(parentProjectPath(selected.path), name);
     await repository.renameEntry(activeProject.value.uuid, selected.path, target);
+    invalidateBuildState();
     entries.value = await repository.listEntries(activeProject.value.uuid);
     activeProject.value = await repository.getProject(activeProject.value.uuid);
     openFiles.value = activeProject.value.editorState.openFiles;
@@ -246,6 +263,7 @@ async function deleteSelectedEntry() {
   if (!await confirmAction("删除文件或目录", `删除“${selected.path}”${selected.kind === "directory" ? "及其全部内容" : ""}吗？`)) return;
   try {
     await repository.deleteEntry(activeProject.value.uuid, selected.path);
+    invalidateBuildState();
     entries.value = await repository.listEntries(activeProject.value.uuid);
     activeProject.value = await repository.getProject(activeProject.value.uuid);
     openFiles.value = activeProject.value.editorState.openFiles;
@@ -266,6 +284,69 @@ function showStatus(message) {
 function showError(error) {
   status.value = error?.message || "操作失败。";
   statusKind.value = "error";
+}
+
+async function createCurrentSnapshot() {
+  if (!activeProject.value) throw new Error("请先打开项目。");
+  await flushSave();
+  return createProjectSnapshot(repository, activeProject.value.uuid);
+}
+
+async function validateProject() {
+  if (taskBusy.value) return;
+  taskBusy.value = true;
+  try {
+    const snapshot = await createCurrentSnapshot();
+    const contracts = await loadStudioPlatformContracts();
+    validationReport.value = await validateProjectSnapshot(snapshot, { contracts });
+    buildResult.value = null;
+    showStatus(validationReport.value.passed ? "项目验证通过。" : `验证发现 ${validationReport.value.errorCount} 个错误。`);
+  } catch (error) {
+    showError(error);
+  } finally {
+    taskBusy.value = false;
+  }
+}
+
+async function buildProject() {
+  if (taskBusy.value) return;
+  taskBusy.value = true;
+  try {
+    const snapshot = await createCurrentSnapshot();
+    const contracts = await loadStudioPlatformContracts();
+    const { buildProjectPackage } = await import("./build/deterministic-builder.js");
+    buildResult.value = await buildProjectPackage(snapshot, { contracts });
+    validationReport.value = buildResult.value.validationReport;
+    showStatus(buildResult.value.artifactReady ? "确定性 ZIP 构建完成。" : "构建被验证错误阻止。");
+  } catch (error) {
+    showError(error);
+  } finally {
+    taskBusy.value = false;
+  }
+}
+
+function exportBuild() {
+  if (!buildResult.value?.artifactReady || !buildResult.value.zipBytes) return;
+  const identity = buildResult.value.manifestIdentity;
+  const baseName = `${identity?.id || "webwindows-function"}-${identity?.version || "build"}`.replace(/[^a-z0-9._-]+/gi, "-");
+  const blob = new Blob([buildResult.value.zipBytes], { type: "application/zip" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = `${baseName}.zip`;
+  anchor.click();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
+
+function invalidateBuildState() {
+  validationReport.value = null;
+  buildResult.value = null;
+}
+
+function openProblem(problem) {
+  const entry = entries.value.find((candidate) => candidate.kind === "file"
+    && (problem.path === candidate.path || problem.path?.startsWith(`${candidate.path}$`)));
+  if (entry) openFile(entry.path).catch(showError);
 }
 
 function askText(title, message, value) {
@@ -308,7 +389,9 @@ function finishDialog(result) {
       <button type="button" :disabled="!activeProject" @click="renameProject">重命名项目</button>
       <button type="button" :disabled="!activeProject" @click="deleteProject">删除项目</button>
       <span class="toolbar-spacer"></span>
-      <button type="button" disabled title="Phase 1B 提供 Run">Run available in next phase</button>
+      <button type="button" :disabled="!activeProject || taskBusy" @click="validateProject">Validate</button>
+      <button class="primary" type="button" :disabled="!activeProject || taskBusy" @click="buildProject">Build</button>
+      <button type="button" disabled title="Phase 1C 提供 Run/Preview">Run available in next phase</button>
     </header>
 
     <section v-if="activeProject" class="studio-main">
@@ -378,6 +461,27 @@ function finishDialog(result) {
             @update:manifest="updateManifestForm($event).catch(showError)"
             @open-json="openFile('manifest.json').catch(showError)"
           />
+          <section class="build-inspector">
+            <h3>Validation</h3>
+            <p v-if="!validationReport">尚未创建 Snapshot 验证。</p>
+            <dl v-else>
+              <div><dt>Result</dt><dd>{{ validationReport.passed ? 'Passed' : 'Blocked' }}</dd></div>
+              <div><dt>Errors</dt><dd>{{ validationReport.errorCount }}</dd></div>
+              <div><dt>Warnings</dt><dd>{{ validationReport.warningCount }}</dd></div>
+              <div><dt>Files</dt><dd>{{ validationReport.packageFacts.fileCount }}</dd></div>
+              <div><dt>Bytes</dt><dd>{{ validationReport.packageFacts.unpackedBytes }}</dd></div>
+            </dl>
+            <template v-if="buildResult">
+              <h3>Build Result</h3>
+              <p v-if="!buildResult.artifactReady" class="build-blocked">验证未通过，没有生成可发布 ZIP。</p>
+              <dl v-else>
+                <div><dt>Size</dt><dd>{{ buildResult.zipSize }} bytes</dd></div>
+                <div><dt>Files</dt><dd>{{ buildResult.fileCount }}</dd></div>
+                <div class="hash-row"><dt>SHA-256</dt><dd>{{ buildResult.sha256 }}</dd></div>
+              </dl>
+              <button type="button" :disabled="!buildResult.artifactReady" @click="exportBuild">Export ZIP</button>
+            </template>
+          </section>
         </div>
       </aside>
     </section>
@@ -389,16 +493,16 @@ function finishDialog(result) {
     </section>
 
     <section class="problems-panel">
-      <div class="panel-heading"><span>Problems</span><span>{{ manifestDiagnostics.length }}</span></div>
-      <div v-if="!manifestDiagnostics.length" class="problems-empty">Manifest v1 Schema 未发现问题。</div>
+      <div class="panel-heading"><span>Problems</span><span>{{ displayedProblems.length }}</span></div>
+      <div v-if="!displayedProblems.length" class="problems-empty">当前 Snapshot 未发现问题。</div>
       <button
-        v-for="(problem, index) in manifestDiagnostics"
-        :key="`${problem.path}:${index}`"
+        v-for="(problem, index) in displayedProblems"
+        :key="`${problem.ruleId}:${problem.path}:${index}`"
         type="button"
         class="problem-row"
-        @click="openFile('manifest.json').catch(showError)"
+        @click="openProblem(problem)"
       >
-        <span class="problem-severity" :class="problem.severity">{{ problem.severity }}</span>
+        <span class="problem-severity" :class="problem.severity">{{ problem.ruleId }}</span>
         <code>{{ problem.path }}</code>
         <span>{{ problem.message }}</span>
       </button>

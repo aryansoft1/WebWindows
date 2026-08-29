@@ -232,6 +232,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .manifest-form .check input { width: auto; }
 .manifest-form .inspector-note { margin: 2px 0 0; font-weight: 400; }
 .inspector-summary { margin-top: 10px; color: #68778d; font-size: 11px; }
+.build-inspector { margin-top: 16px; padding-top: 12px; border-top: 1px solid #dce4ef; }
+.build-inspector h3 { margin: 8px 0; font-size: 12px; }
+.build-inspector dl { display: grid; gap: 4px; margin: 0 0 10px; }
+.build-inspector dl div { display: grid; grid-template-columns: 74px 1fr; gap: 7px; font-size: 11px; }
+.build-inspector dt { color: #69788e; }
+.build-inspector dd { min-width: 0; margin: 0; color: #26344c; overflow-wrap: anywhere; }
+.build-inspector .hash-row { grid-template-columns: 74px minmax(0, 1fr); }
+.build-inspector > button { width: 100%; }
+.build-blocked { color: #a22b35 !important; }
 
 .problems-panel {
   min-height: 0;
@@ -242,7 +251,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .problems-empty { padding: 14px; color: #7a879a; font-size: 12px; }
 .problem-row {
   display: grid;
-  grid-template-columns: 58px minmax(80px, 180px) 1fr;
+  grid-template-columns: 68px minmax(80px, 180px) 1fr;
   gap: 10px;
   width: 100%;
   padding: 7px 12px;

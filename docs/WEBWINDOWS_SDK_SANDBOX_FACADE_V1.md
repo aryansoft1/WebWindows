@@ -1,12 +1,12 @@
 # WebWindows SDK Sandbox Facade v1
 
-状态：Phase 0B 设计草案，尚未注入当前 package sandbox
+状态：Phase 2A shape freeze；尚未注入当前 Preview 或 Production package sandbox
 
 ## 1. Facade 目标
 
 未来沙箱内的 `window.WebWindows` 是 SDK 创建的冻结数据/函数 facade，不是 `parent.WebWindows`，也不是宿主对象代理。Facade 只实现 `webwindows-public-api-v1.d.ts` 中获准进入 sandbox 的稳定 namespace。
 
-v1 设计 namespace：
+长期 Public API namespace 仍为：
 
 ```text
 window.WebWindows
@@ -24,6 +24,8 @@ window.WebWindows
 
 不包含 `apps`、安装/目录接口、Shell window manager、管理员接口、Developer API 凭证、内部 adapter 或 Native 私有对象。
 
+Phase 2 Pilot 不生成完整 namespace，只生成机器 allowlist 明确登记的 `device.battery.getState` 和 `device.battery.refresh`。新增 Public API 不会自动进入 facade；Storage 与 fileDialog 本阶段完全不生成。
+
 ## 2. 同步 API 兼容
 
 现有 Public Device API 含同步 getter，跨 frame Broker 本身是异步的。Facade 采用 handshake snapshot 保持当前形状：
@@ -33,6 +35,8 @@ window.WebWindows
 - `refresh()` 和 setter 按现有公开返回形状工作；异步 refresh 完成后更新 cache 并发出 SDK event；
 - `network.refresh()` 保留当前“同步返回 cache、必要时后台刷新”的行为；
 - file dialog 与 storage I/O 保持 Promise API。
+
+Phase 2 Pilot 只实际设计 `battery.getState()` cache 和 `battery.refresh()` request。其他同步 getter 继续保留为未来 handshake snapshot 规则，不在 Pilot 中承诺可用。
 
 Facade 不用 SharedArrayBuffer、同步 XHR、阻塞 loop 或 parent property access 模拟同步调用。
 

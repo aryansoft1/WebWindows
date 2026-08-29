@@ -1,135 +1,184 @@
 # WebWindows Capability Broker Protocol v1
 
-状态：Phase 0B 设计草案，尚未接入 Preview 或 Production Runtime
+状态：Phase 2A contract freeze；尚未接入 Preview 或 Production Runtime
 
-## 1. 目标与边界
+机器契约：
 
-Capability Broker 在唯一来源 sandbox 与可信 WebWindows host 之间代理稳定 Public API。它解决权限、capability、参数校验和结果清洗，不改变现有 Public API 行为，也不属于 Native Bridge。
+- `data/sdk/capability-broker-v1.schema.json`
+- `data/sdk/capability-broker-methods-v1.json`
+- `data/sdk/capability-broker-errors-v1.json`
+- `data/sdk/capability-broker-policy-v1.json`
 
-硬边界：
+本冻结不修改 Native Bridge v1、现有 Public API、Manifest v1、Package Runtime 或安装/提交行为。
 
-- Broker 只映射 `data/sdk/webwindows-public-api-v1.d.ts` 中的 `device` 与 `fileDialog`；
-- 禁止动态属性遍历、任意方法名、宿主函数引用和 DOM 对象传递；
-- 禁止转发任何私有 Native ABI 对象、方法、错误字段或 transport envelope；
-- Preview 与未来 Production Package Runtime 使用相同协议版本和 method/permission policy；
-- 权限决定“应用是否被允许”，Runtime capability 决定“当前宿主是否实现”，两者独立检查；
-- 未知方法、未知权限、未声明权限和缺失 grant 默认拒绝。
+## 1. 边界与默认决定
 
-## 2. 通道建立
+Broker 只允许逐项登记的稳定 Public API method。它不是对象代理，不遍历宿主 `window.WebWindows`，也不能接受任意 method string 后转发。
 
-可信 Sandbox Host 创建 `MessageChannel`，把一个 port 通过一次性 bootstrap 消息转移给内层 iframe。bootstrap 必须绑定：
+```text
+unknown method       -> deny
+unknown permission   -> deny
+wildcard             -> impossible
+private host member  -> impossible
+```
 
-- 当前 iframe 的精确 `WindowProxy`；
-- 不可猜测的 `sessionId` 与 `channelId`；
-- immutable app identity、manifest hash、policy version；
-- 当前 effective permissions 和 capability snapshot；
-- Preview 或 Production mode。
+Broker 可信端只调用 `webwindows-public-api-v1.d.ts` 描述的稳定 Public API。Native transport、adapter、Shell API、安装 API 和宿主对象引用永远不进入 registry 或 wire envelope。
 
-转移完成后，业务请求只走绑定的 `MessagePort`。Host 不接受来自全局 `message` 事件的业务 method call。Sandbox 的 unique origin 不能作为身份；身份来自 Host 已绑定的 WindowProxy、port 与 session record。
+权限决定“应用是否被允许”，Runtime capability 决定“当前宿主是否实现”。两者是独立事实，都满足才允许调用，一个不能推出另一个。Broker 默认拒绝，只映射 `data/sdk/webwindows-public-api-v1.d.ts` 中被 machine registry 逐项登记的稳定 method。
 
-## 3. Envelope
+## 2. Phase 2 Pilot
+
+Phase 2A 只冻结 Battery read Pilot，不启用 Runtime：
+
+| Method | Invocation | Permission | Capability | 选择理由 |
+| --- | --- | --- | --- | --- |
+| `device.battery.getState` | handshake snapshot | `device.battery-status.read` | `battery.status` | 同步、只读、无参数；返回值可严格清洗，不含设备 ID |
+| `device.battery.refresh` | request/response | `device.battery-status.read` | `battery.status` | 异步只读，可验证 timeout/cancel；Browser 与 Dreama Android 已有测试证据 |
+
+两者均为 low risk、无需 sandbox user gesture、采用 no-consent policy，但仍必须有 Manifest permission declaration 和可信平台 policy 决定。返回值只允许 `supported/present/level/charging/connected/source`；`level` 限制为 0..1 或 null；`source` 归一化为 `browser/runtime/unsupported`。
+
+暂不选择：
+
+- Network：transport、effective type、downlink、RTT 会暴露网络环境；
+- Runtime：platform、engine、version、device class、native/trusted 增加宿主指纹；
+- Display：屏幕尺寸与 pixel ratio 是指纹输入；
+- Audio：暴露用户/页面音量，且 native/page scope 语义不同；
+- Storage/FileDialog：涉及用户资源、opaque handle、手势、持久 grant 和写入语义。
+
+## 3. 通道与身份
+
+Preview 和 Production 都由可信 Host 为每个 app session 创建专用 `MessagePort`。bootstrap 绑定精确 iframe `WindowProxy`、sessionId、snapshotId、channelId、不可猜测 token、app identity 和可信 policy context。业务请求建立后只走这个 port。
+
+Wire envelope 携带 `sessionId/snapshotId/channelId`，但它们不是 sandbox 自证身份。权威身份来自 Host 内存中的 port/session/token binding。Host 不接受 sandbox 自报的 permission、grant、capability、identity 或 user gesture。
+
+Preview 与未来 Production Package Runtime 使用相同协议：
+
+```text
+protocol = webwindows-capability-broker-v1
+version  = 1
+types    = request | response | cancel | event
+```
+
+允许的 mode 差异只有 identity、grant persistence、policy context 和 asset source。
+
+## 4. Wire envelopes
 
 Request：
 
 ```json
 {
-  "type": "webwindows:sdk:request",
-  "protocol": "1.0",
-  "sessionId": "opaque",
-  "channelId": "opaque",
-  "id": "monotonic-request-id",
-  "method": "device.network.getState",
+  "protocol": "webwindows-capability-broker-v1",
+  "version": 1,
+  "type": "request",
+  "sessionId": "session-opaque-123456",
+  "snapshotId": "snapshot-opaque-123456",
+  "channelId": "channel-opaque-123456",
+  "requestId": "request-1",
+  "method": "device.battery.refresh",
   "params": {}
 }
 ```
 
-Response：
+Success response：
 
 ```json
 {
-  "type": "webwindows:sdk:response",
-  "protocol": "1.0",
-  "sessionId": "opaque",
-  "channelId": "opaque",
-  "id": "monotonic-request-id",
+  "protocol": "webwindows-capability-broker-v1",
+  "version": 1,
+  "type": "response",
+  "sessionId": "session-opaque-123456",
+  "snapshotId": "snapshot-opaque-123456",
+  "channelId": "channel-opaque-123456",
+  "requestId": "request-1",
+  "method": "device.battery.refresh",
   "ok": true,
-  "result": {}
-}
-```
-
-Error response：
-
-```json
-{
-  "type": "webwindows:sdk:response",
-  "protocol": "1.0",
-  "sessionId": "opaque",
-  "channelId": "opaque",
-  "id": "monotonic-request-id",
-  "ok": false,
-  "error": {
-    "code": "permission-denied",
-    "message": "The function is not allowed to use this API."
+  "result": {
+    "supported": true,
+    "present": true,
+    "level": 0.72,
+    "charging": false,
+    "connected": false,
+    "source": "runtime"
   }
 }
 ```
 
-Event：
+Cancel 使用相同 identity/request/method binding，`type:"cancel"`，不接受任意 reason payload。Event 同样绑定 session/snapshot/channel/request/method，当前 schema 只保留 `snapshot.update` 和 `capability.change` 形状；Phase 2A 不启用事件。
 
-```json
-{
-  "type": "webwindows:sdk:event",
-  "protocol": "1.0",
-  "sessionId": "opaque",
-  "channelId": "opaque",
-  "event": "webwindows:network-change",
-  "detail": {}
-}
+所有消息必须满足 JSON Schema、structured-clone safe 和大小/深度限制。Request schema 不存在 `userGesture` 字段。
+
+## 5. Authorization decision
+
+Host 按 `capability-broker-policy-v1.json` 的固定顺序决策：
+
+1. port/session/token binding 有效；
+2. session 未过期；
+3. protocol version 支持；
+4. requestId 在该 session 首次使用；
+5. request envelope 未超过 16 KiB；
+6. method 在显式 allowlist；
+7. Source permission 已声明；
+8. platform/store/review policy 允许；
+9. 所需 user/session/persistent grant 有效；
+10. Runtime capability 支持；
+11. params 满足 method schema；
+12. 需要时存在 Host-owned gesture；
+13. 并发与速率配额允许。
+
+每层失败使用独立稳定错误，不能用一个 `permission-denied` 掩盖 capability、schema、gesture 或 timeout。
+
+## 6. Timeout、cancel 与迟到结果
+
+- Registry 为每个 method 固定 timeout；Battery refresh 为 3000 ms；handshake snapshot 不产生 request timeout；
+- Host effective timeout 不得超过 method timeout、全局 10000 ms 上限或 session 剩余寿命；
+- timeout 产生一个 terminal `request-timeout`，之后的 host result 被忽略并只记录结果类别；
+- cancel 产生 terminal `request-cancelled`；若 Public API 支持 abort，Host 可以尝试 abort，否则只撤销结果交付；
+- duplicate requestId 返回 `duplicate-request-id`，不影响原请求；
+- unknown/duplicate cancel 静默忽略，不能影响其他请求；
+- Stop 取消 pending 后关闭 port；expiry 使用 `session-expired`；Reload 取消旧请求并轮换 session/channel/token；
+- 旧 port 或旧 session 的 response 永远不能进入新 session。
+
+## 7. Public errors
+
+完整机器列表来自 `capability-broker-errors-v1.json`。错误只包含 `code/message/retryable`。不得包含 private stack、adapter/provider、Native method/transport、文件路径/URI、cookie、credential 或原始宿主异常。无法安全分类的宿主错误归一化为 `internal-error`。
+
+## 8. Consent 与 gesture
+
+三类 consent：
+
+- no-consent：低风险、已声明 permission，由可信 policy 决定，不产生 runtime prompt；
+- session-grant：可信 Host UI 对一个 app/session 临时授权，Preview 只保存在 session memory；
+- persistent-user-grant：未来 Production 持久授权，必须绑定 published app identity、permission、policy version 和可选 resource scope。
+
+Sandbox 的点击或 `userGesture:true` 都不是授权证明。需要 gesture 时只能由 Host-owned user action 在可信 UI 交互中生成一次性 action authority。Phase 2A Pilot 不需要 gesture，也不实现 Consent UI。
+
+## 9. Audit
+
+Preview audit 仅保存在 Studio session memory。记录 timestamp、mode、app/project identity、session/snapshot、requestId、method、permission、decision、result category 和 latency。
+
+不记录 params/result payload、API Key、cookie、credential、Native transport、private stack、filesystem path 或 provider URI。Production 是否持久审计留待后续 policy。
+
+## 10. Sandbox facade
+
+开发者最终仍写：
+
+```js
+window.WebWindows.device.battery.getState();
+await window.WebWindows.device.battery.refresh();
 ```
 
-所有 envelope 必须是 plain structured-clone data。禁止函数、DOM、MessagePort（bootstrap port 除外）、SharedArrayBuffer、宿主 handle、循环对象和未受限二进制。
+不会公开 `broker.call()`。Facade 是 sandbox 本地冻结对象，不是 Host object reference。`getState()` 从 handshake 的清洗 cache 同步返回副本；`refresh()` 通过 Broker request/response 更新 cache。未登记 namespace/member 不生成到 Pilot facade，不能通过枚举发现 Host 内部对象。
 
-## 4. 请求决策顺序
+## 11. Manifest permission contract gap
 
-Broker 对每次请求按固定顺序执行：
+Manifest v1 是事实冻结规范，当前没有 `permissions` 字段。Phase 2A 不借未知字段宽松行为暗中赋予 permission，也不修改 Manifest v1。
 
-1. session/channel 仍有效，port 与 iframe 仍匹配；
-2. protocol major version 匹配，请求 ID 未重放；
-3. method 位于固定 Public API whitelist；
-4. params 满足 method schema、深度、字段、字符串和字节上限；
-5. Manifest 声明 method 对应的细粒度 permission；
-6. Store/review policy 未撤销该 permission；
-7. 用户 grant 有效且仍绑定当前 app、resource 和 session；
-8. 当前 Runtime capability 支持此操作；
-9. user-action、并发、速率和结果大小约束满足；
-10. 调用可信 host 的稳定 Public API；
-11. 按公共 result schema 复制和清洗响应。
+因此真实项目启用 Broker 前必须单独冻结 Source permission declaration 的版本化承载方式，并让 Studio validator、Developer Center、server validator 和 review policy 共同消费。缺少这一步时，即使 method/capability 可用，授权决策也必须返回 `permission-not-declared`。
 
-建议稳定错误码：`session-invalid`、`protocol-unsupported`、`request-replayed`、`method-not-allowed`、`invalid-params`、`permission-not-declared`、`permission-denied`、`capability-unavailable`、`user-action-required`、`rate-limited`、`result-too-large`、`operation-failed`。
+这不阻塞 Phase 2B 编写 gated Broker runtime/harness，但阻塞把 Pilot 默认开放给实际第三方项目。
 
-Host 不把平台异常、内部 method、路径、URI、provider、stack 或私有 error details 传给 sandbox。
+## 12. Native Bridge 与 Production
 
-## 5. User action
+Broker 只调用稳定 Public API。Public API 内部选择 Browser/Dreama adapter 的方式不可见。Native Bridge v1 的 envelope、method、capability transport 和生命周期保持完全冻结。
 
-Sandbox 自报 `userGesture:true` 不可信。需要用户手势的调用采用 Host-owned user action：
-
-1. sandbox 请求对应 method；
-2. Broker 返回 `user-action-required` 和 opaque action ID；
-3. Host 在受信 UI 中显示功能名、动作和资源范围；
-4. 用户点击 Host 按钮；
-5. Host 在该可信手势内执行 picker/确认动作；
-6. action ID 一次性消费并返回清洗结果。
-
-不得用透明覆盖层、模拟点击或子 frame 的布尔字段证明用户激活。
-
-## 6. 资源授权
-
-目录、文件和云资料必须使用 app-scoped opaque resource handle。Broker 保存真实 Public API resource/volume，sandbox 只获得不可跨 app/session 使用的 ID 和必要元数据。不得把宿主 `readUrl/writeUrl`、Android URI、文件系统路径或已有 volume 列表整体透传。
-
-## 7. 生命周期与撤销
-
-窗口关闭、导航、session 超时、项目 Reload、权限撤销或 app 更新时，Host 关闭 port、拒绝 pending requests 并撤销 action/resource handles。迟到 response 被忽略。Preview Reload 创建新 channel，不复用旧 nonce 或 request sequence。
-
-## 8. 与 Native Bridge v1 的关系
-
-无协议映射关系。Broker 调用的是当前可信页面上的稳定 `window.WebWindows` Public API；该 API 内部如何选择 Browser/Dreama adapter 不可见。Native Bridge v1 的 envelope、method、capability transport 和生命周期保持完全冻结。
+Phase 2A 不修改 Production Package Runtime。未来 Preview 与 Production 接入必须使用本文件同一 wire schema、method registry、permission/capability mapping、error model 和 decision order。

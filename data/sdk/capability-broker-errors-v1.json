@@ -1,0 +1,36 @@
+{
+  "$schema": "https://www.y0.hk/data/sdk/capability-broker-v1.schema.json#/$defs/errorRegistry",
+  "schemaVersion": 1,
+  "contract": "webwindows-capability-broker-errors-v1",
+  "status": "contract-frozen-runtime-disabled",
+  "defaultPublicMessage": "The WebWindows capability request failed.",
+  "privateDetailsAllowed": false,
+  "errors": [
+    { "code": "protocol-unsupported", "category": "protocol", "retryable": false, "message": "The capability protocol version is not supported." },
+    { "code": "session-invalid", "category": "session", "retryable": false, "message": "The capability session is no longer valid." },
+    { "code": "session-expired", "category": "session", "retryable": false, "message": "The capability session has expired." },
+    { "code": "duplicate-request-id", "category": "protocol", "retryable": false, "message": "The request identifier was already used in this session." },
+    { "code": "method-not-allowed", "category": "authorization", "retryable": false, "message": "The requested public API method is not available to this function." },
+    { "code": "permission-not-declared", "category": "authorization", "retryable": false, "message": "The function did not declare the required permission." },
+    { "code": "policy-denied", "category": "authorization", "retryable": false, "message": "Platform policy does not permit this capability." },
+    { "code": "permission-denied", "category": "authorization", "retryable": false, "message": "The required permission has not been granted." },
+    { "code": "capability-unsupported", "category": "compatibility", "retryable": false, "message": "The current runtime does not support this capability." },
+    { "code": "invalid-params", "category": "validation", "retryable": false, "message": "The request parameters are invalid." },
+    { "code": "request-too-large", "category": "validation", "retryable": false, "message": "The capability request exceeds the size limit." },
+    { "code": "gesture-required", "category": "authorization", "retryable": true, "message": "This action requires a trusted WebWindows user gesture." },
+    { "code": "rate-limited", "category": "quota", "retryable": true, "message": "The capability request limit has been reached." },
+    { "code": "request-timeout", "category": "execution", "retryable": true, "message": "The capability request timed out." },
+    { "code": "request-cancelled", "category": "execution", "retryable": false, "message": "The capability request was cancelled." },
+    { "code": "response-too-large", "category": "validation", "retryable": false, "message": "The capability response exceeds the size limit." },
+    { "code": "broker-unavailable", "category": "availability", "retryable": true, "message": "The WebWindows capability service is unavailable." },
+    { "code": "internal-error", "category": "execution", "retryable": false, "message": "The WebWindows capability request failed." }
+  ],
+  "forbiddenErrorData": [
+    "private stack",
+    "host filesystem path or URI",
+    "adapter identity",
+    "Native transport or method",
+    "cookie or credential",
+    "raw provider error"
+  ]
+}

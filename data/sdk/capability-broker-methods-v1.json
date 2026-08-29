@@ -1,0 +1,99 @@
+{
+  "$schema": "https://www.y0.hk/data/sdk/capability-broker-v1.schema.json#/$defs/methodRegistry",
+  "schemaVersion": 1,
+  "contract": "webwindows-capability-broker-methods-v1",
+  "status": "contract-frozen-runtime-disabled",
+  "publicApiSource": "data/sdk/webwindows-public-api-v1.d.ts",
+  "defaultDecision": "deny",
+  "wildcardsAllowed": false,
+  "unknownMethods": "deny",
+  "methods": [
+    {
+      "id": "device.battery.getState",
+      "publicNamespace": "device.battery",
+      "publicMember": "getState",
+      "invocation": "handshake-snapshot",
+      "requiredPermission": "device.battery-status.read",
+      "requiredRuntimeCapability": "battery.status",
+      "riskClass": "low",
+      "userGesture": "none",
+      "consent": "no-consent",
+      "parameterSchema": {
+        "type": "object",
+        "maxProperties": 0,
+        "additionalProperties": false
+      },
+      "resultSchema": { "$ref": "#/$defs/sanitizedBatteryState" },
+      "timeoutMs": 0,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "phase-2b-candidate",
+      "productionAvailability": "disabled",
+      "currentStatus": "pilot-contract-only",
+      "sanitization": "Clamp level to 0..1 or null; map source to browser, runtime, or unsupported; reject extra fields."
+    },
+    {
+      "id": "device.battery.refresh",
+      "publicNamespace": "device.battery",
+      "publicMember": "refresh",
+      "invocation": "request-response",
+      "requiredPermission": "device.battery-status.read",
+      "requiredRuntimeCapability": "battery.status",
+      "riskClass": "low",
+      "userGesture": "none",
+      "consent": "no-consent",
+      "parameterSchema": {
+        "type": "object",
+        "maxProperties": 0,
+        "additionalProperties": false
+      },
+      "resultSchema": { "$ref": "#/$defs/sanitizedBatteryState" },
+      "timeoutMs": 3000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "phase-2b-candidate",
+      "productionAvailability": "disabled",
+      "currentStatus": "pilot-contract-only",
+      "sanitization": "Same public BatteryState shape as getState; never return adapter or transport objects."
+    }
+  ],
+  "reviewedNotSelected": [
+    {
+      "id": "device.network.getState",
+      "reason": "Returns transport, effective type, downlink, RTT and connectivity context; defer until privacy minimization is reviewed."
+    },
+    {
+      "id": "device.runtime.getInfo",
+      "reason": "Returns platform, engine, versions, device class and native/trusted flags that increase host fingerprinting."
+    },
+    {
+      "id": "device.display.getInfo",
+      "reason": "Screen dimensions and pixel ratio are fingerprinting inputs."
+    },
+    {
+      "id": "device.audio.getVolume",
+      "reason": "Exposes a user or page media setting and differs between native and page scopes."
+    }
+  ],
+  "explicitlyExcluded": [
+    "device.storage",
+    "fileDialog.open",
+    "fileDialog.save",
+    "fileDialog.write",
+    "fileDialog.read",
+    "fileDialog.saveBlob"
+  ],
+  "$defs": {
+    "sanitizedBatteryState": {
+      "type": "object",
+      "required": ["supported", "present", "level", "charging", "connected", "source"],
+      "properties": {
+        "supported": { "type": "boolean" },
+        "present": { "type": ["boolean", "null"] },
+        "level": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "charging": { "type": ["boolean", "null"] },
+        "connected": { "type": ["boolean", "null"] },
+        "source": { "enum": ["browser", "runtime", "unsupported"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}

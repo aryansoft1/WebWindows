@@ -16,6 +16,10 @@ Developer Studio、Developer Center、提交校验、审核后台、Package Runt
 | `data/sdk/runtime-compatibility-v1.json` | 已确认 package/host Runtime 与 capability 事实 | Runtime 实现和自动化测试 |
 | `assets/js/package-runtime.js` + policy tests | 当前 Package Runtime 的可执行安全策略 | Phase 0A 暂不重构；代码行为由回归测试冻结 |
 | `data/sdk/permissions-v1.json` | 新权限词汇、默认拒绝、与 capability 的映射 | Phase 0B 新契约；不是当前 Runtime 事实 |
+| `data/sdk/capability-broker-v1.schema.json` | Preview/Production 共用 request/response/cancel/event wire schema | Phase 2A 冻结；尚未启用 Runtime |
+| `data/sdk/capability-broker-methods-v1.json` | method-level allowlist、permission/capability、参数/结果、timeout、availability | 未登记 method 默认拒绝，禁止 wildcard |
+| `data/sdk/capability-broker-errors-v1.json` | 第三方可见的稳定 Broker errors | 禁止透出 Native/adapter/stack/path |
+| `data/sdk/capability-broker-policy-v1.json` | authorization 顺序、配额、cancel、consent、audit 和 Preview/Production 同形规则 | Manifest permission declaration 仍是显式 contract gap |
 | Broker/lifecycle/Preview protocol 文档 | 新的跨沙箱消息和生命周期契约 | Phase 0B 设计；接入前独立评审 |
 
 未来可以从已冻结 Runtime 行为提取机器可读 `package-runtime-policy-v1.json`，但在提取完成前不得让新 JSON 与现有代码并列成为两个权威实现。

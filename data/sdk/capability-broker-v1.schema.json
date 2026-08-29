@@ -1,0 +1,226 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/capability-broker-v1.schema.json",
+  "title": "WebWindows Capability Broker Protocol v1",
+  "description": "Wire envelope and registry schemas shared by Preview and Production. This contract does not enable a runtime implementation.",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/response" },
+    { "$ref": "#/$defs/cancel" },
+    { "$ref": "#/$defs/event" }
+  ],
+  "$defs": {
+    "protocol": { "const": "webwindows-capability-broker-v1" },
+    "version": { "const": 1 },
+    "opaqueId": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 160,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "methodId": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 160,
+      "pattern": "^[a-z][a-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)+$"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9._:-]+$"
+    },
+    "baseEnvelopeProperties": {
+      "type": "object",
+      "properties": {
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "version": { "$ref": "#/$defs/version" },
+        "sessionId": { "$ref": "#/$defs/opaqueId" },
+        "snapshotId": { "$ref": "#/$defs/opaqueId" },
+        "channelId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "method": { "$ref": "#/$defs/methodId" }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["protocol", "version", "type", "sessionId", "snapshotId", "channelId", "requestId", "method", "params"],
+      "properties": {
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "version": { "$ref": "#/$defs/version" },
+        "type": { "const": "request" },
+        "sessionId": { "$ref": "#/$defs/opaqueId" },
+        "snapshotId": { "$ref": "#/$defs/opaqueId" },
+        "channelId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "method": { "$ref": "#/$defs/methodId" },
+        "params": { "type": "object", "maxProperties": 64 }
+      },
+      "additionalProperties": false
+    },
+    "cancel": {
+      "type": "object",
+      "required": ["protocol", "version", "type", "sessionId", "snapshotId", "channelId", "requestId", "method"],
+      "properties": {
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "version": { "$ref": "#/$defs/version" },
+        "type": { "const": "cancel" },
+        "sessionId": { "$ref": "#/$defs/opaqueId" },
+        "snapshotId": { "$ref": "#/$defs/opaqueId" },
+        "channelId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "method": { "$ref": "#/$defs/methodId" }
+      },
+      "additionalProperties": false
+    },
+    "publicError": {
+      "type": "object",
+      "required": ["code", "message", "retryable"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$", "maxLength": 64 },
+        "message": { "type": "string", "minLength": 1, "maxLength": 240 },
+        "retryable": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "successResponse": {
+      "type": "object",
+      "required": ["protocol", "version", "type", "sessionId", "snapshotId", "channelId", "requestId", "method", "ok", "result"],
+      "properties": {
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "version": { "$ref": "#/$defs/version" },
+        "type": { "const": "response" },
+        "sessionId": { "$ref": "#/$defs/opaqueId" },
+        "snapshotId": { "$ref": "#/$defs/opaqueId" },
+        "channelId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "method": { "$ref": "#/$defs/methodId" },
+        "ok": { "const": true },
+        "result": {}
+      },
+      "additionalProperties": false
+    },
+    "errorResponse": {
+      "type": "object",
+      "required": ["protocol", "version", "type", "sessionId", "snapshotId", "channelId", "requestId", "method", "ok", "error"],
+      "properties": {
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "version": { "$ref": "#/$defs/version" },
+        "type": { "const": "response" },
+        "sessionId": { "$ref": "#/$defs/opaqueId" },
+        "snapshotId": { "$ref": "#/$defs/opaqueId" },
+        "channelId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "method": { "$ref": "#/$defs/methodId" },
+        "ok": { "const": false },
+        "error": { "$ref": "#/$defs/publicError" }
+      },
+      "additionalProperties": false
+    },
+    "response": {
+      "oneOf": [
+        { "$ref": "#/$defs/successResponse" },
+        { "$ref": "#/$defs/errorResponse" }
+      ]
+    },
+    "event": {
+      "type": "object",
+      "required": ["protocol", "version", "type", "sessionId", "snapshotId", "channelId", "requestId", "method", "event", "detail"],
+      "properties": {
+        "protocol": { "$ref": "#/$defs/protocol" },
+        "version": { "$ref": "#/$defs/version" },
+        "type": { "const": "event" },
+        "sessionId": { "$ref": "#/$defs/opaqueId" },
+        "snapshotId": { "$ref": "#/$defs/opaqueId" },
+        "channelId": { "$ref": "#/$defs/opaqueId" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "method": { "$ref": "#/$defs/methodId" },
+        "event": { "enum": ["snapshot.update", "capability.change"] },
+        "detail": { "type": "object", "maxProperties": 64 }
+      },
+      "additionalProperties": false
+    },
+    "methodDefinition": {
+      "type": "object",
+      "required": [
+        "id", "publicNamespace", "publicMember", "invocation", "requiredPermission",
+        "requiredRuntimeCapability", "riskClass", "userGesture", "consent", "parameterSchema",
+        "resultSchema", "timeoutMs", "maximumResponseBytes", "previewAvailability",
+        "productionAvailability", "currentStatus", "sanitization"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/methodId" },
+        "publicNamespace": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$" },
+        "publicMember": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*$" },
+        "invocation": { "enum": ["handshake-snapshot", "request-response"] },
+        "requiredPermission": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)+$" },
+        "requiredRuntimeCapability": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)+$" },
+        "riskClass": { "enum": ["low", "medium", "high"] },
+        "userGesture": { "enum": ["none", "host-required"] },
+        "consent": { "enum": ["no-consent", "session-grant", "persistent-user-grant"] },
+        "parameterSchema": { "type": "object" },
+        "resultSchema": { "type": "object" },
+        "timeoutMs": { "type": "integer", "minimum": 0, "maximum": 10000 },
+        "maximumResponseBytes": { "type": "integer", "minimum": 1, "maximum": 1048576 },
+        "previewAvailability": { "enum": ["disabled", "phase-2b-candidate", "enabled"] },
+        "productionAvailability": { "enum": ["disabled", "future-candidate", "enabled"] },
+        "currentStatus": { "enum": ["pilot-contract-only", "enabled", "deprecated"] },
+        "sanitization": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "methodRegistry": {
+      "type": "object",
+      "required": ["schemaVersion", "contract", "status", "publicApiSource", "defaultDecision", "wildcardsAllowed", "unknownMethods", "methods", "reviewedNotSelected", "explicitlyExcluded", "$defs"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "schemaVersion": { "const": 1 },
+        "contract": { "const": "webwindows-capability-broker-methods-v1" },
+        "status": { "const": "contract-frozen-runtime-disabled" },
+        "publicApiSource": { "const": "data/sdk/webwindows-public-api-v1.d.ts" },
+        "defaultDecision": { "const": "deny" },
+        "wildcardsAllowed": { "const": false },
+        "unknownMethods": { "const": "deny" },
+        "methods": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/methodDefinition" } },
+        "reviewedNotSelected": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "reason"],
+            "properties": { "id": { "$ref": "#/$defs/methodId" }, "reason": { "type": "string", "minLength": 1 } },
+            "additionalProperties": false
+          }
+        },
+        "explicitlyExcluded": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "$defs": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "errorDefinition": {
+      "type": "object",
+      "required": ["code", "category", "retryable", "message"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^[a-z]+(?:-[a-z]+)*$" },
+        "category": { "enum": ["protocol", "session", "authorization", "compatibility", "validation", "quota", "execution", "availability"] },
+        "retryable": { "type": "boolean" },
+        "message": { "type": "string", "minLength": 1, "maxLength": 240 }
+      },
+      "additionalProperties": false
+    },
+    "errorRegistry": {
+      "type": "object",
+      "required": ["schemaVersion", "contract", "status", "defaultPublicMessage", "privateDetailsAllowed", "errors", "forbiddenErrorData"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "schemaVersion": { "const": 1 },
+        "contract": { "const": "webwindows-capability-broker-errors-v1" },
+        "status": { "const": "contract-frozen-runtime-disabled" },
+        "defaultPublicMessage": { "type": "string", "minLength": 1 },
+        "privateDetailsAllowed": { "const": false },
+        "errors": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/errorDefinition" } },
+        "forbiddenErrorData": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

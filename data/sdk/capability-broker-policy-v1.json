@@ -1,0 +1,81 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-capability-broker-policy-v1",
+  "status": "contract-frozen-runtime-disabled",
+  "protocol": "webwindows-capability-broker-v1",
+  "protocolVersion": 1,
+  "sameProtocolForPreviewAndProduction": true,
+  "defaultDecision": "deny",
+  "limits": {
+    "maximumRequestBytes": 16384,
+    "maximumEnvelopeDepth": 8,
+    "maximumConcurrentRequests": 8,
+    "maximumRequestsPerMinute": 120,
+    "defaultRequestTimeoutMs": 5000,
+    "maximumRequestTimeoutMs": 10000
+  },
+  "authorizationOrder": [
+    { "step": "session-binding", "failure": "session-invalid" },
+    { "step": "session-expiry", "failure": "session-expired" },
+    { "step": "protocol-version", "failure": "protocol-unsupported" },
+    { "step": "request-id-unique", "failure": "duplicate-request-id" },
+    { "step": "request-size", "failure": "request-too-large" },
+    { "step": "method-allowlist", "failure": "method-not-allowed" },
+    { "step": "manifest-permission-declared", "failure": "permission-not-declared" },
+    { "step": "platform-store-policy", "failure": "policy-denied" },
+    { "step": "user-grant", "failure": "permission-denied" },
+    { "step": "runtime-capability", "failure": "capability-unsupported" },
+    { "step": "parameter-schema", "failure": "invalid-params" },
+    { "step": "host-user-gesture", "failure": "gesture-required" },
+    { "step": "quota-rate-limit", "failure": "rate-limited" }
+  ],
+  "consentModes": {
+    "no-consent": {
+      "description": "Declared low-risk permission may be granted by trusted platform policy without a runtime prompt.",
+      "persistence": "none"
+    },
+    "session-grant": {
+      "description": "Trusted Host UI grants one capability to one app identity and Preview session.",
+      "persistence": "session-memory"
+    },
+    "persistent-user-grant": {
+      "description": "Future Production grant bound to published app identity, permission, policy version and optional resource scope.",
+      "persistence": "future-production-policy"
+    }
+  },
+  "cancellation": {
+    "terminalResponse": "request-cancelled",
+    "hostAttemptsAbortWhenSupported": true,
+    "lateResult": "ignore-and-audit",
+    "unknownRequestId": "ignore",
+    "duplicateCancel": "ignore"
+  },
+  "sessionTermination": {
+    "stop": "cancel-pending-and-close-port",
+    "expiry": "reject-pending-session-expired-and-close-port",
+    "reload": "cancel-old-pending-rotate-session-channel-and-token",
+    "lateOldSessionResponse": "ignore-and-audit"
+  },
+  "gestureAuthority": {
+    "authority": "trusted-host-ui-only",
+    "sandboxClaimAccepted": false,
+    "requestFieldAllowed": false
+  },
+  "audit": {
+    "previewPersistence": "session-memory",
+    "productionPersistence": "future-policy",
+    "fields": [
+      "timestamp", "mode", "appIdentity", "projectIdentity", "sessionId", "snapshotId",
+      "requestId", "method", "permission", "decision", "resultCategory", "latencyMs"
+    ],
+    "forbiddenFields": [
+      "params", "result", "apiKey", "cookie", "credential", "nativeTransport",
+      "privateStack", "filesystemPath", "providerUri"
+    ]
+  },
+  "modeDifferences": ["identity", "grantPersistence", "policyContext", "assetSource"],
+  "manifestPermissionDeclaration": {
+    "status": "required-contract-gap",
+    "note": "Manifest v1 factual schema has no permissions field. No real project may receive Pilot access until a separately reviewed source declaration contract exists."
+  }
+}

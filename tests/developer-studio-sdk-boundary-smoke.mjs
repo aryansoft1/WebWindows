@@ -29,8 +29,12 @@ assert.doesNotMatch(studioHtml, /unsafe-eval/);
 assert.match(studioHtml, /worker-src 'self'/);
 assert.match(studioSource, /Run available in next phase/);
 assert.doesNotMatch(studioSource, /WebWindowsNative|parent\.WebWindows|Capability Broker/);
-assert.match(studioBundle, /monaco-runtime-[A-Za-z0-9_-]+\.js/);
-assert.ok(Buffer.byteLength(studioBundle) < 500_000, "Studio entry should not eagerly contain Monaco");
+const entryReference = /import\s+["']\.\/([^"']+)["']/.exec(studioBundle)?.[1];
+const lazyEntryBundle = entryReference ? await read(`dist-developer-studio/${entryReference}`) : studioBundle;
+assert.match(lazyEntryBundle, /monaco-runtime-[A-Za-z0-9_-]+\.js/);
+assert.match(lazyEntryBundle, /deterministic-builder-[A-Za-z0-9_-]+\.js/);
+assert.ok(Buffer.byteLength(studioBundle) + Buffer.byteLength(lazyEntryBundle) < 500_000,
+  "Studio entry should not eagerly contain Monaco or JSZip");
 
 const template = createHelloWebWindowsTemplate();
 const sourceManifest = JSON.parse(template.files.find((entry) => entry.path === "manifest.json").content);

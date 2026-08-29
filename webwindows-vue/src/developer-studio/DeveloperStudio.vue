@@ -11,6 +11,8 @@ import { buildProjectTree, languageForPath } from "./project/tree-model.js";
 import { createProjectSnapshot } from "./snapshot/project-snapshot.js";
 import { loadStudioPlatformContracts } from "./validation/platform-contracts.js";
 import { validateProjectSnapshot } from "./validation/project-validator.js";
+import { PreviewHostClient } from "./preview/preview-host-client.js";
+import { PreviewSessionController } from "./preview/preview-session-controller.js";
 
 const repository = new ProjectRepository();
 const projects = ref([]);
@@ -26,12 +28,21 @@ const manifestDiagnostics = ref([]);
 const validationReport = ref(null);
 const buildResult = ref(null);
 const taskBusy = ref(false);
+const previewHostFrame = ref(null);
+const previewHostReady = ref(false);
+const previewSession = ref(null);
+const consoleEvents = ref([]);
+const bottomPanel = ref("problems");
+const inspectorMode = ref("preview");
+const consoleLevel = ref("all");
 const status = ref("");
 const statusKind = ref("");
 const dialog = ref(null);
 let dialogResolve = null;
 let saveTimer = 0;
 let manifestValidationSequence = 0;
+let previewHostClient = null;
+let previewController = null;
 
 const tree = computed(() => buildProjectTree(entries.value));
 const activeEntry = computed(() => entries.value.find((entry) => entry.path === activeFile.value));
@@ -43,6 +54,9 @@ const displayedProblems = computed(() => validationReport.value?.diagnostics || 
   path: problem.path,
   message: problem.message
 })));
+const displayedConsoleEvents = computed(() => consoleLevel.value === "all"
+  ? consoleEvents.value
+  : consoleEvents.value.filter((event) => event.level === consoleLevel.value));
 
 onMounted(async () => {
   try {
@@ -55,6 +69,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearTimeout(saveTimer);
+  previewController?.dispose().catch(() => {});
   repository.close();
 });
 
@@ -79,6 +94,7 @@ async function createProject() {
 
 async function openProject(projectId) {
   if (!projectId) return;
+  if (previewSession.value) await stopPreview();
   await flushSave();
   activeProject.value = await repository.getProject(projectId);
   entries.value = await repository.listEntries(projectId);
@@ -343,6 +359,74 @@ function invalidateBuildState() {
   buildResult.value = null;
 }
 
+async function connectPreviewHost() {
+  previewHostReady.value = false;
+  previewController?.dispose().catch(() => {});
+  previewHostClient = new PreviewHostClient({
+    onConsole: (event) => {
+      const active = previewSession.value || previewController?.activeSession;
+      if (!active || event?.sessionId !== active.sessionId || event?.snapshotId !== active.snapshotId) return;
+      consoleEvents.value = [...consoleEvents.value, event].slice(-1000);
+    },
+    onState: (event) => {
+      if (!previewSession.value || event?.sessionId !== previewSession.value.sessionId) return;
+      previewSession.value = { ...previewSession.value, state: event.state };
+    }
+  });
+  previewController = new PreviewSessionController({ hostClient: previewHostClient });
+  try {
+    await previewHostClient.connect(previewHostFrame.value);
+    previewHostReady.value = true;
+  } catch (error) {
+    showError(error);
+  }
+}
+
+async function runPreview({ reload = false } = {}) {
+  if (taskBusy.value || !previewController || !previewHostReady.value) return;
+  taskBusy.value = true;
+  try {
+    const snapshot = await createCurrentSnapshot();
+    const contracts = await loadStudioPlatformContracts();
+    const result = reload && previewSession.value
+      ? await previewController.reload(snapshot, { contracts })
+      : await previewController.run(snapshot, { contracts });
+    validationReport.value = result.validationReport;
+    buildResult.value = null;
+    bottomPanel.value = result.started ? "console" : "problems";
+    inspectorMode.value = "preview";
+    if (!result.started) {
+      showStatus(`Developer Preview 被 ${result.validationReport.errorCount} 个验证错误阻止。`);
+      return;
+    }
+    previewSession.value = result.session;
+    showStatus(reload ? "Developer Preview 已从新 Snapshot 重新加载。" : "Developer Preview 已启动。");
+  } catch (error) {
+    showError(error);
+  } finally {
+    taskBusy.value = false;
+  }
+}
+
+async function stopPreview() {
+  if (!previewController || !previewSession.value) return;
+  try {
+    await previewController.stop(previewSession.value.sessionId);
+    previewSession.value = null;
+    showStatus("Developer Preview 已停止，会话凭据已撤销。");
+  } catch (error) {
+    showError(error);
+  }
+}
+
+function clearConsole() {
+  consoleEvents.value = [];
+}
+
+function consoleMessage(event) {
+  return event.arguments.map((value) => typeof value === "string" ? value : JSON.stringify(value)).join(" ");
+}
+
 function openProblem(problem) {
   const entry = entries.value.find((candidate) => candidate.kind === "file"
     && (problem.path === candidate.path || problem.path?.startsWith(`${candidate.path}$`)));
@@ -391,7 +475,9 @@ function finishDialog(result) {
       <span class="toolbar-spacer"></span>
       <button type="button" :disabled="!activeProject || taskBusy" @click="validateProject">Validate</button>
       <button class="primary" type="button" :disabled="!activeProject || taskBusy" @click="buildProject">Build</button>
-      <button type="button" disabled title="Phase 1C 提供 Run/Preview">Run available in next phase</button>
+      <button class="primary" type="button" :disabled="!activeProject || taskBusy || !previewHostReady" @click="runPreview()">Run</button>
+      <button type="button" :disabled="!previewSession || taskBusy" @click="runPreview({ reload: true })">Reload</button>
+      <button type="button" :disabled="!previewSession" @click="stopPreview">Stop</button>
     </header>
 
     <section v-if="activeProject" class="studio-main">
@@ -451,8 +537,14 @@ function finishDialog(result) {
       </section>
 
       <aside class="inspector-panel">
-        <div class="panel-heading"><span>Manifest / Inspector</span></div>
-        <div class="inspector-content">
+        <div class="panel-heading">
+          <span>Inspector</span>
+          <div class="panel-switcher">
+            <button type="button" :class="{ active: inspectorMode === 'manifest' }" @click="inspectorMode = 'manifest'">Manifest</button>
+            <button type="button" :class="{ active: inspectorMode === 'preview' }" @click="inspectorMode = 'preview'">Preview</button>
+          </div>
+        </div>
+        <div v-show="inspectorMode === 'manifest'" class="inspector-content">
           <h2>Manifest v1</h2>
           <p class="project-uuid">项目 UUID：{{ activeProject.uuid }}</p>
           <ManifestInspector
@@ -483,6 +575,21 @@ function finishDialog(result) {
             </template>
           </section>
         </div>
+        <div v-show="inspectorMode === 'preview'" class="preview-inspector">
+          <div class="preview-session-banner">
+            <strong>Developer Preview</strong>
+            <span v-if="previewSession">{{ previewSession.state }} · {{ previewSession.snapshotId }}</span>
+            <span v-else>无活动会话</span>
+          </div>
+          <iframe
+            ref="previewHostFrame"
+            class="preview-host-frame"
+            src="developer-preview-host.html?v=20260829-1"
+            title="Trusted Developer Preview Host"
+            referrerpolicy="no-referrer"
+            @load="connectPreviewHost"
+          ></iframe>
+        </div>
       </aside>
     </section>
 
@@ -493,19 +600,41 @@ function finishDialog(result) {
     </section>
 
     <section class="problems-panel">
-      <div class="panel-heading"><span>Problems</span><span>{{ displayedProblems.length }}</span></div>
-      <div v-if="!displayedProblems.length" class="problems-empty">当前 Snapshot 未发现问题。</div>
-      <button
-        v-for="(problem, index) in displayedProblems"
-        :key="`${problem.ruleId}:${problem.path}:${index}`"
-        type="button"
-        class="problem-row"
-        @click="openProblem(problem)"
-      >
-        <span class="problem-severity" :class="problem.severity">{{ problem.ruleId }}</span>
-        <code>{{ problem.path }}</code>
-        <span>{{ problem.message }}</span>
-      </button>
+      <div class="bottom-tabs">
+        <button type="button" :class="{ active: bottomPanel === 'problems' }" @click="bottomPanel = 'problems'">Problems <span>{{ displayedProblems.length }}</span></button>
+        <button type="button" :class="{ active: bottomPanel === 'console' }" @click="bottomPanel = 'console'">Console <span>{{ consoleEvents.length }}</span></button>
+        <span class="bottom-spacer"></span>
+        <template v-if="bottomPanel === 'console'">
+          <select v-model="consoleLevel" aria-label="Console level">
+            <option value="all">All levels</option>
+            <option v-for="level in ['log', 'info', 'warn', 'error', 'debug']" :key="level" :value="level">{{ level }}</option>
+          </select>
+          <button type="button" @click="clearConsole">Clear</button>
+        </template>
+      </div>
+      <template v-if="bottomPanel === 'problems'">
+        <div v-if="!displayedProblems.length" class="problems-empty">当前 Snapshot 未发现问题。</div>
+        <button
+          v-for="(problem, index) in displayedProblems"
+          :key="`${problem.ruleId}:${problem.path}:${index}`"
+          type="button"
+          class="problem-row"
+          @click="openProblem(problem)"
+        >
+          <span class="problem-severity" :class="problem.severity">{{ problem.ruleId }}</span>
+          <code>{{ problem.path }}</code>
+          <span>{{ problem.message }}</span>
+        </button>
+      </template>
+      <template v-else>
+        <div v-if="!displayedConsoleEvents.length" class="problems-empty">当前 Developer Preview 尚无 Console 输出。</div>
+        <div v-for="event in displayedConsoleEvents" :key="`${event.sessionId}:${event.sequence}`" class="console-row" :class="event.level">
+          <time>{{ event.timestamp }}</time>
+          <strong>{{ event.level }}</strong>
+          <span>{{ consoleMessage(event) }}</span>
+          <code>{{ event.snapshotId }}</code>
+        </div>
+      </template>
     </section>
 
     <div v-if="status" class="studio-status" :class="statusKind" role="status">{{ status }}</div>

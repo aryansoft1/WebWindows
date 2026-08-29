@@ -97,6 +97,21 @@ export class ProjectRepository {
     return entries.sort(compareEntries).map(cloneValue);
   }
 
+  async readProjectState(projectId) {
+    const database = await this.open();
+    const transaction = database.transaction([PROJECT_STORE, FILE_STORE], "readonly");
+    const project = await requestResult(transaction.objectStore(PROJECT_STORE).get(projectId));
+    if (!project) throw repositoryError("project-not-found", "找不到项目。");
+    const entries = await requestResult(
+      transaction.objectStore(FILE_STORE).index(PROJECT_FILE_INDEX).getAll(projectId)
+    );
+    await transactionDone(transaction);
+    return {
+      project: cloneValue(project),
+      entries: entries.sort(compareEntries).map(cloneValue)
+    };
+  }
+
   async readTextFile(projectId, path) {
     const entry = await this.getEntry(projectId, path);
     if (entry.kind !== "file") throw repositoryError("not-a-file", "目标不是文本文件。");

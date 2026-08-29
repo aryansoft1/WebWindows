@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-package-runtime-policy-v1",
+  "source": "assets/js/package-runtime.js frozen by tests/package-runtime-policy-smoke.mjs",
+  "runtimeModel": "browser-zip-sandbox-v1",
+  "limits": {
+    "maxFiles": 500,
+    "maxUnpackedBytes": 31457280,
+    "maxPathCharacters": 240
+  },
+  "allowedExtensions": [
+    ".html", ".htm", ".css", ".js", ".json", ".txt", ".md",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico",
+    ".woff", ".woff2", ".ttf", ".otf", ".mp3", ".wav", ".ogg",
+    ".mp4", ".webm"
+  ],
+  "entryExtensions": [".html", ".htm"],
+  "execution": {
+    "scripts": "classic-only",
+    "modules": "unsupported",
+    "network": "none",
+    "sameOrigin": false,
+    "externalDependencies": "unsupported"
+  },
+  "archive": {
+    "format": "zip",
+    "crcRequired": true,
+    "symlinks": "rejected"
+  }
+}

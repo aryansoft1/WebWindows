@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-studio-validator-rules-v1",
+  "validatorVersion": "1.0.0",
+  "rules": [
+    { "ruleId": "WWM001", "category": "manifest", "defaultSeverity": "error", "title": "Manifest JSON" },
+    { "ruleId": "WWM002", "category": "manifest", "defaultSeverity": "error", "title": "Manifest Schema" },
+    { "ruleId": "WWM003", "category": "manifest", "defaultSeverity": "error", "title": "Published-only field" },
+    { "ruleId": "WWM004", "category": "manifest", "defaultSeverity": "warning", "title": "Platform-reserved field" },
+    { "ruleId": "WWP001", "category": "package", "defaultSeverity": "error", "title": "Root manifest" },
+    { "ruleId": "WWP002", "category": "package", "defaultSeverity": "error", "title": "Safe normalized path" },
+    { "ruleId": "WWP003", "category": "package", "defaultSeverity": "error", "title": "File count" },
+    { "ruleId": "WWP004", "category": "package", "defaultSeverity": "error", "title": "Unpacked size" },
+    { "ruleId": "WWP005", "category": "package", "defaultSeverity": "error", "title": "Allowed extension" },
+    { "ruleId": "WWP006", "category": "package", "defaultSeverity": "error", "title": "HTML entry" },
+    { "ruleId": "WWP007", "category": "package", "defaultSeverity": "error", "title": "UTF-8 text" },
+    { "ruleId": "WWS001", "category": "source", "defaultSeverity": "error", "title": "ES Module unsupported" },
+    { "ruleId": "WWS002", "category": "source", "defaultSeverity": "error", "title": "External resource unsupported" },
+    { "ruleId": "WWS003", "category": "source", "defaultSeverity": "error", "title": "Private Native API" },
+    { "ruleId": "WWS004", "category": "source", "defaultSeverity": "error", "title": "Shell internal API" },
+    { "ruleId": "WWS005", "category": "source", "defaultSeverity": "warning", "title": "Static network reference" },
+    { "ruleId": "WWC001", "category": "compatibility", "defaultSeverity": "error", "title": "Runtime model compatibility" }
+  ]
+}

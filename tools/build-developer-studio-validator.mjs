@@ -48,3 +48,27 @@ for (const target of targets) {
   await writeFile(outputPath, source, "utf8");
   console.log(`Generated ${outputPath}`);
 }
+
+const brokerSchema = JSON.parse(await readFile(resolve(root, "data/sdk/capability-broker-v1.schema.json"), "utf8"));
+const brokerMethods = JSON.parse(await readFile(resolve(root, "data/sdk/capability-broker-methods-v1.json"), "utf8"));
+const refreshMethod = brokerMethods.methods.find((method) => method.id === "device.battery.refresh");
+const stateMethod = brokerMethods.methods.find((method) => method.id === "device.battery.getState");
+if (!refreshMethod || !stateMethod) throw new Error("Battery Pilot method contracts are missing.");
+const brokerAjv = new Ajv2020({ allErrors: true, code: { source: true, esm: true }, strict: false });
+const refreshParamsSchema = { $id: "https://www.y0.hk/data/sdk/generated/battery-refresh-params-v1", ...refreshMethod.parameterSchema };
+const batteryResultSchema = { $id: "https://www.y0.hk/data/sdk/generated/battery-result-v1", $defs: brokerMethods.$defs, ...stateMethod.resultSchema };
+brokerAjv.addSchema(brokerSchema);
+brokerAjv.addSchema(refreshParamsSchema);
+brokerAjv.addSchema(batteryResultSchema);
+const brokerStandaloneRaw = standaloneCode(brokerAjv, {
+  validateEnvelope: brokerSchema.$id,
+  validateRefreshParams: refreshParamsSchema.$id,
+  validateBatteryResult: batteryResultSchema.$id
+});
+const brokerStandalone = brokerStandaloneRaw
+  .replaceAll('require("ajv/dist/runtime/ucs2length").default', "ucs2length")
+  .replaceAll('require("ajv/dist/runtime/equal").default', "equal");
+const brokerOutput = resolve(root, "webwindows-vue/src/developer-studio/broker/generated-broker-validator.js");
+const brokerSource = `// Generated from Capability Broker v1 contracts. Do not edit.\n${unicodeLength}\n${scalarEqual}\n${brokerStandalone}\n`;
+await writeFile(brokerOutput, brokerSource, "utf8");
+console.log(`Generated ${brokerOutput}`);

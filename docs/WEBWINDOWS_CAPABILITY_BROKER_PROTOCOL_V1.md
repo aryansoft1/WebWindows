@@ -1,6 +1,6 @@
 # WebWindows Capability Broker Protocol v1
 
-状态：Phase 2A contract freeze；尚未接入 Preview 或 Production Runtime
+状态：Phase 2B Battery Pilot 已接入 Developer Studio Preview；Production Runtime 保持 disabled
 
 机器契约：
 
@@ -28,7 +28,7 @@ Broker 可信端只调用 `webwindows-public-api-v1.d.ts` 描述的稳定 Public
 
 ## 2. Phase 2 Pilot
 
-Phase 2A 只冻结 Battery read Pilot，不启用 Runtime：
+Phase 2B 只在 Developer Studio Preview 启用 Battery read Pilot：
 
 | Method | Invocation | Permission | Capability | 选择理由 |
 | --- | --- | --- | --- | --- |
@@ -103,7 +103,7 @@ Success response：
 }
 ```
 
-Cancel 使用相同 identity/request/method binding，`type:"cancel"`，不接受任意 reason payload。Event 同样绑定 session/snapshot/channel/request/method，当前 schema 只保留 `snapshot.update` 和 `capability.change` 形状；Phase 2A 不启用事件。
+Cancel 使用相同 identity/request/method binding，`type:"cancel"`，不接受任意 reason payload。Event 同样绑定 session/snapshot/channel/request/method，当前 schema 只保留 `snapshot.update` 和 `capability.change` 形状；Phase 2B Battery Pilot 不启用事件。
 
 所有消息必须满足 JSON Schema、structured-clone safe 和大小/深度限制。Request schema 不存在 `userGesture` 字段。
 
@@ -169,16 +169,14 @@ await window.WebWindows.device.battery.refresh();
 
 不会公开 `broker.call()`。Facade 是 sandbox 本地冻结对象，不是 Host object reference。`getState()` 从 handshake 的清洗 cache 同步返回副本；`refresh()` 通过 Broker request/response 更新 cache。未登记 namespace/member 不生成到 Pilot facade，不能通过枚举发现 Host 内部对象。
 
-## 11. Manifest permission contract gap
+## 11. Manifest permission authority
 
-Manifest v1 是事实冻结规范，当前没有 `permissions` 字段。Phase 2A 不借未知字段宽松行为暗中赋予 permission，也不修改 Manifest v1。
+Manifest v1 是事实冻结规范，没有 `permissions` 字段，因此 Preview 不为 v1 创建 Battery facade，也不存在隐藏 fallback。
 
-因此真实项目启用 Broker 前必须单独冻结 Source permission declaration 的版本化承载方式，并让 Studio validator、Developer Center、server validator 和 review policy 共同消费。缺少这一步时，即使 method/capability 可用，授权决策也必须返回 `permission-not-declared`。
-
-这不阻塞 Phase 2B 编写 gated Broker runtime/harness，但阻塞把 Pilot 默认开放给实际第三方项目。
+Manifest v2 已通过 `manifest-v2.schema.json`、`permissions-v1.json` 和 `sdk.apiVersion:"1"` 建立 Source permission declaration authority。Phase 2B 只接受声明 `device.battery-status.read` 的 v2 Snapshot；v2 未声明时 facade 存在，但 handshake 与调用稳定返回 `permission-not-declared`。
 
 ## 12. Native Bridge 与 Production
 
 Broker 只调用稳定 Public API。Public API 内部选择 Browser/Dreama adapter 的方式不可见。Native Bridge v1 的 envelope、method、capability transport 和生命周期保持完全冻结。
 
-Phase 2A 不修改 Production Package Runtime。未来 Preview 与 Production 接入必须使用本文件同一 wire schema、method registry、permission/capability mapping、error model 和 decision order。
+Phase 2B 不修改 Production Package Runtime；`productionAvailability` 继续为 `disabled`。未来 Production 接入必须使用本文件同一 wire schema、method registry、permission/capability mapping、error model 和 decision order，并另行评审。

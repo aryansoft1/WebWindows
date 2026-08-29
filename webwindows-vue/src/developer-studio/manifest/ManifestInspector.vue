@@ -30,7 +30,7 @@ function permissionPresentation(permission) {
   return {
     description: permission.description || permission.publicApiTargets?.join(", ") || "No public API target registered",
     consent: methods[0]?.consent || permission.prompt || "unspecified",
-    pilot: methods.some((method) => method.currentStatus === "pilot-contract-only") ? "Pilot contract only" : "Not in current Pilot",
+    pilot: methods.some((method) => method.currentStatus === "enabled") ? "Preview Pilot enabled" : "Pilot contract only",
     methods: methods.map((method) => method.id)
   };
 }

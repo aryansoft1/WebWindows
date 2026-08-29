@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "webwindows-capability-broker-policy-v1",
-  "status": "contract-frozen-runtime-disabled",
+  "status": "preview-pilot-enabled-production-disabled",
   "protocol": "webwindows-capability-broker-v1",
   "protocolVersion": 1,
   "sameProtocolForPreviewAndProduction": true,
@@ -75,9 +75,9 @@
   },
   "modeDifferences": ["identity", "grantPersistence", "policyContext", "assetSource"],
   "manifestPermissionDeclaration": {
-    "status": "resolved-by-manifest-v2-contract-runtime-disabled",
+    "status": "resolved-by-manifest-v2-contract-preview-pilot-enabled",
     "sourceManifestSchema": "data/sdk/manifest-v2.schema.json",
     "permissionRegistry": "data/sdk/permissions-v1.json",
-    "note": "Manifest v2 now carries requested permissions. Broker Runtime remains disabled until a later phase implements all authorization steps."
+    "note": "Manifest v2 carries requested permissions. Phase 2B enables only the Battery Pilot in Developer Studio Preview; Production remains disabled."
   }
 }

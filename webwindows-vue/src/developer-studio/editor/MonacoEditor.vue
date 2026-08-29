@@ -16,12 +16,15 @@ let model;
 let monaco;
 let changeSubscription;
 let applyingExternalValue = false;
+let configureManifestSchemaForText;
 
 onMounted(async () => {
   try {
     const runtime = await import("./monaco-runtime.js");
     ({ monaco } = await runtime.configureStudioMonaco());
+    configureManifestSchemaForText = runtime.configureManifestSchemaForText;
     model = getOrCreateModel();
+    updateManifestSchema(model.getValue());
     editor = monaco.editor.create(host.value, {
       model,
       automaticLayout: true,
@@ -35,7 +38,9 @@ onMounted(async () => {
       accessibilityPageSize: 20
     });
     changeSubscription = editor.onDidChangeModelContent(() => {
-      if (!applyingExternalValue) emit("update:value", model.getValue());
+      const value = model.getValue();
+      updateManifestSchema(value);
+      if (!applyingExternalValue) emit("update:value", value);
     });
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => emit("save"));
     loading.value = false;
@@ -52,6 +57,7 @@ watch(() => props.value, (value) => {
   if (!model || model.getValue() === value) return;
   applyingExternalValue = true;
   model.setValue(value);
+  updateManifestSchema(value);
   applyingExternalValue = false;
 });
 
@@ -83,6 +89,10 @@ function updateMarkers() {
     endLineNumber: marker.endLine || marker.line || 1,
     endColumn: marker.endColumn || Math.max(2, (marker.column || 1) + 1)
   })));
+}
+
+function updateManifestSchema(value) {
+  if (props.path === "manifest.json") configureManifestSchemaForText?.(value);
 }
 </script>
 

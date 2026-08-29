@@ -4,6 +4,7 @@ import FileTreeNode from "./FileTreeNode.vue";
 import MonacoEditor from "./editor/MonacoEditor.vue";
 import ManifestInspector from "./manifest/ManifestInspector.vue";
 import { validateManifestText } from "./manifest/manifest-validator.js";
+import { selectManifestVersion } from "./manifest/manifest-version.js";
 import { createHelloWebWindowsTemplate } from "./project/hello-template.js";
 import { childPath, ProjectRepository } from "./project/project-repository.js";
 import { normalizeProjectPath, parentProjectPath, projectPathName } from "./project/path-policy.js";
@@ -25,6 +26,8 @@ const editorText = ref("");
 const dirtyFiles = ref(new Set());
 const manifestValue = ref(null);
 const manifestDiagnostics = ref([]);
+const permissionRegistry = ref(null);
+const brokerMethods = ref(null);
 const validationReport = ref(null);
 const buildResult = ref(null);
 const taskBusy = ref(false);
@@ -48,6 +51,7 @@ const tree = computed(() => buildProjectTree(entries.value));
 const activeEntry = computed(() => entries.value.find((entry) => entry.path === activeFile.value));
 const editorLanguage = computed(() => languageForPath(activeFile.value));
 const activeMarkers = computed(() => activeFile.value === "manifest.json" ? manifestDiagnostics.value : []);
+const activeManifestVersion = computed(() => selectManifestVersion(manifestValue.value));
 const displayedProblems = computed(() => validationReport.value?.diagnostics || manifestDiagnostics.value.map((problem) => ({
   ruleId: "Manifest",
   severity: problem.severity,
@@ -60,6 +64,9 @@ const displayedConsoleEvents = computed(() => consoleLevel.value === "all"
 
 onMounted(async () => {
   try {
+    const contracts = await loadStudioPlatformContracts();
+    permissionRegistry.value = contracts.permissionRegistry;
+    brokerMethods.value = contracts.brokerMethods;
     await refreshProjects();
     if (projects.value.length) await openProject(projects.value[0].uuid);
   } catch (error) {
@@ -545,11 +552,13 @@ function finishDialog(result) {
           </div>
         </div>
         <div v-show="inspectorMode === 'manifest'" class="inspector-content">
-          <h2>Manifest v1</h2>
+          <h2>Manifest {{ activeManifestVersion === 2 ? 'v2' : activeManifestVersion === 1 ? 'v1' : 'unsupported' }}</h2>
           <p class="project-uuid">项目 UUID：{{ activeProject.uuid }}</p>
           <ManifestInspector
             :manifest="manifestValue"
             :diagnostics="manifestDiagnostics"
+            :permission-registry="permissionRegistry"
+            :broker-methods="brokerMethods"
             @update:manifest="updateManifestForm($event).catch(showError)"
             @open-json="openFile('manifest.json').catch(showError)"
           />

@@ -8,6 +8,9 @@ export async function loadStudioPlatformContracts() {
 async function loadContracts() {
   const resources = await Promise.all([
     fetchJson("/data/sdk/manifest-v1.schema.json"),
+    fetchJson("/data/sdk/manifest-v2.schema.json"),
+    fetchJson("/data/sdk/permissions-v1.json"),
+    fetchJson("/data/sdk/capability-broker-methods-v1.json"),
     fetchJson("/data/sdk/package-runtime-policy-v1.json"),
     fetchJson("/data/sdk/runtime-compatibility-v1.json"),
     fetchJson("/data/sdk/studio-validator-rules-v1.json"),
@@ -15,10 +18,13 @@ async function loadContracts() {
   ]);
   return Object.freeze({
     manifestSchema: resources[0],
-    packagePolicy: resources[1],
-    runtimeCompatibility: resources[2],
-    ruleCatalog: resources[3],
-    publicApiText: resources[4]
+    manifestSchemas: Object.freeze({ 1: resources[0], 2: resources[1] }),
+    permissionRegistry: resources[2],
+    brokerMethods: resources[3],
+    packagePolicy: resources[4],
+    runtimeCompatibility: resources[5],
+    ruleCatalog: resources[6],
+    publicApiText: resources[7]
   });
 }
 

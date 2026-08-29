@@ -11,9 +11,11 @@ import {
   javascriptDefaults,
   ScriptTarget
 } from "monaco-editor/language/typescript/monaco.contribution.js";
+import { selectManifestVersion } from "../manifest/manifest-version.js";
 
 const SDK_URI = "inmemory://webwindows-sdk/webwindows-public-api-v1.d.ts";
 let configuredPromise;
+let manifestContracts;
 
 self.MonacoEnvironment = {
   getWorker(_moduleId, label) {
@@ -31,13 +33,18 @@ export async function configureStudioMonaco() {
 }
 
 async function configure() {
-  const [sdkResponse, schemaResponse] = await Promise.all([
+  const [sdkResponse, v1Response, v2Response, permissionsResponse] = await Promise.all([
     fetch("/data/sdk/webwindows-public-api-v1.d.ts", { credentials: "same-origin" }),
-    fetch("/data/sdk/manifest-v1.schema.json", { credentials: "same-origin" })
+    fetch("/data/sdk/manifest-v1.schema.json", { credentials: "same-origin" }),
+    fetch("/data/sdk/manifest-v2.schema.json", { credentials: "same-origin" }),
+    fetch("/data/sdk/permissions-v1.json", { credentials: "same-origin" })
   ]);
   if (!sdkResponse.ok) throw new Error("无法载入 WebWindows Public API 类型定义。");
-  if (!schemaResponse.ok) throw new Error("无法载入 Manifest v1 Schema。");
-  const [sdkText, manifestSchema] = await Promise.all([sdkResponse.text(), schemaResponse.json()]);
+  if (!v1Response.ok || !v2Response.ok || !permissionsResponse.ok) throw new Error("无法载入 Manifest 平台契约。");
+  const [sdkText, manifestV1, manifestV2, permissionRegistry] = await Promise.all([
+    sdkResponse.text(), v1Response.json(), v2Response.json(), permissionsResponse.json()
+  ]);
+  manifestContracts = { schemas: { 1: manifestV1, 2: manifestV2 }, permissionRegistry };
 
   javascriptDefaults.setEagerModelSync(true);
   javascriptDefaults.setCompilerOptions({
@@ -50,16 +57,36 @@ async function configure() {
   });
   javascriptDefaults.addExtraLib(sdkText, SDK_URI);
 
-  jsonDefaults.setDiagnosticsOptions({
-    validate: true,
-    allowComments: false,
-    schemas: [{
-      uri: manifestSchema.$id || "/data/sdk/manifest-v1.schema.json",
+  configureManifestSchemaForText("{}");
+  return { monaco, manifestSchemas: manifestContracts.schemas };
+}
+
+export function configureManifestSchemaForText(text) {
+  if (!manifestContracts) return null;
+  const version = explicitManifestVersion(text);
+  const schema = manifestContracts.schemas[version];
+  const schemas = [{
+    uri: manifestContracts.permissionRegistry.$id,
+    fileMatch: [],
+    schema: manifestContracts.permissionRegistry
+  }];
+  if (schema) {
+    schemas.push({
+      uri: schema.$id,
       fileMatch: ["**/manifest.json"],
-      schema: manifestSchema
-    }]
-  });
-  return { monaco, manifestSchema };
+      schema
+    });
+  }
+  jsonDefaults.setDiagnosticsOptions({ validate: true, allowComments: false, schemas });
+  return version;
+}
+
+function explicitManifestVersion(text) {
+  try {
+    return selectManifestVersion(JSON.parse(text));
+  } catch {
+    return null;
+  }
 }
 
 export { monaco };

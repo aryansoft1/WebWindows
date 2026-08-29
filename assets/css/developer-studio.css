@@ -243,6 +243,15 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .manifest-form .check { display: flex; align-items: center; gap: 6px; color: #56657a; font-size: 12px; }
 .manifest-form .check input { width: auto; }
 .manifest-form .inspector-note { margin: 2px 0 0; font-weight: 400; }
+.manifest-form input[readonly] { background: #f4f7fb; color: #526178; }
+.permission-fieldset { max-height: 360px; overflow: auto; }
+.permission-option { display: grid; gap: 4px; padding: 7px; border: 1px solid #e2e8f0; border-radius: 6px; }
+.permission-heading { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.permission-heading input { width: auto; }
+.permission-heading code { overflow-wrap: anywhere; color: #26344c; font-size: 10px; }
+.permission-option small { overflow-wrap: anywhere; color: #68778d; font-size: 10px; line-height: 1.35; }
+.permission-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+.permission-meta > * { padding: 2px 5px; border-radius: 999px; background: #edf2f7; color: #526178; font-size: 9px; font-weight: 500; }
 .inspector-summary { margin-top: 10px; color: #68778d; font-size: 11px; }
 .build-inspector { margin-top: 16px; padding-top: 12px; border-top: 1px solid #dce4ef; }
 .build-inspector h3 { margin: 8px 0; font-size: 12px; }

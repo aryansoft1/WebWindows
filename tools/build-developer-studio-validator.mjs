@@ -5,13 +5,6 @@ import Ajv2020 from "ajv/dist/2020.js";
 import standaloneCode from "ajv/dist/standalone/index.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const schemaPath = resolve(root, "data/sdk/manifest-v1.schema.json");
-const outputPath = resolve(root, "webwindows-vue/src/developer-studio/manifest/generated-manifest-validator.js");
-const schema = JSON.parse(await readFile(schemaPath, "utf8"));
-const ajv = new Ajv2020({ allErrors: true, code: { source: true, esm: true }, strict: false });
-const validate = ajv.compile(schema);
-const standalone = standaloneCode(ajv, validate)
-  .replace('require("ajv/dist/runtime/ucs2length").default', "ucs2length");
 const unicodeLength = `function ucs2length(value) {
   let length = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -24,6 +17,34 @@ const unicodeLength = `function ucs2length(value) {
   }
   return length;
 }`;
-const source = `// Generated from data/sdk/manifest-v1.schema.json. Do not edit.\n${unicodeLength}\n${standalone}\n`;
-await writeFile(outputPath, source, "utf8");
-console.log(`Generated ${outputPath}`);
+const scalarEqual = `function equal(left, right) {
+  return left === right;
+}`;
+const permissionRegistry = JSON.parse(await readFile(resolve(root, "data/sdk/permissions-v1.json"), "utf8"));
+const targets = [
+  {
+    schema: "data/sdk/manifest-v1.schema.json",
+    output: "webwindows-vue/src/developer-studio/manifest/generated-manifest-validator.js"
+  },
+  {
+    schema: "data/sdk/manifest-v2.schema.json",
+    output: "webwindows-vue/src/developer-studio/manifest/generated-manifest-v2-validator.js"
+  }
+];
+
+for (const target of targets) {
+  const schemaPath = resolve(root, target.schema);
+  const outputPath = resolve(root, target.output);
+  const schema = JSON.parse(await readFile(schemaPath, "utf8"));
+  const ajv = new Ajv2020({ allErrors: true, code: { source: true, esm: true }, strict: false });
+  ajv.addSchema(permissionRegistry);
+  const validate = ajv.compile(schema);
+  const rawStandalone = standaloneCode(ajv, validate);
+  const usesScalarEqual = rawStandalone.includes('require("ajv/dist/runtime/equal").default');
+  const standalone = rawStandalone
+    .replaceAll('require("ajv/dist/runtime/ucs2length").default', "ucs2length")
+    .replaceAll('require("ajv/dist/runtime/equal").default', "equal");
+  const source = `// Generated from ${target.schema}. Do not edit.\n${unicodeLength}\n${usesScalarEqual ? `${scalarEqual}\n` : ""}${standalone}\n`;
+  await writeFile(outputPath, source, "utf8");
+  console.log(`Generated ${outputPath}`);
+}

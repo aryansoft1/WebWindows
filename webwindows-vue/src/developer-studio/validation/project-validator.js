@@ -1,4 +1,6 @@
-import validateManifestSchema from "../manifest/generated-manifest-validator.js";
+import validateManifestV1 from "../manifest/generated-manifest-validator.js";
+import validateManifestV2 from "../manifest/generated-manifest-v2-validator.js";
+import { selectManifestVersion } from "../manifest/manifest-version.js";
 import { normalizeProjectPath } from "../project/path-policy.js";
 import { getSnapshotFile } from "../snapshot/project-snapshot.js";
 import { loadStudioPlatformContracts } from "./platform-contracts.js";
@@ -30,7 +32,7 @@ export async function validateProjectSnapshot(snapshot, options = {}) {
   }
 
   if (manifest) {
-    validateManifest(manifest, contracts.manifestSchema, add);
+    validateManifest(manifest, contracts, add);
     validateEntry(snapshot, manifest, contracts.packagePolicy, add);
   }
   scanSources(snapshot, manifest, contracts, add);
@@ -105,15 +107,34 @@ function validatePackage(snapshot, policy, add) {
   }
 }
 
-function validateManifest(manifest, schema, add) {
-  if (!validateManifestSchema(manifest)) {
-    for (const error of validateManifestSchema.errors || []) {
+function validateManifest(manifest, contracts, add) {
+  const manifestVersion = selectManifestVersion(manifest);
+  if (manifestVersion == null) {
+    add("WWM005", {
+      path: "manifest.json$.manifestVersion",
+      message: "不支持的 Manifest 版本；legacy v1 省略 manifestVersion，v2 显式使用数字 2。"
+    });
+    return;
+  }
+  const schema = contracts.manifestSchemas?.[manifestVersion] || contracts.manifestSchema;
+  const validateSchema = manifestVersion === 2 ? validateManifestV2 : validateManifestV1;
+  if (!validateSchema(manifest)) {
+    for (const error of validateSchema.errors || []) {
+      if (isSpecializedManifestError(manifestVersion, error)) continue;
       add("WWM002", {
         path: `manifest.json${pointerPath(error.instancePath, error.params?.missingProperty)}`,
         message: error.message || error.keyword,
         metadata: { keyword: error.keyword, schemaPath: error.schemaPath }
       });
     }
+  }
+  validatePermissionDeclaration(manifest, manifestVersion, contracts.permissionRegistry, add);
+  if (manifestVersion === 2 && manifest.sdk?.apiVersion !== undefined && manifest.sdk.apiVersion !== "1") {
+    add("WWM009", {
+      path: "manifest.json$.sdk.apiVersion",
+      message: "当前只支持 WebWindows Public SDK API version 1。",
+      metadata: { actual: manifest.sdk.apiVersion }
+    });
   }
   const properties = schema.$defs?.sourceManifest?.properties || {};
   for (const [name, definition] of Object.entries(properties)) {
@@ -142,6 +163,49 @@ function validateManifest(manifest, schema, add) {
   }
 }
 
+function validatePermissionDeclaration(manifest, manifestVersion, registry, add) {
+  if (manifestVersion === 1) {
+    if (Object.prototype.hasOwnProperty.call(manifest, "permissions")) {
+      add("WWM008", {
+        path: "manifest.json$.permissions",
+        message: "Manifest v1 不承载权限声明；该字段不会授予能力，请显式迁移到 v2。"
+      });
+    }
+    return;
+  }
+  if (!Array.isArray(manifest.permissions)) return;
+  const registered = new Set((registry?.permissions || []).map((permission) => permission.id));
+  const declarable = new Set(registry?.sourceDeclaration?.declarablePermissionIds || []);
+  const seen = new Set();
+  manifest.permissions.forEach((permission, index) => {
+    if (typeof permission !== "string") return;
+    const path = `manifest.json$.permissions[${index}]`;
+    if (seen.has(permission)) {
+      add("WWM007", { path, message: `重复权限：${permission}`, metadata: { permission } });
+    }
+    seen.add(permission);
+    if (isForbiddenPermission(permission)) {
+      add("WWM008", { path, message: `禁止声明超级或私有权限：${permission}`, metadata: { permission } });
+    } else if (!registered.has(permission)) {
+      add("WWM006", { path, message: `未知权限：${permission}`, metadata: { permission } });
+    } else if (!declarable.has(permission)) {
+      add("WWM008", { path, message: `权限尚未开放 Source Manifest 声明：${permission}`, metadata: { permission } });
+    }
+  });
+}
+
+function isForbiddenPermission(permission) {
+  return permission === "native" || permission === "system" || permission === "device.*"
+    || permission.includes("*") || /(?:^|[.-])(?:private|internal)(?:[.-]|$)/i.test(permission);
+}
+
+function isSpecializedManifestError(manifestVersion, error) {
+  if (manifestVersion !== 2) return false;
+  return (error.instancePath === "/sdk/apiVersion" && error.keyword === "const")
+    || (error.instancePath === "/permissions" && error.keyword === "uniqueItems")
+    || (error.instancePath.startsWith("/permissions/") && error.keyword === "enum");
+}
+
 function validateEntry(snapshot, manifest, policy, add) {
   if (typeof manifest.entry !== "string") return;
   let entry;
@@ -165,7 +229,7 @@ function scanSources(snapshot, manifest, contracts, add) {
   const paths = new Set(snapshot.files.map((file) => file.path));
   for (const file of snapshot.files) {
     const ext = extension(file.path);
-    if (ext === ".js") scanJavaScript(file, allowedRoots, add);
+    if (ext === ".js") scanJavaScript(file, allowedRoots, manifest, add);
     if (ext === ".html" || ext === ".htm") scanHtml(file, paths, add);
     if (ext === ".css") scanCss(file, add);
   }
@@ -176,7 +240,7 @@ function scanSources(snapshot, manifest, contracts, add) {
   void manifest;
 }
 
-function scanJavaScript(file, allowedRoots, add) {
+function scanJavaScript(file, allowedRoots, manifest, add) {
   const code = maskStringsAndComments(file.content);
   matchAll(code, /(^|[;\n{}])\s*(?:import\s|export\s)/gm, (match, offset) => {
     add("WWS001", { path: file.path, location: locationAt(file.content, offset), message: "Package Runtime 仅支持 classic JavaScript。" });
@@ -205,6 +269,16 @@ function scanJavaScript(file, allowedRoots, add) {
       message: `${match[0]} 可能依赖网络，但当前 Package Runtime 的 connect-src 为 none。`
     });
   });
+  const batteryCall = /\b(?:window\s*\.\s*)?WebWindows\s*\.\s*device\s*\.\s*battery\s*\.\s*(?:getState|refresh)\s*\(/g.exec(code);
+  if (batteryCall && (selectManifestVersion(manifest) !== 2
+      || !manifest.permissions?.includes("device.battery-status.read"))) {
+    add("WWM010", {
+      path: file.path,
+      location: locationAt(file.content, batteryCall.index),
+      message: "Battery Broker API 需要 Manifest v2 声明 device.battery-status.read；静态提示不会自动授予权限。",
+      metadata: { requiredPermission: "device.battery-status.read" }
+    });
+  }
 }
 
 function scanHtml(file, paths, add) {
@@ -310,7 +384,13 @@ function pointerPath(instancePath, missingProperty) {
 
 function validIdentity(manifest) {
   if (!manifest || typeof manifest.id !== "string" || typeof manifest.version !== "string") return null;
-  return { id: manifest.id, version: manifest.version, name: typeof manifest.name === "string" ? manifest.name : null };
+  return {
+    id: manifest.id,
+    version: manifest.version,
+    name: typeof manifest.name === "string" ? manifest.name : null,
+    manifestVersion: selectManifestVersion(manifest),
+    sdkApiVersion: typeof manifest.sdk?.apiVersion === "string" ? manifest.sdk.apiVersion : null
+  };
 }
 
 function extension(path) {

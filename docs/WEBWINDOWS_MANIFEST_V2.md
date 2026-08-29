@@ -1,7 +1,7 @@
 # WebWindows Manifest v2
 
-状态：Phase 2A.5 contract freeze  
-日期：2026-08-29  
+状态：Phase 2A.5 contract freeze
+日期：2026-08-29
 机器可读 Schema：`/data/sdk/manifest-v2.schema.json`
 
 ## 1. 目的与版本选择

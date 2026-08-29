@@ -149,7 +149,9 @@ assert.equal(policy.gestureAuthority.authority, "trusted-host-ui-only");
 assert.equal(policy.gestureAuthority.sandboxClaimAccepted, false);
 assert.equal(policy.sameProtocolForPreviewAndProduction, true);
 assert.deepEqual(policy.modeDifferences, ["identity", "grantPersistence", "policyContext", "assetSource"]);
-assert.equal(policy.manifestPermissionDeclaration.status, "required-contract-gap");
+assert.equal(policy.manifestPermissionDeclaration.status, "resolved-by-manifest-v2-contract-runtime-disabled");
+assert.equal(policy.manifestPermissionDeclaration.sourceManifestSchema, "data/sdk/manifest-v2.schema.json");
+assert.equal(methods.methods.every((method) => method.productionAvailability === "disabled"), true);
 assert.equal(manifestSchema.$defs.sourceManifest.properties.permissions, undefined);
 
 console.log("capability broker v1 contract smoke test passed");

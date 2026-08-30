@@ -6,11 +6,15 @@
   const MIME_TYPES = { ".html":"text/html;charset=utf-8", ".htm":"text/html;charset=utf-8", ".css":"text/css;charset=utf-8", ".js":"text/javascript;charset=utf-8", ".json":"application/json;charset=utf-8", ".txt":"text/plain;charset=utf-8", ".md":"text/markdown;charset=utf-8", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".gif":"image/gif", ".webp":"image/webp", ".svg":"image/svg+xml", ".ico":"image/x-icon", ".woff":"font/woff", ".woff2":"font/woff2", ".ttf":"font/ttf", ".otf":"font/otf", ".mp3":"audio/mpeg", ".wav":"audio/wav", ".ogg":"audio/ogg", ".mp4":"video/mp4", ".webm":"video/webm" };
   const TRUST_STATES = Object.freeze({ SYSTEM:"system-trusted", VERIFIED:"verified-release", LEGACY:"legacy-unverified", FAILED:"verification-failed" });
   const PERMISSION_POLICY_VERSION = 1;
+  const SOURCE_MANIFEST_INTEGRITY_VERSION = 1;
   let runtimeTrustState = TRUST_STATES.FAILED;
   let verifiedRuntimePackageIdentity = null;
   let productionBrokerContext = null;
   let activeRuntimeSessionId = null;
   let productionContextDiagnostics = null;
+  let productionPolicyContracts = null;
+  let activeProductionBroker = null;
+  let activeProductionBrokerPort = null;
 
   class RuntimeVerificationError extends Error {
     constructor(code, message) { super(message); this.name = "RuntimeVerificationError"; this.code = code; }
@@ -42,13 +46,19 @@
       const resolved = resolvePath(cssPath, reference); return resolved && urls.has(resolved) ? `url("${urls.get(resolved)}")` : whole;
     });
   }
-  function rewriteHtml(html, entryPath, urls, textAssets) {
+  function rewriteHtml(html, entryPath, urls, textAssets, sdkBootstrapSource = "") {
     const documentNode = new DOMParser().parseFromString(html, "text/html");
     if (documentNode.querySelector('script[type="module"]')) throw new Error("当前沙箱版本暂不支持 ES Module，请使用经典脚本。");
     const csp = documentNode.createElement("meta");
     csp.httpEquiv = "Content-Security-Policy";
     csp.content = "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:; connect-src 'none'; frame-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'";
     documentNode.head.prepend(csp);
+    if (sdkBootstrapSource) {
+      const sdk = documentNode.createElement("script");
+      sdk.setAttribute("data-webwindows-production-sdk", "v1");
+      sdk.textContent = sdkBootstrapSource;
+      documentNode.head.insertBefore(sdk, csp.nextSibling);
+    }
     documentNode.querySelectorAll("script[src]").forEach((node) => {
       const reference = node.getAttribute("src"), resolved = resolvePath(entryPath, reference);
       if (!resolved || !textAssets.has(resolved) || extension(resolved) !== ".js") throw new Error(`脚本必须包含在功能包内：${reference}`);
@@ -97,6 +107,7 @@
     const permissions = identity?.approvedPermissions;
     if (!identity || strings.some((key) => typeof identity[key] !== "string" || !identity[key]) || identity.publishedReleaseId !== releaseId ||
         !/^[a-f0-9]{64}$/.test(identity.packageSha256) || !/^[a-f0-9]{64}$/.test(identity.sourceManifestSha256) ||
+        identity.sourceManifestIntegrityVersion !== SOURCE_MANIFEST_INTEGRITY_VERSION ||
         ![1, 2].includes(identity.manifestVersion) || !Array.isArray(permissions) || new Set(permissions).size !== permissions.length ||
         !["active", "delisted"].includes(identity.releaseStatus) ||
         !Number.isInteger(identity.reviewPolicyVersion) || identity.reviewPolicyVersion < 1 ||
@@ -142,11 +153,12 @@
     const requestedPermissions = manifestVersion === 2 ? manifest.permissions : [];
     if (manifest.id !== expected.appId || manifest.version !== expected.version || manifestVersion !== expected.manifestVersion || sdkVersion !== expected.sdkVersion || (entryHint && manifest.entry !== entryHint)) fail("manifest-identity-mismatch", "功能包 Manifest 身份与发布版本不一致。");
     if (!Array.isArray(requestedPermissions) || new Set(requestedPermissions).size !== requestedPermissions.length || expected.approvedPermissions.some((permission) => !requestedPermissions.includes(permission))) fail("release-binding-mismatch", "发布权限与功能包声明不一致。");
-    return { entry:normalizePath(manifest.entry || "index.html"), requestedPermissions:Object.freeze([...requestedPermissions]) };
+    return { entry:normalizePath(manifest.entry || "index.html"), requestedPermissions:Object.freeze([...requestedPermissions]), manifestVersion, sdkVersion };
   }
   function createVerifiedIdentity(expected) {
     return Object.freeze({ publishedReleaseId:expected.publishedReleaseId, appId:expected.appId, publisherId:expected.publisherId, version:expected.version,
-      packageSha256:expected.packageSha256, sourceManifestSha256:expected.sourceManifestSha256, manifestVersion:expected.manifestVersion, sdkVersion:expected.sdkVersion,
+      packageSha256:expected.packageSha256, sourceManifestSha256:expected.sourceManifestSha256,
+      sourceManifestIntegrityVersion:expected.sourceManifestIntegrityVersion, manifestVersion:expected.manifestVersion, sdkVersion:expected.sdkVersion,
       reviewDecisionId:expected.reviewDecisionId, approvedPermissions:Object.freeze([...expected.approvedPermissions]), reviewPolicyVersion:expected.reviewPolicyVersion,
       releaseState:expected.releaseStatus,
       verificationTimestamp:new Date().toISOString() });
@@ -157,14 +169,15 @@
       "/data/sdk/permission-decision-v1.json",
       "/data/sdk/capability-broker-policy-v1.json",
       "/data/sdk/capability-broker-methods-v1.json",
+      "/data/sdk/capability-broker-errors-v1.json",
       "/data/sdk/permissions-v1.json"
     ];
     const responses = await Promise.all(paths.map((path) => fetch(path, { credentials:"same-origin", cache:"no-store" })));
     if (responses.some((response) => !response.ok)) throw new Error("production-context-contract-unavailable");
-    const [context, decision, brokerPolicy, methods, permissions] = await Promise.all(responses.map((response) => response.json()));
+    const [context, decision, brokerPolicy, methods, brokerErrors, permissions] = await Promise.all(responses.map((response) => response.json()));
     if (context.contextVersion !== 1 || decision.policyVersion !== PERMISSION_POLICY_VERSION || brokerPolicy.policyVersion !== PERMISSION_POLICY_VERSION || methods.schemaVersion !== 1 ||
         context.policyVersions?.currentPermissionPolicyVersion !== PERMISSION_POLICY_VERSION) throw new Error("production-context-policy-version-mismatch");
-    return { context, decision, brokerPolicy, methods, permissions };
+    return { context, decision, brokerPolicy, methods, brokerMethods:methods, brokerErrors, permissions };
   }
   async function readTrustedRuntimeCapabilities() {
     const batteryApi = window.WebWindows?.device?.battery;
@@ -185,7 +198,7 @@
     return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]);
   }
   function assertContextTrustBinding(verified, expected) {
-    const fields = ["publishedReleaseId", "appId", "publisherId", "version", "packageSha256", "sourceManifestSha256", "manifestVersion", "sdkVersion", "reviewDecisionId", "reviewPolicyVersion"];
+    const fields = ["publishedReleaseId", "appId", "publisherId", "version", "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "sdkVersion", "reviewDecisionId", "reviewPolicyVersion"];
     if (!verified || runtimeTrustState !== TRUST_STATES.VERIFIED || fields.some((field) => verified[field] !== expected[field]) ||
         verified.releaseState !== expected.releaseStatus || !sameArray(verified.approvedPermissions, expected.approvedPermissions)) {
       fail("runtime-release-verification-failed", "无法构造可信运行授权上下文。");
@@ -219,6 +232,7 @@
       version:verified.version,
       packageSha256:verified.packageSha256,
       sourceManifestSha256:verified.sourceManifestSha256,
+      sourceManifestIntegrityVersion:verified.sourceManifestIntegrityVersion,
       manifestVersion:verified.manifestVersion,
       sdkVersion:verified.sdkVersion,
       reviewDecisionId:verified.reviewDecisionId,
@@ -261,6 +275,7 @@
     }
     try {
       const contracts = await loadProductionPolicyContracts();
+      productionPolicyContracts = contracts;
       productionBrokerContext = buildProductionBrokerContext({ verified:verifiedRuntimePackageIdentity, expected, requestedPermissions, runtimeSessionId, contracts, runtimeCapabilities });
       recordContextDiagnostics({ runtimeSessionId, expected, requestedPermissions, runtimeCapabilities, context:productionBrokerContext });
       return productionBrokerContext;
@@ -272,6 +287,11 @@
     }
   }
   function destroyProductionBrokerContext(reason) {
+    activeProductionBroker?.close?.("request-cancelled");
+    activeProductionBrokerPort?.close?.();
+    activeProductionBroker = null;
+    activeProductionBrokerPort = null;
+    productionPolicyContracts = null;
     if (productionBrokerContext || activeRuntimeSessionId) console.info("[WebWindows Runtime Context]", JSON.stringify({ contextState:"destroyed", runtimeSessionId:activeRuntimeSessionId, reason:reason || "runtime-stop" }));
     productionBrokerContext = null;
     productionContextDiagnostics = null;
@@ -294,7 +314,7 @@
     const contents = await readArchive(packageBytes), source = await verifySourceManifest(contents, expected, entryHint);
     verifiedRuntimePackageIdentity = createVerifiedIdentity(expected); runtimeTrustState = TRUST_STATES.VERIFIED;
     await establishProductionBrokerContext(expected, source.requestedPermissions, runtimeSessionId);
-    return { contents, entry:source.entry };
+    return { contents, entry:source.entry, manifestVersion:source.manifestVersion, sdkVersion:source.sdkVersion };
   }
   async function prepareLegacy(params) {
     const appId = String(params.get("appId") || "").trim(), version = String(params.get("version") || "").trim(), entry = normalizePath(params.get("entry") || "index.html");
@@ -303,13 +323,52 @@
     const contents = await readArchive(await downloadPackage(packageUrl));
     runtimeTrustState = TRUST_STATES.LEGACY; verifiedRuntimePackageIdentity = null; return { contents, entry };
   }
-  async function executePreparedPackage(contents, entry) {
+  async function executePreparedPackage(contents, entry, brokerSession = null) {
     if (!contents.has(entry) || ![".html", ".htm"].includes(extension(entry))) throw new Error("Manifest 指定的 HTML 入口不存在。");
     const urls = new Map(), textAssets = new Map();
     for (const [path, bytes] of contents) if (![".html", ".htm", ".css", ".js"].includes(extension(path))) urls.set(path, createDataUrl(bytes, MIME_TYPES[extension(path)] || "application/octet-stream"));
     for (const [path, bytes] of contents) if ([".css", ".js"].includes(extension(path))) { const text = new TextDecoder("utf-8", { fatal:true }).decode(bytes); textAssets.set(path, extension(path) === ".css" ? rewriteCss(text, path, urls) : text); }
     const html = new TextDecoder("utf-8", { fatal:true }).decode(contents.get(entry));
-    const frame = document.getElementById("packageFrame"); frame.srcdoc = rewriteHtml(html, entry, urls, textAssets); frame.hidden = false; document.getElementById("runtimeState").hidden = true;
+    const frame = document.getElementById("packageFrame");
+    if (brokerSession) frame.addEventListener("load", () => {
+      try { frame.contentWindow.postMessage(brokerSession.initMessage, "*", [brokerSession.sandboxPort]); }
+      catch { destroyProductionBrokerContext("broker-init-failed"); }
+    }, { once:true });
+    frame.srcdoc = rewriteHtml(html, entry, urls, textAssets, brokerSession?.bootstrap || "");
+    frame.hidden = false; document.getElementById("runtimeState").hidden = true;
+  }
+
+  async function productionBrokerFeatureEnabled() {
+    try {
+      const response = await fetch("/data/config/runtime-features-v1.json", { credentials:"same-origin", cache:"no-store" });
+      const config = response.ok ? await response.json() : null;
+      return config?.contract === "webwindows-runtime-features-v1" && config.version === 1 && config.productionCapabilityBrokerV1 === true;
+    } catch { return false; }
+  }
+
+  async function createProductionBrokerSession(prepared) {
+    if (!productionBrokerContext || prepared.manifestVersion !== 2 || prepared.sdkVersion !== "1" || !(await productionBrokerFeatureEnabled())) return null;
+    const module = window.WebWindowsProductionBatteryBrokerV1;
+    if (!module?.ProductionBatteryBroker || !module?.createProductionSdkBootstrap || !productionPolicyContracts) return null;
+    const broker = new module.ProductionBatteryBroker({
+      context:productionBrokerContext,
+      contracts:productionPolicyContracts,
+      publicApi:window.WebWindows,
+      releaseStatusProvider:() => lookupExpectedIdentity(productionBrokerContext.publishedReleaseId, productionBrokerContext.appId, productionBrokerContext.version),
+      onDiagnostic:(diagnostic) => console.info("[WebWindows Production Broker]", JSON.stringify(diagnostic))
+    });
+    const launch = await broker.createLaunchDescriptor();
+    if (!launch.facadeEnabled) return null;
+    const channel = new MessageChannel();
+    channel.port1.onmessage = async (event) => {
+      const response = await broker.handleEnvelope(event.data);
+      if (response) try { channel.port1.postMessage(response); } catch { /* session closed */ }
+    };
+    channel.port1.start?.();
+    activeProductionBroker = broker;
+    activeProductionBrokerPort = channel.port1;
+    const wire = { sessionId:broker.binding.sessionId, snapshotId:broker.binding.snapshotId };
+    return { bootstrap:module.createProductionSdkBootstrap(wire, launch), initMessage:broker.initMessage(), sandboxPort:channel.port2 };
   }
   function setError(error) {
     destroyProductionBrokerContext("verification-failed"); runtimeTrustState = TRUST_STATES.FAILED; verifiedRuntimePackageIdentity = null;
@@ -322,7 +381,8 @@
     activeRuntimeSessionId = opaqueId("runtime");
     const params = new URLSearchParams(location.search), prepared = params.has("release") ? await prepareVerified(params, activeRuntimeSessionId) : await prepareLegacy(params);
     if (!params.has("release")) recordContextDiagnostics({ runtimeSessionId:activeRuntimeSessionId, expected:null, requestedPermissions:[], runtimeCapabilities:null, context:null, denialReason:"legacy-unverified" });
-    await executePreparedPackage(prepared.contents, prepared.entry);
+    const brokerSession = params.has("release") ? await createProductionBrokerSession(prepared) : null;
+    await executePreparedPackage(prepared.contents, prepared.entry, brokerSession);
   }
   window.addEventListener?.("pagehide", () => destroyProductionBrokerContext("pagehide"));
   document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error)));

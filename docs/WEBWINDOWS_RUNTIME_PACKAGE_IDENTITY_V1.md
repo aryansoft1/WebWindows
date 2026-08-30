@@ -8,7 +8,7 @@ Phase 2D.4 binds production execution to the immutable `PublishedRelease` select
 
 The package endpoint's release route joins the package by `PublishedRelease.submission_id` and exact `package_sha256`. It does not select the newest package for an app/version. The browser computes SHA-256 from the downloaded bytes before calling JSZip; transport SHA headers cannot override this result.
 
-After the ZIP passes SHA verification, the frozen ZIP structural policy still applies. The runtime reads only root `manifest.json`, decodes strict UTF-8, hashes its RFC-8785/JCS-compatible canonical JSON, checks app/version/Manifest/SDK identity, and verifies that release-approved permissions are a subset of the v2 Source Manifest request. The root manifest determines the entry; a catalog entry hint must match it.
+After the ZIP passes SHA verification, the frozen ZIP structural policy still applies. The runtime reads only root `manifest.json`, decodes strict UTF-8, hashes its RFC 8785/JCS canonical JSON, checks app/version/Manifest/SDK identity, and verifies that release-approved permissions are a subset of the v2 Source Manifest request. `sourceManifestSha256` is this canonical digest, never a raw Manifest entry digest. Cross-implementation canonical vectors protect Server and Runtime equality. The root manifest determines the entry; a catalog entry hint must match it.
 
 Only then does the host create an immutable, session-memory `VerifiedRuntimePackageIdentity` and continue through the unchanged CSP and unique-origin iframe sandbox. The identity, hashes, publisher/review data, approved permissions, and trust state are never injected into the sandbox.
 

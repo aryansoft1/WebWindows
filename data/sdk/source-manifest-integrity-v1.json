@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/source-manifest-integrity-v1.json",
+  "contract": "webwindows-source-manifest-integrity-v1",
+  "version": 1,
+  "authorityPath": "zip-root:/manifest.json",
+  "sourceManifestSha256": {
+    "definition": "SHA-256(RFC-8785-JCS(JSON.parse(strict-UTF8(root-manifest-bytes))))",
+    "rawBytesDigest": false,
+    "encoding": "lowercase-hex",
+    "canonicalEncoding": "UTF-8",
+    "implementations": [
+      "server-tools/developer-package-validator/Program.cs#Canonical",
+      "assets/js/package-runtime.js#canonicalizeJson"
+    ]
+  },
+  "consumers": [
+    "server-validation-report-v1", "review-decision-v1", "published-release-v1",
+    "catalog-release-binding-v1", "runtime-release-api", "production-package-runtime"
+  ],
+  "invariants": [
+    "one-field-one-digest-definition",
+    "raw-manifest-bytes-are-not-the-sourceManifestSha256-authority",
+    "all-downstream-records-copy-the-server-validator-digest-without-recomputation",
+    "runtime-recomputes-the-same-canonical-digest-from-the-verified-zip-root-manifest"
+  ]
+}

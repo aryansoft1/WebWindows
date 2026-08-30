@@ -30,6 +30,18 @@ try {
   assert.equal(validV2.report.packageSha256, sha(validV2.bytes));
   assert.match(validV2.report.sourceManifestSha256, /^[a-f0-9]{64}$/);
 
+  const canonicalVectorManifest = {
+    ...baseV2,
+    canonicalVector: {
+      z: 1e-7, a: 0.000001, large: 1e20, escaped: "line\n雪",
+      numbers: [333333333.33333329, 1e30, 4.5, 0.002, 1e-27, 5e-324, 1.7976931348623157e308, 9007199254740992]
+    }
+  };
+  const canonicalVector = await validate(await zipFor(canonicalVectorManifest), reorder(canonicalVectorManifest));
+  assert.equal(canonicalVector.report.passed, true, JSON.stringify(canonicalVector.report.diagnostics));
+  assert.equal(canonicalVector.report.sourceManifestSha256, sha(Buffer.from(canonicalize(canonicalVectorManifest))),
+    "Server and browser must use the same RFC 8785/JCS UTF-8 manifest digest definition");
+
   const validV2Again = await validate(validV2.bytes, reorder(baseV2));
   for (const field of ["reportId", "validatorVersion", "packageSha256", "packageSize", "sourceManifestSha256", "manifestVersion", "appId", "version", "publisherId", "sdkVersion", "requestedPermissions", "schemaResult", "packagePolicyResult", "diagnostics", "passed"])
     assert.deepEqual(validV2Again.report[field], validV2.report[field], `stable report field ${field}`);
@@ -109,6 +121,12 @@ function reorder(value) {
 }
 
 function sha(bytes) { return crypto.createHash("sha256").update(bytes).digest("hex"); }
+
+function canonicalize(value) {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalize).join(",")}]`;
+  return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalize(value[key])}`).join(",")}}`;
+}
 
 function patchFlags(input, flag) {
   const data = Buffer.from(input);

@@ -305,8 +305,47 @@ namespace WebWindows.DeveloperPackageValidator {
         var array = value as object[]; if (array != null) return "[" + String.Join(",", array.Select(Write)) + "]";
         if (value is string) return Quote((string)value);
         if (value is bool) return (bool)value ? "true" : "false";
-        if (value is int || value is long || value is decimal || value is double) return Convert.ToString(value, CultureInfo.InvariantCulture).ToLowerInvariant();
+        if (value is int || value is long || value is decimal || value is double) return EcmaNumber(Convert.ToDouble(value, CultureInfo.InvariantCulture));
         throw new InvalidOperationException();
+      }
+      static string EcmaNumber(double value) {
+        if (Double.IsNaN(value) || Double.IsInfinity(value)) throw new InvalidOperationException();
+        if (value == 0) return "0";
+        var text = ShortestRoundTrip(value).ToLowerInvariant();
+        var exponent = 0;
+        var e = text.IndexOf('e');
+        if (e >= 0) { exponent = Int32.Parse(text.Substring(e + 1), CultureInfo.InvariantCulture); text = text.Substring(0, e); }
+        var negative = text.StartsWith("-", StringComparison.Ordinal);
+        if (negative) text = text.Substring(1);
+        var dot = text.IndexOf('.');
+        var before = dot < 0 ? text.Length : dot;
+        var rawDigits = text.Replace(".", "");
+        var leadingZeros = rawDigits.Length - rawDigits.TrimStart('0').Length;
+        var digits = rawDigits.TrimStart('0').TrimEnd('0');
+        if (digits.Length == 0) return "0";
+        var decimalPosition = before + exponent - leadingZeros;
+        string result;
+        if (decimalPosition > 0 && decimalPosition <= 21) {
+          result = digits.Length <= decimalPosition
+            ? digits + new string('0', decimalPosition - digits.Length)
+            : digits.Substring(0, decimalPosition) + "." + digits.Substring(decimalPosition);
+        } else if (decimalPosition <= 0 && decimalPosition > -6) {
+          result = "0." + new string('0', -decimalPosition) + digits;
+        } else {
+          result = digits.Substring(0, 1) + (digits.Length > 1 ? "." + digits.Substring(1) : "") +
+            "e" + (decimalPosition - 1 >= 0 ? "+" : "") + (decimalPosition - 1).ToString(CultureInfo.InvariantCulture);
+        }
+        return negative ? "-" + result : result;
+      }
+      static string ShortestRoundTrip(double value) {
+        var bits = BitConverter.DoubleToInt64Bits(value);
+        for (var precision = 1; precision <= 17; precision++) {
+          var candidate = value.ToString("G" + precision.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+          double parsed;
+          if (Double.TryParse(candidate, NumberStyles.Float, CultureInfo.InvariantCulture, out parsed) &&
+              BitConverter.DoubleToInt64Bits(parsed) == bits) return candidate;
+        }
+        return value.ToString("G17", CultureInfo.InvariantCulture);
       }
       static string Quote(string value) { return Json.Serialize(value); }
     }

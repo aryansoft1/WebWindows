@@ -39,6 +39,8 @@
     "location": "zip-root",
     "unique": true,
     "canonicalization": "RFC-8785-JCS-UTF8",
+    "digestDefinition": "SHA-256(RFC-8785-JCS(JSON.parse(strict-UTF8(zip-root:/manifest.json))))",
+    "rawBytesDigest": false,
     "outerManifestPolicy": "absent-or-canonical-semantic-equality",
     "mismatchResult": "submission-validation-failed"
   },

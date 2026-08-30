@@ -19,13 +19,15 @@ assert.match(developerApi, /webwindows_function_ownership/);
 assert.match(developerApi, /RunTrustedPackageValidator|source_manifest_sha256/,
   "Phase 2D.1 must integrate trusted validation and Source Manifest binding");
 assert.doesNotMatch(developerApi, /approvedPermissions/,
-  "Phase 2D.1 must not be mistaken for immutable review/release integration");
+  "Developer submission authentication must not become review authority");
 
 assert.match(adminReview, /targetStatus = "approved"/);
-assert.match(adminReview, /targetStatus = "revoked"/);
+assert.match(adminReview, /releaseTargetStatus = "revoked"/);
 assert.match(adminReview, /package_sha256.*integrity_sha256/is);
-assert.doesNotMatch(adminReview, /approved_permissions|review_policy_version|review_decision_id/i,
-  "current admin review has no package-bound permission decision record");
+assert.match(adminReview, /webwindows_review_decisions/);
+assert.match(adminReview, /webwindows_published_releases/);
+assert.match(adminReview, /approved_permissions_base64|review_policy_version|review_decision_id/i,
+  "Phase 2D.2 admin review must create package-bound immutable trust records");
 
 assert.match(adminCatalog, /webwindows_function_catalog_versions/);
 assert.match(adminCatalog, /catalogJson/);
@@ -40,7 +42,7 @@ assert.doesNotMatch(packageRuntime, /X-WebWindows-Package-SHA256|crypto\.subtle\
 for (const phrase of [
   "ZIP-root `manifest.json` is the only Source Manifest authority",
   "Current production drift",
-  "No production implementation is changed in Phase 2C.5"
+  "Package Runtime, Production Broker/facade, Native Bridge, and the public Device API remain unchanged through Phase 2D.2"
 ]) assert.match(trustDoc, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
 console.log("production trust current implementation drift smoke test passed");

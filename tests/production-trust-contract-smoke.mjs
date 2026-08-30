@@ -23,13 +23,15 @@ const identity = {
   catalogRevisionId: "catalog-10", reviewDecisionId: "review-100", reviewPolicyVersion: 1
 };
 const review = {
-  reviewDecisionId: "review-100", publishedReleaseId: "release-100", appId: identity.appId,
+  reviewDecisionId: "review-100", submissionId: "submission-100", appId: identity.appId,
   publisherId: identity.publisherId, version: identity.version, packageSha256: A,
   sourceManifestSha256: B, requestedPermissions: ["permission.a", "permission.b", "permission.c"],
   approvedPermissions: ["permission.a", "permission.b"], deniedPermissions: ["permission.c"],
   permissionRisk: { "permission.a": "low", "permission.b": "medium", "permission.c": "high" },
-  reviewPolicyVersion: 1, decision: "approved",
-  decidedBy: { type: "authorized-reviewer", id: "reviewer-7" }, decidedAt: "2026-08-30T00:00:00.000Z"
+  validationReportId: "validation-100", manifestVersion: 2, sdkVersion: "1",
+  riskSummary: { summary: "validation-passed" }, reviewPolicyVersion: 1, decision: "approved",
+  reviewerType: "authorized-reviewer", reviewerIdentity: "reviewer-7",
+  reviewedAt: "2026-08-30T00:00:00.000Z"
 };
 const verifiedManifest = {
   appId: identity.appId, version: identity.version, manifestVersion: 2, sourceManifestSha256: B,

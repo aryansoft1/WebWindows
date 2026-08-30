@@ -11,7 +11,8 @@ const files = [
   "cloud/browser/openResource.asp",
   "cloud/browser/private-files.asp",
   "cloud/browser/private-resource.asp",
-  "cloud/browser/search.asp"
+  "cloud/browser/search.asp",
+  "admin_api/developerPlatform.asp"
 ];
 
 for (const relative of files) {

@@ -32,7 +32,7 @@ export function createTrustedProductionContext({
     if (review?.[field] === undefined || review?.[field] === null || review?.[field] === "") failures.push(`review-missing:${field}`);
   }
   for (const [reviewField, identityField] of [
-    ["publishedReleaseId", "publishedReleaseId"], ["appId", "appId"], ["publisherId", "publisherId"],
+    ["appId", "appId"], ["publisherId", "publisherId"],
     ["version", "version"], ["packageSha256", "packageSha256"],
     ["sourceManifestSha256", "sourceManifestSha256"], ["reviewDecisionId", "reviewDecisionId"],
     ["reviewPolicyVersion", "reviewPolicyVersion"]

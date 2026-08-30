@@ -55,6 +55,16 @@
     if (!app.name || typeof app.entry !== "string" || !app.window?.mode) {
       throw new Error(`应用 ${app.id} 缺少 name、entry 或 window.mode。`);
     }
+    // Discovery classification only. App Registry never promotes this metadata
+    // into package, review, Broker, or runtime trust authority.
+    if (!app.sourceType) {
+      app.sourceType = app.package ? "legacy-third-party" : "system";
+    }
+    if (!app.releaseBinding) {
+      app.releaseBinding = app.sourceType === "developer-release"
+        ? (app.release?.binding || "verified")
+        : (app.sourceType === "system" ? "system" : "legacy-unverified");
+    }
     return app;
   }
 

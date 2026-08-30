@@ -73,6 +73,7 @@ Sub FinishError(ByVal statusCode, ByVal code, ByVal message)
     Case 400: Response.Status = "400 Bad Request"
     Case 401: Response.Status = "401 Unauthorized"
     Case 403: Response.Status = "403 Forbidden"
+    Case 409: Response.Status = "409 Conflict"
     Case 405: Response.Status = "405 Method Not Allowed"
     Case Else: Response.Status = "500 Internal Server Error"
   End Select
@@ -82,6 +83,30 @@ Sub FinishError(ByVal statusCode, ByVal code, ByVal message)
     If conn.State <> 0 Then conn.Close
   End If
   Response.End
+End Sub
+
+Sub EnsureReleaseBindingTable()
+  On Error Resume Next
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_catalog_release_bindings (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,catalog_revision_id BIGINT NOT NULL,catalog_entry_id VARCHAR(160) NOT NULL," & _
+    "source_type VARCHAR(30) NOT NULL,release_binding_state VARCHAR(30) NOT NULL," & _
+    "published_release_id BIGINT NULL,published_release_identity VARCHAR(64) NULL," & _
+    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "manifest_version INT NULL,sdk_version VARCHAR(20) NULL,review_decision_identity VARCHAR(64) NULL," & _
+    "approved_permissions_base64 LONGTEXT NULL,review_policy_version INT NULL," & _
+    "package_download_url VARCHAR(500) NULL,release_status VARCHAR(24) NOT NULL," & _
+    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
+    "UNIQUE KEY uk_catalog_binding_entry(catalog_revision_id,catalog_entry_id)," & _
+    "UNIQUE KEY uk_catalog_binding_release(catalog_revision_id,published_release_identity)," & _
+    "KEY idx_catalog_binding_release_identity(published_release_identity)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number <> 0 Then
+    Dim bindingError
+    bindingError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    FinishError 500, "CATALOG_BINDING_SCHEMA_FAILED", bindingError
+  End If
+  On Error GoTo 0
 End Sub
 
 Function EnsureCatalogTable()
@@ -129,6 +154,7 @@ If Request.ServerVariables("HTTP_X_WEBWINDOWS_ADMIN_REQUEST") <> "function-catal
 End If
 
 EnsureCatalogTable
+EnsureReleaseBindingTable
 
 Dim method
 method = UCase(Request.ServerVariables("REQUEST_METHOD"))
@@ -165,11 +191,12 @@ If method = "GET" Then
     """},""catalog"":" & catalogJson & "}"
 
 ElseIf method = "POST" Then
-  Dim catalogText, versionText, noteText, normalized, encodedCatalog
+  Dim catalogText, versionText, noteText, normalized, securityCompact, encodedCatalog, protectedRs, activeRevisionId
   catalogText = CStr(Request.Form("catalogJson"))
   versionText = Left(Trim(CStr(Request.Form("version"))), 40)
   noteText = Left(Trim(CStr(Request.Form("note"))), 255)
   normalized = Replace(Replace(Replace(catalogText, vbCr, ""), vbLf, ""), vbTab, "")
+  securityCompact = Replace(normalized, " ", "")
 
   If Len(catalogText) < 50 Or Len(catalogText) > 524288 Then
     FinishError 400, "CATALOG_SIZE_INVALID", "功能目录内容大小无效。"
@@ -178,6 +205,28 @@ ElseIf method = "POST" Then
      InStr(1, normalized, """schemaVersion"":1", vbTextCompare) = 0 Or _
      InStr(1, normalized, """apps"":[", vbTextCompare) = 0 Then
     FinishError 400, "CATALOG_FORMAT_INVALID", "功能目录格式无效。"
+  End If
+  Set protectedRs = conn.Execute("SELECT v.id,(SELECT COUNT(*) FROM webwindows_catalog_release_bindings b " & _
+    "WHERE b.catalog_revision_id=v.id) AS binding_count FROM webwindows_function_catalog_versions v " & _
+    "WHERE v.is_active=1 ORDER BY v.id DESC LIMIT 1")
+  activeRevisionId = 0
+  If Not protectedRs.EOF Then
+    activeRevisionId = CLng(protectedRs("id"))
+    If CLng(protectedRs("binding_count")) > 0 Then
+      protectedRs.Close
+      FinishError 409, "RELEASE_AUTHORITY_REQUIRED", _
+        "当前目录包含 PublishedRelease；请通过开发者平台发布、下架或撤销。"
+    End If
+  End If
+  protectedRs.Close
+  Set protectedRs = Nothing
+  If InStr(1, securityCompact, """sourceType"":""developer-release""", vbTextCompare) > 0 Or _
+     InStr(1, securityCompact, """publishedReleaseId""", vbTextCompare) > 0 Then
+    FinishError 409, "RELEASE_AUTHORITY_REQUIRED", "第三方 Release 只能由开发者平台写入目录。"
+  End If
+  If InStr(1, securityCompact, """package"":", vbTextCompare) > 0 Or _
+     InStr(1, securityCompact, """releaseBinding"":""verified""", vbTextCompare) > 0 Then
+    FinishError 409, "RELEASE_BOUND_FIELD_READ_ONLY", "Package/Release 信任字段不可在功能仓库中直接编辑。"
   End If
   If versionText = "" Then versionText = Replace(Replace(CStr(Now()), "/", ""), " ", "-")
   If noteText = "" Then noteText = "后台发布"

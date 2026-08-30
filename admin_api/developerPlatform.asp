@@ -132,6 +132,14 @@ Function SqlNullableText(ByVal value)
   End If
 End Function
 
+Function JsonNullableText(ByVal value)
+  If IsNull(value) Then
+    JsonNullableText = "null"
+  Else
+    JsonNullableText = """" & JsonText(value) & """"
+  End If
+End Function
+
 Function CanonicalPermissionSelection(ByVal requestedJson, ByVal selectedJson, ByRef deniedJson, ByRef reason)
   Dim shape, token, requested, selected, requestedMatches, selectedMatches, item, key, approved, denied
   Set shape = New RegExp
@@ -314,6 +322,24 @@ Sub EnsureTables()
     On Error GoTo 0
     Fail 500, "CATALOG_SCHEMA_FAILED", schemaError
   End If
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_catalog_release_bindings (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,catalog_revision_id BIGINT NOT NULL,catalog_entry_id VARCHAR(160) NOT NULL," & _
+    "source_type VARCHAR(30) NOT NULL,release_binding_state VARCHAR(30) NOT NULL," & _
+    "published_release_id BIGINT NULL,published_release_identity VARCHAR(64) NULL," & _
+    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "manifest_version INT NULL,sdk_version VARCHAR(20) NULL,review_decision_identity VARCHAR(64) NULL," & _
+    "approved_permissions_base64 LONGTEXT NULL,review_policy_version INT NULL," & _
+    "package_download_url VARCHAR(500) NULL,release_status VARCHAR(24) NOT NULL," & _
+    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
+    "UNIQUE KEY uk_catalog_binding_entry(catalog_revision_id,catalog_entry_id)," & _
+    "UNIQUE KEY uk_catalog_binding_release(catalog_revision_id,published_release_identity)," & _
+    "KEY idx_catalog_binding_release_identity(published_release_identity)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number <> 0 Then
+    schemaError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    Fail 500, "CATALOG_BINDING_SCHEMA_FAILED", schemaError
+  End If
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
   Err.Clear
@@ -378,6 +404,7 @@ ElseIf action = "submissions" And method = "GET" Then
     "v.id AS validation_id,v.report_base64,v.passed AS validation_passed," & _
     "r.review_decision_id,r.decision,r.requested_permissions_base64,r.approved_permissions_base64," & _
     "r.denied_permissions_base64,r.review_policy_version,r.reviewer_identity,r.reviewer_type," & _
+    "r.validation_report_id,r.manifest_version,r.sdk_version," & _
     "r.package_sha256 AS review_package_sha256,r.source_manifest_sha256 AS review_manifest_sha256,r.created_at AS reviewed_at," & _
     "pr.id AS release_internal_id,pr.published_release_id,pr.package_sha256 AS release_package_sha256," & _
     "pr.release_status,pr.created_at AS published_at,re.release_status AS event_release_status " & _
@@ -411,6 +438,9 @@ ElseIf action = "submissions" And method = "GET" Then
         ",""approvedPermissions"":" & Base64DecodeUtf8(CStr(submissionRs("approved_permissions_base64"))) & _
         ",""deniedPermissions"":" & Base64DecodeUtf8(CStr(submissionRs("denied_permissions_base64"))) & _
         ",""reviewPolicyVersion"":" & CLng(submissionRs("review_policy_version")) & _
+        ",""validationReportId"":""" & JsonText(submissionRs("validation_report_id")) & _
+        """,""manifestVersion"":" & CLng(submissionRs("manifest_version")) & _
+        ",""sdkVersion"":" & JsonNullableText(submissionRs("sdk_version")) & _
         ",""reviewerIdentity"":""" & JsonText(submissionRs("reviewer_identity")) & _
         """,""reviewerType"":""" & JsonText(submissionRs("reviewer_type")) & _
         """,""packageSha256"":""" & JsonText(submissionRs("review_package_sha256")) & _
@@ -617,6 +647,8 @@ ElseIf action = "submission-status" And method = "POST" Then
 ElseIf action = "publish-release" And method = "POST" Then
   Dim publishSubmissionId, catalogText, catalogVersionText, catalogNote, encodedCatalog
   Dim publishRs, duplicateRs, publishSql, releaseSql, publishError, publishedReleaseRs
+  Dim releaseIdentityRs, releaseIdentity, approvedPermissionsJson, packageDownloadUrl
+  Dim releaseInternalId, newCatalogRevisionId, previousCatalogRevisionId, identityRs, bindingSql
   publishSubmissionId = FormPositiveLong("submissionId")
   catalogText = CStr(Request.Form("catalogJson"))
   catalogVersionText = Left(Trim(CStr(Request.Form("version"))), 40)
@@ -664,32 +696,80 @@ ElseIf action = "publish-release" And method = "POST" Then
   End If
   duplicateRs.Close
   Set duplicateRs = Nothing
+  If InStr(1, catalogText, "__WEBWINDOWS_SERVER_RELEASE_ID__", vbBinaryCompare) = 0 Then
+    publishRs.Close
+    Fail 409, "CATALOG_RELEASE_PLACEHOLDER_REQUIRED", "Catalog 必须由发布服务绑定服务器生成的 Release ID。"
+  End If
+  Set releaseIdentityRs = conn.Execute("SELECT CONCAT('rel_',LOWER(REPLACE(UUID(),'-',''))) AS release_identity")
+  releaseIdentity = CStr(releaseIdentityRs("release_identity"))
+  releaseIdentityRs.Close
+  Set releaseIdentityRs = Nothing
+  catalogText = Replace(catalogText, "__WEBWINDOWS_SERVER_RELEASE_ID__", releaseIdentity, 1, -1, vbBinaryCompare)
+  approvedPermissionsJson = Base64DecodeUtf8(CStr(publishRs("approved_permissions_base64")))
+  packageDownloadUrl = "/api/function-package.asp?appId=" & CStr(publishRs("app_id")) & _
+    "&version=" & CStr(publishRs("app_version"))
   If InStr(1, catalogText, """id"":""" & CStr(publishRs("app_id")) & """", vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """version"":""" & CStr(publishRs("app_version")) & """", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """sourceType"":""developer-release""", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """releaseBinding"":""verified""", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """publishedReleaseId"":""" & releaseIdentity & """", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """publisherId"":""" & CStr(publishRs("developer_id")) & """", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """packageSha256"":""" & LCase(CStr(publishRs("package_sha256"))) & """", vbTextCompare) = 0 Or _
+     InStr(1, catalogText, """sourceManifestSha256"":""" & LCase(CStr(publishRs("source_manifest_sha256"))) & """", vbTextCompare) = 0 Or _
+     InStr(1, catalogText, """manifestVersion"":" & CStr(CLng(publishRs("manifest_version"))), vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """reviewDecisionId"":""" & CStr(publishRs("review_decision_id")) & """", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """approvedPermissions"":" & approvedPermissionsJson, vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """reviewPolicyVersion"":" & CStr(CLng(publishRs("review_policy_version"))), vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """sha256"":""" & LCase(CStr(publishRs("package_sha256"))) & """", vbTextCompare) = 0 Then
     publishRs.Close
     Fail 409, "CATALOG_RELEASE_MISMATCH", "兼容目录内容未包含当前 ReviewDecision 绑定的 app/version/package。"
+  End If
+  If IsNull(publishRs("sdk_version")) Then
+    If InStr(1, catalogText, """sdkVersion"":null", vbBinaryCompare) = 0 Then
+      publishRs.Close
+      Fail 409, "CATALOG_RELEASE_MISMATCH", "Catalog SDK projection 与 PublishedRelease 不一致。"
+    End If
+  ElseIf InStr(1, catalogText, """sdkVersion"":""" & CStr(publishRs("sdk_version")) & """", vbBinaryCompare) = 0 Then
+    publishRs.Close
+    Fail 409, "CATALOG_RELEASE_MISMATCH", "Catalog SDK projection 与 PublishedRelease 不一致。"
   End If
   encodedCatalog = Base64EncodeUtf8(catalogText)
   releaseSql = "INSERT INTO webwindows_published_releases " & _
     "(published_release_id,submission_id,publisher_id,app_id,app_version,package_sha256,source_manifest_sha256," & _
     "manifest_version,sdk_version,validation_record_id,validation_report_id,review_decision_id," & _
     "approved_permissions_base64,review_policy_version,release_status,published_by) VALUES (" & _
-    "CONCAT('rel_',LOWER(REPLACE(UUID(),'-','')))," & publishSubmissionId & "," & CLng(publishRs("developer_id")) & _
+    "'" & releaseIdentity & "'," & publishSubmissionId & "," & CLng(publishRs("developer_id")) & _
     ",'" & Replace(CStr(publishRs("app_id")), "'", "''") & "','" & Replace(CStr(publishRs("app_version")), "'", "''") & _
     "','" & LCase(CStr(publishRs("package_sha256"))) & "','" & LCase(CStr(publishRs("source_manifest_sha256"))) & _
     "'," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
     "," & CLng(publishRs("validation_record_id")) & ",'" & Replace(CStr(publishRs("validation_report_id")), "'", "''") & _
     "'," & CLng(publishRs("review_internal_id")) & ",'" & CStr(publishRs("approved_permissions_base64")) & _
     "'," & CLng(publishRs("review_policy_version")) & ",'active'," & CLng(Session("user_id")) & ")"
-  publishRs.Close
-  Set publishRs = Nothing
+  previousCatalogRevisionId = 0
+  Set identityRs = conn.Execute("SELECT id FROM webwindows_function_catalog_versions WHERE is_active=1 ORDER BY id DESC LIMIT 1")
+  If Not identityRs.EOF Then previousCatalogRevisionId = CLng(identityRs("id"))
+  identityRs.Close
+  Set identityRs = Nothing
   On Error Resume Next
   publishError = ""
   conn.BeginTrans
   If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
   conn.Execute releaseSql
   If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  releaseInternalId = 0
+  If Len(publishError) = 0 Then
+    Set identityRs = conn.Execute("SELECT LAST_INSERT_ID() AS identity_id")
+    If Err.Number <> 0 Then
+      publishError = "无法取得 PublishedRelease identity。"
+      Err.Clear
+    ElseIf identityRs.EOF Then
+      publishError = "无法取得 PublishedRelease identity。"
+    Else
+      releaseInternalId = CLng(identityRs("identity_id"))
+    End If
+    If IsObject(identityRs) Then identityRs.Close
+    Set identityRs = Nothing
+  End If
   If Len(publishError) = 0 Then
     conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
     If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
@@ -700,6 +780,47 @@ ElseIf action = "publish-release" And method = "POST" Then
     Replace(catalogNote, "'", "''") & "'," & CLng(Session("user_id")) & ",1)"
   If Len(publishError) = 0 Then
     conn.Execute publishSql
+    If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  End If
+  newCatalogRevisionId = 0
+  If Len(publishError) = 0 Then
+    Set identityRs = conn.Execute("SELECT LAST_INSERT_ID() AS identity_id")
+    If Err.Number <> 0 Then
+      publishError = "无法取得 Catalog revision identity。"
+      Err.Clear
+    ElseIf identityRs.EOF Then
+      publishError = "无法取得 Catalog revision identity。"
+    Else
+      newCatalogRevisionId = CLng(identityRs("identity_id"))
+    End If
+    If IsObject(identityRs) Then identityRs.Close
+    Set identityRs = Nothing
+  End If
+  If Len(publishError) = 0 And previousCatalogRevisionId > 0 Then
+    conn.Execute "INSERT INTO webwindows_catalog_release_bindings " & _
+      "(catalog_revision_id,catalog_entry_id,source_type,release_binding_state,published_release_id," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status) " & _
+      "SELECT " & newCatalogRevisionId & ",catalog_entry_id,source_type,release_binding_state,published_release_id," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status " & _
+      "FROM webwindows_catalog_release_bindings WHERE catalog_revision_id=" & previousCatalogRevisionId & _
+      " AND catalog_entry_id<>'" & Replace(CStr(publishRs("app_id")), "'", "''") & "'"
+    If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  End If
+  If Len(publishError) = 0 Then
+    bindingSql = "INSERT INTO webwindows_catalog_release_bindings " & _
+      "(catalog_revision_id,catalog_entry_id,source_type,release_binding_state,published_release_id," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status) VALUES (" & _
+      newCatalogRevisionId & ",'" & Replace(CStr(publishRs("app_id")), "'", "''") & _
+      "','developer-release','verified'," & releaseInternalId & ",'" & releaseIdentity & _
+      "','" & LCase(CStr(publishRs("package_sha256"))) & "','" & LCase(CStr(publishRs("source_manifest_sha256"))) & _
+      "'," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
+      ",'" & Replace(CStr(publishRs("review_decision_id")), "'", "''") & "','" & _
+      CStr(publishRs("approved_permissions_base64")) & "'," & CLng(publishRs("review_policy_version")) & _
+      ",'" & Replace(packageDownloadUrl, "'", "''") & "','active')"
+    conn.Execute bindingSql
     If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
   End If
   If Len(publishError) = 0 Then
@@ -715,6 +836,8 @@ ElseIf action = "publish-release" And method = "POST" Then
   End If
   conn.CommitTrans
   On Error GoTo 0
+  publishRs.Close
+  Set publishRs = Nothing
   Set publishedReleaseRs = conn.Execute("SELECT published_release_id FROM webwindows_published_releases WHERE submission_id=" & _
     publishSubmissionId & " ORDER BY id DESC LIMIT 1")
   Response.Write "{""ok"":true,""status"":""published"",""publishedReleaseId"":""" & _
@@ -724,14 +847,22 @@ ElseIf action = "publish-release" And method = "POST" Then
 
 ElseIf action = "release-status" And method = "POST" Then
   Dim releaseSubmissionId, releaseTargetStatus, releaseNote, releaseRs, releaseError
+  Dim statusCatalogText, statusCatalogVersion, statusEncodedCatalog, statusOldRevisionId, statusNewRevisionId
   releaseSubmissionId = FormPositiveLong("submissionId")
   releaseTargetStatus = LCase(Trim(CStr(Request.Form("status"))))
   releaseNote = Left(Trim(CStr(Request.Form("note"))), 255)
+  statusCatalogText = CStr(Request.Form("catalogJson"))
+  statusCatalogVersion = Left(Trim(CStr(Request.Form("version"))), 40)
   If releaseSubmissionId <= 0 Then Fail 400, "SUBMISSION_ID_INVALID", "提交 ID 无效。"
   If releaseTargetStatus <> "delisted" And releaseTargetStatus <> "revoked" Then _
     Fail 400, "RELEASE_STATUS_INVALID", "Release 只允许下架或撤销。"
-  Set releaseRs = conn.Execute("SELECT pr.id,pr.release_status,re.release_status AS latest_status " & _
-    "FROM webwindows_published_releases pr LEFT JOIN webwindows_published_release_events re " & _
+  If Len(statusCatalogText) < 50 Or Len(statusCatalogText) > 524288 Or statusCatalogVersion = "" Then _
+    Fail 400, "CATALOG_PROJECTION_REQUIRED", "Release 状态变更必须携带新的 Catalog projection。"
+  Set releaseRs = conn.Execute("SELECT pr.id,pr.published_release_id,pr.app_id,pr.release_status," & _
+    "re.release_status AS latest_status FROM webwindows_published_releases pr " & _
+    "JOIN webwindows_catalog_release_bindings b ON b.published_release_id=pr.id " & _
+    "JOIN webwindows_function_catalog_versions cv ON cv.id=b.catalog_revision_id AND cv.is_active=1 " & _
+    "LEFT JOIN webwindows_published_release_events re " & _
     "ON re.id=(SELECT MAX(re2.id) FROM webwindows_published_release_events re2 WHERE re2.published_release_id=pr.id) " & _
     "WHERE pr.submission_id=" & releaseSubmissionId & " ORDER BY pr.id DESC LIMIT 1")
   If releaseRs.EOF Then
@@ -744,6 +875,22 @@ ElseIf action = "release-status" And method = "POST" Then
     releaseRs.Close
     Fail 409, "REVOKED_RELEASE_IMMUTABLE", "已撤销 Release 不能重写或恢复。"
   End If
+  If InStr(1, statusCatalogText, """id"":""" & CStr(releaseRs("published_release_id")) & """", vbBinaryCompare) = 0 Or _
+     InStr(1, statusCatalogText, """status"":""" & releaseTargetStatus & """", vbBinaryCompare) = 0 Or _
+     InStr(1, statusCatalogText, """status"":""disabled""", vbBinaryCompare) = 0 Then
+    releaseRs.Close
+    Fail 409, "CATALOG_RELEASE_STATUS_MISMATCH", "Catalog projection 未绑定并隐藏目标 PublishedRelease。"
+  End If
+  statusEncodedCatalog = Base64EncodeUtf8(statusCatalogText)
+  statusOldRevisionId = 0
+  Set identityRs = conn.Execute("SELECT id FROM webwindows_function_catalog_versions WHERE is_active=1 ORDER BY id DESC LIMIT 1")
+  If Not identityRs.EOF Then statusOldRevisionId = CLng(identityRs("id"))
+  identityRs.Close
+  Set identityRs = Nothing
+  If statusOldRevisionId <= 0 Then
+    releaseRs.Close
+    Fail 409, "CATALOG_REVISION_REQUIRED", "没有可投影 Release 状态的活动 Catalog revision。"
+  End If
   On Error Resume Next
   releaseError = ""
   conn.BeginTrans
@@ -753,6 +900,43 @@ ElseIf action = "release-status" And method = "POST" Then
     CLng(releaseRs("id")) & ",'" & releaseTargetStatus & "','" & Replace(releaseNote, "'", "''") & _
     "'," & CLng(Session("user_id")) & ",'admin:" & Replace(CStr(Session("username")), "'", "''") & "')"
   If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  If Len(releaseError) = 0 Then
+    conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
+    If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  End If
+  If Len(releaseError) = 0 Then
+    conn.Execute "INSERT INTO webwindows_function_catalog_versions " & _
+      "(catalog_version,catalog_json,storage_encoding,publish_note,published_by,is_active) VALUES ('" & _
+      Replace(statusCatalogVersion, "'", "''") & "','" & statusEncodedCatalog & "','base64','" & _
+      Replace(releaseNote, "'", "''") & "'," & CLng(Session("user_id")) & ",1)"
+    If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  End If
+  statusNewRevisionId = 0
+  If Len(releaseError) = 0 Then
+    Set identityRs = conn.Execute("SELECT LAST_INSERT_ID() AS identity_id")
+    If Err.Number <> 0 Then
+      releaseError = Err.Description
+      Err.Clear
+    ElseIf identityRs.EOF Then
+      releaseError = "无法取得 Catalog revision identity。"
+    Else
+      statusNewRevisionId = CLng(identityRs("identity_id"))
+    End If
+    If IsObject(identityRs) Then identityRs.Close
+    Set identityRs = Nothing
+  End If
+  If Len(releaseError) = 0 Then
+    conn.Execute "INSERT INTO webwindows_catalog_release_bindings " & _
+      "(catalog_revision_id,catalog_entry_id,source_type,release_binding_state,published_release_id," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status) " & _
+      "SELECT " & statusNewRevisionId & ",catalog_entry_id,source_type,release_binding_state,published_release_id," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url," & _
+      "CASE WHEN published_release_id=" & CLng(releaseRs("id")) & " THEN '" & releaseTargetStatus & _
+      "' ELSE release_status END FROM webwindows_catalog_release_bindings WHERE catalog_revision_id=" & statusOldRevisionId
+    If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  End If
   If releaseTargetStatus = "revoked" And Len(releaseError) = 0 Then
     conn.Execute "UPDATE webwindows_function_submissions SET status='revoked',review_note='" & _
       Replace(releaseNote, "'", "''") & "' WHERE id=" & releaseSubmissionId

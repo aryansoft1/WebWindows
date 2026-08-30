@@ -107,16 +107,48 @@ Function EnsureCatalogTable()
   On Error GoTo 0
 End Function
 
-Function ActiveCatalog()
+Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
+  Dim rs, valid
+  valid = True
+  On Error Resume Next
+  Set rs = conn.Execute("SELECT catalog_entry_id,published_release_identity,package_sha256," & _
+    "review_decision_identity,release_binding_state FROM webwindows_catalog_release_bindings " & _
+    "WHERE catalog_revision_id=" & CLng(revisionId))
+  If Err.Number <> 0 Then
+    Err.Clear
+    ReleaseBindingsValid = (InStr(1, catalogText, """sourceType"":""developer-release""", vbTextCompare) = 0)
+    On Error GoTo 0
+    Exit Function
+  End If
+  Do Until rs.EOF
+    If LCase(CStr(rs("release_binding_state"))) <> "verified" Or _
+       InStr(1, catalogText, """id"":""" & CStr(rs("catalog_entry_id")) & """", vbBinaryCompare) = 0 Or _
+       InStr(1, catalogText, """publishedReleaseId"":""" & CStr(rs("published_release_identity")) & """", vbBinaryCompare) = 0 Or _
+       InStr(1, catalogText, """packageSha256"":""" & CStr(rs("package_sha256")) & """", vbTextCompare) = 0 Or _
+       InStr(1, catalogText, """reviewDecisionId"":""" & CStr(rs("review_decision_identity")) & """", vbBinaryCompare) = 0 Then
+      valid = False
+      Exit Do
+    End If
+    rs.MoveNext
+  Loop
+  rs.Close
+  Set rs = Nothing
+  On Error GoTo 0
+  ReleaseBindingsValid = valid
+End Function
+
+Function ActiveCatalog(ByRef revisionId)
   Dim rs
   ActiveCatalog = ""
+  revisionId = 0
   On Error Resume Next
-  Set rs = conn.Execute("SELECT catalog_json,storage_encoding FROM webwindows_function_catalog_versions " & _
+  Set rs = conn.Execute("SELECT id,catalog_json,storage_encoding FROM webwindows_function_catalog_versions " & _
     "WHERE is_active=1 ORDER BY id DESC LIMIT 1")
   If Err.Number = 0 Then
     If Not rs.EOF Then
       If LCase(CStr(rs("storage_encoding"))) = "base64" Then
         ActiveCatalog = Base64DecodeUtf8(CStr(rs("catalog_json")))
+        revisionId = CLng(rs("id"))
       End If
     End If
     rs.Close
@@ -148,14 +180,15 @@ Sub SeedCatalog(ByVal catalogText)
   On Error GoTo 0
 End Sub
 
-Dim catalogText, tableReady, catalogSource
+Dim catalogText, tableReady, catalogSource, activeRevisionId
 catalogText = ""
 catalogSource = "unavailable"
 tableReady = EnsureCatalogTable()
 
 If tableReady Then
-  catalogText = ActiveCatalog()
-  If catalogText <> "" And Not ValidCatalog(catalogText) Then
+  catalogText = ActiveCatalog(activeRevisionId)
+  If catalogText <> "" And (Not ValidCatalog(catalogText) Or _
+     Not ReleaseBindingsValid(catalogText, activeRevisionId)) Then
     On Error Resume Next
     conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
     Err.Clear
@@ -182,6 +215,7 @@ If catalogText = "" Then
 End If
 
 Response.AddHeader "X-WebWindows-Catalog-Source", catalogSource
+Response.AddHeader "X-WebWindows-Catalog-Release-Binding", "v1"
 If catalogText = "" Then
   Response.Status = "503 Service Unavailable"
   Response.Write "{""ok"":false,""message"":""功能仓库目录暂不可用。""}"

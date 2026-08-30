@@ -73,9 +73,14 @@
       catalogDocument = structuredClone(payload.catalog);
       revision = payload.revision || null;
       dirty = false;
+      const releaseBound = catalogDocument.apps.some(releaseProtected);
+      document.getElementById("publishCatalog").disabled = releaseBound;
+      document.getElementById("newFunction").disabled = releaseBound;
       updateRevision();
       renderRows();
-      setStatus("当前发布目录已读取。");
+      setStatus(releaseBound
+        ? "当前 revision 含第三方 Release；发布、下架与撤销请前往开发者平台。"
+        : "当前发布目录已读取。");
     } catch (error) {
       catalogDocument = null;
       renderRows();
@@ -92,6 +97,15 @@
     if (app.install?.source === "preinstalled" ||
         app.install?.defaultState === "installed") return "preinstalled";
     return "optional";
+  }
+
+  function sourceTypeOf(app) {
+    if (app.sourceType) return app.sourceType;
+    return app.package ? "legacy-third-party" : "system";
+  }
+
+  function releaseProtected(app) {
+    return sourceTypeOf(app) !== "system";
   }
 
   function distributionLabel(value) {
@@ -135,7 +149,7 @@
   }
 
   function removeFunction(app) {
-    if (CORE_FUNCTIONS.has(app.id) || distributionOf(app) === "system") return;
+    if (CORE_FUNCTIONS.has(app.id) || distributionOf(app) === "system" || releaseProtected(app)) return;
     if (!window.confirm(`从待发布目录移除“${app.name}”吗？服务器程序文件不会被删除。`)) return;
     catalogDocument.apps = catalogDocument.apps.filter((item) => item.id !== app.id);
     dirty = true;
@@ -145,7 +159,7 @@
   }
 
   function toggleCatalogStatus(app) {
-    if (CORE_FUNCTIONS.has(app.id)) return;
+    if (CORE_FUNCTIONS.has(app.id) || releaseProtected(app)) return;
     app.catalog = {
       ...(app.catalog || {}),
       status: catalogStatus(app) === "published" ? "disabled" : "published"
@@ -192,6 +206,9 @@
       const text = document.createElement("div");
       text.appendChild(element("strong", "", app.name));
       text.appendChild(element("small", "", app.id));
+      text.appendChild(element("small", "", sourceTypeOf(app) === "developer-release"
+        ? `Verified release · ${app.release?.id || "unknown"}`
+        : (sourceTypeOf(app) === "legacy-third-party" ? "Legacy · unverified" : "System")));
       functionInfo.append(icon, text);
       functionCell.appendChild(functionInfo);
       row.appendChild(functionCell);
@@ -218,18 +235,18 @@
 
       const actionsCell = document.createElement("td");
       const actions = element("div", "row-actions");
-      actions.appendChild(actionButton("编辑", "", () => openEditor(app)));
+      actions.appendChild(actionButton("编辑", "", () => openEditor(app), releaseProtected(app)));
       actions.appendChild(actionButton(
         status === "published" ? "下架" : "上架",
         "",
         () => toggleCatalogStatus(app),
-        CORE_FUNCTIONS.has(app.id)
+        CORE_FUNCTIONS.has(app.id) || releaseProtected(app)
       ));
       actions.appendChild(actionButton(
         "移除定义",
         "danger",
         () => removeFunction(app),
-        distribution === "system" || CORE_FUNCTIONS.has(app.id)
+        distribution === "system" || CORE_FUNCTIONS.has(app.id) || releaseProtected(app)
       ));
       actionsCell.appendChild(actions);
       row.appendChild(actionsCell);
@@ -293,6 +310,8 @@
       },
       catalog: { status: "published" }
     };
+    definition.sourceType = definition.sourceType || "system";
+    definition.releaseBinding = definition.releaseBinding || "system";
     editingId = app?.id || null;
     document.getElementById("editorTitle").textContent =
       app ? `编辑 ${app.name}` : "新建功能";
@@ -336,6 +355,8 @@
     const distribution = value("functionDistribution");
     const system = distribution === "system";
     definition.id = id;
+    definition.sourceType = "system";
+    definition.releaseBinding = "system";
     definition.name = value("functionName");
     definition.version = value("functionVersion") || "1.0.0";
     definition.description = value("functionDescription");

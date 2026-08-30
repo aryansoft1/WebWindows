@@ -4,6 +4,7 @@
   const CATALOG_API = "/admin_api/functionCatalog.asp";
   const PLATFORM_HEADERS = { "X-WebWindows-Admin-Request": "developer-platform" };
   const CATALOG_HEADERS = { "X-WebWindows-Admin-Request": "function-catalog" };
+  const RELEASE_ID_PLACEHOLDER = "__WEBWINDOWS_SERVER_RELEASE_ID__";
   let developers = [];
   let submissions = [];
 
@@ -188,6 +189,26 @@
       entry: originalEntry,
       downloadUrl: `/api/function-package.asp?appId=${encodeURIComponent(submission.appId)}&version=${encodeURIComponent(submission.version)}`
     };
+    manifest.sourceType = "developer-release";
+    manifest.releaseBinding = "verified";
+    manifest.release = {
+      id: RELEASE_ID_PLACEHOLDER,
+      binding: "verified",
+      status: "active",
+      publishedReleaseId: RELEASE_ID_PLACEHOLDER,
+      publisherId: String(submission.developerId),
+      packageSha256: submission.packageSha256,
+      sourceManifestSha256: submission.reviewDecision.sourceManifestSha256,
+      manifestVersion: submission.reviewDecision.manifestVersion,
+      sdkVersion: submission.reviewDecision.sdkVersion,
+      reviewDecisionId: submission.reviewDecision.reviewDecisionId,
+      approvedPermissions: [...submission.reviewDecision.approvedPermissions],
+      reviewPolicyVersion: submission.reviewDecision.reviewPolicyVersion,
+      packageDownloadIdentity: {
+        kind: "release-package-v1",
+        downloadUrl: manifest.package.downloadUrl
+      }
+    };
     manifest.entry = `/package-runtime.html?runtime=1&appId=${encodeURIComponent(submission.appId)}` +
       `&version=${encodeURIComponent(submission.version)}&entry=${encodeURIComponent(originalEntry)}`;
     manifest.window = {
@@ -218,15 +239,26 @@
     setStatus(`${submission.appId} ${submission.version} 已发布。`, "success");
   }
 
-  async function revokeSubmission(submission) {
-    if (!window.confirm("撤销提交状态不会自动删除服务器程序文件，确定继续吗？")) return;
+  async function changeReleaseStatus(submission, status) {
+    const label = status === "revoked" ? "撤销" : "下架";
+    if (!window.confirm(`${label} ${submission.appId} ${submission.version} 吗？历史 Release 记录会保留。`)) return;
+    const catalogPayload = await request(CATALOG_API, "", null, CATALOG_HEADERS);
+    const catalog = structuredClone(catalogPayload.catalog);
+    const app = catalog.apps.find((item) => item.release?.id === submission.publishedRelease?.publishedReleaseId);
+    if (!app) throw new Error("当前 Catalog revision 未绑定该 PublishedRelease。");
+    app.catalog = { ...(app.catalog || {}), status: "disabled" };
+    app.release = { ...(app.release || {}), status };
+    const version = catalogVersion();
+    catalog.repository = { ...(catalog.repository || {}), catalogVersion: version, updatedAt: new Date().toISOString() };
     const body = new URLSearchParams();
     body.set("submissionId", submission.id);
-    body.set("status", "revoked");
-    body.set("note", "管理员撤销发布");
+    body.set("status", status);
+    body.set("note", `管理员${label} Release`);
+    body.set("version", version);
+    body.set("catalogJson", JSON.stringify(catalog));
     await request(API_URL, "release-status", { method: "POST", body });
     await loadPlatform();
-    setStatus(`${submission.appId} 已标记为撤销；如需下架，请同时在功能仓库操作。`);
+    setStatus(`${submission.appId} 已${label}，Catalog projection 已同步。`, "success");
   }
 
   function renderSubmissions() {
@@ -292,8 +324,12 @@
         submission.status !== "approved"
       ));
       actions.appendChild(button(
-        "撤销", "danger", () => revokeSubmission(submission),
-        submission.status !== "published"
+        "下架", "", () => changeReleaseStatus(submission, "delisted").catch((error) => setStatus(error.message, "error")),
+        submission.publishedRelease?.releaseStatus !== "active"
+      ));
+      actions.appendChild(button(
+        "撤销", "danger", () => changeReleaseStatus(submission, "revoked").catch((error) => setStatus(error.message, "error")),
+        !submission.publishedRelease || submission.publishedRelease.releaseStatus === "revoked"
       ));
       actionCell.appendChild(actions);
       row.appendChild(actionCell);

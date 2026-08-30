@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import vm from "node:vm";
+import { webcrypto } from "node:crypto";
 
 const runtimeSource = await fs.readFile(
   new URL("../assets/js/package-runtime.js", import.meta.url), "utf8"
@@ -106,6 +107,7 @@ const context = {
   RegExp,
   Error,
   Promise,
+  crypto: webcrypto,
   btoa,
   location: { search: "?appId=com.example.test&version=1.0.0&entry=index.html" },
   fetch: async () => ({ ok: true, status: 200, arrayBuffer: async () => new ArrayBuffer(8) }),

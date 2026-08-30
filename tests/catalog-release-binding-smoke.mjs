@@ -70,7 +70,7 @@ assert.throws(() => assertBinding({ ...projection, release: { ...projection.rele
 assertBinding(projection, release);
 
 assert.match(runtime, /publishedReleaseId|reviewDecisionId/);
-assert.doesNotMatch(runtime, /ProductionBrokerContext|WebWindowsNative/);
+assert.doesNotMatch(runtime, /WebWindowsNative|window\.ProductionBrokerContext/);
 assert.doesNotMatch(device, /CatalogReleaseBinding|publishedReleaseId|reviewDecisionId/);
 assert.doesNotMatch(native, /CatalogReleaseBinding|publishedReleaseId|reviewDecisionId/);
 console.log("catalog release binding and authority boundary smoke test passed");

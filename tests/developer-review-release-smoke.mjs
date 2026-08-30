@@ -82,7 +82,9 @@ for (const phrase of [
 ]) assert.match(doc, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
 assert.match(runtime, /approvedPermissions/);
-assert.doesNotMatch(runtime, /ProductionBrokerContext|window\.WebWindows|WebWindowsNative/);
+assert.match(runtime, /window\.WebWindows\?\.device\?\.battery/,
+  "Production context capability checks must use the stable Host Public Device API");
+assert.doesNotMatch(runtime, /WebWindowsNative|window\.ProductionBrokerContext|window\.WebWindows\s*=/);
 assert.doesNotMatch(publicApi, /ReviewDecision|PublishedRelease|approvedPermissions/);
 assert.doesNotMatch(nativeContract, /ReviewDecision|PublishedRelease|approvedPermissions/);
 

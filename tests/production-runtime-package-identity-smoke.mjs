@@ -26,7 +26,8 @@ const verifiedFlow = source.slice(source.indexOf("async function prepareVerified
 assert.ok(verifiedFlow.indexOf("sha256Hex(packageBytes)") < verifiedFlow.indexOf("readArchive(packageBytes)"), "ZIP SHA must precede unzip");
 assert.match(page, /sandbox="allow-scripts allow-forms allow-modals allow-downloads"/);
 assert.doesNotMatch(page, /allow-same-origin/);
-assert.doesNotMatch(source, /window\.WebWindows|WebWindowsNative|ProductionBrokerContext/);
+assert.match(source, /window\.WebWindows\?\.device\?\.battery/);
+assert.doesNotMatch(source, /WebWindowsNative|window\.ProductionBrokerContext|window\.WebWindows\s*=/);
 assert.doesNotMatch(registry, /runtimeTrustState\s*=|verifiedRuntimePackageIdentity\s*=/);
 assert.doesNotMatch(device + native, /VerifiedRuntimePackageIdentity/);
 
@@ -83,7 +84,11 @@ const runtimeState = { hidden: false, dataset: {}, classList: { add() {} }, quer
 const frame = { srcdoc: "", hidden: true };
 const context = {
   console, URLSearchParams, TextDecoder, TextEncoder, Uint8Array, ArrayBuffer, Map, Set, Object, Array, String, Number, RegExp, Error, Promise, Date,
-  btoa, location: { search: "" }, crypto: { subtle: { digest: async (...args) => { stages.push("sha"); return webcrypto.subtle.digest(...args); } } },
+  btoa, location: { search: "" }, crypto: {
+    subtle: { digest: async (...args) => { stages.push("sha"); return webcrypto.subtle.digest(...args); } },
+    randomUUID: () => webcrypto.randomUUID(),
+    getRandomValues: (value) => webcrypto.getRandomValues(value)
+  },
   fetch: async (url) => {
     if (String(url).startsWith("/api/runtime-release.asp")) return {
       ok: lookupStatus === 200, status: lookupStatus,

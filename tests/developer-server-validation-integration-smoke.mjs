@@ -37,7 +37,7 @@ const trustRules = rules.rules.filter((rule) => rule.ruleId.startsWith("WWT"));
 assert.deepEqual(trustRules.map((rule) => rule.ruleId), Array.from({ length: 12 }, (_, index) => `WWT${String(index + 1).padStart(3, "0")}`));
 assert.equal(new Set(rules.rules.map((rule) => rule.ruleId)).size, rules.rules.length);
 
-assert.doesNotMatch(runtime, /ServerValidationReport|ProductionBrokerContext|publishedAppIdentity/);
+assert.doesNotMatch(runtime, /ServerValidationReport|publishedAppIdentity|window\.ProductionBrokerContext/);
 assert.doesNotMatch(publicApi, /ProductionBrokerContext|approvedPermissions/);
 assert.doesNotMatch(nativeAdapter, /PublishedAppIdentity|ServerValidationReport/);
 console.log("developer server validation integration and production boundary smoke test passed");

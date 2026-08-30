@@ -12,6 +12,7 @@ export async function loadStudioContracts() {
     brokerMethods: await json("data/sdk/capability-broker-methods-v1.json"),
     brokerErrors: await json("data/sdk/capability-broker-errors-v1.json"),
     brokerPolicy: await json("data/sdk/capability-broker-policy-v1.json"),
+    permissionDecision: await json("data/sdk/permission-decision-v1.json"),
     packagePolicy: await json("data/sdk/package-runtime-policy-v1.json"),
     runtimeCompatibility: await json("data/sdk/runtime-compatibility-v1.json"),
     ruleCatalog: await json("data/sdk/studio-validator-rules-v1.json"),

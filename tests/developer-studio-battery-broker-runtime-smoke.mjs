@@ -25,6 +25,8 @@ const denied = broker({ platformPolicyPermits: false, publicApi: publicApi({ cal
 assert.equal((await denied.createLaunchDescriptor()).handshake.error.code, "policy-denied");
 assert.equal((await denied.handleEnvelope(request(denied, "policy-denied"))).error.code, "policy-denied");
 assert.equal(deniedCalls.state, 0);
+const grantDeniedBroker = broker({ grantResolver: () => false });
+assert.equal((await grantDeniedBroker.createLaunchDescriptor()).handshake.error.code, "permission-denied");
 const unsupportedCalls = { capabilities: 0, state: 0, refresh: 0 };
 const unsupported = broker({ publicApi: publicApi({ capability: false, calls: unsupportedCalls }) });
 assert.equal((await unsupported.createLaunchDescriptor()).handshake.error.code, "capability-unsupported");
@@ -49,6 +51,11 @@ assert.equal(apiCalls.refresh, 1, "dispatch must use the stable public refresh m
 
 assert.equal((await eligible.handleEnvelope(request(eligible, "unknown", { method: "device.network.getState" }))).error.code, "method-not-allowed");
 assert.equal((await eligible.handleEnvelope(request(eligible, "invalid", { params: { extra: true } }))).error.code, "invalid-params");
+const sandboxClaims = request(eligible, "sandbox-claims", {
+  params: { userGesture: true, grantState: "session-grant", capability: true, policyVersion: 999, token: "secret-sentinel" }
+});
+assert.equal((await eligible.handleEnvelope(sandboxClaims)).error.code, "invalid-params",
+  "sandbox authority claims must be rejected as application parameters");
 const oversized = request(eligible, "oversized", { padding: "x".repeat(20_000) });
 assert.equal((await eligible.handleEnvelope(oversized)).error.code, "request-too-large");
 const duplicateRequest = request(eligible, "duplicate");
@@ -117,6 +124,19 @@ const auditKeys = new Set(auditEntries.flatMap((entry) => Object.keys(entry)));
 for (const forbidden of ["params", "result", "adapterSecret", "privateStack", "nativeTransport", "cookie", "apiKey"]) {
   assert.equal(auditKeys.has(forbidden), false, `audit must exclude ${forbidden}`);
 }
+const diagnostics = eligible.getDiagnostics();
+assert.equal(diagnostics.some((entry) => entry.grantState === "not-required" && entry.policyVersion === 1), true);
+const diagnosticKeys = new Set(diagnostics.flatMap((entry) => Object.keys(entry)));
+for (const forbidden of ["params", "result", "token", "credential", "adapter", "provider", "privateStack", "nativeMethod"]) {
+  assert.equal(diagnosticKeys.has(forbidden), false, `developer diagnostics must exclude ${forbidden}`);
+}
+assert.equal(JSON.stringify(diagnostics).includes("secret-sentinel"), false, "diagnostics must not echo request data");
+const auditCount = eligible.getAudit().length;
+eligible.clearDiagnostics();
+assert.equal(eligible.getDiagnostics().length, 0);
+assert.equal(eligible.getAudit().length, auditCount, "clearing the developer projection must not affect Broker audit/state");
+assert.equal((await eligible.handleEnvelope(request(eligible, "after-clear"))).ok, true);
+assert.equal(eligible.getDiagnostics().length > 0, true);
 assert.equal(apiCalls.capabilities > 0, true);
 console.log("developer studio battery broker runtime smoke test passed");
 
@@ -127,6 +147,7 @@ function broker(overrides = {}) {
     contracts: overrides.contracts || contracts,
     publicApi: overrides.publicApi || publicApi(),
     platformPolicyPermits: overrides.platformPolicyPermits ?? true,
+    grantResolver: overrides.grantResolver,
     now: overrides.now,
     setTimer: overrides.setTimer,
     clearTimer: overrides.clearTimer

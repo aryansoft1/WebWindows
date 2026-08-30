@@ -87,8 +87,10 @@ await repository.writeTextFile(project.uuid, "manifest.json", `${JSON.stringify(
 const v2Snapshot = await createProjectSnapshot(repository, project.uuid);
 const v2Host = new FakeHost();
 const publicCalls = { state: 0, refresh: 0 };
+const projectedDiagnostics = [];
 const v2Controller = new PreviewSessionController({
   hostClient: v2Host,
+  onBrokerDiagnostic: (entry) => projectedDiagnostics.push(entry),
   publicApiProvider: () => ({ device: { battery: {
     getCapabilities: () => ({ status: { supported: true } }),
     getState: () => { publicCalls.state += 1; return batteryState(); },
@@ -102,7 +104,17 @@ assert.equal(v2Host.starts[0].launch.handshake.ok, true);
 assert.match(v2Host.starts[0].html, /webwindows-studio-preview-sdk-init-v1/);
 assert.match(v2Host.starts[0].html, /device\.battery\.refresh/);
 assert.equal(publicCalls.state, 1);
+assert.equal(projectedDiagnostics.some((entry) => entry.grantState === "not-required"), true);
+assert.equal(v2Controller.getBrokerDiagnostics().length > 0, true);
+const activeBeforeClear = v2Controller.activeSession.sessionId;
+v2Controller.clearBrokerDiagnostics();
+assert.equal(v2Controller.getBrokerDiagnostics().length, 0);
+assert.equal(v2Controller.activeSession.sessionId, activeBeforeClear, "Clear must not change Broker session state");
+const v2Reloaded = await v2Controller.reload(v2Snapshot, { contracts, domParser: new FakeDOMParser() });
+assert.notEqual(v2Reloaded.session.sessionId, activeBeforeClear, "Reload must create a fresh permission decision scope");
+assert.equal(v2Controller.getBrokerDiagnostics().some((entry) => entry.policyVersion === 1), true);
 await v2Controller.stop();
+assert.equal(v2Controller.getBrokerDiagnostics().length, 0, "Stop must discard session diagnostics and grants");
 
 const after = await repository.readProjectState(project.uuid);
 assert.equal(after.project.uuid, project.uuid);

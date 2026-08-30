@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/production-broker-context-v1.json",
+  "contract": "webwindows-production-broker-context-v1",
+  "contextVersion": 1,
+  "status": "context-construction-enabled-broker-and-facade-disabled",
+  "required": [
+    "contextVersion", "contextId", "runtimeSessionId", "publishedReleaseId", "appId",
+    "publisherId", "version", "packageSha256", "sourceManifestSha256", "manifestVersion",
+    "sdkVersion", "reviewDecisionId", "reviewPolicyVersion", "permissionPolicyVersion",
+    "requestedPermissions", "approvedPermissions", "effectivePermissions", "releaseState",
+    "trustState", "contextState", "runtimeCapabilities", "grantState", "createdAt"
+  ],
+  "contextStates": ["eligible", "ineligible", "revoked", "legacy", "verification-failed"],
+  "creationEligibility": {
+    "trustState": ["verified-release"],
+    "releaseState": ["active"],
+    "systemUsesDeveloperContext": false,
+    "legacyCreatesContext": false,
+    "delistedCreatesPrivilegedContext": false,
+    "revokedCreatesContext": false,
+    "securityBlockedCreatesContext": false
+  },
+  "authorities": {
+    "packageAndManifest": "VerifiedRuntimePackageIdentity",
+    "publisherReviewApprovedPermissionsAndReleaseState": "trusted-runtime-release-api",
+    "requestedPermissions": "verified-zip-root-source-manifest",
+    "runtimeCapabilities": "host-stable-window.WebWindows.device-public-api",
+    "grantState": "trusted-host-grant-authority",
+    "sandboxClaimsAccepted": false
+  },
+  "permissionFormula": "requested-intersection-approved-intersection-policy-intersection-applicable-grant-intersection-runtime-capability",
+  "policyVersions": {
+    "reviewPolicyVersion": "immutable-review-domain",
+    "permissionPolicyVersion": "effective-permission-decision-domain",
+    "currentPermissionPolicyVersion": 1,
+    "interchangeable": false
+  },
+  "batteryPilot": {
+    "permissionId": "device.battery-status.read",
+    "runtimeCapability": "battery.status",
+    "consentMode": "no-consent",
+    "grantState": "not-required",
+    "effectiveMeansBrokerEligibilityOnly": true,
+    "productionMethodInvocationEnabled": false
+  },
+  "lifecycle": {
+    "scope": "single-production-runtime-session-memory",
+    "reload": "new-runtimeSessionId-and-new-context",
+    "pagehideOrStop": "destroy-context-and-invalidate-session",
+    "crossSessionReuse": false,
+    "persistentStores": []
+  },
+  "boundaries": {
+    "sandboxReceivesContext": false,
+    "queryOrCatalogMayConstructContext": false,
+    "productionBrokerEnabled": false,
+    "productionSdkFacadeEnabled": false,
+    "persistentGrantStorageImplemented": false,
+    "nativeAbiIsAuthority": false
+  },
+  "consumes": [
+    "verified-runtime-package-identity-v1.json", "published-app-identity-v1.json",
+    "review-decision-v1.json", "published-release-v1.json", "permission-decision-v1.json",
+    "capability-broker-policy-v1.json", "capability-broker-methods-v1.json", "permissions-v1.json"
+  ]
+}

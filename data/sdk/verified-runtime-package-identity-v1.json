@@ -7,7 +7,7 @@
   "required": [
     "publishedReleaseId", "appId", "publisherId", "version", "packageSha256",
     "sourceManifestSha256", "manifestVersion", "sdkVersion", "reviewDecisionId",
-    "approvedPermissions", "reviewPolicyVersion", "verificationTimestamp"
+    "approvedPermissions", "reviewPolicyVersion", "releaseState", "verificationTimestamp"
   ],
   "trustStates": ["system-trusted", "verified-release", "legacy-unverified", "verification-failed"],
   "verificationOrder": [

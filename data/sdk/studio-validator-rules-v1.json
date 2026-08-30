@@ -25,6 +25,18 @@
     { "ruleId": "WWS003", "category": "source", "defaultSeverity": "error", "title": "Private Native API" },
     { "ruleId": "WWS004", "category": "source", "defaultSeverity": "error", "title": "Shell internal API" },
     { "ruleId": "WWS005", "category": "source", "defaultSeverity": "warning", "title": "Static network reference" },
-    { "ruleId": "WWC001", "category": "compatibility", "defaultSeverity": "error", "title": "Runtime model compatibility" }
+    { "ruleId": "WWC001", "category": "compatibility", "defaultSeverity": "error", "title": "Runtime model compatibility" },
+    { "ruleId": "WWT001", "category": "trust", "defaultSeverity": "error", "title": "Outer Manifest mismatch" },
+    { "ruleId": "WWT002", "category": "trust", "defaultSeverity": "error", "title": "Expected app identity mismatch" },
+    { "ruleId": "WWT003", "category": "trust", "defaultSeverity": "error", "title": "Expected version mismatch" },
+    { "ruleId": "WWT004", "category": "trust", "defaultSeverity": "error", "title": "Package hash mismatch" },
+    { "ruleId": "WWT005", "category": "trust", "defaultSeverity": "error", "title": "Duplicate or colliding ZIP path" },
+    { "ruleId": "WWT006", "category": "trust", "defaultSeverity": "error", "title": "Encrypted ZIP unsupported" },
+    { "ruleId": "WWT007", "category": "trust", "defaultSeverity": "error", "title": "Malformed ZIP or CRC failure" },
+    { "ruleId": "WWT008", "category": "trust", "defaultSeverity": "error", "title": "Unsupported ZIP compression" },
+    { "ruleId": "WWT009", "category": "trust", "defaultSeverity": "error", "title": "Overlapping ZIP entries" },
+    { "ruleId": "WWT010", "category": "trust", "defaultSeverity": "error", "title": "Unsafe compression ratio" },
+    { "ruleId": "WWT011", "category": "trust", "defaultSeverity": "error", "title": "Publisher ownership mismatch" },
+    { "ruleId": "WWT012", "category": "trust", "defaultSeverity": "error", "title": "Invalid ZIP path encoding" }
   ]
 }

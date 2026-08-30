@@ -21,7 +21,7 @@ const validateMethods = ajv.compile({ $ref: `${schema.$id}#/$defs/methodRegistry
 const validateErrors = ajv.compile({ $ref: `${schema.$id}#/$defs/errorRegistry` });
 assert.equal(validateMethods(methods), true, JSON.stringify(validateMethods.errors));
 assert.equal(validateErrors(errors), true, JSON.stringify(validateErrors.errors));
-assert.equal(errors.status, "preview-pilot-enabled-production-disabled");
+assert.equal(errors.status, "preview-and-production-battery-pilot");
 
 assert.equal(methods.defaultDecision, "deny");
 assert.equal(methods.wildcardsAllowed, false);
@@ -42,9 +42,8 @@ for (const method of methods.methods) {
     assert.ok(runtime.capabilities[method.requiredRuntimeCapability], `${runtime.id}:${method.requiredRuntimeCapability}`);
   }
   assert.equal(method.previewAvailability, "enabled");
-  assert.equal(method.productionAvailability, "disabled");
+  assert.equal(method.productionAvailability, "enabled");
   assert.equal(method.currentStatus, "enabled");
-  assert.equal(method.productionAvailability, "disabled");
 }
 for (const excluded of ["device.storage", "fileDialog.open", "fileDialog.save", "fileDialog.write", "fileDialog.read", "fileDialog.saveBlob"]) {
   assert.ok(methods.explicitlyExcluded.includes(excluded), excluded);
@@ -154,7 +153,8 @@ assert.equal(policy.sameProtocolForPreviewAndProduction, true);
 assert.deepEqual(policy.modeDifferences, ["identity", "grantPersistence", "policyContext", "assetSource"]);
 assert.equal(policy.manifestPermissionDeclaration.status, "resolved-by-manifest-v2-contract-preview-pilot-enabled");
 assert.equal(policy.manifestPermissionDeclaration.sourceManifestSchema, "data/sdk/manifest-v2.schema.json");
-assert.equal(methods.methods.every((method) => method.productionAvailability === "disabled"), true);
+assert.equal(methods.methods.every((method) => method.productionAvailability === "enabled"), true);
+assert.deepEqual(methods.methods.map((method) => method.id), ["device.battery.getState", "device.battery.refresh"]);
 assert.equal(manifestSchema.$defs.sourceManifest.properties.permissions, undefined);
 
 console.log("capability broker v1 contract smoke test passed");

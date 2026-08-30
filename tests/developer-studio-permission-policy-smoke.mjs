@@ -57,7 +57,7 @@ assert.equal(contracts.permissionDecision.authorities.sandboxClaimsAccepted, fal
 assert.deepEqual(Object.keys(contracts.permissionDecision.grantStates), [
   "not-required", "session-grant", "persistent-user-grant", "resource-scoped-grant", "denied"
 ]);
-assert.equal(contracts.permissionDecision.production.brokerEnabled, false);
+assert.equal(contracts.permissionDecision.production.brokerEnabled, "feature-gated-battery-only");
 assert.equal(contracts.brokerMethods.methods.length, 2);
 assert.equal(contracts.brokerMethods.methods.every((item) => item.id.startsWith("device.battery.")), true);
 console.log("developer studio permission policy smoke test passed");

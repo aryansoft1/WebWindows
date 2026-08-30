@@ -153,12 +153,11 @@ assert.doesNotMatch(inspector, /\[\s*["']device\.battery-status\.read/);
 assert.match(monacoRuntime, /manifest-v1\.schema\.json/);
 assert.match(monacoRuntime, /manifest-v2\.schema\.json/);
 assert.match(monacoRuntime, /permissions-v1\.json/);
-assert.equal(brokerMethods.methods.every((method) => method.productionAvailability === "disabled"), true);
-assert.equal(brokerMethods.status, "preview-pilot-enabled-production-disabled");
+assert.equal(brokerMethods.status, "preview-and-production-battery-pilot");
 assert.equal(brokerMethods.methods.every((method) => method.currentStatus === "enabled"), true);
 assert.equal(brokerMethods.methods.every((method) => method.previewAvailability === "enabled"), true);
-assert.equal(brokerMethods.methods.every((method) => method.productionAvailability === "disabled"), true);
-assert.equal(brokerPolicy.status, "preview-pilot-enabled-production-disabled");
+assert.equal(brokerMethods.methods.every((method) => method.productionAvailability === "enabled"), true);
+assert.equal(brokerPolicy.status, "preview-and-production-battery-pilot-feature-gated");
 assert.equal(brokerPolicy.defaultDecision, "deny");
 assert.equal(brokerPolicy.manifestPermissionDeclaration.status, "resolved-by-manifest-v2-contract-preview-pilot-enabled");
 

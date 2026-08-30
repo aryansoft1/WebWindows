@@ -35,10 +35,10 @@ assert.match(adminCatalog, /webwindows_catalog_release_bindings/);
 assert.match(adminCatalog, /RELEASE_AUTHORITY_REQUIRED|RELEASE_BOUND_FIELD_READ_ONLY/);
 
 assert.match(packageDownload, /X-WebWindows-Package-SHA256/);
-assert.match(packageDownload, /s\.status='published'/);
-assert.match(packageRuntime, /fetch\(packageUrl/);
-assert.doesNotMatch(packageRuntime, /X-WebWindows-Package-SHA256|crypto\.subtle\.digest/,
-  "current Runtime does not cryptographically bind the download to catalog/review identity");
+assert.match(packageDownload, /webwindows_published_releases/);
+assert.match(packageRuntime, /downloadPackage\(packageUrl\)/);
+assert.match(packageRuntime, /crypto\.subtle\.digest/,
+  "Phase 2D.4 Runtime cryptographically binds downloaded bytes to release identity");
 
 for (const phrase of [
   "ZIP-root `manifest.json` is the only Source Manifest authority",

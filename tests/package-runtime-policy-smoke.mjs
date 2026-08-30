@@ -9,7 +9,7 @@ const runtimePage = await fs.readFile(
   new URL("../package-runtime.html", import.meta.url), "utf8"
 );
 
-const hook = '  document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error.message)));';
+const hook = '  document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error)));';
 assert.ok(runtimeSource.includes(hook), "package runtime test hook location changed");
 const instrumented = runtimeSource.replace(hook, `
   globalThis.__packageRuntimePolicy = Object.freeze({
@@ -23,6 +23,7 @@ const instrumented = runtimeSource.replace(hook, `
     createDataUrl,
     rewriteCss,
     rewriteHtml,
+    readArchive,
     start
   });
 ${hook}`);

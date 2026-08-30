@@ -81,7 +81,8 @@ for (const phrase of [
   "one InnoDB transaction", "do not receive synthetic ReviewDecision"
 ]) assert.match(doc, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
-assert.doesNotMatch(runtime, /ReviewDecision|PublishedRelease|approvedPermissions/);
+assert.match(runtime, /approvedPermissions/);
+assert.doesNotMatch(runtime, /ProductionBrokerContext|window\.WebWindows|WebWindowsNative/);
 assert.doesNotMatch(publicApi, /ReviewDecision|PublishedRelease|approvedPermissions/);
 assert.doesNotMatch(nativeContract, /ReviewDecision|PublishedRelease|approvedPermissions/);
 

@@ -58,7 +58,7 @@ assert.match(runtimePage, new RegExp(`sandbox=${JSON.stringify(PREVIEW_SANDBOX)}
 assert.match(runtimePage, new RegExp(`referrerpolicy=${JSON.stringify(PREVIEW_REFERRER_POLICY)}`));
 assert.doesNotMatch(runtimePage, /allow-same-origin/);
 
-const hook = '  document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error.message)));';
+const hook = '  document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error)));';
 const instrumented = runtimeSource.replace(hook, `globalThis.__previewContract = { normalizePath, resolvePath, rewriteCss };\n${hook}`);
 const context = { document: { addEventListener() {} }, console, Set, Map, Object, Array, String, Number, RegExp, Error, Promise };
 context.globalThis = context;

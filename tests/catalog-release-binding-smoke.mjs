@@ -69,7 +69,8 @@ assert.throws(() => assertBinding({ ...projection, release: { ...projection.rele
 assert.throws(() => assertBinding({ ...projection, release: { ...projection.release, approvedPermissions: ["device.battery-status.read", "extra"] } }, release));
 assertBinding(projection, release);
 
-assert.doesNotMatch(runtime, /CatalogReleaseBinding|publishedReleaseId|reviewDecisionId/);
+assert.match(runtime, /publishedReleaseId|reviewDecisionId/);
+assert.doesNotMatch(runtime, /ProductionBrokerContext|WebWindowsNative/);
 assert.doesNotMatch(device, /CatalogReleaseBinding|publishedReleaseId|reviewDecisionId/);
 assert.doesNotMatch(native, /CatalogReleaseBinding|publishedReleaseId|reviewDecisionId/);
 console.log("catalog release binding and authority boundary smoke test passed");

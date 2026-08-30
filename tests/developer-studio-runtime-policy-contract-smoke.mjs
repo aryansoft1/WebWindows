@@ -6,7 +6,7 @@ import { loadStudioContracts } from "./helpers/load-studio-contracts.mjs";
 
 const contracts = await loadStudioContracts();
 const runtimeSource = await fs.readFile(new URL("../assets/js/package-runtime.js", import.meta.url), "utf8");
-const hook = '  document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error.message)));';
+const hook = '  document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error)));';
 assert.ok(runtimeSource.includes(hook));
 const instrumented = runtimeSource.replace(hook, `
   globalThis.__runtimePolicy = { MAX_FILES, MAX_UNCOMPRESSED_BYTES, ALLOWED_EXTENSIONS, normalizePath };

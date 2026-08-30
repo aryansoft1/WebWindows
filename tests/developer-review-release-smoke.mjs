@@ -30,7 +30,7 @@ assert.equal(release.contract, "webwindows-published-release-v1");
 assert.deepEqual(release.releaseStatuses, ["active", "delisted", "revoked"]);
 assert.equal(release.immutability.sameVersionDifferentPackage, "reject");
 assert.equal(release.immutability.revokedMayBecomeActive, false);
-assert.equal(release.authority.catalog, "compatibility-publication-only-until-phase-2d.3");
+assert.equal(release.authority.catalog, "release-bound-projection-v1");
 assert.ok(validation.required.includes("requestedPermissions"));
 
 for (const table of [

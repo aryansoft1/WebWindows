@@ -31,7 +31,8 @@ assert.match(adminReview, /approved_permissions_base64|review_policy_version|rev
 
 assert.match(adminCatalog, /webwindows_function_catalog_versions/);
 assert.match(adminCatalog, /catalogJson/);
-assert.doesNotMatch(adminCatalog, /review_decision_id|source_manifest_sha256|approved_permissions/i);
+assert.match(adminCatalog, /webwindows_catalog_release_bindings/);
+assert.match(adminCatalog, /RELEASE_AUTHORITY_REQUIRED|RELEASE_BOUND_FIELD_READ_ONLY/);
 
 assert.match(packageDownload, /X-WebWindows-Package-SHA256/);
 assert.match(packageDownload, /s\.status='published'/);
@@ -42,7 +43,7 @@ assert.doesNotMatch(packageRuntime, /X-WebWindows-Package-SHA256|crypto\.subtle\
 for (const phrase of [
   "ZIP-root `manifest.json` is the only Source Manifest authority",
   "Current production drift",
-  "Package Runtime, Production Broker/facade, Native Bridge, and the public Device API remain unchanged through Phase 2D.2"
+  "Package Runtime, Production Broker/facade, Native Bridge, and the public Device API remain unchanged through Phase 2D.3"
 ]) assert.match(trustDoc, new RegExp(phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
 console.log("production trust current implementation drift smoke test passed");

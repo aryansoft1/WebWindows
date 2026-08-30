@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-effective-permission-decision-v1",
+  "status": "preview-framework-production-disabled",
+  "policyVersion": 1,
+  "defaultDecision": "deny",
+  "decisionOrder": [
+    "manifest-declaration",
+    "platform-review-policy",
+    "host-owned-user-grant",
+    "runtime-capability",
+    "method-policy",
+    "broker-decision"
+  ],
+  "decisionShape": {
+    "required": [
+      "permissionId", "methodId", "declared", "policy", "consentMode",
+      "grantState", "capability", "methodPolicy", "effective", "denialReason", "policyVersion"
+    ],
+    "policy": ["allowed", "denied", "not-evaluated"],
+    "capability": ["supported", "unsupported", "conditional", "not-evaluated"],
+    "methodPolicy": ["enabled", "disabled", "not-evaluated"]
+  },
+  "grantStates": {
+    "not-required": {
+      "description": "No user consent is required, but declaration and trusted platform policy still apply.",
+      "persistence": "none"
+    },
+    "session-grant": {
+      "description": "A trusted Host decision bound to one app, project and Preview session.",
+      "persistence": "preview-session-memory"
+    },
+    "persistent-user-grant": {
+      "description": "Reserved for a future Production policy bound to published identity and policy version.",
+      "persistence": "not-implemented"
+    },
+    "resource-scoped-grant": {
+      "description": "Reserved for a future Host-selected resource scope; it is not a storage permission or capability.",
+      "persistence": "not-implemented"
+    },
+    "denied": {
+      "description": "Trusted Host grant authority denied or did not establish the required grant.",
+      "persistence": "none"
+    }
+  },
+  "stableDenialReasons": {
+    "not-declared": "permission-not-declared",
+    "policy-denied": "policy-denied",
+    "grant-denied": "permission-denied",
+    "capability-unsupported": "capability-unsupported",
+    "method-disabled": "method-not-allowed",
+    "gesture-required": "gesture-required",
+    "rate-limited": "rate-limited"
+  },
+  "authorities": {
+    "manifestDeclaration": "source-manifest",
+    "platformReviewPolicy": "trusted-webwindows-host",
+    "userGrant": "trusted-webwindows-host-ui",
+    "runtimeCapability": "trusted-public-api-provider",
+    "methodPolicy": "capability-broker-method-registry",
+    "sandboxClaimsAccepted": false,
+    "forbiddenSandboxClaims": ["grant", "grantState", "userGesture", "capability", "policy", "policyVersion"]
+  },
+  "previewLifecycle": {
+    "storage": "session-memory-only",
+    "stop": "discard-session-grants-and-decisions",
+    "reload": "create-new-session-and-reevaluate",
+    "crossSessionReuse": false,
+    "crossProjectReuse": false,
+    "persistentStores": ["none"]
+  },
+  "batteryPilot": {
+    "permissionId": "device.battery-status.read",
+    "consentMode": "no-consent",
+    "grantStateWhenTrustedPolicyAllows": "not-required",
+    "prompt": false
+  },
+  "production": {
+    "brokerEnabled": false,
+    "consentUiImplemented": false,
+    "persistentGrantImplemented": false
+  }
+}

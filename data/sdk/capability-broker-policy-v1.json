@@ -4,6 +4,8 @@
   "status": "preview-pilot-enabled-production-disabled",
   "protocol": "webwindows-capability-broker-v1",
   "protocolVersion": 1,
+  "policyVersion": 1,
+  "permissionDecisionContract": "data/sdk/permission-decision-v1.json",
   "sameProtocolForPreviewAndProduction": true,
   "defaultDecision": "deny",
   "limits": {
@@ -41,6 +43,10 @@
     "persistent-user-grant": {
       "description": "Future Production grant bound to published app identity, permission, policy version and optional resource scope.",
       "persistence": "future-production-policy"
+    },
+    "resource-scoped-grant": {
+      "description": "Future trusted Host grant bound to a Host-selected resource. Contract only; no Storage API is enabled.",
+      "persistence": "not-implemented"
     }
   },
   "cancellation": {
@@ -60,6 +66,15 @@
     "authority": "trusted-host-ui-only",
     "sandboxClaimAccepted": false,
     "requestFieldAllowed": false
+  },
+  "consentAuthority": {
+    "authority": "trusted-webwindows-host-ui",
+    "sandboxMaySelfGrant": false,
+    "sandboxMayReportGesture": false,
+    "sandboxMayReportCapability": false,
+    "sandboxMayChangePolicyVersion": false,
+    "previewPersistence": "session-memory-only",
+    "productionConsentUi": "not-implemented"
   },
   "audit": {
     "previewPersistence": "session-memory",

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "webwindows-server-validation-report-v1",
-  "status": "contract-frozen-server-integration-disabled",
+  "status": "contract-frozen-server-validation-integrated",
   "reportName": "ServerValidationReport",
   "required": [
     "reportId", "validatorVersion", "validatedAt", "packageSha256", "packageSize",

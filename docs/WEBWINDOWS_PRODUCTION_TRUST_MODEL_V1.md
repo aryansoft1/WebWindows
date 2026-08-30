@@ -73,20 +73,20 @@ The existing Function Catalog remains the sole distribution catalog. A future pu
 
 `appId` ownership is bound to an opaque publisher/developer account ID. Review binds the publisher and exact release. Developer revocation affects all publisher releases according to the revocation matrix. Ownership transfer is an explicit security event, not an edit to display metadata, and invalidates grants. API Key rotation has no effect on published identity.
 
-## 8. Current production drift (audit only)
+## 8. Current production drift and implemented foundations
 
 The following are observations, not changes introduced by this contract:
 
-1. `developer_api/v1.asp` accepts an outer `manifestJson` plus separate `appId`/`version`; it performs string-level ID checks and does not establish ZIP-root Manifest authority or canonical equality.
-2. Upload computes SHA-256 over the stored package blob and compares a submitted digest, but it does not safely extract/validate package contents or create a structured ServerValidationReport.
-3. Admin review verifies a package exists and its stored hash equals submission integrity, but review state has no immutable review-decision identity, requested/approved permission sets, risk data or review policy version.
-4. Review/publish state is bound to a submission row, but the Function Catalog is published through a separate request. Submission/catalog/package publication is not one atomic release transaction.
+1. `developer_api/v1.asp` still accepts an outer `manifestJson` plus separate `appId`/`version`, but Phase 2D.1 now requires canonical equality with ZIP-root `manifest.json`; the ZIP-root Source Manifest is review authority.
+2. Phase 2D.1 safely extracts and validates uploaded ZIP bytes and stores an immutable structured ServerValidationReport bound to package and Source Manifest hashes.
+3. Phase 2D.2 creates append-only ReviewDecision records with requested/approved/denied permissions, exact hashes, reviewer/risk data, and review policy version.
+4. Phase 2D.2 creates append-only PublishedRelease records and makes Developer Platform release creation, catalog revision publication, and submission projection one database transaction. Catalog entries are not yet release-bound runtime authority.
 5. `api/function-package.asp` serves the stored SHA-256 via `ETag` and `X-WebWindows-Package-SHA256`; `assets/js/package-runtime.js` downloads the ZIP but does not cryptographically verify those values before extraction.
 6. Package Runtime receives `appId`, `version` and `entry` from catalog/runtime query parameters and does not bind them to ZIP-root `manifest.json` or a PublishedAppIdentity.
-7. Current submission status supports `revoked`, but there is no separate delisted state, emergency block, permission-only review revocation, running-session termination or Broker revocation propagation.
+7. Phase 2D.2 records `delisted` and terminal `revoked` as append-only release events. Emergency block, permission-only review revocation, running-session termination, and Broker propagation remain unimplemented.
 8. `webwindows_function_ownership` binds `appId` to numeric developer ID, but transfer/revocation/grant invalidation semantics are absent. Developer status controls submission authentication, not a runtime publisher identity record.
 9. Current catalog schema can carry package hash/size/download URL through published metadata, but it lacks required release, publisher, canonical Manifest hash, review reference/policy and approved-permission fields.
 10. Catalog validation is structural/string-level and does not verify catalog metadata against the published package/review identity. Database catalog publication may also fall back to the JSON system catalog.
 11. API Key is correctly used for Developer API authentication, but no separate formal statement currently prevents downstream code from treating it as application identity; this contract now forbids that use.
 
-No production implementation is changed in Phase 2C.5.
+Package Runtime, Production Broker/facade, Native Bridge, and the public Device API remain unchanged through Phase 2D.2.

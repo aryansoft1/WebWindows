@@ -1,16 +1,17 @@
 {
   "schemaVersion": 1,
   "contract": "webwindows-review-decision-v1",
-  "status": "contract-frozen-review-integration-disabled",
+  "status": "contract-frozen-admin-review-integrated",
   "decisionName": "ReviewDecision",
   "reviewPolicyVersion": 1,
   "required": [
-    "reviewDecisionId", "publishedReleaseId", "appId", "publisherId", "version",
+    "reviewDecisionId", "submissionId", "appId", "publisherId", "version",
     "packageSha256", "sourceManifestSha256", "requestedPermissions", "approvedPermissions",
-    "deniedPermissions", "permissionRisk", "reviewPolicyVersion", "decision",
-    "decidedBy", "decidedAt"
+    "deniedPermissions", "validationReportId", "manifestVersion", "sdkVersion",
+    "riskSummary", "reviewPolicyVersion", "decision", "reviewerType",
+    "reviewerIdentity", "reviewedAt"
   ],
-  "decisions": ["approved", "denied", "revoked"],
+  "decisions": ["approved", "rejected"],
   "reviewerAuthorities": ["authorized-reviewer", "trusted-policy-system"],
   "permissionRules": {
     "requestedAuthority": "verified-zip-root-source-manifest",
@@ -23,10 +24,17 @@
   "binding": {
     "packageSha256Required": true,
     "sourceManifestSha256Required": true,
-    "publishedReleaseIdRequired": true,
+    "publishedReleaseIdRequired": false,
     "publisherIdRequired": true,
     "appIdForeverApproval": false,
-    "newPackageRequiresNewDecision": true
+    "newPackageRequiresNewDecision": true,
+    "activeValidationRequired": true,
+    "sourceManifestHashMustMatchValidation": true
+  },
+  "immutability": {
+    "record": "append-only",
+    "reReview": "new-record-with-supersedes-id",
+    "submissionStatus": "compatibility-projection-only"
   },
   "revocationEvents": {
     "delisted": {

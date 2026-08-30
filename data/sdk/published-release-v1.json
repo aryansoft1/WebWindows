@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-published-release-v1",
+  "status": "contract-frozen-publication-record-integrated",
+  "releaseName": "PublishedRelease",
+  "required": [
+    "publishedReleaseId", "submissionId", "appId", "publisherId", "version",
+    "packageSha256", "sourceManifestSha256", "manifestVersion", "sdkVersion",
+    "validationReportId", "reviewDecisionId", "approvedPermissions",
+    "reviewPolicyVersion", "publishedAt", "releaseStatus"
+  ],
+  "releaseStatuses": ["active", "delisted", "revoked"],
+  "identity": {
+    "format": "opaque-server-identity",
+    "notDerivedOnlyFrom": ["appId", "version"],
+    "binds": ["publisherId", "appId", "version", "packageSha256", "sourceManifestSha256"]
+  },
+  "authority": {
+    "reviewDecision": "latest-approved-exact-package-decision",
+    "validationReport": "active-passed-exact-package-and-source-manifest-report",
+    "approvedPermissions": "copied-from-review-decision",
+    "catalog": "compatibility-publication-only-until-phase-2d.3"
+  },
+  "immutability": {
+    "releaseRecord": "append-only",
+    "sameVersionDifferentPackage": "reject",
+    "statusTransitions": "append-only-release-events",
+    "physicalDelete": "forbidden",
+    "revokedMayBecomeActive": false
+  },
+  "legacy": {
+    "unverifiedCatalogEntries": "no-synthetic-review-or-release-record",
+    "migration": "future-revalidate-review-and-publish"
+  }
+}

@@ -70,6 +70,119 @@ Function Base64DecodeUtf8(ByVal value)
   Set stream = Nothing
 End Function
 
+Function Base64EncodeUtf8(ByVal value)
+  Dim stream, bytes, xml, node
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.WriteText CStr(value)
+  stream.Position = 0
+  stream.Type = 1
+  stream.Position = 3
+  bytes = stream.Read
+  stream.Close
+  Set stream = Nothing
+  Set xml = Server.CreateObject("Msxml2.DOMDocument.3.0")
+  Set node = xml.createElement("base64")
+  node.dataType = "bin.base64"
+  node.nodeTypedValue = bytes
+  Base64EncodeUtf8 = Replace(Replace(node.text, vbCr, ""), vbLf, "")
+  Set node = Nothing
+  Set xml = Nothing
+End Function
+
+Function JsonValueForKey(ByVal json, ByVal key, ByVal stringValue)
+  Dim regex, matches
+  Set regex = New RegExp
+  regex.IgnoreCase = False
+  If stringValue Then
+    regex.Pattern = """" & key & """\s*:\s*""([^""\\]*(\\.[^""\\]*)*)"""
+  Else
+    regex.Pattern = """" & key & """\s*:\s*([^,}\r\n]+)"
+  End If
+  Set matches = regex.Execute(CStr(json))
+  If matches.Count = 0 Then
+    JsonValueForKey = ""
+  Else
+    JsonValueForKey = Trim(CStr(matches(0).SubMatches(0)))
+  End If
+  Set matches = Nothing
+  Set regex = Nothing
+End Function
+
+Function JsonArrayForKey(ByVal json, ByVal key)
+  Dim regex, matches
+  Set regex = New RegExp
+  regex.IgnoreCase = False
+  regex.Pattern = """" & key & """\s*:\s*(\[[^\]]*\])"
+  Set matches = regex.Execute(CStr(json))
+  If matches.Count = 0 Then JsonArrayForKey = "" Else JsonArrayForKey = CStr(matches(0).SubMatches(0))
+  Set matches = Nothing
+  Set regex = Nothing
+End Function
+
+Function SqlNullableText(ByVal value)
+  If IsNull(value) Then
+    SqlNullableText = "NULL"
+  ElseIf Len(CStr(value)) = 0 Then
+    SqlNullableText = "NULL"
+  Else
+    SqlNullableText = "'" & Replace(CStr(value), "'", "''") & "'"
+  End If
+End Function
+
+Function CanonicalPermissionSelection(ByVal requestedJson, ByVal selectedJson, ByRef deniedJson, ByRef reason)
+  Dim shape, token, requested, selected, requestedMatches, selectedMatches, item, key, approved, denied
+  Set shape = New RegExp
+  shape.Pattern = "^\s*\[\s*(""[a-z0-9]+([._-][a-z0-9]+)*""\s*(,\s*""[a-z0-9]+([._-][a-z0-9]+)*""\s*)*)?\]\s*$"
+  shape.IgnoreCase = False
+  If Not shape.Test(CStr(requestedJson)) Or Not shape.Test(CStr(selectedJson)) Then
+    reason = "权限集合不是有效的 permission ID JSON 数组。"
+    CanonicalPermissionSelection = ""
+    Exit Function
+  End If
+  Set token = New RegExp
+  token.Pattern = """([a-z0-9]+([._-][a-z0-9]+)*)"""
+  token.Global = True
+  Set requested = Server.CreateObject("Scripting.Dictionary")
+  Set selected = Server.CreateObject("Scripting.Dictionary")
+  Set requestedMatches = token.Execute(CStr(requestedJson))
+  For Each item In requestedMatches
+    key = CStr(item.SubMatches(0))
+    If requested.Exists(key) Then
+      reason = "验证报告包含重复权限。"
+      CanonicalPermissionSelection = ""
+      Exit Function
+    End If
+    requested.Add key, True
+  Next
+  Set selectedMatches = token.Execute(CStr(selectedJson))
+  For Each item In selectedMatches
+    key = CStr(item.SubMatches(0))
+    If selected.Exists(key) Or Not requested.Exists(key) Then
+      reason = "批准权限必须是请求权限的无重复子集。"
+      CanonicalPermissionSelection = ""
+      Exit Function
+    End If
+    selected.Add key, True
+  Next
+  approved = "["
+  denied = "["
+  For Each key In requested.Keys
+    If selected.Exists(key) Then
+      If Len(approved) > 1 Then approved = approved & ","
+      approved = approved & """" & key & """"
+    Else
+      If Len(denied) > 1 Then denied = denied & ","
+      denied = denied & """" & key & """"
+    End If
+  Next
+  CanonicalPermissionSelection = approved & "]"
+  deniedJson = denied & "]"
+  reason = ""
+End Function
+
 Sub EnsureTables()
   On Error Resume Next
   conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_developers (" & _
@@ -135,6 +248,73 @@ Sub EnsureTables()
     "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
     "KEY idx_submission_validation_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
   Err.Clear
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_review_decisions (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,review_decision_id VARCHAR(64) NOT NULL," & _
+    "submission_id BIGINT NOT NULL,publisher_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
+    "app_version VARCHAR(40) NOT NULL,package_sha256 VARCHAR(64) NOT NULL," & _
+    "source_manifest_sha256 VARCHAR(64) NOT NULL,validation_record_id BIGINT NOT NULL," & _
+    "validation_report_id VARCHAR(80) NOT NULL," & _
+    "manifest_version INT NOT NULL,sdk_version VARCHAR(20) NULL," & _
+    "requested_permissions_base64 LONGTEXT NOT NULL,approved_permissions_base64 LONGTEXT NOT NULL," & _
+    "denied_permissions_base64 LONGTEXT NOT NULL,review_policy_version INT NOT NULL," & _
+    "decision VARCHAR(20) NOT NULL,review_note VARCHAR(255) NOT NULL DEFAULT ''," & _
+    "reviewer_type VARCHAR(30) NOT NULL,reviewed_by BIGINT NULL,reviewer_identity VARCHAR(160) NOT NULL," & _
+    "risk_summary_base64 LONGTEXT NOT NULL,supersedes_id BIGINT NULL," & _
+    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
+    "UNIQUE KEY uk_review_decision_identity(review_decision_id)," & _
+    "KEY idx_review_decision_submission(submission_id,id)," & _
+    "KEY idx_review_decision_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number <> 0 Then
+    schemaError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    Fail 500, "REVIEW_DECISION_SCHEMA_FAILED", schemaError
+  End If
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_published_releases (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,published_release_id VARCHAR(64) NOT NULL," & _
+    "submission_id BIGINT NOT NULL,publisher_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
+    "app_version VARCHAR(40) NOT NULL,package_sha256 VARCHAR(64) NOT NULL," & _
+    "source_manifest_sha256 VARCHAR(64) NOT NULL,manifest_version INT NOT NULL," & _
+    "sdk_version VARCHAR(20) NULL,validation_record_id BIGINT NOT NULL," & _
+    "validation_report_id VARCHAR(80) NOT NULL,review_decision_id BIGINT NOT NULL," & _
+    "approved_permissions_base64 LONGTEXT NOT NULL,review_policy_version INT NOT NULL," & _
+    "release_status VARCHAR(24) NOT NULL DEFAULT 'active',published_by BIGINT NULL," & _
+    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
+    "UNIQUE KEY uk_published_release_identity(published_release_id)," & _
+    "UNIQUE KEY uk_published_release_version(app_id,app_version)," & _
+    "UNIQUE KEY uk_published_release_review(review_decision_id)," & _
+    "KEY idx_published_release_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number <> 0 Then
+    schemaError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    Fail 500, "PUBLISHED_RELEASE_SCHEMA_FAILED", schemaError
+  End If
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_published_release_events (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,published_release_id BIGINT NOT NULL," & _
+    "release_status VARCHAR(24) NOT NULL,event_note VARCHAR(255) NOT NULL DEFAULT ''," & _
+    "acted_by BIGINT NULL,actor_identity VARCHAR(160) NOT NULL," & _
+    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
+    "KEY idx_release_event_release(published_release_id,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number <> 0 Then
+    schemaError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    Fail 500, "RELEASE_EVENT_SCHEMA_FAILED", schemaError
+  End If
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_function_catalog_versions (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,catalog_version VARCHAR(40) NOT NULL," & _
+    "catalog_json LONGTEXT NOT NULL,storage_encoding VARCHAR(12) NOT NULL DEFAULT 'base64'," & _
+    "publish_note VARCHAR(255) NOT NULL DEFAULT '',published_by BIGINT NULL," & _
+    "is_active TINYINT(1) NOT NULL DEFAULT 0,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
+    "PRIMARY KEY(id),KEY idx_function_catalog_active(is_active,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number <> 0 Then
+    schemaError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    Fail 500, "CATALOG_SCHEMA_FAILED", schemaError
+  End If
+  Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_sha256 VARCHAR(64) NOT NULL DEFAULT ''"
@@ -191,12 +371,21 @@ If action = "developers" And method = "GET" Then
 
 ElseIf action = "submissions" And method = "GET" Then
   Dim submissionRs, submissionJson, firstSubmission, manifestJson, packageReadyJson, serverValidatedJson, validationReportJson
+  Dim reviewDecisionJson, publishedReleaseJson, effectiveReleaseStatus
   Set submissionRs = conn.Execute("SELECT s.id,s.developer_id,s.app_id,s.app_version,s.manifest_base64," & _
     "s.integrity_sha256,s.package_size,s.package_sha256,s.package_uploaded_at," & _
     "s.validation_status,s.status,s.review_note,s.created_at,s.updated_at,d.display_name,u.username," & _
-    "v.report_base64,v.passed AS validation_passed " & _
+    "v.id AS validation_id,v.report_base64,v.passed AS validation_passed," & _
+    "r.review_decision_id,r.decision,r.requested_permissions_base64,r.approved_permissions_base64," & _
+    "r.denied_permissions_base64,r.review_policy_version,r.reviewer_identity,r.reviewer_type," & _
+    "r.package_sha256 AS review_package_sha256,r.source_manifest_sha256 AS review_manifest_sha256,r.created_at AS reviewed_at," & _
+    "pr.id AS release_internal_id,pr.published_release_id,pr.package_sha256 AS release_package_sha256," & _
+    "pr.release_status,pr.created_at AS published_at,re.release_status AS event_release_status " & _
     "FROM webwindows_function_submissions s " & _
     "LEFT JOIN webwindows_submission_validations v ON v.id=s.active_validation_id " & _
+    "LEFT JOIN webwindows_review_decisions r ON r.id=(SELECT MAX(r2.id) FROM webwindows_review_decisions r2 WHERE r2.submission_id=s.id) " & _
+    "LEFT JOIN webwindows_published_releases pr ON pr.id=(SELECT MAX(pr2.id) FROM webwindows_published_releases pr2 WHERE pr2.submission_id=s.id) " & _
+    "LEFT JOIN webwindows_published_release_events re ON re.id=(SELECT MAX(re2.id) FROM webwindows_published_release_events re2 WHERE re2.published_release_id=pr.id) " & _
     "JOIN webwindows_developers d ON s.developer_id=d.id " & _
     "LEFT JOIN webwindows_users u ON d.user_id=u.id ORDER BY s.id DESC LIMIT 200")
   submissionJson = "{""ok"":true,""submissions"":["
@@ -214,6 +403,29 @@ ElseIf action = "submissions" And method = "GET" Then
         If CBool(submissionRs("validation_passed")) Then serverValidatedJson = "true"
       End If
     End If
+    reviewDecisionJson = "null"
+    If Not IsNull(submissionRs("review_decision_id")) Then
+      reviewDecisionJson = "{""reviewDecisionId"":""" & JsonText(submissionRs("review_decision_id")) & _
+        """,""decision"":""" & JsonText(submissionRs("decision")) & _
+        """,""requestedPermissions"":" & Base64DecodeUtf8(CStr(submissionRs("requested_permissions_base64"))) & _
+        ",""approvedPermissions"":" & Base64DecodeUtf8(CStr(submissionRs("approved_permissions_base64"))) & _
+        ",""deniedPermissions"":" & Base64DecodeUtf8(CStr(submissionRs("denied_permissions_base64"))) & _
+        ",""reviewPolicyVersion"":" & CLng(submissionRs("review_policy_version")) & _
+        ",""reviewerIdentity"":""" & JsonText(submissionRs("reviewer_identity")) & _
+        """,""reviewerType"":""" & JsonText(submissionRs("reviewer_type")) & _
+        """,""packageSha256"":""" & JsonText(submissionRs("review_package_sha256")) & _
+        """,""sourceManifestSha256"":""" & JsonText(submissionRs("review_manifest_sha256")) & _
+        """,""reviewedAt"":""" & JsonText(submissionRs("reviewed_at")) & """}"
+    End If
+    publishedReleaseJson = "null"
+    If Not IsNull(submissionRs("published_release_id")) Then
+      effectiveReleaseStatus = CStr(submissionRs("release_status"))
+      If Not IsNull(submissionRs("event_release_status")) Then effectiveReleaseStatus = CStr(submissionRs("event_release_status"))
+      publishedReleaseJson = "{""publishedReleaseId"":""" & JsonText(submissionRs("published_release_id")) & _
+        """,""packageSha256"":""" & JsonText(submissionRs("release_package_sha256")) & _
+        """,""releaseStatus"":""" & JsonText(effectiveReleaseStatus) & _
+        """,""publishedAt"":""" & JsonText(submissionRs("published_at")) & """}"
+    End If
     submissionJson = submissionJson & "{""id"":" & CLng(submissionRs("id")) & _
       ",""developerId"":" & CLng(submissionRs("developer_id")) & _
       ",""developerName"":""" & JsonText(submissionRs("display_name")) & _
@@ -228,6 +440,8 @@ ElseIf action = "submissions" And method = "GET" Then
       ",""serverValidated"":" & serverValidatedJson & _
       ",""validationStatus"":""" & JsonText(submissionRs("validation_status")) & _
       """,""validationReport"":" & validationReportJson & _
+      ",""reviewDecision"":" & reviewDecisionJson & _
+      ",""publishedRelease"":" & publishedReleaseJson & _
       ",""status"":""" & JsonText(submissionRs("status")) & _
       """,""reviewNote"":""" & JsonText(submissionRs("review_note")) & _
       """,""createdAt"":""" & JsonText(submissionRs("created_at")) & _
@@ -266,93 +480,295 @@ ElseIf action = "developer-status" And method = "POST" Then
   Response.Write "{""ok"":true,""status"":""" & JsonText(developerStatus) & """}"
 
 ElseIf action = "submission-status" And method = "POST" Then
-  Dim submissionId, targetStatus, reviewNote, currentRs, currentStatus, allowed
+  Dim submissionId, targetStatus, reviewNote, currentRs, currentStatus
+  Dim reportText, requestedJson, selectedJson, approvedJson, deniedJson, permissionError
+  Dim reportId, reportPackageSha, reportManifestSha, manifestVersionText, sdkVersionText
+  Dim supersedesId, reviewerIdentity, decisionText, reviewSql, reviewError, newDecisionRs
   submissionId = FormPositiveLong("submissionId")
   targetStatus = LCase(Trim(CStr(Request.Form("status"))))
   reviewNote = Left(Trim(CStr(Request.Form("note"))), 255)
   If submissionId <= 0 Then Fail 400, "SUBMISSION_ID_INVALID", "提交 ID 无效。"
-  If targetStatus <> "approved" And targetStatus <> "rejected" And _
-     targetStatus <> "published" And targetStatus <> "revoked" Then
+  If targetStatus <> "approved" And targetStatus <> "rejected" Then
     Fail 400, "SUBMISSION_STATUS_INVALID", "审核状态无效。"
   End If
+  If targetStatus = "rejected" And Len(reviewNote) = 0 Then Fail 400, "REVIEW_NOTE_REQUIRED", "驳回必须填写审核原因。"
   Set currentRs = conn.Execute("SELECT s.status,s.package_size,s.package_sha256,s.integrity_sha256," & _
-    "s.app_id,s.developer_id,s.validation_status,v.passed AS validation_passed," & _
-    "v.package_sha256 AS validated_package_sha256 FROM webwindows_function_submissions s " & _
+    "s.app_id,s.app_version,s.developer_id,s.active_validation_id,s.validation_status," & _
+    "v.passed AS validation_passed,v.package_sha256 AS validated_package_sha256," & _
+    "v.source_manifest_sha256,v.report_base64 FROM webwindows_function_submissions s " & _
     "LEFT JOIN webwindows_submission_validations v ON v.id=s.active_validation_id WHERE s.id=" & submissionId)
   If currentRs.EOF Then
     currentRs.Close
     Fail 404, "SUBMISSION_NOT_FOUND", "没有找到功能提交。"
   End If
   currentStatus = LCase(CStr(currentRs("status")))
+  If currentStatus <> "submitted" And currentStatus <> "rejected" And currentStatus <> "approved" Then
+    currentRs.Close
+    Fail 409, "SUBMISSION_TRANSITION_INVALID", "已发布或撤销的提交不能原地复审；请创建新提交。"
+  End If
+  If CLng(currentRs("package_size")) <= 0 Or _
+     LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("integrity_sha256"))) Then
+    currentRs.Close
+    Fail 409, "PACKAGE_REQUIRED", "必须先上传并通过 SHA-256 校验的 ZIP 功能包。"
+  End If
+  If LCase(CStr(currentRs("validation_status"))) <> "validated" Or _
+     IsNull(currentRs("validation_passed")) Or IsNull(currentRs("validated_package_sha256")) Or _
+     IsNull(currentRs("source_manifest_sha256")) Or IsNull(currentRs("report_base64")) Then
+    currentRs.Close
+    Fail 409, "SERVER_VALIDATION_REQUIRED", "审核必须绑定当前已通过的服务器验证报告。"
+  End If
+  If Not CBool(currentRs("validation_passed")) Or _
+     LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("validated_package_sha256"))) Then
+    currentRs.Close
+    Fail 409, "VALIDATION_BINDING_MISMATCH", "验证报告与当前功能包 SHA-256 不匹配。"
+  End If
+  reportText = Base64DecodeUtf8(CStr(currentRs("report_base64")))
+  reportId = JsonValueForKey(reportText, "reportId", True)
+  reportPackageSha = LCase(JsonValueForKey(reportText, "packageSha256", True))
+  reportManifestSha = LCase(JsonValueForKey(reportText, "sourceManifestSha256", True))
+  manifestVersionText = JsonValueForKey(reportText, "manifestVersion", False)
+  sdkVersionText = JsonValueForKey(reportText, "sdkVersion", True)
+  requestedJson = JsonArrayForKey(reportText, "requestedPermissions")
+  If Len(reportId) = 0 Or reportPackageSha <> LCase(CStr(currentRs("package_sha256"))) Or _
+     reportManifestSha <> LCase(CStr(currentRs("source_manifest_sha256"))) Or _
+     (manifestVersionText <> "1" And manifestVersionText <> "2") Or Len(requestedJson) = 0 Then
+    currentRs.Close
+    Fail 409, "VALIDATION_REPORT_BINDING_INVALID", "服务器验证报告身份或 Source Manifest 绑定无效。"
+  End If
+  selectedJson = CStr(Request.Form("approvedPermissionsJson"))
+  If targetStatus = "rejected" Then selectedJson = "[]"
+  If Len(Trim(selectedJson)) = 0 Then selectedJson = "[]"
+  approvedJson = CanonicalPermissionSelection(requestedJson, selectedJson, deniedJson, permissionError)
+  If Len(permissionError) > 0 Then
+    currentRs.Close
+    Fail 400, "PERMISSION_SELECTION_INVALID", permissionError
+  End If
+  If targetStatus = "approved" Then decisionText = "approved" Else decisionText = "rejected"
+  reviewerIdentity = "admin:" & CStr(Session("username"))
+  Dim appIdSql, versionSql, sdkSql, riskJson, previousRs, ownershipRs
+  appIdSql = Replace(CStr(currentRs("app_id")), "'", "''")
+  versionSql = Replace(CStr(currentRs("app_version")), "'", "''")
+  sdkSql = Replace(sdkVersionText, "'", "''")
+  riskJson = "{""validationReportId"":""" & JsonText(reportId) & """,""summary"":""validation-passed""}"
+  supersedesId = "NULL"
+  Set previousRs = conn.Execute("SELECT MAX(id) AS latest_id FROM webwindows_review_decisions WHERE submission_id=" & submissionId)
+  If Not IsNull(previousRs("latest_id")) Then supersedesId = CStr(CLng(previousRs("latest_id")))
+  previousRs.Close
+  Set previousRs = Nothing
+  Set ownershipRs = conn.Execute("SELECT developer_id FROM webwindows_function_ownership WHERE app_id='" & appIdSql & "' LIMIT 1")
+  If targetStatus = "approved" And Not ownershipRs.EOF Then
+    If CLng(ownershipRs("developer_id")) <> CLng(currentRs("developer_id")) Then
+      ownershipRs.Close
+      currentRs.Close
+      Fail 409, "APP_ID_OWNED", "该功能 ID 已属于其他开发者。"
+    End If
+  End If
+  ownershipRs.Close
+  Set ownershipRs = Nothing
+  reviewSql = "INSERT INTO webwindows_review_decisions " & _
+    "(review_decision_id,submission_id,publisher_id,app_id,app_version,package_sha256," & _
+    "source_manifest_sha256,validation_record_id,validation_report_id,manifest_version,sdk_version," & _
+    "requested_permissions_base64,approved_permissions_base64,denied_permissions_base64," & _
+    "review_policy_version,decision,review_note,reviewer_type,reviewed_by,reviewer_identity,risk_summary_base64,supersedes_id) VALUES (" & _
+    "CONCAT('rvd_',LOWER(REPLACE(UUID(),'-','')))," & submissionId & "," & CLng(currentRs("developer_id")) & _
+    ",'" & appIdSql & "','" & versionSql & "','" & LCase(CStr(currentRs("package_sha256"))) & _
+    "','" & reportManifestSha & "'," & CLng(currentRs("active_validation_id")) & ",'" & Replace(reportId, "'", "''") & _
+    "'," & CLng(manifestVersionText) & "," & SqlNullableText(sdkVersionText) & _
+    ",'" & Base64EncodeUtf8(requestedJson) & "','" & Base64EncodeUtf8(approvedJson) & _
+    "','" & Base64EncodeUtf8(deniedJson) & "',1,'" & decisionText & "','" & Replace(reviewNote, "'", "''") & _
+    "','authorized-reviewer'," & CLng(Session("user_id")) & ",'" & Replace(reviewerIdentity, "'", "''") & _
+    "','" & Base64EncodeUtf8(riskJson) & "'," & supersedesId & ")"
+  On Error Resume Next
+  reviewError = ""
+  conn.BeginTrans
+  If Err.Number <> 0 Then reviewError = Err.Description: Err.Clear
   If targetStatus = "approved" Then
-    If CLng(currentRs("package_size")) <= 0 Or _
-       LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("integrity_sha256"))) Then
-      currentRs.Close
-      Fail 409, "PACKAGE_REQUIRED", "必须先上传并通过 SHA-256 校验的 ZIP 功能包。"
-    End If
-    If LCase(CStr(currentRs("validation_status"))) <> "validated" Or _
-       IsNull(currentRs("validation_passed")) Or IsNull(currentRs("validated_package_sha256")) Then
-      currentRs.Close
-      Fail 409, "SERVER_VALIDATION_REQUIRED", "功能包必须先通过与当前 SHA-256 绑定的服务器验证。"
-    End If
-    If Not CBool(currentRs("validation_passed")) Or _
-       LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("validated_package_sha256"))) Then
-      currentRs.Close
-      Fail 409, "SERVER_VALIDATION_REQUIRED", "服务器验证报告未通过或与当前功能包不匹配。"
-    End If
-    Dim ownershipRs
-    Set ownershipRs = conn.Execute("SELECT developer_id FROM webwindows_function_ownership " & _
-      "WHERE app_id='" & Replace(CStr(currentRs("app_id")), "'", "''") & "' LIMIT 1")
-    If Not ownershipRs.EOF Then
-      If CLng(ownershipRs("developer_id")) <> CLng(currentRs("developer_id")) Then
-        ownershipRs.Close
-        currentRs.Close
-        Fail 409, "APP_ID_OWNED", "该功能 ID 已属于其他开发者。"
-      End If
-    Else
-      conn.Execute "INSERT INTO webwindows_function_ownership(app_id,developer_id) VALUES ('" & _
-        Replace(CStr(currentRs("app_id")), "'", "''") & "'," & CLng(currentRs("developer_id")) & ")"
-    End If
-    ownershipRs.Close
-    Set ownershipRs = Nothing
+    conn.Execute "INSERT IGNORE INTO webwindows_function_ownership(app_id,developer_id) VALUES ('" & _
+      appIdSql & "'," & CLng(currentRs("developer_id")) & ")"
+    If Err.Number <> 0 Then reviewError = Err.Description: Err.Clear
   End If
-  If targetStatus = "published" Then
-    If LCase(CStr(currentRs("validation_status"))) <> "validated" Or _
-       IsNull(currentRs("validation_passed")) Or IsNull(currentRs("validated_package_sha256")) Then
-      currentRs.Close
-      Fail 409, "SERVER_VALIDATION_REQUIRED", "未通过服务器验证的功能包不能发布。"
-    End If
-    If Not CBool(currentRs("validation_passed")) Or _
-       LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("validated_package_sha256"))) Then
-      currentRs.Close
-      Fail 409, "SERVER_VALIDATION_REQUIRED", "服务器验证报告未通过或与当前功能包不匹配。"
-    End If
+  If Len(reviewError) = 0 Then
+    conn.Execute reviewSql
+    If Err.Number <> 0 Then reviewError = Err.Description: Err.Clear
   End If
+  If Len(reviewError) = 0 Then
+    conn.Execute "UPDATE webwindows_function_submissions SET status='" & targetStatus & _
+      "',review_note='" & Replace(reviewNote, "'", "''") & "',reviewed_by=" & CLng(Session("user_id")) & _
+      ",reviewed_at=NOW() WHERE id=" & submissionId
+    If Err.Number <> 0 Then reviewError = Err.Description: Err.Clear
+  End If
+  If Len(reviewError) > 0 Then
+    conn.RollbackTrans
+    On Error GoTo 0
+    currentRs.Close
+    Fail 500, "REVIEW_DECISION_CREATE_FAILED", reviewError
+  End If
+  conn.CommitTrans
+  On Error GoTo 0
   currentRs.Close
   Set currentRs = Nothing
-  allowed = False
-  If targetStatus = "approved" And (currentStatus = "submitted" Or currentStatus = "rejected") Then allowed = True
-  If targetStatus = "rejected" And (currentStatus = "submitted" Or currentStatus = "approved") Then allowed = True
-  If targetStatus = "published" And currentStatus = "approved" Then allowed = True
-  If targetStatus = "revoked" And currentStatus = "published" Then allowed = True
-  If Not allowed Then
-    Fail 409, "SUBMISSION_TRANSITION_INVALID", "当前审核状态不允许执行此操作。"
+  Set newDecisionRs = conn.Execute("SELECT review_decision_id FROM webwindows_review_decisions WHERE submission_id=" & _
+    submissionId & " ORDER BY id DESC LIMIT 1")
+  Response.Write "{""ok"":true,""status"":""" & JsonText(targetStatus) & _
+    """,""reviewDecisionId"":""" & JsonText(newDecisionRs("review_decision_id")) & """}"
+  newDecisionRs.Close
+  Set newDecisionRs = Nothing
+
+ElseIf action = "publish-release" And method = "POST" Then
+  Dim publishSubmissionId, catalogText, catalogVersionText, catalogNote, encodedCatalog
+  Dim publishRs, duplicateRs, publishSql, releaseSql, publishError, publishedReleaseRs
+  publishSubmissionId = FormPositiveLong("submissionId")
+  catalogText = CStr(Request.Form("catalogJson"))
+  catalogVersionText = Left(Trim(CStr(Request.Form("version"))), 40)
+  catalogNote = Left(Trim(CStr(Request.Form("note"))), 255)
+  If publishSubmissionId <= 0 Then Fail 400, "SUBMISSION_ID_INVALID", "提交 ID 无效。"
+  If Len(catalogText) < 50 Or Len(catalogText) > 524288 Or _
+     InStr(1, catalogText, """schemaVersion"":1", vbTextCompare) = 0 Or _
+     InStr(1, catalogText, """apps""", vbTextCompare) = 0 Then
+    Fail 400, "CATALOG_FORMAT_INVALID", "功能目录内容无效。"
   End If
-  Dim statusCmd
-  Set statusCmd = Server.CreateObject("ADODB.Command")
-  With statusCmd
-    .ActiveConnection = conn
-    .CommandText = "UPDATE webwindows_function_submissions SET status=?,review_note=?," & _
-      "reviewed_by=?,reviewed_at=NOW() WHERE id=?"
-    .CommandType = 1
-    .Parameters.Append .CreateParameter(, 200, 1, 20, targetStatus)
-    .Parameters.Append .CreateParameter(, 200, 1, 255, reviewNote)
-    .Parameters.Append .CreateParameter(, 3, 1, , CLng(Session("user_id")))
-    .Parameters.Append .CreateParameter(, 3, 1, , submissionId)
-    .Execute
-  End With
-  Set statusCmd = Nothing
-  Response.Write "{""ok"":true,""status"":""" & JsonText(targetStatus) & """}"
+  If catalogVersionText = "" Then Fail 400, "CATALOG_VERSION_REQUIRED", "目录版本不能为空。"
+  Set publishRs = conn.Execute("SELECT s.status,s.developer_id,s.app_id,s.app_version,s.package_sha256," & _
+    "s.active_validation_id,r.id AS review_internal_id,r.review_decision_id,r.package_sha256 AS review_package_sha256," & _
+    "r.source_manifest_sha256,r.validation_record_id,r.validation_report_id,r.manifest_version,r.sdk_version," & _
+    "r.approved_permissions_base64,r.review_policy_version,r.decision " & _
+    "FROM webwindows_function_submissions s LEFT JOIN webwindows_review_decisions r " & _
+    "ON r.id=(SELECT MAX(r2.id) FROM webwindows_review_decisions r2 WHERE r2.submission_id=s.id) " & _
+    "WHERE s.id=" & publishSubmissionId)
+  If publishRs.EOF Then
+    publishRs.Close
+    Fail 404, "SUBMISSION_NOT_FOUND", "没有找到功能提交。"
+  End If
+  If IsNull(publishRs("review_decision_id")) Then
+    publishRs.Close
+    Fail 409, "APPROVED_REVIEW_REQUIRED", "发布必须由当前包与当前验证绑定的批准 ReviewDecision 授权。"
+  End If
+  If LCase(CStr(publishRs("decision"))) <> "approved" Or _
+     LCase(CStr(publishRs("package_sha256"))) <> LCase(CStr(publishRs("review_package_sha256"))) Or _
+     CLng(publishRs("active_validation_id")) <> CLng(publishRs("validation_record_id")) Then
+    publishRs.Close
+    Fail 409, "APPROVED_REVIEW_REQUIRED", "发布必须由当前包与当前验证绑定的批准 ReviewDecision 授权。"
+  End If
+  Set duplicateRs = conn.Execute("SELECT package_sha256,published_release_id FROM webwindows_published_releases WHERE app_id='" & _
+    Replace(CStr(publishRs("app_id")), "'", "''") & "' AND app_version='" & _
+    Replace(CStr(publishRs("app_version")), "'", "''") & "' LIMIT 1")
+  If Not duplicateRs.EOF Then
+    If LCase(CStr(duplicateRs("package_sha256"))) <> LCase(CStr(publishRs("package_sha256"))) Then
+      duplicateRs.Close
+      publishRs.Close
+      Fail 409, "RELEASE_PACKAGE_REPLACEMENT_FORBIDDEN", "同一 appId/version 已绑定不同功能包；必须创建新版本。"
+    End If
+    duplicateRs.Close
+    publishRs.Close
+    Fail 409, "RELEASE_ALREADY_EXISTS", "该功能版本已经具有不可变 PublishedRelease。"
+  End If
+  duplicateRs.Close
+  Set duplicateRs = Nothing
+  If InStr(1, catalogText, """id"":""" & CStr(publishRs("app_id")) & """", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """version"":""" & CStr(publishRs("app_version")) & """", vbBinaryCompare) = 0 Or _
+     InStr(1, catalogText, """sha256"":""" & LCase(CStr(publishRs("package_sha256"))) & """", vbTextCompare) = 0 Then
+    publishRs.Close
+    Fail 409, "CATALOG_RELEASE_MISMATCH", "兼容目录内容未包含当前 ReviewDecision 绑定的 app/version/package。"
+  End If
+  encodedCatalog = Base64EncodeUtf8(catalogText)
+  releaseSql = "INSERT INTO webwindows_published_releases " & _
+    "(published_release_id,submission_id,publisher_id,app_id,app_version,package_sha256,source_manifest_sha256," & _
+    "manifest_version,sdk_version,validation_record_id,validation_report_id,review_decision_id," & _
+    "approved_permissions_base64,review_policy_version,release_status,published_by) VALUES (" & _
+    "CONCAT('rel_',LOWER(REPLACE(UUID(),'-','')))," & publishSubmissionId & "," & CLng(publishRs("developer_id")) & _
+    ",'" & Replace(CStr(publishRs("app_id")), "'", "''") & "','" & Replace(CStr(publishRs("app_version")), "'", "''") & _
+    "','" & LCase(CStr(publishRs("package_sha256"))) & "','" & LCase(CStr(publishRs("source_manifest_sha256"))) & _
+    "'," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
+    "," & CLng(publishRs("validation_record_id")) & ",'" & Replace(CStr(publishRs("validation_report_id")), "'", "''") & _
+    "'," & CLng(publishRs("review_internal_id")) & ",'" & CStr(publishRs("approved_permissions_base64")) & _
+    "'," & CLng(publishRs("review_policy_version")) & ",'active'," & CLng(Session("user_id")) & ")"
+  publishRs.Close
+  Set publishRs = Nothing
+  On Error Resume Next
+  publishError = ""
+  conn.BeginTrans
+  If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  conn.Execute releaseSql
+  If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  If Len(publishError) = 0 Then
+    conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
+    If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  End If
+  publishSql = "INSERT INTO webwindows_function_catalog_versions " & _
+    "(catalog_version,catalog_json,storage_encoding,publish_note,published_by,is_active) VALUES ('" & _
+    Replace(catalogVersionText, "'", "''") & "','" & encodedCatalog & "','base64','" & _
+    Replace(catalogNote, "'", "''") & "'," & CLng(Session("user_id")) & ",1)"
+  If Len(publishError) = 0 Then
+    conn.Execute publishSql
+    If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  End If
+  If Len(publishError) = 0 Then
+    conn.Execute "UPDATE webwindows_function_submissions SET status='published',review_note='" & _
+      Replace(catalogNote, "'", "''") & "',reviewed_by=" & CLng(Session("user_id")) & _
+      ",reviewed_at=NOW() WHERE id=" & publishSubmissionId
+    If Err.Number <> 0 Then publishError = Err.Description: Err.Clear
+  End If
+  If Len(publishError) > 0 Then
+    conn.RollbackTrans
+    On Error GoTo 0
+    Fail 500, "PUBLISHED_RELEASE_CREATE_FAILED", publishError
+  End If
+  conn.CommitTrans
+  On Error GoTo 0
+  Set publishedReleaseRs = conn.Execute("SELECT published_release_id FROM webwindows_published_releases WHERE submission_id=" & _
+    publishSubmissionId & " ORDER BY id DESC LIMIT 1")
+  Response.Write "{""ok"":true,""status"":""published"",""publishedReleaseId"":""" & _
+    JsonText(publishedReleaseRs("published_release_id")) & """}"
+  publishedReleaseRs.Close
+  Set publishedReleaseRs = Nothing
+
+ElseIf action = "release-status" And method = "POST" Then
+  Dim releaseSubmissionId, releaseTargetStatus, releaseNote, releaseRs, releaseError
+  releaseSubmissionId = FormPositiveLong("submissionId")
+  releaseTargetStatus = LCase(Trim(CStr(Request.Form("status"))))
+  releaseNote = Left(Trim(CStr(Request.Form("note"))), 255)
+  If releaseSubmissionId <= 0 Then Fail 400, "SUBMISSION_ID_INVALID", "提交 ID 无效。"
+  If releaseTargetStatus <> "delisted" And releaseTargetStatus <> "revoked" Then _
+    Fail 400, "RELEASE_STATUS_INVALID", "Release 只允许下架或撤销。"
+  Set releaseRs = conn.Execute("SELECT pr.id,pr.release_status,re.release_status AS latest_status " & _
+    "FROM webwindows_published_releases pr LEFT JOIN webwindows_published_release_events re " & _
+    "ON re.id=(SELECT MAX(re2.id) FROM webwindows_published_release_events re2 WHERE re2.published_release_id=pr.id) " & _
+    "WHERE pr.submission_id=" & releaseSubmissionId & " ORDER BY pr.id DESC LIMIT 1")
+  If releaseRs.EOF Then
+    releaseRs.Close
+    Fail 409, "PUBLISHED_RELEASE_REQUIRED", "没有可下架或撤销的 PublishedRelease。"
+  End If
+  effectiveReleaseStatus = CStr(releaseRs("release_status"))
+  If Not IsNull(releaseRs("latest_status")) Then effectiveReleaseStatus = CStr(releaseRs("latest_status"))
+  If effectiveReleaseStatus = "revoked" Then
+    releaseRs.Close
+    Fail 409, "REVOKED_RELEASE_IMMUTABLE", "已撤销 Release 不能重写或恢复。"
+  End If
+  On Error Resume Next
+  releaseError = ""
+  conn.BeginTrans
+  If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  conn.Execute "INSERT INTO webwindows_published_release_events " & _
+    "(published_release_id,release_status,event_note,acted_by,actor_identity) VALUES (" & _
+    CLng(releaseRs("id")) & ",'" & releaseTargetStatus & "','" & Replace(releaseNote, "'", "''") & _
+    "'," & CLng(Session("user_id")) & ",'admin:" & Replace(CStr(Session("username")), "'", "''") & "')"
+  If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  If releaseTargetStatus = "revoked" And Len(releaseError) = 0 Then
+    conn.Execute "UPDATE webwindows_function_submissions SET status='revoked',review_note='" & _
+      Replace(releaseNote, "'", "''") & "' WHERE id=" & releaseSubmissionId
+    If Err.Number <> 0 Then releaseError = Err.Description: Err.Clear
+  End If
+  If Len(releaseError) > 0 Then
+    conn.RollbackTrans
+    On Error GoTo 0
+    releaseRs.Close
+    Fail 500, "RELEASE_EVENT_CREATE_FAILED", releaseError
+  End If
+  conn.CommitTrans
+  On Error GoTo 0
+  releaseRs.Close
+  Set releaseRs = Nothing
+  Response.Write "{""ok"":true,""releaseStatus"":""" & JsonText(releaseTargetStatus) & """}"
 
 Else
   Fail 404, "ACTION_NOT_FOUND", "没有找到开发者平台管理操作。"

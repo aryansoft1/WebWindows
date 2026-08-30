@@ -126,15 +126,23 @@
     setStatus("功能包已下载；请继续在隔离环境中检查内容。", "success");
   }
 
-  async function setSubmissionStatus(submission, status, note) {
+  async function setSubmissionStatus(submission, status, note, approvedPermissions) {
     const body = new URLSearchParams();
     body.set("submissionId", submission.id);
     body.set("status", status);
     body.set("note", note || "");
+    body.set("approvedPermissionsJson", JSON.stringify(approvedPermissions || []));
     await request(API_URL, "submission-status", { method: "POST", body });
   }
 
   async function reviewSubmission(submission, status) {
+    const requested = Array.isArray(submission.validationReport?.requestedPermissions)
+      ? submission.validationReport.requestedPermissions : [];
+    const approved = status === "approved"
+      ? requested.filter((permission) => window.confirm(
+          `批准权限 ${permission} 吗？\n\nReview approved ≠ Runtime enabled；当前 Production Broker 仍保持禁用。`
+        ))
+      : [];
     const note = window.prompt(
       status === "approved" ? "审核说明（可留空）" : "请填写驳回原因",
       status === "approved" ? "Manifest 审核通过" : ""
@@ -144,7 +152,7 @@
       window.alert("驳回时必须填写原因。");
       return;
     }
-    await setSubmissionStatus(submission, status, note);
+    await setSubmissionStatus(submission, status, note, approved);
     await loadPlatform();
     setStatus(`${submission.appId} 已${status === "approved" ? "批准" : "驳回"}。`, "success");
   }
@@ -204,15 +212,19 @@
     body.set("version", version);
     body.set("note", `开发者提交：${submission.appId} ${submission.version}`);
     body.set("catalogJson", JSON.stringify(catalog));
-    await request(CATALOG_API, "", { method: "POST", body }, CATALOG_HEADERS);
-    await setSubmissionStatus(submission, "published", "已发布到功能仓库");
+    body.set("submissionId", submission.id);
+    await request(API_URL, "publish-release", { method: "POST", body });
     await loadPlatform();
     setStatus(`${submission.appId} ${submission.version} 已发布。`, "success");
   }
 
   async function revokeSubmission(submission) {
     if (!window.confirm("撤销提交状态不会自动删除服务器程序文件，确定继续吗？")) return;
-    await setSubmissionStatus(submission, "revoked", "管理员撤销发布");
+    const body = new URLSearchParams();
+    body.set("submissionId", submission.id);
+    body.set("status", "revoked");
+    body.set("note", "管理员撤销发布");
+    await request(API_URL, "release-status", { method: "POST", body });
     await loadPlatform();
     setStatus(`${submission.appId} 已标记为撤销；如需下架，请同时在功能仓库操作。`);
   }
@@ -238,7 +250,19 @@
             ? `已上传 · ${Math.ceil(submission.packageSize / 1024)} KB`
             : "等待上传"),
         element("small", "", `${submission.integritySha256.slice(0, 16)}…`),
-        element("small", "", "Server validation: " + (submission.validationStatus || "not-validated"))
+        element("small", "", "Server validation: " + (submission.validationStatus || "not-validated")),
+        element("small", "", "Requested: " +
+          ((submission.validationReport?.requestedPermissions || []).join(", ") || "none")),
+        element("small", "", submission.reviewDecision
+          ? `Review ${submission.reviewDecision.reviewDecisionId}: ${submission.reviewDecision.decision}`
+          : "Review: none"),
+        element("small", "", submission.reviewDecision
+          ? `Approved: ${submission.reviewDecision.approvedPermissions.join(", ") || "none"}; Denied: ${submission.reviewDecision.deniedPermissions.join(", ") || "none"}`
+          : "Review approved ≠ Runtime enabled"),
+        element("small", "", submission.publishedRelease
+          ? `Release ${submission.publishedRelease.publishedReleaseId}: ${submission.publishedRelease.releaseStatus}`
+          : "Published release: none"),
+        element("small", "", `Package SHA: ${submission.packageSha256 || "none"}`)
       );
       row.appendChild(integrityCell);
       const statusCell = document.createElement("td");

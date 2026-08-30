@@ -26,7 +26,8 @@ export function createTrustedProductionContext({
   if (verifiedManifest?.appId !== identity?.appId
       || verifiedManifest?.version !== identity?.version
       || verifiedManifest?.manifestVersion !== identity?.manifestVersion
-      || verifiedManifest?.sourceManifestSha256 !== identity?.sourceManifestSha256) failures.push("manifest-mismatch");
+      || verifiedManifest?.sourceManifestSha256 !== identity?.sourceManifestSha256
+      || verifiedManifest?.sourceManifestIntegrityVersion !== identity?.sourceManifestIntegrityVersion) failures.push("manifest-mismatch");
   if (review?.decision !== "approved") failures.push(review?.decision === "revoked" ? "release-revoked" : "review-not-approved");
   for (const field of reviewContract.required) {
     if (review?.[field] === undefined || review?.[field] === null || review?.[field] === "") failures.push(`review-missing:${field}`);
@@ -34,7 +35,7 @@ export function createTrustedProductionContext({
   for (const [reviewField, identityField] of [
     ["appId", "appId"], ["publisherId", "publisherId"],
     ["version", "version"], ["packageSha256", "packageSha256"],
-    ["sourceManifestSha256", "sourceManifestSha256"], ["reviewDecisionId", "reviewDecisionId"],
+    ["sourceManifestSha256", "sourceManifestSha256"], ["sourceManifestIntegrityVersion", "sourceManifestIntegrityVersion"], ["reviewDecisionId", "reviewDecisionId"],
     ["reviewPolicyVersion", "reviewPolicyVersion"]
   ]) {
     if (review?.[reviewField] !== identity?.[identityField]) failures.push(`review-binding-mismatch:${reviewField}`);

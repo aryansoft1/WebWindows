@@ -199,6 +199,7 @@
       publisherId: String(submission.developerId),
       packageSha256: submission.packageSha256,
       sourceManifestSha256: submission.reviewDecision.sourceManifestSha256,
+      sourceManifestIntegrityVersion: submission.reviewDecision.sourceManifestIntegrityVersion,
       manifestVersion: submission.reviewDecision.manifestVersion,
       sdkVersion: submission.reviewDecision.sdkVersion,
       reviewDecisionId: submission.reviewDecision.reviewDecisionId,

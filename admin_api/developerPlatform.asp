@@ -250,7 +250,7 @@ Sub EnsureTables()
   End If
   conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_submission_validations (" & _
     "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
-    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NOT NULL," & _
     "validator_version VARCHAR(20) NOT NULL,passed TINYINT(1) NOT NULL," & _
     "report_base64 LONGTEXT NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
     "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
@@ -260,7 +260,7 @@ Sub EnsureTables()
     "id BIGINT NOT NULL AUTO_INCREMENT,review_decision_id VARCHAR(64) NOT NULL," & _
     "submission_id BIGINT NOT NULL,publisher_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
     "app_version VARCHAR(40) NOT NULL,package_sha256 VARCHAR(64) NOT NULL," & _
-    "source_manifest_sha256 VARCHAR(64) NOT NULL,validation_record_id BIGINT NOT NULL," & _
+    "source_manifest_sha256 VARCHAR(64) NOT NULL,source_manifest_integrity_version INT NOT NULL,validation_record_id BIGINT NOT NULL," & _
     "validation_report_id VARCHAR(80) NOT NULL," & _
     "manifest_version INT NOT NULL,sdk_version VARCHAR(20) NULL," & _
     "requested_permissions_base64 LONGTEXT NOT NULL,approved_permissions_base64 LONGTEXT NOT NULL," & _
@@ -282,7 +282,7 @@ Sub EnsureTables()
     "id BIGINT NOT NULL AUTO_INCREMENT,published_release_id VARCHAR(64) NOT NULL," & _
     "submission_id BIGINT NOT NULL,publisher_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
     "app_version VARCHAR(40) NOT NULL,package_sha256 VARCHAR(64) NOT NULL," & _
-    "source_manifest_sha256 VARCHAR(64) NOT NULL,manifest_version INT NOT NULL," & _
+    "source_manifest_sha256 VARCHAR(64) NOT NULL,source_manifest_integrity_version INT NOT NULL,manifest_version INT NOT NULL," & _
     "sdk_version VARCHAR(20) NULL,validation_record_id BIGINT NOT NULL," & _
     "validation_report_id VARCHAR(80) NOT NULL,review_decision_id BIGINT NOT NULL," & _
     "approved_permissions_base64 LONGTEXT NOT NULL,review_policy_version INT NOT NULL," & _
@@ -326,7 +326,7 @@ Sub EnsureTables()
     "id BIGINT NOT NULL AUTO_INCREMENT,catalog_revision_id BIGINT NOT NULL,catalog_entry_id VARCHAR(160) NOT NULL," & _
     "source_type VARCHAR(30) NOT NULL,release_binding_state VARCHAR(30) NOT NULL," & _
     "published_release_id BIGINT NULL,published_release_identity VARCHAR(64) NULL," & _
-    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NULL," & _
     "manifest_version INT NULL,sdk_version VARCHAR(20) NULL,review_decision_identity VARCHAR(64) NULL," & _
     "approved_permissions_base64 LONGTEXT NULL,review_policy_version INT NULL," & _
     "package_download_url VARCHAR(500) NULL,release_status VARCHAR(24) NOT NULL," & _
@@ -350,6 +350,14 @@ Sub EnsureTables()
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN validation_status VARCHAR(30) NOT NULL DEFAULT 'not-validated'"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN active_validation_id BIGINT NULL"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_submission_validations ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_review_decisions ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_published_releases ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_catalog_release_bindings ADD COLUMN source_manifest_integrity_version INT NULL DEFAULT 0"
   Err.Clear
   conn.Execute "UPDATE webwindows_function_submissions SET validation_status='legacy-unverified' " & _
     "WHERE status='published' AND validation_status='not-validated'"
@@ -405,7 +413,7 @@ ElseIf action = "submissions" And method = "GET" Then
     "r.review_decision_id,r.decision,r.requested_permissions_base64,r.approved_permissions_base64," & _
     "r.denied_permissions_base64,r.review_policy_version,r.reviewer_identity,r.reviewer_type," & _
     "r.validation_report_id,r.manifest_version,r.sdk_version," & _
-    "r.package_sha256 AS review_package_sha256,r.source_manifest_sha256 AS review_manifest_sha256,r.created_at AS reviewed_at," & _
+    "r.package_sha256 AS review_package_sha256,r.source_manifest_sha256 AS review_manifest_sha256,r.source_manifest_integrity_version AS review_manifest_integrity_version,r.created_at AS reviewed_at," & _
     "pr.id AS release_internal_id,pr.published_release_id,pr.package_sha256 AS release_package_sha256," & _
     "pr.release_status,pr.created_at AS published_at,re.release_status AS event_release_status " & _
     "FROM webwindows_function_submissions s " & _
@@ -445,6 +453,7 @@ ElseIf action = "submissions" And method = "GET" Then
         """,""reviewerType"":""" & JsonText(submissionRs("reviewer_type")) & _
         """,""packageSha256"":""" & JsonText(submissionRs("review_package_sha256")) & _
         """,""sourceManifestSha256"":""" & JsonText(submissionRs("review_manifest_sha256")) & _
+        """,""sourceManifestIntegrityVersion"":" & CLng(submissionRs("review_manifest_integrity_version")) & _
         """,""reviewedAt"":""" & JsonText(submissionRs("reviewed_at")) & """}"
     End If
     publishedReleaseJson = "null"
@@ -512,7 +521,7 @@ ElseIf action = "developer-status" And method = "POST" Then
 ElseIf action = "submission-status" And method = "POST" Then
   Dim submissionId, targetStatus, reviewNote, currentRs, currentStatus
   Dim reportText, requestedJson, selectedJson, approvedJson, deniedJson, permissionError
-  Dim reportId, reportPackageSha, reportManifestSha, manifestVersionText, sdkVersionText
+  Dim reportId, reportPackageSha, reportManifestSha, reportManifestIntegrityVersion, manifestVersionText, sdkVersionText
   Dim supersedesId, reviewerIdentity, decisionText, reviewSql, reviewError, newDecisionRs
   submissionId = FormPositiveLong("submissionId")
   targetStatus = LCase(Trim(CStr(Request.Form("status"))))
@@ -525,7 +534,7 @@ ElseIf action = "submission-status" And method = "POST" Then
   Set currentRs = conn.Execute("SELECT s.status,s.package_size,s.package_sha256,s.integrity_sha256," & _
     "s.app_id,s.app_version,s.developer_id,s.active_validation_id,s.validation_status," & _
     "v.passed AS validation_passed,v.package_sha256 AS validated_package_sha256," & _
-    "v.source_manifest_sha256,v.report_base64 FROM webwindows_function_submissions s " & _
+    "v.source_manifest_sha256,v.source_manifest_integrity_version,v.report_base64 FROM webwindows_function_submissions s " & _
     "LEFT JOIN webwindows_submission_validations v ON v.id=s.active_validation_id WHERE s.id=" & submissionId)
   If currentRs.EOF Then
     currentRs.Close
@@ -556,11 +565,13 @@ ElseIf action = "submission-status" And method = "POST" Then
   reportId = JsonValueForKey(reportText, "reportId", True)
   reportPackageSha = LCase(JsonValueForKey(reportText, "packageSha256", True))
   reportManifestSha = LCase(JsonValueForKey(reportText, "sourceManifestSha256", True))
+  reportManifestIntegrityVersion = JsonValueForKey(reportText, "sourceManifestIntegrityVersion", False)
   manifestVersionText = JsonValueForKey(reportText, "manifestVersion", False)
   sdkVersionText = JsonValueForKey(reportText, "sdkVersion", True)
   requestedJson = JsonArrayForKey(reportText, "requestedPermissions")
   If Len(reportId) = 0 Or reportPackageSha <> LCase(CStr(currentRs("package_sha256"))) Or _
      reportManifestSha <> LCase(CStr(currentRs("source_manifest_sha256"))) Or _
+     reportManifestIntegrityVersion <> "1" Or CLng(currentRs("source_manifest_integrity_version")) <> 1 Or _
      (manifestVersionText <> "1" And manifestVersionText <> "2") Or Len(requestedJson) = 0 Then
     currentRs.Close
     Fail 409, "VALIDATION_REPORT_BINDING_INVALID", "服务器验证报告身份或 Source Manifest 绑定无效。"
@@ -597,12 +608,12 @@ ElseIf action = "submission-status" And method = "POST" Then
   Set ownershipRs = Nothing
   reviewSql = "INSERT INTO webwindows_review_decisions " & _
     "(review_decision_id,submission_id,publisher_id,app_id,app_version,package_sha256," & _
-    "source_manifest_sha256,validation_record_id,validation_report_id,manifest_version,sdk_version," & _
+    "source_manifest_sha256,source_manifest_integrity_version,validation_record_id,validation_report_id,manifest_version,sdk_version," & _
     "requested_permissions_base64,approved_permissions_base64,denied_permissions_base64," & _
     "review_policy_version,decision,review_note,reviewer_type,reviewed_by,reviewer_identity,risk_summary_base64,supersedes_id) VALUES (" & _
     "CONCAT('rvd_',LOWER(REPLACE(UUID(),'-','')))," & submissionId & "," & CLng(currentRs("developer_id")) & _
     ",'" & appIdSql & "','" & versionSql & "','" & LCase(CStr(currentRs("package_sha256"))) & _
-    "','" & reportManifestSha & "'," & CLng(currentRs("active_validation_id")) & ",'" & Replace(reportId, "'", "''") & _
+    "','" & reportManifestSha & "',1," & CLng(currentRs("active_validation_id")) & ",'" & Replace(reportId, "'", "''") & _
     "'," & CLng(manifestVersionText) & "," & SqlNullableText(sdkVersionText) & _
     ",'" & Base64EncodeUtf8(requestedJson) & "','" & Base64EncodeUtf8(approvedJson) & _
     "','" & Base64EncodeUtf8(deniedJson) & "',1,'" & decisionText & "','" & Replace(reviewNote, "'", "''") & _
@@ -662,7 +673,7 @@ ElseIf action = "publish-release" And method = "POST" Then
   If catalogVersionText = "" Then Fail 400, "CATALOG_VERSION_REQUIRED", "目录版本不能为空。"
   Set publishRs = conn.Execute("SELECT s.status,s.developer_id,s.app_id,s.app_version,s.package_sha256," & _
     "s.active_validation_id,r.id AS review_internal_id,r.review_decision_id,r.package_sha256 AS review_package_sha256," & _
-    "r.source_manifest_sha256,r.validation_record_id,r.validation_report_id,r.manifest_version,r.sdk_version," & _
+    "r.source_manifest_sha256,r.source_manifest_integrity_version,r.validation_record_id,r.validation_report_id,r.manifest_version,r.sdk_version," & _
     "r.approved_permissions_base64,r.review_policy_version,r.decision " & _
     "FROM webwindows_function_submissions s LEFT JOIN webwindows_review_decisions r " & _
     "ON r.id=(SELECT MAX(r2.id) FROM webwindows_review_decisions r2 WHERE r2.submission_id=s.id) " & _
@@ -715,6 +726,8 @@ ElseIf action = "publish-release" And method = "POST" Then
      InStr(1, catalogText, """publisherId"":""" & CStr(publishRs("developer_id")) & """", vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """packageSha256"":""" & LCase(CStr(publishRs("package_sha256"))) & """", vbTextCompare) = 0 Or _
      InStr(1, catalogText, """sourceManifestSha256"":""" & LCase(CStr(publishRs("source_manifest_sha256"))) & """", vbTextCompare) = 0 Or _
+     InStr(1, catalogText, """sourceManifestIntegrityVersion"":1", vbBinaryCompare) = 0 Or _
+     CLng(publishRs("source_manifest_integrity_version")) <> 1 Or _
      InStr(1, catalogText, """manifestVersion"":" & CStr(CLng(publishRs("manifest_version"))), vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """reviewDecisionId"":""" & CStr(publishRs("review_decision_id")) & """", vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """approvedPermissions"":" & approvedPermissionsJson, vbBinaryCompare) = 0 Or _
@@ -734,13 +747,13 @@ ElseIf action = "publish-release" And method = "POST" Then
   End If
   encodedCatalog = Base64EncodeUtf8(catalogText)
   releaseSql = "INSERT INTO webwindows_published_releases " & _
-    "(published_release_id,submission_id,publisher_id,app_id,app_version,package_sha256,source_manifest_sha256," & _
+    "(published_release_id,submission_id,publisher_id,app_id,app_version,package_sha256,source_manifest_sha256,source_manifest_integrity_version," & _
     "manifest_version,sdk_version,validation_record_id,validation_report_id,review_decision_id," & _
     "approved_permissions_base64,review_policy_version,release_status,published_by) VALUES (" & _
     "'" & releaseIdentity & "'," & publishSubmissionId & "," & CLng(publishRs("developer_id")) & _
     ",'" & Replace(CStr(publishRs("app_id")), "'", "''") & "','" & Replace(CStr(publishRs("app_version")), "'", "''") & _
     "','" & LCase(CStr(publishRs("package_sha256"))) & "','" & LCase(CStr(publishRs("source_manifest_sha256"))) & _
-    "'," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
+    "',1," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
     "," & CLng(publishRs("validation_record_id")) & ",'" & Replace(CStr(publishRs("validation_report_id")), "'", "''") & _
     "'," & CLng(publishRs("review_internal_id")) & ",'" & CStr(publishRs("approved_permissions_base64")) & _
     "'," & CLng(publishRs("review_policy_version")) & ",'active'," & CLng(Session("user_id")) & ")"
@@ -798,10 +811,10 @@ ElseIf action = "publish-release" And method = "POST" Then
   If Len(publishError) = 0 And previousCatalogRevisionId > 0 Then
     conn.Execute "INSERT INTO webwindows_catalog_release_bindings " & _
       "(catalog_revision_id,catalog_entry_id,source_type,release_binding_state,published_release_id," & _
-      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,source_manifest_integrity_version,manifest_version,sdk_version," & _
       "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status) " & _
       "SELECT " & newCatalogRevisionId & ",catalog_entry_id,source_type,release_binding_state,published_release_id," & _
-      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,source_manifest_integrity_version,manifest_version,sdk_version," & _
       "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status " & _
       "FROM webwindows_catalog_release_bindings WHERE catalog_revision_id=" & previousCatalogRevisionId & _
       " AND catalog_entry_id<>'" & Replace(CStr(publishRs("app_id")), "'", "''") & "'"
@@ -810,12 +823,12 @@ ElseIf action = "publish-release" And method = "POST" Then
   If Len(publishError) = 0 Then
     bindingSql = "INSERT INTO webwindows_catalog_release_bindings " & _
       "(catalog_revision_id,catalog_entry_id,source_type,release_binding_state,published_release_id," & _
-      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,source_manifest_integrity_version,manifest_version,sdk_version," & _
       "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status) VALUES (" & _
       newCatalogRevisionId & ",'" & Replace(CStr(publishRs("app_id")), "'", "''") & _
       "','developer-release','verified'," & releaseInternalId & ",'" & releaseIdentity & _
       "','" & LCase(CStr(publishRs("package_sha256"))) & "','" & LCase(CStr(publishRs("source_manifest_sha256"))) & _
-      "'," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
+      "',1," & CLng(publishRs("manifest_version")) & "," & SqlNullableText(publishRs("sdk_version")) & _
       ",'" & Replace(CStr(publishRs("review_decision_id")), "'", "''") & "','" & _
       CStr(publishRs("approved_permissions_base64")) & "'," & CLng(publishRs("review_policy_version")) & _
       ",'" & Replace(packageDownloadUrl, "'", "''") & "','active')"
@@ -927,10 +940,10 @@ ElseIf action = "release-status" And method = "POST" Then
   If Len(releaseError) = 0 Then
     conn.Execute "INSERT INTO webwindows_catalog_release_bindings " & _
       "(catalog_revision_id,catalog_entry_id,source_type,release_binding_state,published_release_id," & _
-      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,source_manifest_integrity_version,manifest_version,sdk_version," & _
       "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url,release_status) " & _
       "SELECT " & statusNewRevisionId & ",catalog_entry_id,source_type,release_binding_state,published_release_id," & _
-      "published_release_identity,package_sha256,source_manifest_sha256,manifest_version,sdk_version," & _
+      "published_release_identity,package_sha256,source_manifest_sha256,source_manifest_integrity_version,manifest_version,sdk_version," & _
       "review_decision_identity,approved_permissions_base64,review_policy_version,package_download_url," & _
       "CASE WHEN published_release_id=" & CLng(releaseRs("id")) & " THEN '" & releaseTargetStatus & _
       "' ELSE release_status END FROM webwindows_catalog_release_bindings WHERE catalog_revision_id=" & statusOldRevisionId

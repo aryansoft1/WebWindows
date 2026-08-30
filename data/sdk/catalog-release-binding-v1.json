@@ -7,13 +7,13 @@
   "requiredEntryFields": ["id", "sourceType", "releaseBinding"],
   "releaseBackedRequired": [
     "publishedReleaseId", "publisherId", "version", "packageSha256",
-    "sourceManifestSha256", "manifestVersion", "sdkVersion",
+    "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "sdkVersion",
     "reviewDecisionId", "approvedPermissions", "reviewPolicyVersion",
     "packageDownloadIdentity"
   ],
   "releaseOwnedReadOnly": [
     "publishedReleaseId", "publisherId", "version", "packageSha256",
-    "sourceManifestSha256", "manifestVersion", "sdkVersion",
+    "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "sdkVersion",
     "reviewDecisionId", "approvedPermissions", "reviewPolicyVersion",
     "packageDownloadIdentity"
   ],

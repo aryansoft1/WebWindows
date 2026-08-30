@@ -6,7 +6,7 @@
   "scope": "trusted-host-session-memory-only",
   "required": [
     "publishedReleaseId", "appId", "publisherId", "version", "packageSha256",
-    "sourceManifestSha256", "manifestVersion", "sdkVersion", "reviewDecisionId",
+    "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "sdkVersion", "reviewDecisionId",
     "approvedPermissions", "reviewPolicyVersion", "releaseState", "verificationTimestamp"
   ],
   "trustStates": ["system-trusted", "verified-release", "legacy-unverified", "verification-failed"],
@@ -30,8 +30,8 @@
     "catalogOrQueryIsAuthority": false,
     "responseHashHeaderIsAuthority": false,
     "sandboxReceivesIdentity": false,
-    "productionBrokerEnabled": false,
-    "productionSdkFacadeEnabled": false,
+    "productionBrokerEnabled": "feature-gated-battery-only-after-context",
+    "productionSdkFacadeEnabled": "feature-gated-verified-v2-sdk1-only",
     "legacyPromotedToVerified": false
   },
   "errors": [

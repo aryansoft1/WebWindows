@@ -3,10 +3,10 @@
   "$id": "https://www.y0.hk/data/sdk/production-broker-context-v1.json",
   "contract": "webwindows-production-broker-context-v1",
   "contextVersion": 1,
-  "status": "context-construction-enabled-broker-and-facade-disabled",
+  "status": "context-construction-enabled-production-battery-broker-feature-gated",
   "required": [
     "contextVersion", "contextId", "runtimeSessionId", "publishedReleaseId", "appId",
-    "publisherId", "version", "packageSha256", "sourceManifestSha256", "manifestVersion",
+    "publisherId", "version", "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion",
     "sdkVersion", "reviewDecisionId", "reviewPolicyVersion", "permissionPolicyVersion",
     "requestedPermissions", "approvedPermissions", "effectivePermissions", "releaseState",
     "trustState", "contextState", "runtimeCapabilities", "grantState", "createdAt"
@@ -42,7 +42,7 @@
     "consentMode": "no-consent",
     "grantState": "not-required",
     "effectiveMeansBrokerEligibilityOnly": true,
-    "productionMethodInvocationEnabled": false
+    "productionMethodInvocationEnabled": "feature-gated-battery-only"
   },
   "lifecycle": {
     "scope": "single-production-runtime-session-memory",
@@ -54,8 +54,8 @@
   "boundaries": {
     "sandboxReceivesContext": false,
     "queryOrCatalogMayConstructContext": false,
-    "productionBrokerEnabled": false,
-    "productionSdkFacadeEnabled": false,
+    "productionBrokerEnabled": "feature-gated-battery-only",
+    "productionSdkFacadeEnabled": "feature-gated-verified-v2-sdk1-only",
     "persistentGrantStorageImplemented": false,
     "nativeAbiIsAuthority": false
   },

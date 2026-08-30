@@ -131,6 +131,16 @@ Function ReportStringField(ByVal reportJson, ByVal fieldName)
   Set regex = Nothing
 End Function
 
+Function ReportIntegerField(ByVal reportJson, ByVal fieldName)
+  Dim regex, matches
+  Set regex = New RegExp
+  regex.Pattern = """" & fieldName & """:([0-9]+)"
+  Set matches = regex.Execute(CStr(reportJson))
+  If matches.Count = 1 Then ReportIntegerField = CLng(matches(0).SubMatches(0)) Else ReportIntegerField = 0
+  Set matches = Nothing
+  Set regex = Nothing
+End Function
+
 Function RunTrustedPackageValidator(ByVal packageBytes, ByVal outerManifest, ByVal expectedAppId, _
     ByVal expectedVersion, ByVal publisherId, ByVal submissionId, ByRef reportJson)
   Dim fso, quarantineRoot, nonce, zipPath, manifestPath, reportPath, exePath, rootPath
@@ -204,7 +214,7 @@ Sub EnsureDeveloperTables()
     "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
   validationSql = "CREATE TABLE IF NOT EXISTS webwindows_submission_validations (" & _
     "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
-    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NOT NULL," & _
     "validator_version VARCHAR(20) NOT NULL,passed TINYINT(1) NOT NULL," & _
     "report_base64 LONGTEXT NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
     "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
@@ -246,6 +256,8 @@ Sub EnsureDeveloperTables()
     On Error GoTo 0
     Fail 500, "VALIDATION_SCHEMA_FAILED", "验证记录数据表初始化失败：" & tableError
   End If
+  conn.Execute "ALTER TABLE webwindows_submission_validations ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
+  Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_sha256 VARCHAR(64) NOT NULL DEFAULT ''"
@@ -493,7 +505,7 @@ ElseIf action = "upload-package" And method = "POST" Then
   Dim expectedIntegrity, totalBytes, packageBytes, byte1, byte2, byte3, byte4
   Dim contentType, originalFilename, packageCmd, packageHashRs, actualIntegrity
   Dim expectedAppId, expectedVersion, outerManifest, validationReport, validationPassed
-  Dim sourceManifestHash, validationReportBase64, validationCmd, validationIdRs, validationId
+  Dim sourceManifestHash, sourceManifestIntegrityVersion, validationReportBase64, validationCmd, validationIdRs, validationId
   Dim validationStatusText
   uploadApiKey = Trim(CStr(Request.ServerVariables("HTTP_X_WEBWINDOWS_DEVELOPER_KEY")))
   If uploadApiKey = "" Then Fail 401, "API_KEY_REQUIRED", "缺少开发者 API Key。"
@@ -596,18 +608,21 @@ ElseIf action = "upload-package" And method = "POST" Then
   validationPassed = RunTrustedPackageValidator(packageBytes, outerManifest, expectedAppId, _
     expectedVersion, uploadDeveloperId, submissionId, validationReport)
   sourceManifestHash = ReportStringField(validationReport, "sourceManifestSha256")
+  sourceManifestIntegrityVersion = ReportIntegerField(validationReport, "sourceManifestIntegrityVersion")
+  If sourceManifestIntegrityVersion <> 1 Then validationPassed = False
   validationReportBase64 = Base64EncodeUtf8(validationReport)
   Set validationCmd = Server.CreateObject("ADODB.Command")
   With validationCmd
     .ActiveConnection = conn
     .CommandText = "INSERT INTO webwindows_submission_validations " & _
-      "(submission_id,developer_id,package_sha256,source_manifest_sha256,validator_version,passed,report_base64) " & _
-      "VALUES (?,?,?,?,?,?,?)"
+      "(submission_id,developer_id,package_sha256,source_manifest_sha256,source_manifest_integrity_version,validator_version,passed,report_base64) " & _
+      "VALUES (?,?,?,?,?,?,?,?)"
     .CommandType = 1
     .Parameters.Append .CreateParameter(, 3, 1, , submissionId)
     .Parameters.Append .CreateParameter(, 3, 1, , uploadDeveloperId)
     .Parameters.Append .CreateParameter(, 200, 1, 64, actualIntegrity)
     .Parameters.Append .CreateParameter(, 200, 1, 64, sourceManifestHash)
+    .Parameters.Append .CreateParameter(, 3, 1, , sourceManifestIntegrityVersion)
     .Parameters.Append .CreateParameter(, 200, 1, 20, "1.0.0")
     .Parameters.Append .CreateParameter(, 3, 1, , Abs(CInt(validationPassed)))
     .Parameters.Append .CreateParameter(, 201, 1, Len(validationReportBase64), validationReportBase64)

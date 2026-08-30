@@ -13,10 +13,14 @@ const [contract, validator, runtime, validationContract, review, release, bindin
 
 assert.equal(contract.contract, "webwindows-source-manifest-integrity-v1");
 assert.equal(contract.sourceManifestSha256.rawBytesDigest, false);
+assert.equal(contract.sourceManifestIntegrityVersion, 1);
 assert.match(contract.sourceManifestSha256.definition, /SHA-256\(RFC-8785-JCS/);
 assert.equal(identityDoc.sourceManifestAuthority.rawBytesDigest, false);
 assert.match(identityDoc.sourceManifestAuthority.digestDefinition, /zip-root:\/manifest\.json/);
-for (const item of [validationContract, review, release, binding]) assert.ok(JSON.stringify(item).includes("sourceManifestSha256"));
+for (const item of [validationContract, review, release, binding]) {
+  assert.ok(JSON.stringify(item).includes("sourceManifestSha256"));
+  assert.ok(item.required?.includes("sourceManifestIntegrityVersion") || item.releaseBackedRequired?.includes("sourceManifestIntegrityVersion"));
+}
 
 assert.match(validator, /var canonical = Canonical\.Write\(manifest\)/);
 assert.match(validator, /manifestHash = Sha\(StrictUtf8\.GetBytes\(canonical\)\)/);
@@ -25,6 +29,9 @@ assert.match(runtime, /sha256Hex\(new TextEncoder\(\)\.encode\(canonicalizeJson\
 assert.match(developerApi, /source_manifest_sha256/);
 assert.match(admin, /source_manifest_sha256/);
 assert.match(lookup, /pr\.source_manifest_sha256/);
+for (const implementation of [developerApi, admin, lookup]) assert.match(implementation, /source_manifest_integrity_version/);
+assert.match(lookup, /sourceManifestIntegrityVersion/);
+assert.match(runtime, /sourceManifestIntegrityVersion\s*!==\s*SOURCE_MANIFEST_INTEGRITY_VERSION/);
 assert.doesNotMatch(lookup, /manifest_blob|manifest_bytes|raw_manifest/i);
 
 console.log("source Manifest canonical integrity contract smoke test passed");

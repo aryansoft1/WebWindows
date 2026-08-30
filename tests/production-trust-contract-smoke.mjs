@@ -19,13 +19,13 @@ const A = "a".repeat(64);
 const B = "b".repeat(64);
 const identity = {
   appId: "com.example.secure", publisherId: "publisher-42", version: "1.0.0", manifestVersion: 2,
-  sdkVersion: "1", packageSha256: A, sourceManifestSha256: B, publishedReleaseId: "release-100",
+  sdkVersion: "1", packageSha256: A, sourceManifestSha256: B, sourceManifestIntegrityVersion: 1, publishedReleaseId: "release-100",
   catalogRevisionId: "catalog-10", reviewDecisionId: "review-100", reviewPolicyVersion: 1
 };
 const review = {
   reviewDecisionId: "review-100", submissionId: "submission-100", appId: identity.appId,
   publisherId: identity.publisherId, version: identity.version, packageSha256: A,
-  sourceManifestSha256: B, requestedPermissions: ["permission.a", "permission.b", "permission.c"],
+  sourceManifestSha256: B, sourceManifestIntegrityVersion: 1, requestedPermissions: ["permission.a", "permission.b", "permission.c"],
   approvedPermissions: ["permission.a", "permission.b"], deniedPermissions: ["permission.c"],
   permissionRisk: { "permission.a": "low", "permission.b": "medium", "permission.c": "high" },
   validationReportId: "validation-100", manifestVersion: 2, sdkVersion: "1",
@@ -34,7 +34,7 @@ const review = {
   reviewedAt: "2026-08-30T00:00:00.000Z"
 };
 const verifiedManifest = {
-  appId: identity.appId, version: identity.version, manifestVersion: 2, sourceManifestSha256: B,
+  appId: identity.appId, version: identity.version, manifestVersion: 2, sourceManifestSha256: B, sourceManifestIntegrityVersion: 1,
   requestedPermissions: review.requestedPermissions
 };
 const grants = [

@@ -91,7 +91,7 @@ Sub EnsureReleaseBindingTable()
     "id BIGINT NOT NULL AUTO_INCREMENT,catalog_revision_id BIGINT NOT NULL,catalog_entry_id VARCHAR(160) NOT NULL," & _
     "source_type VARCHAR(30) NOT NULL,release_binding_state VARCHAR(30) NOT NULL," & _
     "published_release_id BIGINT NULL,published_release_identity VARCHAR(64) NULL," & _
-    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NULL," & _
     "manifest_version INT NULL,sdk_version VARCHAR(20) NULL,review_decision_identity VARCHAR(64) NULL," & _
     "approved_permissions_base64 LONGTEXT NULL,review_policy_version INT NULL," & _
     "package_download_url VARCHAR(500) NULL,release_status VARCHAR(24) NOT NULL," & _
@@ -106,6 +106,8 @@ Sub EnsureReleaseBindingTable()
     On Error GoTo 0
     FinishError 500, "CATALOG_BINDING_SCHEMA_FAILED", bindingError
   End If
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_catalog_release_bindings ADD COLUMN source_manifest_integrity_version INT NULL DEFAULT 0"
   On Error GoTo 0
 End Sub
 

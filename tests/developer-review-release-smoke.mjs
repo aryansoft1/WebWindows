@@ -18,7 +18,7 @@ assert.equal(review.contract, "webwindows-review-decision-v1");
 assert.deepEqual(review.decisions, ["approved", "rejected"]);
 for (const field of [
   "reviewDecisionId", "submissionId", "publisherId", "packageSha256",
-  "sourceManifestSha256", "validationReportId", "requestedPermissions",
+  "sourceManifestSha256", "sourceManifestIntegrityVersion", "validationReportId", "requestedPermissions",
   "approvedPermissions", "deniedPermissions", "reviewPolicyVersion",
   "reviewerIdentity", "riskSummary"
 ]) assert.ok(review.required.includes(field), `ReviewDecision requires ${field}`);

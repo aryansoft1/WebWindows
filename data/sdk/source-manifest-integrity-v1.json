@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://www.y0.hk/data/sdk/source-manifest-integrity-v1.json",
   "contract": "webwindows-source-manifest-integrity-v1",
+  "sourceManifestIntegrityVersion": 1,
   "version": 1,
   "authorityPath": "zip-root:/manifest.json",
   "sourceManifestSha256": {
@@ -19,6 +20,8 @@
     "catalog-release-binding-v1", "runtime-release-api", "production-package-runtime"
   ],
   "invariants": [
+    "every-trust-record-must-explicitly-bind-sourceManifestIntegrityVersion-1",
+    "missing-or-unknown-integrity-version-fails-closed-and-is-never-assumed-v1",
     "one-field-one-digest-definition",
     "raw-manifest-bytes-are-not-the-sourceManifestSha256-authority",
     "all-downstream-records-copy-the-server-validator-digest-without-recomputation",

@@ -112,7 +112,7 @@ Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
   valid = True
   bindingCount = 0
   On Error Resume Next
-  Set rs = conn.Execute("SELECT catalog_entry_id,published_release_identity,package_sha256," & _
+  Set rs = conn.Execute("SELECT catalog_entry_id,published_release_identity,package_sha256,source_manifest_integrity_version," & _
     "review_decision_identity,release_binding_state FROM webwindows_catalog_release_bindings " & _
     "WHERE catalog_revision_id=" & CLng(revisionId))
   If Err.Number <> 0 Then
@@ -127,6 +127,8 @@ Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
        InStr(1, catalogText, """id"":""" & CStr(rs("catalog_entry_id")) & """", vbBinaryCompare) = 0 Or _
        InStr(1, catalogText, """publishedReleaseId"":""" & CStr(rs("published_release_identity")) & """", vbBinaryCompare) = 0 Or _
        InStr(1, catalogText, """packageSha256"":""" & CStr(rs("package_sha256")) & """", vbTextCompare) = 0 Or _
+       CLng(rs("source_manifest_integrity_version")) <> 1 Or _
+       InStr(1, catalogText, """sourceManifestIntegrityVersion"":1", vbBinaryCompare) = 0 Or _
        InStr(1, catalogText, """reviewDecisionId"":""" & CStr(rs("review_decision_identity")) & """", vbBinaryCompare) = 0 Then
       valid = False
       Exit Do

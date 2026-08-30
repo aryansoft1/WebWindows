@@ -5,7 +5,7 @@
   "reportName": "ServerValidationReport",
   "required": [
     "reportId", "validatorVersion", "validatedAt", "packageSha256", "packageSize",
-    "sourceManifestSha256", "manifestVersion", "normalizedAppIdentity", "schemaResult",
+    "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "normalizedAppIdentity", "schemaResult",
     "packagePolicyResult", "requestedPermissions", "sdkVersion", "diagnostics", "passed"
   ],
   "normalizedAppIdentityRequired": ["appId", "version", "publisherId"],

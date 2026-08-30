@@ -5,7 +5,7 @@
   "identityName": "PublishedAppIdentity",
   "required": [
     "appId", "publisherId", "version", "manifestVersion", "sdkVersion",
-    "packageSha256", "sourceManifestSha256", "publishedReleaseId",
+    "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "publishedReleaseId",
     "catalogRevisionId", "reviewDecisionId", "reviewPolicyVersion"
   ],
   "fieldTypes": {
@@ -16,6 +16,7 @@
     "sdkVersion": "string-or-null",
     "packageSha256": "lowercase-sha256",
     "sourceManifestSha256": "lowercase-sha256",
+    "sourceManifestIntegrityVersion": "const-1",
     "publishedReleaseId": "opaque-server-identity",
     "catalogRevisionId": "opaque-server-identity",
     "reviewDecisionId": "opaque-server-identity",
@@ -29,6 +30,7 @@
     "publisherId": "developer-account-and-app-ownership-record",
     "packageSha256": "server-upload-digest-and-runtime-verification",
     "sourceManifestSha256": "server-validator-canonical-manifest-digest",
+    "sourceManifestIntegrityVersion": "server-validator-integrity-contract-version",
     "publishedReleaseId": "publication-service",
     "catalogRevisionId": "published-catalog",
     "reviewDecisionId": "review-service",
@@ -71,7 +73,7 @@
     "capabilityError": false
   },
   "catalogRequirements": [
-    "publishedReleaseId", "packageSha256", "sourceManifestSha256", "manifestVersion",
+    "publishedReleaseId", "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion",
     "sdkVersion", "reviewDecisionId", "reviewPolicyVersion", "approvedPermissions",
     "packageDownloadIdentity", "publisherId"
   ],

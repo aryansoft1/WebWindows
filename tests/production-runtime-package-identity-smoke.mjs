@@ -66,7 +66,7 @@ const zipBytes = await zipFor();
 function identity(overrides = {}) {
   return {
     publishedReleaseId: releaseId, appId: manifest.id, publisherId: "42", version: manifest.version,
-    packageSha256: sha(zipBytes), sourceManifestSha256: manifestSha(manifest), manifestVersion: 2,
+    packageSha256: sha(zipBytes), sourceManifestSha256: manifestSha(manifest), sourceManifestIntegrityVersion: 1, manifestVersion: 2,
     sdkVersion: "1", reviewDecisionId: "rvd_verified", approvedPermissions: ["device.battery-status.read"],
     reviewPolicyVersion: 1, releaseStatus: "active", catalogRevisionId: 10,
     packageDownloadIdentity: { publishedReleaseId: releaseId, downloadUrl: `/api/function-package.asp?release=${releaseId}` },
@@ -116,6 +116,13 @@ assert.equal(Object.isFrozen(verifiedIdentity.approvedPermissions), true);
 assert.equal(verifiedIdentity.publishedReleaseId, releaseId);
 assert.equal(context.VerifiedRuntimePackageIdentity, undefined);
 assert.equal(context.runtimeTrustState, undefined);
+
+for (const integrityVersion of [0, 2, undefined]) {
+  activeIdentity = identity({ sourceManifestIntegrityVersion:integrityVersion });
+  if (integrityVersion === undefined) delete activeIdentity.sourceManifestIntegrityVersion;
+  await assert.rejects(() => runtime.prepareVerified(params()), (error) => error.code === "runtime-release-verification-failed");
+}
+activeIdentity = identity();
 
 const beforeTamperLoads = loadCount;
 activeBytes = Uint8Array.from(zipBytes);

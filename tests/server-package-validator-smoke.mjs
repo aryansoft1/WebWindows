@@ -29,6 +29,7 @@ try {
   assert.equal(validV2.report.sdkVersion, "1");
   assert.equal(validV2.report.packageSha256, sha(validV2.bytes));
   assert.match(validV2.report.sourceManifestSha256, /^[a-f0-9]{64}$/);
+  assert.equal(validV2.report.sourceManifestIntegrityVersion, 1);
 
   const canonicalVectorManifest = {
     ...baseV2,
@@ -43,7 +44,7 @@ try {
     "Server and browser must use the same RFC 8785/JCS UTF-8 manifest digest definition");
 
   const validV2Again = await validate(validV2.bytes, reorder(baseV2));
-  for (const field of ["reportId", "validatorVersion", "packageSha256", "packageSize", "sourceManifestSha256", "manifestVersion", "appId", "version", "publisherId", "sdkVersion", "requestedPermissions", "schemaResult", "packagePolicyResult", "diagnostics", "passed"])
+  for (const field of ["reportId", "validatorVersion", "packageSha256", "packageSize", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "appId", "version", "publisherId", "sdkVersion", "requestedPermissions", "schemaResult", "packagePolicyResult", "diagnostics", "passed"])
     assert.deepEqual(validV2Again.report[field], validV2.report[field], `stable report field ${field}`);
 
   await rejected(await zipFor({ ...baseV1, manifestVersion: 3 }), { ...baseV1, manifestVersion: 3 }, "WWM005");

@@ -69,7 +69,7 @@ With releaseCmd
   .ActiveConnection = conn
   .CommandType = 1
   .CommandText = "SELECT pr.published_release_id,pr.publisher_id,pr.app_id,pr.app_version," & _
-    "pr.package_sha256,pr.source_manifest_sha256,pr.manifest_version,pr.sdk_version," & _
+    "pr.package_sha256,pr.source_manifest_sha256,pr.source_manifest_integrity_version,pr.manifest_version,pr.sdk_version," & _
     "pr.review_policy_version,r.review_decision_id,pr.approved_permissions_base64," & _
     "b.catalog_revision_id,b.package_download_url,b.release_binding_state,b.release_status," & _
     "COALESCE((SELECT e.release_status FROM webwindows_published_release_events e " & _
@@ -82,6 +82,8 @@ With releaseCmd
     "WHERE pr.published_release_id=? AND b.catalog_entry_id=pr.app_id " & _
     "AND b.release_binding_state='verified' AND b.package_sha256=pr.package_sha256 " & _
     "AND b.source_manifest_sha256=pr.source_manifest_sha256 AND b.manifest_version=pr.manifest_version " & _
+    "AND b.source_manifest_integrity_version=pr.source_manifest_integrity_version " & _
+    "AND r.source_manifest_integrity_version=pr.source_manifest_integrity_version " & _
     "AND (b.sdk_version=pr.sdk_version OR (b.sdk_version IS NULL AND pr.sdk_version IS NULL)) " & _
     "AND b.review_decision_identity=r.review_decision_id " & _
     "AND b.approved_permissions_base64=pr.approved_permissions_base64 " & _
@@ -92,6 +94,10 @@ End With
 If releaseRs.EOF Then
   releaseRs.Close
   Fail "404 Not Found", "release-not-found", "没有找到可验证的发布版本。"
+End If
+If CLng(releaseRs("source_manifest_integrity_version")) <> 1 Then
+  releaseRs.Close
+  Fail "409 Conflict", "runtime-release-verification-failed", "发布版本完整性算法版本无法确认。"
 End If
 If appIdHint <> "" And appIdHint <> LCase(CStr(releaseRs("app_id"))) Then
   releaseRs.Close
@@ -115,6 +121,7 @@ Response.Write "{""ok"":true,""identity"":{""publishedReleaseId"":""" & JsonText
   """,""appId"":""" & JsonText(releaseRs("app_id")) & """,""publisherId"":""" & CStr(releaseRs("publisher_id")) & _
   """,""version"":""" & JsonText(releaseRs("app_version")) & """,""packageSha256"":""" & LCase(CStr(releaseRs("package_sha256"))) & _
   """,""sourceManifestSha256"":""" & LCase(CStr(releaseRs("source_manifest_sha256"))) & _
+  """,""sourceManifestIntegrityVersion"":" & CLng(releaseRs("source_manifest_integrity_version")) & _
   """,""manifestVersion"":" & CLng(releaseRs("manifest_version")) & ",""sdkVersion"":" & JsonNullable(releaseRs("sdk_version")) & _
   ",""reviewDecisionId"":""" & JsonText(releaseRs("review_decision_id")) & """,""approvedPermissions"":" & _
   Base64DecodeUtf8(CStr(releaseRs("approved_permissions_base64"))) & ",""reviewPolicyVersion"":" & _

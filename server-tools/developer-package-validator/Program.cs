@@ -36,6 +36,7 @@ namespace WebWindows.DeveloperPackageValidator {
     internal sealed class Result {
       public string contract = "webwindows-server-validation-report-v1";
       public string reportId, validatorVersion = ValidatorVersion, validatedAt, packageSha256, sourceManifestSha256;
+      public int sourceManifestIntegrityVersion = 1;
       public long packageSize;
       public int? manifestVersion;
       public string appId, version, publisherId, sdkVersion, submissionId;

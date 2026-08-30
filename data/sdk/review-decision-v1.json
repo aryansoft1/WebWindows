@@ -6,7 +6,7 @@
   "reviewPolicyVersion": 1,
   "required": [
     "reviewDecisionId", "submissionId", "appId", "publisherId", "version",
-    "packageSha256", "sourceManifestSha256", "requestedPermissions", "approvedPermissions",
+    "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "requestedPermissions", "approvedPermissions",
     "deniedPermissions", "validationReportId", "manifestVersion", "sdkVersion",
     "riskSummary", "reviewPolicyVersion", "decision", "reviewerType",
     "reviewerIdentity", "reviewedAt"

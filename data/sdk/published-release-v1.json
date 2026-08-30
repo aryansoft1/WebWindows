@@ -5,7 +5,7 @@
   "releaseName": "PublishedRelease",
   "required": [
     "publishedReleaseId", "submissionId", "appId", "publisherId", "version",
-    "packageSha256", "sourceManifestSha256", "manifestVersion", "sdkVersion",
+    "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "sdkVersion",
     "validationReportId", "reviewDecisionId", "approvedPermissions",
     "reviewPolicyVersion", "publishedAt", "releaseStatus"
   ],
@@ -13,7 +13,7 @@
   "identity": {
     "format": "opaque-server-identity",
     "notDerivedOnlyFrom": ["appId", "version"],
-    "binds": ["publisherId", "appId", "version", "packageSha256", "sourceManifestSha256"]
+    "binds": ["publisherId", "appId", "version", "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion"]
   },
   "authority": {
     "reviewDecision": "latest-approved-exact-package-decision",

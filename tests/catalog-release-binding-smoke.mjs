@@ -55,7 +55,7 @@ assert.match(center, /dataset\.releaseBinding/);
 
 const release = Object.freeze({
   id: "rel_123", appId: "com.example.app", publisherId: "42", version: "1.0.0",
-  packageSha256: "a".repeat(64), sourceManifestSha256: "b".repeat(64),
+  packageSha256: "a".repeat(64), sourceManifestSha256: "b".repeat(64), sourceManifestIntegrityVersion: 1,
   manifestVersion: 2, sdkVersion: "1", reviewDecisionId: "rvd_123",
   approvedPermissions: ["device.battery-status.read"], reviewPolicyVersion: 1
 });
@@ -80,7 +80,7 @@ function project(value) {
     id: value.appId, version: value.version, sourceType: "developer-release", releaseBinding: "verified",
     release: {
       id: value.id, publishedReleaseId: value.id, binding: "verified", publisherId: value.publisherId,
-      packageSha256: value.packageSha256, sourceManifestSha256: value.sourceManifestSha256,
+      packageSha256: value.packageSha256, sourceManifestSha256: value.sourceManifestSha256, sourceManifestIntegrityVersion: value.sourceManifestIntegrityVersion,
       manifestVersion: value.manifestVersion, sdkVersion: value.sdkVersion,
       reviewDecisionId: value.reviewDecisionId, approvedPermissions: [...value.approvedPermissions],
       reviewPolicyVersion: value.reviewPolicyVersion
@@ -92,7 +92,7 @@ function assertBinding(entry, value) {
   assert.equal(entry.id, value.appId);
   assert.equal(entry.version, value.version);
   assert.equal(entry.release.id, value.id);
-  for (const field of ["publisherId", "packageSha256", "sourceManifestSha256", "manifestVersion", "sdkVersion", "reviewDecisionId", "reviewPolicyVersion"])
+  for (const field of ["publisherId", "packageSha256", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "sdkVersion", "reviewDecisionId", "reviewPolicyVersion"])
     assert.deepEqual(entry.release[field], value[field]);
   assert.deepEqual(entry.release.approvedPermissions, value.approvedPermissions);
 }

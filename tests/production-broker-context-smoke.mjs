@@ -17,8 +17,8 @@ const [source, contextContract, identityContract, appIdentity, review, release, 
 assert.equal(contextContract.contract, "webwindows-production-broker-context-v1");
 assert.equal(contextContract.contextVersion, 1);
 assert.equal(contextContract.creationEligibility.delistedCreatesPrivilegedContext, false);
-assert.equal(contextContract.boundaries.productionBrokerEnabled, false);
-assert.equal(contextContract.boundaries.productionSdkFacadeEnabled, false);
+assert.equal(contextContract.boundaries.productionBrokerEnabled, "feature-gated-battery-only");
+assert.equal(contextContract.boundaries.productionSdkFacadeEnabled, "feature-gated-verified-v2-sdk1-only");
 assert.equal(contextContract.policyVersions.interchangeable, false);
 for (const field of ["runtimeSessionId", "requestedPermissions", "approvedPermissions", "effectivePermissions", "reviewPolicyVersion", "permissionPolicyVersion", "runtimeCapabilities", "grantState"])
   assert.ok(contextContract.required.includes(field), `Context requires ${field}`);
@@ -54,7 +54,7 @@ const runtime = context.__productionContextTest;
 const A = "a".repeat(64), B = "b".repeat(64), releaseId = `rel_${"1".repeat(32)}`;
 const expected = {
   publishedReleaseId:releaseId, appId:"com.example.context", publisherId:"42", version:"1.0.0",
-  packageSha256:A, sourceManifestSha256:B, manifestVersion:2, sdkVersion:"1", reviewDecisionId:"rvd_context",
+  packageSha256:A, sourceManifestSha256:B, sourceManifestIntegrityVersion:1, manifestVersion:2, sdkVersion:"1", reviewDecisionId:"rvd_context",
   approvedPermissions:["device.battery-status.read"], reviewPolicyVersion:1, releaseStatus:"active"
 };
 const verified = Object.freeze({ ...expected, releaseState:"active", approvedPermissions:Object.freeze([...expected.approvedPermissions]), verificationTimestamp:new Date().toISOString() });
@@ -121,7 +121,8 @@ assert.equal(runtime.isProductionBrokerContextActive(eligible), false);
 assert.equal(runtime.getContext(), null);
 
 assert.doesNotMatch(registry + center, /buildProductionBrokerContext|ProductionBrokerContext\s*=/);
-assert.doesNotMatch(source, /MessageChannel|MessagePort|postMessage\([^)]*ProductionBrokerContext|window\.ProductionBrokerContext/);
+assert.doesNotMatch(source, /postMessage\([^)]*ProductionBrokerContext|window\.ProductionBrokerContext/);
+assert.match(source, /new MessageChannel\(\)/);
 assert.doesNotMatch(source, /localStorage|indexedDB|document\.cookie/);
 assert.match(page, /assets\/js\/device-api\.js/);
 assert.doesNotMatch(page, /allow-same-origin/);

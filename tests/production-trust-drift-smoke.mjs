@@ -16,8 +16,10 @@ assert.match(developerApi, /Request\.Form\("appId"\)/);
 assert.match(developerApi, /Request\.Form\("version"\)/);
 assert.match(developerApi, /LOWER\(SHA2\(package_blob,256\)\)/i, "server currently computes uploaded package SHA-256");
 assert.match(developerApi, /webwindows_function_ownership/);
-assert.doesNotMatch(developerApi, /ServerValidationReport|sourceManifestSha256|approvedPermissions/,
-  "current Developer API must not be mistaken for the frozen future validation/report integration");
+assert.match(developerApi, /RunTrustedPackageValidator|source_manifest_sha256/,
+  "Phase 2D.1 must integrate trusted validation and Source Manifest binding");
+assert.doesNotMatch(developerApi, /approvedPermissions/,
+  "Phase 2D.1 must not be mistaken for immutable review/release integration");
 
 assert.match(adminReview, /targetStatus = "approved"/);
 assert.match(adminReview, /targetStatus = "revoked"/);

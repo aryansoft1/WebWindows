@@ -5,8 +5,12 @@
   const ALLOWED_EXTENSIONS = new Set([".html", ".htm", ".css", ".js", ".json", ".txt", ".md", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".otf", ".mp3", ".wav", ".ogg", ".mp4", ".webm"]);
   const MIME_TYPES = { ".html":"text/html;charset=utf-8", ".htm":"text/html;charset=utf-8", ".css":"text/css;charset=utf-8", ".js":"text/javascript;charset=utf-8", ".json":"application/json;charset=utf-8", ".txt":"text/plain;charset=utf-8", ".md":"text/markdown;charset=utf-8", ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".gif":"image/gif", ".webp":"image/webp", ".svg":"image/svg+xml", ".ico":"image/x-icon", ".woff":"font/woff", ".woff2":"font/woff2", ".ttf":"font/ttf", ".otf":"font/otf", ".mp3":"audio/mpeg", ".wav":"audio/wav", ".ogg":"audio/ogg", ".mp4":"video/mp4", ".webm":"video/webm" };
   const TRUST_STATES = Object.freeze({ SYSTEM:"system-trusted", VERIFIED:"verified-release", LEGACY:"legacy-unverified", FAILED:"verification-failed" });
+  const PERMISSION_POLICY_VERSION = 1;
   let runtimeTrustState = TRUST_STATES.FAILED;
   let verifiedRuntimePackageIdentity = null;
+  let productionBrokerContext = null;
+  let activeRuntimeSessionId = null;
+  let productionContextDiagnostics = null;
 
   class RuntimeVerificationError extends Error {
     constructor(code, message) { super(message); this.name = "RuntimeVerificationError"; this.code = code; }
@@ -71,6 +75,17 @@
     if (Array.isArray(value)) return `[${value.map(canonicalizeJson).join(",")}]`;
     return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalizeJson(value[key])}`).join(",")}}`;
   }
+  function deepFreeze(value) {
+    if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+    Object.values(value).forEach(deepFreeze);
+    return Object.freeze(value);
+  }
+  function opaqueId(prefix) {
+    if (typeof globalThis.crypto?.randomUUID === "function") return `${prefix}_${globalThis.crypto.randomUUID().replace(/-/g, "")}`;
+    const bytes = new Uint8Array(16);
+    globalThis.crypto.getRandomValues(bytes);
+    return `${prefix}_${Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("")}`;
+  }
   async function sha256Hex(bytes) {
     if (!globalThis.crypto?.subtle) fail("runtime-release-verification-failed", "当前环境无法验证功能包完整性。");
     const input = bytes instanceof ArrayBuffer ? bytes : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
@@ -127,20 +142,150 @@
     const requestedPermissions = manifestVersion === 2 ? manifest.permissions : [];
     if (manifest.id !== expected.appId || manifest.version !== expected.version || manifestVersion !== expected.manifestVersion || sdkVersion !== expected.sdkVersion || (entryHint && manifest.entry !== entryHint)) fail("manifest-identity-mismatch", "功能包 Manifest 身份与发布版本不一致。");
     if (!Array.isArray(requestedPermissions) || new Set(requestedPermissions).size !== requestedPermissions.length || expected.approvedPermissions.some((permission) => !requestedPermissions.includes(permission))) fail("release-binding-mismatch", "发布权限与功能包声明不一致。");
-    return { entry:normalizePath(manifest.entry || "index.html") };
+    return { entry:normalizePath(manifest.entry || "index.html"), requestedPermissions:Object.freeze([...requestedPermissions]) };
   }
   function createVerifiedIdentity(expected) {
     return Object.freeze({ publishedReleaseId:expected.publishedReleaseId, appId:expected.appId, publisherId:expected.publisherId, version:expected.version,
       packageSha256:expected.packageSha256, sourceManifestSha256:expected.sourceManifestSha256, manifestVersion:expected.manifestVersion, sdkVersion:expected.sdkVersion,
       reviewDecisionId:expected.reviewDecisionId, approvedPermissions:Object.freeze([...expected.approvedPermissions]), reviewPolicyVersion:expected.reviewPolicyVersion,
+      releaseState:expected.releaseStatus,
       verificationTimestamp:new Date().toISOString() });
+  }
+  async function loadProductionPolicyContracts() {
+    const paths = [
+      "/data/sdk/production-broker-context-v1.json",
+      "/data/sdk/permission-decision-v1.json",
+      "/data/sdk/capability-broker-policy-v1.json",
+      "/data/sdk/capability-broker-methods-v1.json",
+      "/data/sdk/permissions-v1.json"
+    ];
+    const responses = await Promise.all(paths.map((path) => fetch(path, { credentials:"same-origin", cache:"no-store" })));
+    if (responses.some((response) => !response.ok)) throw new Error("production-context-contract-unavailable");
+    const [context, decision, brokerPolicy, methods, permissions] = await Promise.all(responses.map((response) => response.json()));
+    if (context.contextVersion !== 1 || decision.policyVersion !== PERMISSION_POLICY_VERSION || brokerPolicy.policyVersion !== PERMISSION_POLICY_VERSION || methods.schemaVersion !== 1 ||
+        context.policyVersions?.currentPermissionPolicyVersion !== PERMISSION_POLICY_VERSION) throw new Error("production-context-policy-version-mismatch");
+    return { context, decision, brokerPolicy, methods, permissions };
+  }
+  async function readTrustedRuntimeCapabilities() {
+    const batteryApi = window.WebWindows?.device?.battery;
+    try {
+      await window.WebWindows?.device?.ready?.();
+      const status = batteryApi?.getCapabilities?.()?.status;
+      return deepFreeze({
+        "battery.status": {
+          supported: batteryApi?.isSupported?.() === true && status?.supported === true,
+          source: typeof status?.source === "string" ? status.source : "unsupported"
+        }
+      });
+    } catch (_) {
+      return deepFreeze({ "battery.status": { supported:false, source:"unsupported" } });
+    }
+  }
+  function sameArray(left, right) {
+    return Array.isArray(left) && Array.isArray(right) && left.length === right.length && left.every((value, index) => value === right[index]);
+  }
+  function assertContextTrustBinding(verified, expected) {
+    const fields = ["publishedReleaseId", "appId", "publisherId", "version", "packageSha256", "sourceManifestSha256", "manifestVersion", "sdkVersion", "reviewDecisionId", "reviewPolicyVersion"];
+    if (!verified || runtimeTrustState !== TRUST_STATES.VERIFIED || fields.some((field) => verified[field] !== expected[field]) ||
+        verified.releaseState !== expected.releaseStatus || !sameArray(verified.approvedPermissions, expected.approvedPermissions)) {
+      fail("runtime-release-verification-failed", "无法构造可信运行授权上下文。");
+    }
+  }
+  function buildProductionBrokerContext({ verified, expected, requestedPermissions, runtimeSessionId, contracts, runtimeCapabilities }) {
+    assertContextTrustBinding(verified, expected);
+    if (expected.releaseStatus !== "active") return null;
+    const knownPermissions = new Set((contracts.permissions.permissions || []).map((item) => item.id));
+    const approved = Object.freeze([...verified.approvedPermissions]);
+    const requested = Object.freeze([...requestedPermissions]);
+    const grantState = {};
+    const effective = [];
+    for (const permissionId of new Set([...requested, ...approved])) {
+      const method = (contracts.methods.methods || []).find((item) => item.requiredPermission === permissionId);
+      const declared = requested.includes(permissionId);
+      const reviewed = approved.includes(permissionId);
+      const noConsent = method?.consent === "no-consent";
+      const capability = method?.requiredRuntimeCapability;
+      const capabilitySupported = capability && runtimeCapabilities[capability]?.supported === true;
+      grantState[permissionId] = noConsent ? "not-required" : "denied";
+      if (knownPermissions.has(permissionId) && declared && reviewed && noConsent && capabilitySupported) effective.push(permissionId);
+    }
+    return deepFreeze({
+      contextVersion:1,
+      contextId:opaqueId("ctx"),
+      runtimeSessionId,
+      publishedReleaseId:verified.publishedReleaseId,
+      appId:verified.appId,
+      publisherId:verified.publisherId,
+      version:verified.version,
+      packageSha256:verified.packageSha256,
+      sourceManifestSha256:verified.sourceManifestSha256,
+      manifestVersion:verified.manifestVersion,
+      sdkVersion:verified.sdkVersion,
+      reviewDecisionId:verified.reviewDecisionId,
+      reviewPolicyVersion:verified.reviewPolicyVersion,
+      permissionPolicyVersion:PERMISSION_POLICY_VERSION,
+      requestedPermissions:requested,
+      approvedPermissions:approved,
+      effectivePermissions:Object.freeze(effective),
+      releaseState:verified.releaseState,
+      trustState:runtimeTrustState,
+      contextState:"eligible",
+      runtimeCapabilities,
+      grantState:deepFreeze(grantState),
+      createdAt:new Date().toISOString()
+    });
+  }
+  function recordContextDiagnostics({ runtimeSessionId, expected, requestedPermissions, runtimeCapabilities, context, denialReason }) {
+    productionContextDiagnostics = deepFreeze({
+      releaseId:expected?.publishedReleaseId || null,
+      runtimeSessionId,
+      trustState:runtimeTrustState,
+      releaseState:expected?.releaseStatus || (runtimeTrustState === TRUST_STATES.LEGACY ? "legacy" : "unknown"),
+      manifestVersion:expected?.manifestVersion || null,
+      sdkVersion:expected?.sdkVersion || null,
+      requestedPermissionCount:requestedPermissions?.length || 0,
+      approvedPermissionCount:expected?.approvedPermissions?.length || 0,
+      effectivePermissionIds:Object.freeze([...(context?.effectivePermissions || [])]),
+      capabilitySupport:deepFreeze({ batteryStatus:runtimeCapabilities?.["battery.status"]?.supported === true }),
+      contextState:context ? context.contextState : (runtimeTrustState === TRUST_STATES.LEGACY ? "legacy" : "ineligible"),
+      denialReason:denialReason || null
+    });
+    console.info("[WebWindows Runtime Context]", JSON.stringify(productionContextDiagnostics));
+  }
+  async function establishProductionBrokerContext(expected, requestedPermissions, runtimeSessionId) {
+    if (runtimeTrustState !== TRUST_STATES.VERIFIED || !verifiedRuntimePackageIdentity) return null;
+    const runtimeCapabilities = await readTrustedRuntimeCapabilities();
+    if (expected.releaseStatus !== "active") {
+      recordContextDiagnostics({ runtimeSessionId, expected, requestedPermissions, runtimeCapabilities, context:null, denialReason:"release-not-privileged" });
+      return null;
+    }
+    try {
+      const contracts = await loadProductionPolicyContracts();
+      productionBrokerContext = buildProductionBrokerContext({ verified:verifiedRuntimePackageIdentity, expected, requestedPermissions, runtimeSessionId, contracts, runtimeCapabilities });
+      recordContextDiagnostics({ runtimeSessionId, expected, requestedPermissions, runtimeCapabilities, context:productionBrokerContext });
+      return productionBrokerContext;
+    } catch (error) {
+      productionBrokerContext = null;
+      if (error instanceof RuntimeVerificationError) throw error;
+      recordContextDiagnostics({ runtimeSessionId, expected, requestedPermissions, runtimeCapabilities, context:null, denialReason:"context-policy-unavailable" });
+      return null;
+    }
+  }
+  function destroyProductionBrokerContext(reason) {
+    if (productionBrokerContext || activeRuntimeSessionId) console.info("[WebWindows Runtime Context]", JSON.stringify({ contextState:"destroyed", runtimeSessionId:activeRuntimeSessionId, reason:reason || "runtime-stop" }));
+    productionBrokerContext = null;
+    productionContextDiagnostics = null;
+    activeRuntimeSessionId = null;
+  }
+  function isProductionBrokerContextActive(context) {
+    return Boolean(context && productionBrokerContext === context && activeRuntimeSessionId === context.runtimeSessionId);
   }
   async function downloadPackage(url) {
     const response = await fetch(url, { credentials:"same-origin", cache:"no-store" });
     if (!response.ok) fail("runtime-release-verification-failed", `功能包读取失败（${response.status}）。`);
     return response.arrayBuffer();
   }
-  async function prepareVerified(params) {
+  async function prepareVerified(params, runtimeSessionId = opaqueId("runtime")) {
     const releaseId = String(params.get("release") || "").trim(), appId = String(params.get("appId") || "").trim(), version = String(params.get("version") || "").trim();
     const entryHint = params.has("entry") ? normalizePath(params.get("entry")) : "";
     const expected = await lookupExpectedIdentity(releaseId, appId, version);
@@ -148,6 +293,7 @@
     if (await sha256Hex(packageBytes) !== expected.packageSha256) fail("package-integrity-failed", "功能包完整性验证失败。");
     const contents = await readArchive(packageBytes), source = await verifySourceManifest(contents, expected, entryHint);
     verifiedRuntimePackageIdentity = createVerifiedIdentity(expected); runtimeTrustState = TRUST_STATES.VERIFIED;
+    await establishProductionBrokerContext(expected, source.requestedPermissions, runtimeSessionId);
     return { contents, entry:source.entry };
   }
   async function prepareLegacy(params) {
@@ -166,14 +312,18 @@
     const frame = document.getElementById("packageFrame"); frame.srcdoc = rewriteHtml(html, entry, urls, textAssets); frame.hidden = false; document.getElementById("runtimeState").hidden = true;
   }
   function setError(error) {
-    runtimeTrustState = TRUST_STATES.FAILED; verifiedRuntimePackageIdentity = null;
+    destroyProductionBrokerContext("verification-failed"); runtimeTrustState = TRUST_STATES.FAILED; verifiedRuntimePackageIdentity = null;
     const state = document.getElementById("runtimeState"); state.dataset.errorCode = error?.code || "runtime-release-verification-failed"; state.classList.add("error"); state.querySelector("h1").textContent = "功能无法启动";
     document.getElementById("runtimeMessage").textContent = error?.message || "功能运行验证失败。";
   }
   async function start() {
     if (!window.JSZip) throw new Error("ZIP 运行组件加载失败，请检查网络后重试。");
-    const params = new URLSearchParams(location.search), prepared = params.has("release") ? await prepareVerified(params) : await prepareLegacy(params);
+    destroyProductionBrokerContext("new-session");
+    activeRuntimeSessionId = opaqueId("runtime");
+    const params = new URLSearchParams(location.search), prepared = params.has("release") ? await prepareVerified(params, activeRuntimeSessionId) : await prepareLegacy(params);
+    if (!params.has("release")) recordContextDiagnostics({ runtimeSessionId:activeRuntimeSessionId, expected:null, requestedPermissions:[], runtimeCapabilities:null, context:null, denialReason:"legacy-unverified" });
     await executePreparedPackage(prepared.contents, prepared.entry);
   }
+  window.addEventListener?.("pagehide", () => destroyProductionBrokerContext("pagehide"));
   document.addEventListener("DOMContentLoaded", () => start().catch((error) => setError(error)));
 })();

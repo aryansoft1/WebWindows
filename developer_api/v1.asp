@@ -60,8 +60,116 @@ Function Base64EncodeUtf8(ByVal value)
   Set xml = Nothing
 End Function
 
+Function Base64DecodeUtf8(ByVal value)
+  Dim xml, node, bytes, stream
+  Set xml = Server.CreateObject("Msxml2.DOMDocument.3.0")
+  Set node = xml.createElement("base64")
+  node.dataType = "bin.base64"
+  node.text = CStr(value)
+  bytes = node.nodeTypedValue
+  Set node = Nothing
+  Set xml = Nothing
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 1
+  stream.Open
+  stream.Write bytes
+  stream.Position = 0
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  Base64DecodeUtf8 = stream.ReadText
+  stream.Close
+  Set stream = Nothing
+End Function
+
+Sub SaveBinaryFile(ByVal path, ByRef bytes)
+  Dim stream
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 1
+  stream.Open
+  stream.Write bytes
+  stream.SaveToFile path, 2
+  stream.Close
+  Set stream = Nothing
+End Sub
+
+Sub SaveUtf8File(ByVal path, ByVal text)
+  Dim stream, bytes
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.WriteText CStr(text)
+  stream.Position = 0
+  stream.Type = 1
+  stream.Position = 3
+  bytes = stream.Read
+  stream.Close
+  Set stream = Nothing
+  SaveBinaryFile path, bytes
+End Sub
+
+Function ReadUtf8File(ByVal path)
+  Dim stream
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.LoadFromFile path
+  ReadUtf8File = stream.ReadText
+  stream.Close
+  Set stream = Nothing
+End Function
+
+Function ReportStringField(ByVal reportJson, ByVal fieldName)
+  Dim regex, matches
+  Set regex = New RegExp
+  regex.Pattern = """" & fieldName & """:""([a-z0-9._-]+)"""
+  regex.IgnoreCase = True
+  Set matches = regex.Execute(CStr(reportJson))
+  If matches.Count = 1 Then ReportStringField = LCase(CStr(matches(0).SubMatches(0))) Else ReportStringField = ""
+  Set matches = Nothing
+  Set regex = Nothing
+End Function
+
+Function RunTrustedPackageValidator(ByVal packageBytes, ByVal outerManifest, ByVal expectedAppId, _
+    ByVal expectedVersion, ByVal publisherId, ByVal submissionId, ByRef reportJson)
+  Dim fso, quarantineRoot, nonce, zipPath, manifestPath, reportPath, exePath, rootPath
+  Dim shell, command, exitCode
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  quarantineRoot = Server.MapPath("../App_Data/developer-validation")
+  If Not fso.FolderExists(Server.MapPath("../App_Data")) Then fso.CreateFolder Server.MapPath("../App_Data")
+  If Not fso.FolderExists(quarantineRoot) Then fso.CreateFolder quarantineRoot
+  nonce = CStr(submissionId) & "-" & Replace(Replace(CStr(Timer), ".", ""), ",", "")
+  zipPath = fso.BuildPath(quarantineRoot, nonce & ".zip")
+  manifestPath = fso.BuildPath(quarantineRoot, nonce & ".manifest.json")
+  reportPath = fso.BuildPath(quarantineRoot, nonce & ".report.json")
+  exePath = Server.MapPath("../server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe")
+  rootPath = Server.MapPath("..")
+  If Not fso.FileExists(exePath) Then
+    Set fso = Nothing
+    Fail 500, "SERVER_VALIDATOR_UNAVAILABLE", "受信任服务器功能包验证器尚未部署。"
+  End If
+  SaveBinaryFile zipPath, packageBytes
+  SaveUtf8File manifestPath, outerManifest
+  command = """" & exePath & """ """ & zipPath & """ """ & manifestPath & """ """ & _
+    expectedAppId & """ """ & expectedVersion & """ """ & CStr(publisherId) & """ """ & _
+    reportPath & """ """ & rootPath & """ """ & CStr(submissionId) & """"
+  Set shell = Server.CreateObject("WScript.Shell")
+  exitCode = shell.Run(command, 0, True)
+  Set shell = Nothing
+  If fso.FileExists(reportPath) Then reportJson = ReadUtf8File(reportPath) Else reportJson = ""
+  On Error Resume Next
+  If fso.FileExists(zipPath) Then fso.DeleteFile zipPath, True
+  If fso.FileExists(manifestPath) Then fso.DeleteFile manifestPath, True
+  If fso.FileExists(reportPath) Then fso.DeleteFile reportPath, True
+  On Error GoTo 0
+  Set fso = Nothing
+  If reportJson = "" Then Fail 500, "SERVER_VALIDATOR_FAILED", "服务器功能包验证器未生成报告。"
+  RunTrustedPackageValidator = (exitCode = 0 And InStr(1, reportJson, """passed"":true", vbTextCompare) > 0)
+End Function
+
 Sub EnsureDeveloperTables()
-  Dim developerSql, submissionSql, packageSql, ownershipSql
+  Dim developerSql, submissionSql, packageSql, ownershipSql, validationSql
   developerSql = "CREATE TABLE IF NOT EXISTS webwindows_developers (" & _
     "id BIGINT NOT NULL AUTO_INCREMENT,user_id BIGINT NOT NULL," & _
     "display_name VARCHAR(120) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'pending'," & _
@@ -94,6 +202,13 @@ Sub EnsureDeveloperTables()
     "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
     "PRIMARY KEY(app_id),KEY idx_function_ownership_developer(developer_id)) " & _
     "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  validationSql = "CREATE TABLE IF NOT EXISTS webwindows_submission_validations (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
+    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "validator_version VARCHAR(20) NOT NULL,passed TINYINT(1) NOT NULL," & _
+    "report_base64 LONGTEXT NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
+    "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
+    "KEY idx_submission_validation_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
   On Error Resume Next
   conn.Execute developerSql
   If Err.Number <> 0 Then
@@ -124,11 +239,25 @@ Sub EnsureDeveloperTables()
     On Error GoTo 0
     Fail 500, "OWNERSHIP_SCHEMA_FAILED", "功能 ID 所有权表初始化失败：" & tableError
   End If
+  conn.Execute validationSql
+  If Err.Number <> 0 Then
+    tableError = Err.Description
+    Err.Clear
+    On Error GoTo 0
+    Fail 500, "VALIDATION_SCHEMA_FAILED", "验证记录数据表初始化失败：" & tableError
+  End If
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_sha256 VARCHAR(64) NOT NULL DEFAULT ''"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_uploaded_at DATETIME NULL"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN validation_status VARCHAR(30) NOT NULL DEFAULT 'not-validated'"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN active_validation_id BIGINT NULL"
+  Err.Clear
+  conn.Execute "UPDATE webwindows_function_submissions SET validation_status='legacy-unverified' " & _
+    "WHERE status='published' AND validation_status='not-validated'"
   Err.Clear
   On Error GoTo 0
 End Sub
@@ -186,7 +315,8 @@ If action = "spec" And method = "GET" Then
     """manifestSchemaVersion"":1,""authentication"":[""session"",""api-key""]," & _
     """packageUpload"":{""contentType"":""application/zip"",""maxBytes"":10485760," & _
     """transport"":""raw-request-body"",""quarantine"":true}," & _
-    """submissionStates"":[""submitted"",""approved"",""rejected"",""published"",""revoked""]}"
+    """submissionStates"":[""submitted"",""approved"",""rejected"",""published"",""revoked""]," & _
+    """validationStates"":[""not-validated"",""validating"",""validation-failed"",""validated"",""legacy-unverified""]}"
 
 ElseIf action = "profile" And method = "GET" Then
   If SessionUserId() = 0 Then Fail 401, "LOGIN_REQUIRED", "请先登录 WebWindows。"
@@ -362,6 +492,9 @@ ElseIf action = "upload-package" And method = "POST" Then
   Dim submissionId, uploadSubmissionCmd, uploadSubmissionRs, uploadStatus
   Dim expectedIntegrity, totalBytes, packageBytes, byte1, byte2, byte3, byte4
   Dim contentType, originalFilename, packageCmd, packageHashRs, actualIntegrity
+  Dim expectedAppId, expectedVersion, outerManifest, validationReport, validationPassed
+  Dim sourceManifestHash, validationReportBase64, validationCmd, validationIdRs, validationId
+  Dim validationStatusText
   uploadApiKey = Trim(CStr(Request.ServerVariables("HTTP_X_WEBWINDOWS_DEVELOPER_KEY")))
   If uploadApiKey = "" Then Fail 401, "API_KEY_REQUIRED", "缺少开发者 API Key。"
   Set uploadDeveloperRs = DeveloperByKey(uploadApiKey)
@@ -383,7 +516,7 @@ ElseIf action = "upload-package" And method = "POST" Then
   Set uploadSubmissionCmd = Server.CreateObject("ADODB.Command")
   With uploadSubmissionCmd
     .ActiveConnection = conn
-    .CommandText = "SELECT status,integrity_sha256 FROM webwindows_function_submissions " & _
+    .CommandText = "SELECT status,integrity_sha256,app_id,app_version,manifest_base64 FROM webwindows_function_submissions " & _
       "WHERE id=? AND developer_id=? LIMIT 1"
     .CommandType = 1
     .Parameters.Append .CreateParameter(, 3, 1, , submissionId)
@@ -396,6 +529,9 @@ ElseIf action = "upload-package" And method = "POST" Then
   End If
   uploadStatus = LCase(CStr(uploadSubmissionRs("status")))
   expectedIntegrity = LCase(CStr(uploadSubmissionRs("integrity_sha256")))
+  expectedAppId = LCase(CStr(uploadSubmissionRs("app_id")))
+  expectedVersion = CStr(uploadSubmissionRs("app_version"))
+  outerManifest = Base64DecodeUtf8(CStr(uploadSubmissionRs("manifest_base64")))
   uploadSubmissionRs.Close
   Set uploadSubmissionRs = Nothing
   Set uploadSubmissionCmd = Nothing
@@ -427,6 +563,9 @@ ElseIf action = "upload-package" And method = "POST" Then
   If originalFilename = "" Then originalFilename = "package.zip"
   If LCase(Right(originalFilename, 4)) <> ".zip" Then originalFilename = originalFilename & ".zip"
 
+  conn.Execute "UPDATE webwindows_function_submissions SET package_size=0,package_sha256=''," & _
+    "package_uploaded_at=NULL,validation_status='validating',active_validation_id=NULL WHERE id=" & submissionId
+
   Set packageCmd = Server.CreateObject("ADODB.Command")
   With packageCmd
     .ActiveConnection = conn
@@ -450,17 +589,54 @@ ElseIf action = "upload-package" And method = "POST" Then
   Set packageHashRs = Nothing
   If expectedIntegrity <> String(64, "0") And actualIntegrity <> expectedIntegrity Then
     conn.Execute "DELETE FROM webwindows_function_packages WHERE submission_id=" & submissionId
+    conn.Execute "UPDATE webwindows_function_submissions SET validation_status='validation-failed' WHERE id=" & submissionId
     Fail 400, "PACKAGE_INTEGRITY_MISMATCH", "上传文件的 SHA-256 与 Manifest 提交值不一致。"
   End If
+  validationReport = ""
+  validationPassed = RunTrustedPackageValidator(packageBytes, outerManifest, expectedAppId, _
+    expectedVersion, uploadDeveloperId, submissionId, validationReport)
+  sourceManifestHash = ReportStringField(validationReport, "sourceManifestSha256")
+  validationReportBase64 = Base64EncodeUtf8(validationReport)
+  Set validationCmd = Server.CreateObject("ADODB.Command")
+  With validationCmd
+    .ActiveConnection = conn
+    .CommandText = "INSERT INTO webwindows_submission_validations " & _
+      "(submission_id,developer_id,package_sha256,source_manifest_sha256,validator_version,passed,report_base64) " & _
+      "VALUES (?,?,?,?,?,?,?)"
+    .CommandType = 1
+    .Parameters.Append .CreateParameter(, 3, 1, , submissionId)
+    .Parameters.Append .CreateParameter(, 3, 1, , uploadDeveloperId)
+    .Parameters.Append .CreateParameter(, 200, 1, 64, actualIntegrity)
+    .Parameters.Append .CreateParameter(, 200, 1, 64, sourceManifestHash)
+    .Parameters.Append .CreateParameter(, 200, 1, 20, "1.0.0")
+    .Parameters.Append .CreateParameter(, 3, 1, , Abs(CInt(validationPassed)))
+    .Parameters.Append .CreateParameter(, 201, 1, Len(validationReportBase64), validationReportBase64)
+    .Execute
+  End With
+  Set validationCmd = Nothing
+  Set validationIdRs = conn.Execute("SELECT LAST_INSERT_ID() AS validation_id")
+  validationId = CLng(validationIdRs("validation_id"))
+  validationIdRs.Close
+  Set validationIdRs = Nothing
+  If validationPassed Then validationStatusText = "validated" Else validationStatusText = "validation-failed"
   conn.Execute "UPDATE webwindows_function_packages SET package_sha256='" & actualIntegrity & _
     "' WHERE submission_id=" & submissionId
   conn.Execute "UPDATE webwindows_function_submissions SET package_size=" & totalBytes & _
     ",package_sha256='" & actualIntegrity & "',integrity_sha256='" & actualIntegrity & _
-    "',package_uploaded_at=NOW(),status='submitted'," & _
+    "',package_uploaded_at=NOW(),status='submitted',validation_status='" & _
+    validationStatusText & "',active_validation_id=" & validationId & "," & _
     "review_note='' WHERE id=" & submissionId
+  If Not validationPassed Then
+    Response.Status = "400 Bad Request"
+    Response.Write "{""ok"":false,""code"":""PACKAGE_VALIDATION_FAILED""," & _
+      """submissionId"":" & submissionId & ",""validationReport"":" & validationReport & "}"
+    If conn.State <> 0 Then conn.Close
+    Response.End
+  End If
   Response.Write "{""ok"":true,""submissionId"":" & submissionId & _
     ",""packageSize"":" & totalBytes & ",""packageSha256"":""" & actualIntegrity & _
-    """,""quarantine"":true,""message"":""功能包已校验并进入隔离审核区。""}"
+    """,""validationStatus"":""validated"",""validationReport"":" & validationReport & _
+    ",""quarantine"":true,""message"":""功能包已通过受信任服务器验证并进入隔离审核区。""}"
 
 ElseIf action = "submissions" And method = "GET" Then
   apiKey = Trim(CStr(Request.ServerVariables("HTTP_X_WEBWINDOWS_DEVELOPER_KEY")))
@@ -478,7 +654,7 @@ ElseIf action = "submissions" And method = "GET" Then
   With listCmd
     .ActiveConnection = conn
     .CommandText = "SELECT id,app_id,app_version,integrity_sha256,package_size,package_sha256," & _
-      "package_uploaded_at,status,review_note,created_at,updated_at " & _
+      "package_uploaded_at,validation_status,status,review_note,created_at,updated_at " & _
       "FROM webwindows_function_submissions WHERE developer_id=? ORDER BY id DESC LIMIT 100"
     .CommandType = 1
     .Parameters.Append .CreateParameter(, 3, 1, , developerId)
@@ -496,6 +672,7 @@ ElseIf action = "submissions" And method = "GET" Then
       """,""packageSize"":" & CLng(listRs("package_size")) & _
       ",""packageSha256"":""" & JsonText(listRs("package_sha256")) & _
       """,""packageUploadedAt"":""" & JsonText(listRs("package_uploaded_at")) & _
+      """,""validationStatus"":""" & JsonText(listRs("validation_status")) & _
       """,""status"":""" & JsonText(listRs("status")) & _
       """,""reviewNote"":""" & JsonText(listRs("review_note")) & _
       """,""createdAt"":""" & JsonText(listRs("created_at")) & _

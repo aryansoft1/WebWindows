@@ -127,11 +127,26 @@ Sub EnsureTables()
     On Error GoTo 0
     Fail 500, "OWNERSHIP_SCHEMA_FAILED", schemaError
   End If
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_submission_validations (" & _
+    "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
+    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL," & _
+    "validator_version VARCHAR(20) NOT NULL,passed TINYINT(1) NOT NULL," & _
+    "report_base64 LONGTEXT NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
+    "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
+    "KEY idx_submission_validation_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_sha256 VARCHAR(64) NOT NULL DEFAULT ''"
   Err.Clear
   conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_uploaded_at DATETIME NULL"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN validation_status VARCHAR(30) NOT NULL DEFAULT 'not-validated'"
+  Err.Clear
+  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN active_validation_id BIGINT NULL"
+  Err.Clear
+  conn.Execute "UPDATE webwindows_function_submissions SET validation_status='legacy-unverified' " & _
+    "WHERE status='published' AND validation_status='not-validated'"
   Err.Clear
   On Error GoTo 0
 End Sub
@@ -175,11 +190,13 @@ If action = "developers" And method = "GET" Then
   Response.Write developerJson
 
 ElseIf action = "submissions" And method = "GET" Then
-  Dim submissionRs, submissionJson, firstSubmission, manifestJson, packageReadyJson
+  Dim submissionRs, submissionJson, firstSubmission, manifestJson, packageReadyJson, serverValidatedJson, validationReportJson
   Set submissionRs = conn.Execute("SELECT s.id,s.developer_id,s.app_id,s.app_version,s.manifest_base64," & _
     "s.integrity_sha256,s.package_size,s.package_sha256,s.package_uploaded_at," & _
-    "s.status,s.review_note,s.created_at,s.updated_at,d.display_name,u.username " & _
+    "s.validation_status,s.status,s.review_note,s.created_at,s.updated_at,d.display_name,u.username," & _
+    "v.report_base64,v.passed AS validation_passed " & _
     "FROM webwindows_function_submissions s " & _
+    "LEFT JOIN webwindows_submission_validations v ON v.id=s.active_validation_id " & _
     "JOIN webwindows_developers d ON s.developer_id=d.id " & _
     "LEFT JOIN webwindows_users u ON d.user_id=u.id ORDER BY s.id DESC LIMIT 200")
   submissionJson = "{""ok"":true,""submissions"":["
@@ -188,8 +205,15 @@ ElseIf action = "submissions" And method = "GET" Then
     If Not firstSubmission Then submissionJson = submissionJson & ","
     firstSubmission = False
     manifestJson = Base64DecodeUtf8(CStr(submissionRs("manifest_base64")))
+    If IsNull(submissionRs("report_base64")) Then validationReportJson = "null" Else validationReportJson = Base64DecodeUtf8(CStr(submissionRs("report_base64")))
     packageReadyJson = LCase(CStr(CBool(CLng(submissionRs("package_size")) > 0 And _
       LCase(CStr(submissionRs("package_sha256"))) = LCase(CStr(submissionRs("integrity_sha256"))))))
+    serverValidatedJson = "false"
+    If LCase(CStr(submissionRs("validation_status"))) = "validated" Then
+      If Not IsNull(submissionRs("validation_passed")) Then
+        If CBool(submissionRs("validation_passed")) Then serverValidatedJson = "true"
+      End If
+    End If
     submissionJson = submissionJson & "{""id"":" & CLng(submissionRs("id")) & _
       ",""developerId"":" & CLng(submissionRs("developer_id")) & _
       ",""developerName"":""" & JsonText(submissionRs("display_name")) & _
@@ -201,6 +225,9 @@ ElseIf action = "submissions" And method = "GET" Then
       ",""packageSha256"":""" & JsonText(submissionRs("package_sha256")) & _
       """,""packageUploadedAt"":""" & JsonText(submissionRs("package_uploaded_at")) & _
       """,""packageReady"":" & packageReadyJson & _
+      ",""serverValidated"":" & serverValidatedJson & _
+      ",""validationStatus"":""" & JsonText(submissionRs("validation_status")) & _
+      """,""validationReport"":" & validationReportJson & _
       ",""status"":""" & JsonText(submissionRs("status")) & _
       """,""reviewNote"":""" & JsonText(submissionRs("review_note")) & _
       """,""createdAt"":""" & JsonText(submissionRs("created_at")) & _
@@ -248,8 +275,10 @@ ElseIf action = "submission-status" And method = "POST" Then
      targetStatus <> "published" And targetStatus <> "revoked" Then
     Fail 400, "SUBMISSION_STATUS_INVALID", "审核状态无效。"
   End If
-  Set currentRs = conn.Execute("SELECT status,package_size,package_sha256,integrity_sha256,app_id,developer_id " & _
-    "FROM webwindows_function_submissions WHERE id=" & submissionId)
+  Set currentRs = conn.Execute("SELECT s.status,s.package_size,s.package_sha256,s.integrity_sha256," & _
+    "s.app_id,s.developer_id,s.validation_status,v.passed AS validation_passed," & _
+    "v.package_sha256 AS validated_package_sha256 FROM webwindows_function_submissions s " & _
+    "LEFT JOIN webwindows_submission_validations v ON v.id=s.active_validation_id WHERE s.id=" & submissionId)
   If currentRs.EOF Then
     currentRs.Close
     Fail 404, "SUBMISSION_NOT_FOUND", "没有找到功能提交。"
@@ -260,6 +289,16 @@ ElseIf action = "submission-status" And method = "POST" Then
        LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("integrity_sha256"))) Then
       currentRs.Close
       Fail 409, "PACKAGE_REQUIRED", "必须先上传并通过 SHA-256 校验的 ZIP 功能包。"
+    End If
+    If LCase(CStr(currentRs("validation_status"))) <> "validated" Or _
+       IsNull(currentRs("validation_passed")) Or IsNull(currentRs("validated_package_sha256")) Then
+      currentRs.Close
+      Fail 409, "SERVER_VALIDATION_REQUIRED", "功能包必须先通过与当前 SHA-256 绑定的服务器验证。"
+    End If
+    If Not CBool(currentRs("validation_passed")) Or _
+       LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("validated_package_sha256"))) Then
+      currentRs.Close
+      Fail 409, "SERVER_VALIDATION_REQUIRED", "服务器验证报告未通过或与当前功能包不匹配。"
     End If
     Dim ownershipRs
     Set ownershipRs = conn.Execute("SELECT developer_id FROM webwindows_function_ownership " & _
@@ -276,6 +315,18 @@ ElseIf action = "submission-status" And method = "POST" Then
     End If
     ownershipRs.Close
     Set ownershipRs = Nothing
+  End If
+  If targetStatus = "published" Then
+    If LCase(CStr(currentRs("validation_status"))) <> "validated" Or _
+       IsNull(currentRs("validation_passed")) Or IsNull(currentRs("validated_package_sha256")) Then
+      currentRs.Close
+      Fail 409, "SERVER_VALIDATION_REQUIRED", "未通过服务器验证的功能包不能发布。"
+    End If
+    If Not CBool(currentRs("validation_passed")) Or _
+       LCase(CStr(currentRs("package_sha256"))) <> LCase(CStr(currentRs("validated_package_sha256"))) Then
+      currentRs.Close
+      Fail 409, "SERVER_VALIDATION_REQUIRED", "服务器验证报告未通过或与当前功能包不匹配。"
+    End If
   End If
   currentRs.Close
   Set currentRs = Nothing

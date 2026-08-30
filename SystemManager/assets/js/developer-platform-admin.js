@@ -97,6 +97,14 @@
     document.getElementById("manifestDialog").showModal();
   }
 
+  function viewValidationReport(submission) {
+    document.getElementById("manifestTitle").textContent =
+      submission.appId + " " + submission.version + " · Server Validation";
+    document.getElementById("manifestContent").textContent =
+      JSON.stringify(submission.validationReport, null, 2);
+    document.getElementById("manifestDialog").showModal();
+  }
+
   async function downloadPackage(submission) {
     setStatus(`正在读取 ${submission.appId} ${submission.version} 的隔离功能包……`);
     const response = await fetch(
@@ -229,7 +237,8 @@
           submission.packageReady
             ? `已上传 · ${Math.ceil(submission.packageSize / 1024)} KB`
             : "等待上传"),
-        element("small", "", `${submission.integritySha256.slice(0, 16)}…`)
+        element("small", "", `${submission.integritySha256.slice(0, 16)}…`),
+        element("small", "", "Server validation: " + (submission.validationStatus || "not-validated"))
       );
       row.appendChild(integrityCell);
       const statusCell = document.createElement("td");
@@ -239,12 +248,15 @@
       const actions = element("div", "actions");
       actions.appendChild(button("查看 Manifest", "", () => viewManifest(submission)));
       actions.appendChild(button(
+        "验证报告", "", () => viewValidationReport(submission), !submission.validationReport
+      ));
+      actions.appendChild(button(
         "下载隔离包", "", () => downloadPackage(submission).catch((error) => setStatus(error.message, "error")),
         !submission.packageReady
       ));
       actions.appendChild(button(
         "批准", "primary", () => reviewSubmission(submission, "approved"),
-        !submission.packageReady ||
+        !submission.serverValidated ||
           (submission.status !== "submitted" && submission.status !== "rejected")
       ));
       actions.appendChild(button(

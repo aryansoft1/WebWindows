@@ -1,11 +1,11 @@
 import {
-  validateBatteryResult,
   validateEnvelope,
   validateRefreshParams
 } from "./generated-broker-validator.js";
 import { createOpaqueIdentity, isPlainObject } from "../preview/preview-protocol.js";
 import { selectManifestVersion } from "../manifest/manifest-version.js";
 import { evaluatePermissionDecision, publicErrorForDecision } from "../permissions/permission-policy-engine.js";
+import { byteLength, sanitizeBatteryResult } from "../../shared/battery-result-policy.js";
 
 export class PreviewBatteryBroker {
   constructor(options) {
@@ -82,7 +82,7 @@ export class PreviewBatteryBroker {
     }
     if (this.seen.has(message.requestId)) return Promise.resolve(this.#errorResponse(message, "duplicate-request-id"));
     this.seen.add(message.requestId);
-    if (bytes(message) > this.contracts.brokerPolicy.limits.maximumRequestBytes) {
+    if (byteLength(message) > this.contracts.brokerPolicy.limits.maximumRequestBytes) {
       return Promise.resolve(this.#errorResponse(message, "request-too-large"));
     }
     const method = this.methods.get(message.method);
@@ -211,22 +211,7 @@ export class PreviewBatteryBroker {
   }
 
   #validateAndSanitize(raw, method) {
-    if (bytes(raw) > method.maximumResponseBytes) throw brokerFailure("response-too-large");
-    if (!isPlainObject(raw) || typeof raw.supported !== "boolean"
-        || !nullableBoolean(raw.present) || !nullableBoolean(raw.connected) || !nullableBoolean(raw.charging)
-        || typeof raw.source !== "string"
-        || !nullableLevel(raw.level)) throw brokerFailure("internal-error");
-    const result = {
-      supported: raw.supported,
-      present: raw.present,
-      level: raw.level,
-      charging: raw.charging,
-      connected: raw.connected,
-      source: sanitizeSource(raw.supported, raw.source)
-    };
-    if (!validateBatteryResult(result)) throw brokerFailure("internal-error");
-    if (bytes(result) > method.maximumResponseBytes) throw brokerFailure("response-too-large");
-    return Object.freeze(result);
+    return sanitizeBatteryResult(raw, method);
   }
 
   #matchesSession(message) {
@@ -336,24 +321,6 @@ function diagnosticReason(category) {
     "rate-limited": "rate-limited"
   };
   return reasons[category] || null;
-}
-
-function nullableBoolean(value) {
-  return value === null || typeof value === "boolean";
-}
-
-function nullableLevel(value) {
-  return value === null || (typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1);
-}
-
-function sanitizeSource(supported, source) {
-  if (!supported || source === "unsupported") return "unsupported";
-  return source === "battery-status-api" || source === "browser" ? "browser" : "runtime";
-}
-
-function bytes(value) {
-  try { return new TextEncoder().encode(JSON.stringify(value)).byteLength; }
-  catch { return Number.POSITIVE_INFINITY; }
 }
 
 function brokerFailure(code) {

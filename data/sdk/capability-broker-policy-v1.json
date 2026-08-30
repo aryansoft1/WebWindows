@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "webwindows-capability-broker-policy-v1",
-  "status": "preview-pilot-enabled-production-disabled",
+  "status": "preview-and-production-battery-pilot-feature-gated",
   "protocol": "webwindows-capability-broker-v1",
   "protocolVersion": 1,
   "policyVersion": 1,
@@ -93,6 +93,6 @@
     "status": "resolved-by-manifest-v2-contract-preview-pilot-enabled",
     "sourceManifestSchema": "data/sdk/manifest-v2.schema.json",
     "permissionRegistry": "data/sdk/permissions-v1.json",
-    "note": "Manifest v2 carries requested permissions. Phase 2B enables only the Battery Pilot in Developer Studio Preview; Production remains disabled."
+    "note": "Manifest v2 carries requested permissions. Preview and feature-gated verified Production share Broker protocol v1; Production enables Battery only."
   }
 }

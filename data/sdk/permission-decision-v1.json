@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "contract": "webwindows-effective-permission-decision-v1",
-  "status": "preview-framework-production-disabled",
+  "status": "preview-and-production-battery-pilot",
   "policyVersion": 1,
   "defaultDecision": "deny",
   "decisionOrder": [
@@ -76,7 +76,7 @@
     "prompt": false
   },
   "production": {
-    "brokerEnabled": false,
+    "brokerEnabled": "feature-gated-battery-only",
     "consentUiImplemented": false,
     "persistentGrantImplemented": false
   }

@@ -2,7 +2,7 @@
   "$schema": "https://www.y0.hk/data/sdk/capability-broker-v1.schema.json#/$defs/methodRegistry",
   "schemaVersion": 1,
   "contract": "webwindows-capability-broker-methods-v1",
-  "status": "preview-pilot-enabled-production-disabled",
+  "status": "preview-and-production-battery-pilot",
   "publicApiSource": "data/sdk/webwindows-public-api-v1.d.ts",
   "defaultDecision": "deny",
   "wildcardsAllowed": false,
@@ -27,7 +27,7 @@
       "timeoutMs": 0,
       "maximumResponseBytes": 4096,
       "previewAvailability": "enabled",
-      "productionAvailability": "disabled",
+      "productionAvailability": "enabled",
       "currentStatus": "enabled",
       "sanitization": "Clamp level to 0..1 or null; map source to browser, runtime, or unsupported; reject extra fields."
     },
@@ -50,7 +50,7 @@
       "timeoutMs": 3000,
       "maximumResponseBytes": 4096,
       "previewAvailability": "enabled",
-      "productionAvailability": "disabled",
+      "productionAvailability": "enabled",
       "currentStatus": "enabled",
       "sanitization": "Same public BatteryState shape as getState; never return adapter or transport objects."
     }

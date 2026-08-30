@@ -1,0 +1,8 @@
+{
+  "contract": "webwindows-runtime-features-v1",
+  "version": 1,
+  "productionCapabilityBrokerV1": false,
+  "authority": "host-deployment-configuration",
+  "queryOverrideAllowed": false,
+  "manifestOverrideAllowed": false
+}

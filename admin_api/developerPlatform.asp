@@ -706,8 +706,7 @@ ElseIf action = "publish-release" And method = "POST" Then
   Set releaseIdentityRs = Nothing
   catalogText = Replace(catalogText, "__WEBWINDOWS_SERVER_RELEASE_ID__", releaseIdentity, 1, -1, vbBinaryCompare)
   approvedPermissionsJson = Base64DecodeUtf8(CStr(publishRs("approved_permissions_base64")))
-  packageDownloadUrl = "/api/function-package.asp?appId=" & CStr(publishRs("app_id")) & _
-    "&version=" & CStr(publishRs("app_version"))
+  packageDownloadUrl = "/api/function-package.asp?release=" & releaseIdentity
   If InStr(1, catalogText, """id"":""" & CStr(publishRs("app_id")) & """", vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """version"":""" & CStr(publishRs("app_version")) & """", vbBinaryCompare) = 0 Or _
      InStr(1, catalogText, """sourceType"":""developer-release""", vbBinaryCompare) = 0 Or _

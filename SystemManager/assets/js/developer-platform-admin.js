@@ -187,7 +187,7 @@
       size: submission.packageSize,
       sha256: submission.packageSha256,
       entry: originalEntry,
-      downloadUrl: `/api/function-package.asp?appId=${encodeURIComponent(submission.appId)}&version=${encodeURIComponent(submission.version)}`
+      downloadUrl: `/api/function-package.asp?release=${encodeURIComponent(RELEASE_ID_PLACEHOLDER)}`
     };
     manifest.sourceType = "developer-release";
     manifest.releaseBinding = "verified";
@@ -209,7 +209,8 @@
         downloadUrl: manifest.package.downloadUrl
       }
     };
-    manifest.entry = `/package-runtime.html?runtime=1&appId=${encodeURIComponent(submission.appId)}` +
+    manifest.entry = `/package-runtime.html?runtime=1&release=${encodeURIComponent(RELEASE_ID_PLACEHOLDER)}` +
+      `&appId=${encodeURIComponent(submission.appId)}` +
       `&version=${encodeURIComponent(submission.version)}&entry=${encodeURIComponent(originalEntry)}`;
     manifest.window = {
       ...(manifest.window || {}),

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/verified-runtime-package-identity-v1.json",
+  "contract": "webwindows-verified-runtime-package-identity-v1",
+  "version": 1,
+  "scope": "trusted-host-session-memory-only",
+  "required": [
+    "publishedReleaseId", "appId", "publisherId", "version", "packageSha256",
+    "sourceManifestSha256", "manifestVersion", "sdkVersion", "reviewDecisionId",
+    "approvedPermissions", "reviewPolicyVersion", "verificationTimestamp"
+  ],
+  "trustStates": ["system-trusted", "verified-release", "legacy-unverified", "verification-failed"],
+  "verificationOrder": [
+    "trusted-release-and-active-catalog-binding-lookup",
+    "exact-release-package-download",
+    "downloaded-zip-sha256-before-unzip",
+    "frozen-zip-structural-policy",
+    "zip-root-manifest-canonical-sha256",
+    "manifest-release-identity",
+    "approved-permissions-subset-of-requested",
+    "existing-sandbox-execution"
+  ],
+  "releaseStatusPolicy": {
+    "active": "allow-new-verified-session",
+    "delisted": "allow-existing-compatibility-launch-reference;not-discoverable",
+    "revoked": "deny-new-session",
+    "security-blocked": "deny-if-present"
+  },
+  "boundaries": {
+    "catalogOrQueryIsAuthority": false,
+    "responseHashHeaderIsAuthority": false,
+    "sandboxReceivesIdentity": false,
+    "productionBrokerEnabled": false,
+    "productionSdkFacadeEnabled": false,
+    "legacyPromotedToVerified": false
+  },
+  "errors": [
+    "release-not-found", "release-not-active", "release-binding-mismatch",
+    "package-integrity-failed", "manifest-integrity-failed",
+    "manifest-identity-mismatch", "runtime-release-verification-failed",
+    "legacy-unverified"
+  ]
+}

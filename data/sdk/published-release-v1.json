@@ -19,7 +19,7 @@
     "reviewDecision": "latest-approved-exact-package-decision",
     "validationReport": "active-passed-exact-package-and-source-manifest-report",
     "approvedPermissions": "copied-from-review-decision",
-    "catalog": "compatibility-publication-only-until-phase-2d.3"
+    "catalog": "release-bound-projection-v1"
   },
   "immutability": {
     "releaseRecord": "append-only",

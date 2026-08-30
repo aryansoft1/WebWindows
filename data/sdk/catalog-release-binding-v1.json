@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-catalog-release-binding-v1",
+  "status": "contract-frozen-catalog-integration-active",
+  "sourceTypes": ["system", "developer-release", "legacy-third-party"],
+  "releaseBindingStates": ["system", "verified", "legacy-unverified"],
+  "requiredEntryFields": ["id", "sourceType", "releaseBinding"],
+  "releaseBackedRequired": [
+    "publishedReleaseId", "publisherId", "version", "packageSha256",
+    "sourceManifestSha256", "manifestVersion", "sdkVersion",
+    "reviewDecisionId", "approvedPermissions", "reviewPolicyVersion",
+    "packageDownloadIdentity"
+  ],
+  "releaseOwnedReadOnly": [
+    "publishedReleaseId", "publisherId", "version", "packageSha256",
+    "sourceManifestSha256", "manifestVersion", "sdkVersion",
+    "reviewDecisionId", "approvedPermissions", "reviewPolicyVersion",
+    "packageDownloadIdentity"
+  ],
+  "classification": {
+    "system": { "publishedReleaseId": null, "authority": "trusted-built-in-model" },
+    "developer-release": { "releaseBinding": "verified", "authority": "published-release-record" },
+    "legacy-third-party": { "releaseBinding": "legacy-unverified", "productionBrokerTrust": false }
+  },
+  "revisionBinding": {
+    "normalizedTable": "webwindows_catalog_release_bindings",
+    "key": ["catalogRevisionId", "catalogEntryId"],
+    "maps": "appId-to-exact-publishedReleaseId",
+    "historicalRowsImmutable": true
+  },
+  "invariants": [
+    "catalog-is-projection-not-trust-authority",
+    "verified-requires-real-published-release",
+    "release-fields-equal-published-release",
+    "direct-catalog-cannot-create-or-replace-developer-release",
+    "same-app-version-cannot-bind-different-release-or-package",
+    "legacy-is-never-auto-promoted-to-verified",
+    "app-registry-is-not-a-security-authority"
+  ],
+  "releaseStatusProjection": {
+    "active": "discoverable",
+    "delisted": "not-discoverable",
+    "revoked": "not-discoverable-runtime-enforcement-deferred"
+  }
+}

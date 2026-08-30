@@ -40,7 +40,7 @@ The base release is created as `active`. Later `delisted` or `revoked` states ar
 
 The Developer Platform publication endpoint now creates the release, creates the next catalog revision, deactivates the previous catalog revision, and updates the submission projection in one InnoDB transaction on the same connection. A failure rolls back all four database effects. The release insert occurs before the catalog insert inside the transaction, and neither becomes visible before commit.
 
-The standalone Function Catalog admin endpoint remains a compatibility administration surface. Catalog-to-release binding and runtime verification are intentionally not introduced here.
+Phase 2D.3 adds the normalized Catalog-to-release binding and blocks the standalone Function Catalog endpoint from changing release authority. Runtime verification remains intentionally separate.
 
 ## Legacy records
 

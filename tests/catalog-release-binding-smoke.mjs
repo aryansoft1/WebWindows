@@ -38,6 +38,8 @@ assert.match(catalogAdmin, /binding_count/);
 assert.match(catalogAdmin, /publishedReleaseId/);
 assert.match(catalogPublic, /ReleaseBindingsValid/);
 assert.match(catalogPublic, /published_release_identity/);
+assert.match(catalogPublic, /referenceMatches\.Count <> bindingCount/,
+  "unbound or duplicate release references must fail closed");
 assert.match(catalogPublic, /X-WebWindows-Catalog-Release-Binding/);
 
 assert.match(developerUi, /sourceType = "developer-release"/);

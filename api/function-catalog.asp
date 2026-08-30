@@ -108,8 +108,9 @@ Function EnsureCatalogTable()
 End Function
 
 Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
-  Dim rs, valid
+  Dim rs, valid, bindingCount, referenceRegex, referenceMatches
   valid = True
+  bindingCount = 0
   On Error Resume Next
   Set rs = conn.Execute("SELECT catalog_entry_id,published_release_identity,package_sha256," & _
     "review_decision_identity,release_binding_state FROM webwindows_catalog_release_bindings " & _
@@ -121,6 +122,7 @@ Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
     Exit Function
   End If
   Do Until rs.EOF
+    bindingCount = bindingCount + 1
     If LCase(CStr(rs("release_binding_state"))) <> "verified" Or _
        InStr(1, catalogText, """id"":""" & CStr(rs("catalog_entry_id")) & """", vbBinaryCompare) = 0 Or _
        InStr(1, catalogText, """publishedReleaseId"":""" & CStr(rs("published_release_identity")) & """", vbBinaryCompare) = 0 Or _
@@ -133,6 +135,13 @@ Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
   Loop
   rs.Close
   Set rs = Nothing
+  Set referenceRegex = New RegExp
+  referenceRegex.Pattern = """publishedReleaseId""\s*:"
+  referenceRegex.Global = True
+  Set referenceMatches = referenceRegex.Execute(CStr(catalogText))
+  If referenceMatches.Count <> bindingCount Then valid = False
+  Set referenceMatches = Nothing
+  Set referenceRegex = Nothing
   On Error GoTo 0
   ReleaseBindingsValid = valid
 End Function

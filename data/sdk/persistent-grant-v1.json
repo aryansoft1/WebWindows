@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-persistent-user-grant-v1",
+  "status": "contract-only-storage-and-ui-not-implemented",
+  "grantName": "PersistentUserGrant",
+  "grantVersion": 1,
+  "required": [
+    "grantId", "userId", "appId", "publisherId", "permissionId", "originReleaseId",
+    "originPackageSha256", "originReviewDecisionId", "permissionRisk", "resourceScope",
+    "reviewPolicyVersion", "grantVersion", "grantedAt", "expiresAt", "state"
+  ],
+  "states": ["active", "denied", "expired", "invalidated", "tombstone"],
+  "resourceScope": {
+    "nullable": true,
+    "authority": "trusted-host-ui",
+    "sandboxMayChoose": false,
+    "storageCapabilityEnabledByContract": false
+  },
+  "bindingAuthorities": {
+    "userId": "trusted-account-session",
+    "appId": "published-app-identity",
+    "publisherId": "published-app-identity-and-ownership",
+    "permissionId": "approved-review-permission",
+    "originReleaseId": "published-app-identity",
+    "originPackageSha256": "verified-package",
+    "originReviewDecisionId": "review-decision",
+    "reviewPolicyVersion": "review-policy",
+    "resourceScope": "trusted-host-ui"
+  },
+  "upgradeInheritance": {
+    "default": "reevaluate",
+    "mayInheritOnlyIf": [
+      "same-app-id", "same-publisher-id", "permission-still-requested", "permission-still-approved",
+      "risk-not-increased", "resource-scope-compatible", "review-policy-compatible", "grant-not-expired-or-invalidated"
+    ],
+    "unchangedPermissionSet": "may-inherit-after-all-compatibility-checks",
+    "addedPermission": "never-inherit-existing-grant-for-new-permission",
+    "removedPermission": "invalidate-and-retain-tombstone",
+    "riskIncrease": "require-new-user-grant",
+    "resourceScopeChange": "require-new-resource-scoped-grant",
+    "publisherChange": "invalidate-all-existing-grants-and-require-new-grant",
+    "ownershipTransfer": "same-as-publisher-change"
+  },
+  "permissionCeiling": {
+    "formula": "requested-intersection-approved-intersection-active-user-grants",
+    "userMayOverrideReviewDeny": false,
+    "userMayGrantUndeclaredPermission": false
+  },
+  "persistence": {
+    "implemented": false,
+    "previewUsesThisContract": false,
+    "tombstonesRetainedForAudit": true,
+    "deletionDefault": false
+  }
+}

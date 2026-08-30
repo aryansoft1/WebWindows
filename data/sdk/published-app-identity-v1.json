@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-published-app-identity-v1",
+  "status": "contract-frozen-production-integration-disabled",
+  "identityName": "PublishedAppIdentity",
+  "required": [
+    "appId", "publisherId", "version", "manifestVersion", "sdkVersion",
+    "packageSha256", "sourceManifestSha256", "publishedReleaseId",
+    "catalogRevisionId", "reviewDecisionId", "reviewPolicyVersion"
+  ],
+  "fieldTypes": {
+    "appId": "non-empty-string",
+    "publisherId": "opaque-server-identity",
+    "version": "manifest-version-string",
+    "manifestVersion": "positive-integer",
+    "sdkVersion": "string-or-null",
+    "packageSha256": "lowercase-sha256",
+    "sourceManifestSha256": "lowercase-sha256",
+    "publishedReleaseId": "opaque-server-identity",
+    "catalogRevisionId": "opaque-server-identity",
+    "reviewDecisionId": "opaque-server-identity",
+    "reviewPolicyVersion": "positive-integer"
+  },
+  "authorities": {
+    "appId": "verified-zip-root-source-manifest",
+    "version": "verified-zip-root-source-manifest",
+    "manifestVersion": "verified-zip-root-source-manifest",
+    "sdkVersion": "verified-zip-root-source-manifest",
+    "publisherId": "developer-account-and-app-ownership-record",
+    "packageSha256": "server-upload-digest-and-runtime-verification",
+    "sourceManifestSha256": "server-validator-canonical-manifest-digest",
+    "publishedReleaseId": "publication-service",
+    "catalogRevisionId": "published-catalog",
+    "reviewDecisionId": "review-service",
+    "reviewPolicyVersion": "review-service"
+  },
+  "sourceManifestAuthority": {
+    "path": "manifest.json",
+    "location": "zip-root",
+    "unique": true,
+    "canonicalization": "RFC-8785-JCS-UTF8",
+    "outerManifestPolicy": "absent-or-canonical-semantic-equality",
+    "mismatchResult": "submission-validation-failed"
+  },
+  "packageTrustChain": [
+    "uploaded-zip",
+    "server-sha256",
+    "server-safe-extraction",
+    "zip-root-source-manifest-validation",
+    "server-validation-report",
+    "package-bound-review-decision",
+    "approved-published-release",
+    "catalog-release-reference",
+    "runtime-download",
+    "runtime-sha256-verification",
+    "published-app-identity",
+    "trusted-production-broker-context"
+  ],
+  "fatalIntegrityFailures": [
+    "package-hash-mismatch",
+    "version-mismatch",
+    "manifest-mismatch",
+    "release-identity-mismatch",
+    "review-package-binding-mismatch"
+  ],
+  "integrityFailureSemantics": {
+    "trustedBrokerContext": "must-not-create",
+    "classification": "integrity-failure",
+    "capabilityError": false
+  },
+  "catalogRequirements": [
+    "publishedReleaseId", "packageSha256", "sourceManifestSha256", "manifestVersion",
+    "sdkVersion", "reviewDecisionId", "reviewPolicyVersion", "approvedPermissions",
+    "packageDownloadIdentity", "publisherId"
+  ],
+  "securityInvariants": [
+    "sandbox-cannot-self-assert-published-identity",
+    "app-id-alone-is-insufficient",
+    "native-bridge-identity-is-irrelevant",
+    "api-key-is-submission-authentication-not-runtime-identity",
+    "catalog-cannot-override-verified-package-identity",
+    "hash-mismatch-prevents-trusted-broker-context"
+  ],
+  "previewProductionIdentity": {
+    "sharedBrokerProtocol": "webwindows-capability-broker-v1",
+    "preview": ["projectUuid", "snapshotId", "sessionId"],
+    "production": ["publishedReleaseId", "packageSha256", "reviewDecisionId", "runtimeSessionId"],
+    "productionUsesProjectUuid": false
+  },
+  "productionBrokerContext": {
+    "required": [
+      "publishedAppIdentity", "verifiedPackageSha256", "requestedPermissions",
+      "approvedPermissions", "applicableUserGrants", "policyVersion",
+      "runtimeCapabilities", "runtimeSessionId"
+    ],
+    "authority": "trusted-webwindows-host",
+    "sandboxInputAccepted": false,
+    "creationGate": "identity-package-review-and-revocation-verification-passed"
+  }
+}

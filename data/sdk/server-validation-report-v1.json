@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-server-validation-report-v1",
+  "status": "contract-frozen-server-integration-disabled",
+  "reportName": "ServerValidationReport",
+  "required": [
+    "reportId", "validatorVersion", "validatedAt", "packageSha256", "packageSize",
+    "sourceManifestSha256", "manifestVersion", "normalizedAppIdentity", "schemaResult",
+    "packagePolicyResult", "requestedPermissions", "sdkVersion", "diagnostics", "passed"
+  ],
+  "normalizedAppIdentityRequired": ["appId", "version", "publisherId"],
+  "resultShape": {
+    "schemaResult": ["passed", "failed"],
+    "packagePolicyResult": ["passed", "failed"],
+    "passed": "boolean",
+    "diagnosticRequired": ["ruleId", "severity", "path", "message"],
+    "diagnosticSeverity": ["error", "warning"]
+  },
+  "facts": {
+    "sourceManifestPath": "manifest.json",
+    "sourceManifestCanonicalization": "RFC-8785-JCS-UTF8",
+    "permissionMeaning": "requested-only",
+    "ruleIdFamilies": ["WWM", "WWP", "WWS", "WWC", "WWT"]
+  },
+  "consumers": ["developer-center", "admin-review", "publication-pipeline", "audit"],
+  "forbiddenFields": [
+    "apiKey", "apiKeyHash", "cookie", "credential", "token", "privateServerPath",
+    "packageBlob", "nativeTransport", "privateStack"
+  ],
+  "publicationGate": {
+    "requiresPassed": true,
+    "requiresMatchingPackageSha256": true,
+    "requiresMatchingSourceManifestSha256": true,
+    "reportIsReviewDecision": false
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-review-decision-v1",
+  "status": "contract-frozen-review-integration-disabled",
+  "decisionName": "ReviewDecision",
+  "reviewPolicyVersion": 1,
+  "required": [
+    "reviewDecisionId", "publishedReleaseId", "appId", "publisherId", "version",
+    "packageSha256", "sourceManifestSha256", "requestedPermissions", "approvedPermissions",
+    "deniedPermissions", "permissionRisk", "reviewPolicyVersion", "decision",
+    "decidedBy", "decidedAt"
+  ],
+  "decisions": ["approved", "denied", "revoked"],
+  "reviewerAuthorities": ["authorized-reviewer", "trusted-policy-system"],
+  "permissionRules": {
+    "requestedAuthority": "verified-zip-root-source-manifest",
+    "approvedAuthority": "review-decision",
+    "approvedMustBeSubsetOfRequested": true,
+    "deniedEqualsRequestedMinusApproved": true,
+    "productionPermissionCeiling": "requested-intersection-approved",
+    "userGrantMayExpandCeiling": false
+  },
+  "binding": {
+    "packageSha256Required": true,
+    "sourceManifestSha256Required": true,
+    "publishedReleaseIdRequired": true,
+    "publisherIdRequired": true,
+    "appIdForeverApproval": false,
+    "newPackageRequiresNewDecision": true
+  },
+  "revocationEvents": {
+    "delisted": {
+      "newAcquisition": "deny",
+      "newSessionForAlreadyVerifiedInstall": "allow",
+      "runningSession": "continue",
+      "broker": "unchanged-if-review-remains-approved",
+      "grant": "retain-active",
+      "catalogMeaning": "not-discoverable-or-newly-installable"
+    },
+    "release-revoked": {
+      "newSession": "deny",
+      "runningPrivilegedSession": "terminate",
+      "broker": "deny-immediately",
+      "grant": "invalidate-and-retain-tombstone",
+      "catalogMeaning": "revoked"
+    },
+    "developer-revoked": {
+      "newSession": "deny-all-publisher-releases",
+      "runningPrivilegedSession": "terminate",
+      "broker": "deny-immediately",
+      "grant": "invalidate-and-retain-tombstone",
+      "catalogMeaning": "publisher-revoked"
+    },
+    "permission-review-revoked": {
+      "newSession": "allow-without-revoked-permission",
+      "runningSession": "continue-unprivileged",
+      "broker": "deny-permission-immediately",
+      "grant": "invalidate-permission-and-retain-tombstone",
+      "catalogMeaning": "permission-restricted"
+    },
+    "security-emergency-block": {
+      "newSession": "deny",
+      "runningSession": "terminate",
+      "broker": "deny-immediately",
+      "grant": "invalidate-and-retain-tombstone",
+      "catalogMeaning": "security-blocked"
+    },
+    "policy-version-invalidation": {
+      "newPrivilegedSession": "deny-until-reevaluated",
+      "runningSession": "deny-affected-permissions",
+      "broker": "reevaluate-or-deny",
+      "grant": "invalidate-and-retain-tombstone",
+      "catalogMeaning": "policy-review-required"
+    },
+    "package-hash-mismatch": {
+      "newSession": "deny",
+      "runningLoad": "abort",
+      "broker": "must-not-create",
+      "grant": "retain-but-unusable-for-mismatched-package",
+      "catalogMeaning": "integrity-error"
+    }
+  }
+}

@@ -5,6 +5,7 @@ import {
 } from "./generated-broker-validator.js";
 import { createOpaqueIdentity, isPlainObject } from "../preview/preview-protocol.js";
 import { selectManifestVersion } from "../manifest/manifest-version.js";
+import { evaluatePermissionDecision, publicErrorForDecision } from "../permissions/permission-policy-engine.js";
 
 export class PreviewBatteryBroker {
   constructor(options) {
@@ -17,6 +18,7 @@ export class PreviewBatteryBroker {
     this.now = options.now || (() => Date.now());
     this.setTimer = options.setTimer || ((callback, delay) => setTimeout(callback, delay));
     this.clearTimer = options.clearTimer || ((timer) => clearTimeout(timer));
+    this.onDiagnostic = typeof options.onDiagnostic === "function" ? options.onDiagnostic : null;
     this.channelId = options.channelId || createOpaqueIdentity("broker");
     this.methods = new Map(this.contracts.brokerMethods.methods.map((method) => [method.id, method]));
     this.errors = new Map(this.contracts.brokerErrors.errors.map((error) => [error.code, error]));
@@ -24,6 +26,7 @@ export class PreviewBatteryBroker {
     this.pending = new Map();
     this.requestTimes = [];
     this.audit = [];
+    this.diagnostics = [];
     this.closed = false;
   }
 
@@ -32,22 +35,23 @@ export class PreviewBatteryBroker {
       return Object.freeze({ facadeEnabled: false });
     }
     const method = this.methods.get("device.battery.getState");
-    const failure = this.#authorize(method);
+    const permissionDecision = this.#authorize(method);
+    const failure = publicErrorForDecision(permissionDecision);
     let handshake;
     if (failure) {
       handshake = { ok: false, error: this.#publicError(failure) };
-      this.#record("handshake", method, "deny", failure, 0);
+      this.#record("handshake", method, "deny", failure, 0, permissionDecision);
     } else {
       const startedAt = this.now();
       try {
         const raw = this.#batteryApi().getState();
         const result = this.#validateAndSanitize(raw, method);
         handshake = { ok: true, result };
-        this.#record("handshake", method, "allow", "success", this.now() - startedAt);
+        this.#record("handshake", method, "allow", "success", this.now() - startedAt, permissionDecision);
       } catch (error) {
         const code = publicFailureCode(error);
         handshake = { ok: false, error: this.#publicError(code) };
-        this.#record("handshake", method, "allow", code, this.now() - startedAt);
+        this.#record("handshake", method, "allow", code, this.now() - startedAt, permissionDecision);
       }
     }
     const refresh = this.methods.get("device.battery.refresh");
@@ -85,22 +89,23 @@ export class PreviewBatteryBroker {
     if (!method || method.invocation !== "request-response" || method.previewAvailability !== "enabled") {
       return Promise.resolve(this.#errorResponse(message, "method-not-allowed", method));
     }
-    const authorizationFailure = this.#authorize(method);
-    if (authorizationFailure) return Promise.resolve(this.#errorResponse(message, authorizationFailure, method));
+    const permissionDecision = this.#authorize(method);
+    const authorizationFailure = publicErrorForDecision(permissionDecision);
+    if (authorizationFailure) return Promise.resolve(this.#errorResponse(message, authorizationFailure, method, true, permissionDecision));
     if (!validateEnvelope(message) || !validateRefreshParams(message.params)) {
-      return Promise.resolve(this.#errorResponse(message, "invalid-params", method));
+      return Promise.resolve(this.#errorResponse(message, "invalid-params", method, true, permissionDecision));
     }
     if (method.userGesture === "host-required") {
-      return Promise.resolve(this.#errorResponse(message, "gesture-required", method));
+      return Promise.resolve(this.#errorResponse(message, "gesture-required", method, true, permissionDecision));
     }
     this.#pruneRateWindow();
     const limits = this.contracts.brokerPolicy.limits;
     if (this.pending.size >= limits.maximumConcurrentRequests
         || this.requestTimes.length >= limits.maximumRequestsPerMinute) {
-      return Promise.resolve(this.#errorResponse(message, "rate-limited", method));
+      return Promise.resolve(this.#errorResponse(message, "rate-limited", method, true, permissionDecision));
     }
     this.requestTimes.push(this.now());
-    return this.#dispatch(message, method);
+    return this.#dispatch(message, method, permissionDecision);
   }
 
   close(code = "request-cancelled") {
@@ -113,16 +118,25 @@ export class PreviewBatteryBroker {
     return this.audit.map((entry) => Object.freeze({ ...entry }));
   }
 
+  getDiagnostics() {
+    return this.diagnostics.map((entry) => Object.freeze({ ...entry }));
+  }
+
+  clearDiagnostics() {
+    this.diagnostics = [];
+  }
+
   #authorize(method) {
-    if (!method) return "method-not-allowed";
-    if (!this.manifest.permissions?.includes(method.requiredPermission)) return "permission-not-declared";
-    const policyAllowed = typeof this.platformPolicyPermits === "function"
-      ? this.platformPolicyPermits(method, this.manifest, this.session) === true
-      : this.platformPolicyPermits === true;
-    if (!policyAllowed) return "policy-denied";
-    if (this.grantResolver(method, this.manifest, this.session) !== true) return "permission-denied";
-    if (!this.#capabilitySupported(method.requiredRuntimeCapability)) return "capability-unsupported";
-    return null;
+    return evaluatePermissionDecision({
+      manifest: this.manifest,
+      method,
+      decisionContract: this.contracts.permissionDecision,
+      platformPolicyAllowed: () => typeof this.platformPolicyPermits === "function"
+        ? this.platformPolicyPermits(method, this.manifest, this.session) === true
+        : this.platformPolicyPermits === true,
+      hostGrant: () => this.grantResolver(method, this.manifest, this.session),
+      capabilitySupported: () => this.#capabilitySupported(method.requiredRuntimeCapability)
+    });
   }
 
   #capabilitySupported(capability) {
@@ -142,18 +156,18 @@ export class PreviewBatteryBroker {
     return battery;
   }
 
-  #dispatch(message, method) {
+  #dispatch(message, method, permissionDecision) {
     const startedAt = this.now();
     const configuredTimeout = method.timeoutMs || this.contracts.brokerPolicy.limits.defaultRequestTimeoutMs;
     const remainingSession = Math.max(0, Date.parse(this.session.expiresAt) - this.now());
     const timeoutMs = Math.min(configuredTimeout, this.contracts.brokerPolicy.limits.maximumRequestTimeoutMs, remainingSession);
     return new Promise((resolve) => {
-      const pending = { message, method, startedAt, resolve, timer: null, settled: false };
+      const pending = { message, method, permissionDecision, startedAt, resolve, timer: null, settled: false };
       pending.timer = this.setTimer(() => {
         this.#finishPending(pending, this.#errorResponse(message, "request-timeout", method, false));
       }, timeoutMs);
       this.pending.set(message.requestId, pending);
-      this.#record(message.requestId, method, "allow", "pending", 0);
+      this.#record(message.requestId, method, "allow", "pending", 0, permissionDecision);
       Promise.resolve().then(() => this.#batteryApi().refresh()).then(
         (raw) => {
           if (pending.settled) {
@@ -192,7 +206,7 @@ export class PreviewBatteryBroker {
     this.clearTimer(pending.timer);
     this.pending.delete(pending.message.requestId);
     const category = response.ok ? "success" : response.error.code;
-    this.#record(pending.message.requestId, pending.method, response.ok ? "allow" : decisionFor(category), category, this.now() - pending.startedAt);
+    this.#record(pending.message.requestId, pending.method, response.ok ? "allow" : decisionFor(category), category, this.now() - pending.startedAt, pending.permissionDecision);
     pending.resolve(response);
   }
 
@@ -237,8 +251,8 @@ export class PreviewBatteryBroker {
     };
   }
 
-  #errorResponse(message, code, method = null, record = true) {
-    if (record) this.#record(message?.requestId || null, method, "deny", code, 0);
+  #errorResponse(message, code, method = null, record = true, permissionDecision = null) {
+    if (record) this.#record(message?.requestId || null, method, "deny", code, 0, permissionDecision);
     return {
       protocol: this.contracts.brokerPolicy.protocol,
       version: this.contracts.brokerPolicy.protocolVersion,
@@ -258,8 +272,8 @@ export class PreviewBatteryBroker {
     return { code: definition.code, message: definition.message, retryable: definition.retryable };
   }
 
-  #record(requestId, method, decision, resultCategory, latencyMs) {
-    this.audit.push(Object.freeze({
+  #record(requestId, method, decision, resultCategory, latencyMs, permissionDecision = null) {
+    const auditEntry = Object.freeze({
       timestamp: new Date(this.now()).toISOString(),
       mode: "preview",
       appIdentity: typeof this.manifest.id === "string" ? this.manifest.id : null,
@@ -272,7 +286,33 @@ export class PreviewBatteryBroker {
       decision,
       resultCategory,
       latencyMs
-    }));
+    });
+    this.audit.push(auditEntry);
+    const denialReason = permissionDecision?.denialReason || diagnosticReason(resultCategory);
+    const diagnostic = Object.freeze({
+      timestamp: auditEntry.timestamp,
+      sessionId: auditEntry.sessionId,
+      snapshotId: auditEntry.snapshotId,
+      projectIdentity: auditEntry.projectIdentity,
+      appIdentity: auditEntry.appIdentity,
+      requestId,
+      method: auditEntry.method,
+      permission: auditEntry.permission,
+      declared: permissionDecision?.declared ?? null,
+      policyDecision: permissionDecision?.policy || "not-evaluated",
+      consentMode: permissionDecision?.consentMode || method?.consent || null,
+      grantState: permissionDecision?.grantState || null,
+      capabilityState: permissionDecision?.capability || "not-evaluated",
+      methodPolicy: permissionDecision?.methodPolicy || (method ? "enabled" : "not-evaluated"),
+      finalDecision: decision,
+      resultCategory,
+      publicError: this.errors.has(resultCategory) ? resultCategory : null,
+      denialReason,
+      latencyMs,
+      policyVersion: this.contracts.permissionDecision.policyVersion
+    });
+    this.diagnostics.push(diagnostic);
+    try { this.onDiagnostic?.(Object.freeze({ ...diagnostic })); } catch { /* diagnostics must not affect dispatch */ }
   }
 
   #pruneRateWindow() {
@@ -283,6 +323,19 @@ export class PreviewBatteryBroker {
 
 function defaultGrantResolver(method) {
   return method.consent === "no-consent";
+}
+
+function diagnosticReason(category) {
+  const reasons = {
+    "permission-not-declared": "not-declared",
+    "policy-denied": "policy-denied",
+    "permission-denied": "grant-denied",
+    "capability-unsupported": "capability-unsupported",
+    "method-not-allowed": "method-disabled",
+    "gesture-required": "gesture-required",
+    "rate-limited": "rate-limited"
+  };
+  return reasons[category] || null;
 }
 
 function nullableBoolean(value) {

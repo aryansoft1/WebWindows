@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import FileTreeNode from "./FileTreeNode.vue";
 import MonacoEditor from "./editor/MonacoEditor.vue";
 import ManifestInspector from "./manifest/ManifestInspector.vue";
+import PermissionInspector from "./permissions/PermissionInspector.vue";
 import { validateManifestText } from "./manifest/manifest-validator.js";
 import { selectManifestVersion } from "./manifest/manifest-version.js";
 import { createHelloWebWindowsTemplate } from "./project/hello-template.js";
@@ -28,6 +29,7 @@ const manifestValue = ref(null);
 const manifestDiagnostics = ref([]);
 const permissionRegistry = ref(null);
 const brokerMethods = ref(null);
+const runtimeCompatibility = ref(null);
 const validationReport = ref(null);
 const buildResult = ref(null);
 const taskBusy = ref(false);
@@ -35,6 +37,7 @@ const previewHostFrame = ref(null);
 const previewHostReady = ref(false);
 const previewSession = ref(null);
 const consoleEvents = ref([]);
+const brokerDiagnostics = ref([]);
 const bottomPanel = ref("problems");
 const inspectorMode = ref("preview");
 const consoleLevel = ref("all");
@@ -67,6 +70,7 @@ onMounted(async () => {
     const contracts = await loadStudioPlatformContracts();
     permissionRegistry.value = contracts.permissionRegistry;
     brokerMethods.value = contracts.brokerMethods;
+    runtimeCompatibility.value = contracts.runtimeCompatibility;
     await refreshProjects();
     if (projects.value.length) await openProject(projects.value[0].uuid);
   } catch (error) {
@@ -380,7 +384,12 @@ async function connectPreviewHost() {
       previewSession.value = { ...previewSession.value, state: event.state };
     }
   });
-  previewController = new PreviewSessionController({ hostClient: previewHostClient });
+  previewController = new PreviewSessionController({
+    hostClient: previewHostClient,
+    onBrokerDiagnostic: (diagnostic) => {
+      brokerDiagnostics.value = [...brokerDiagnostics.value, diagnostic].slice(-500);
+    }
+  });
   try {
     await previewHostClient.connect(previewHostFrame.value);
     previewHostReady.value = true;
@@ -393,6 +402,7 @@ async function runPreview({ reload = false } = {}) {
   if (taskBusy.value || !previewController || !previewHostReady.value) return;
   taskBusy.value = true;
   try {
+    brokerDiagnostics.value = [];
     const snapshot = await createCurrentSnapshot();
     const contracts = await loadStudioPlatformContracts();
     const result = reload && previewSession.value
@@ -420,6 +430,7 @@ async function stopPreview() {
   try {
     await previewController.stop(previewSession.value.sessionId);
     previewSession.value = null;
+    brokerDiagnostics.value = [];
     showStatus("Developer Preview 已停止，会话凭据已撤销。");
   } catch (error) {
     showError(error);
@@ -428,6 +439,11 @@ async function stopPreview() {
 
 function clearConsole() {
   consoleEvents.value = [];
+}
+
+function clearBrokerDiagnostics() {
+  previewController?.clearBrokerDiagnostics();
+  brokerDiagnostics.value = [];
 }
 
 function consoleMessage(event) {
@@ -548,6 +564,7 @@ function finishDialog(result) {
           <span>Inspector</span>
           <div class="panel-switcher">
             <button type="button" :class="{ active: inspectorMode === 'manifest' }" @click="inspectorMode = 'manifest'">Manifest</button>
+            <button type="button" :class="{ active: inspectorMode === 'permissions' }" @click="inspectorMode = 'permissions'">Permissions</button>
             <button type="button" :class="{ active: inspectorMode === 'preview' }" @click="inspectorMode = 'preview'">Preview</button>
           </div>
         </div>
@@ -584,6 +601,16 @@ function finishDialog(result) {
             </template>
           </section>
         </div>
+        <div v-show="inspectorMode === 'permissions'" class="inspector-content">
+          <h2>Permission Inspector</h2>
+          <PermissionInspector
+            :manifest="manifestValue"
+            :permission-registry="permissionRegistry"
+            :broker-methods="brokerMethods"
+            :runtime-compatibility="runtimeCompatibility"
+            :decisions="brokerDiagnostics"
+          />
+        </div>
         <div v-show="inspectorMode === 'preview'" class="preview-inspector">
           <div class="preview-session-banner">
             <strong>Developer Preview</strong>
@@ -612,6 +639,7 @@ function finishDialog(result) {
       <div class="bottom-tabs">
         <button type="button" :class="{ active: bottomPanel === 'problems' }" @click="bottomPanel = 'problems'">Problems <span>{{ displayedProblems.length }}</span></button>
         <button type="button" :class="{ active: bottomPanel === 'console' }" @click="bottomPanel = 'console'">Console <span>{{ consoleEvents.length }}</span></button>
+        <button type="button" :class="{ active: bottomPanel === 'broker' }" @click="bottomPanel = 'broker'">Permissions <span>{{ brokerDiagnostics.length }}</span></button>
         <span class="bottom-spacer"></span>
         <template v-if="bottomPanel === 'console'">
           <select v-model="consoleLevel" aria-label="Console level">
@@ -620,6 +648,7 @@ function finishDialog(result) {
           </select>
           <button type="button" @click="clearConsole">Clear</button>
         </template>
+        <button v-else-if="bottomPanel === 'broker'" type="button" @click="clearBrokerDiagnostics">Clear</button>
       </div>
       <template v-if="bottomPanel === 'problems'">
         <div v-if="!displayedProblems.length" class="problems-empty">当前 Snapshot 未发现问题。</div>
@@ -635,13 +664,26 @@ function finishDialog(result) {
           <span>{{ problem.message }}</span>
         </button>
       </template>
-      <template v-else>
+      <template v-else-if="bottomPanel === 'console'">
         <div v-if="!displayedConsoleEvents.length" class="problems-empty">当前 Developer Preview 尚无 Console 输出。</div>
         <div v-for="event in displayedConsoleEvents" :key="`${event.sessionId}:${event.sequence}`" class="console-row" :class="event.level">
           <time>{{ event.timestamp }}</time>
           <strong>{{ event.level }}</strong>
           <span>{{ consoleMessage(event) }}</span>
           <code>{{ event.snapshotId }}</code>
+        </div>
+      </template>
+      <template v-else>
+        <div v-if="!brokerDiagnostics.length" class="problems-empty">当前 Preview 尚无 Broker permission diagnostics。</div>
+        <div v-for="(item, index) in brokerDiagnostics" :key="`${item.sessionId}:${item.requestId}:${index}`" class="broker-row">
+          <time>{{ item.timestamp }}</time>
+          <code>{{ item.method || 'protocol' }}</code>
+          <span>{{ item.permission || '—' }}</span>
+          <span>declared: {{ item.declared == null ? 'n/a' : item.declared ? 'yes' : 'no' }}</span>
+          <span>policy: {{ item.policyDecision }}</span>
+          <span>grant: {{ item.grantState || 'n/a' }}</span>
+          <span>capability: {{ item.capabilityState }}</span>
+          <strong :class="item.finalDecision">{{ item.denialReason || item.resultCategory }}</strong>
         </div>
       </template>
     </section>

@@ -16,7 +16,8 @@ export class PreviewSessionController {
     now = () => Date.now(),
     publicApiProvider = defaultPublicApiProvider,
     platformPolicyPermits = true,
-    grantResolver
+    grantResolver,
+    onBrokerDiagnostic
   }) {
     if (!hostClient) throw new TypeError("PreviewHostClient is required.");
     this.hostClient = hostClient;
@@ -25,6 +26,7 @@ export class PreviewSessionController {
     this.publicApiProvider = publicApiProvider;
     this.platformPolicyPermits = platformPolicyPermits;
     this.grantResolver = grantResolver;
+    this.onBrokerDiagnostic = typeof onBrokerDiagnostic === "function" ? onBrokerDiagnostic : null;
     this.sessions = new Map();
     this.activeSessionId = null;
     this.hostClient.onBroker = (message) => this.#handleBroker(message);
@@ -50,6 +52,7 @@ export class PreviewSessionController {
         publicApi: this.publicApiProvider(),
         platformPolicyPermits: this.platformPolicyPermits,
         grantResolver: this.grantResolver,
+        onDiagnostic: this.onBrokerDiagnostic,
         now: this.now
       });
       session.brokerLaunch = await session.broker.createLaunchDescriptor();
@@ -98,6 +101,14 @@ export class PreviewSessionController {
 
   getBrokerAudit(sessionId = this.activeSessionId) {
     return sessionId ? this.sessions.get(sessionId)?.broker?.getAudit() || [] : [];
+  }
+
+  getBrokerDiagnostics(sessionId = this.activeSessionId) {
+    return sessionId ? this.sessions.get(sessionId)?.broker?.getDiagnostics() || [] : [];
+  }
+
+  clearBrokerDiagnostics(sessionId = this.activeSessionId) {
+    if (sessionId) this.sessions.get(sessionId)?.broker?.clearDiagnostics();
   }
 
   #createSession(snapshot) {

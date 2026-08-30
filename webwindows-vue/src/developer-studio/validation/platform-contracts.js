@@ -14,6 +14,7 @@ async function loadContracts() {
     fetchJson("/data/sdk/capability-broker-methods-v1.json"),
     fetchJson("/data/sdk/capability-broker-errors-v1.json"),
     fetchJson("/data/sdk/capability-broker-policy-v1.json"),
+    fetchJson("/data/sdk/permission-decision-v1.json"),
     fetchJson("/data/sdk/package-runtime-policy-v1.json"),
     fetchJson("/data/sdk/runtime-compatibility-v1.json"),
     fetchJson("/data/sdk/studio-validator-rules-v1.json"),
@@ -27,10 +28,11 @@ async function loadContracts() {
     brokerMethods: resources[4],
     brokerErrors: resources[5],
     brokerPolicy: resources[6],
-    packagePolicy: resources[7],
-    runtimeCompatibility: resources[8],
-    ruleCatalog: resources[9],
-    publicApiText: resources[10]
+    permissionDecision: resources[7],
+    packagePolicy: resources[8],
+    runtimeCompatibility: resources[9],
+    ruleCatalog: resources[10],
+    publicApiText: resources[11]
   });
 }
 

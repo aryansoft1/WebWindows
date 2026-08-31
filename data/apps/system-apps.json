@@ -131,7 +131,7 @@
         "uninstallable": false
       },
       "placement": {
-        "desktop": false,
+        "desktop": true,
         "startMenu": true,
         "startMenuGroup": "system",
         "startMenuOrder": 27,

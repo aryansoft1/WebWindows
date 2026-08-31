@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/admin-security.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -155,9 +156,6 @@ If Request.ServerVariables("HTTP_X_WEBWINDOWS_ADMIN_REQUEST") <> "function-catal
   FinishError 403, "ADMIN_REQUEST_REQUIRED", "无效的后台管理请求。"
 End If
 
-EnsureCatalogTable
-EnsureReleaseBindingTable
-
 Dim method
 method = UCase(Request.ServerVariables("REQUEST_METHOD"))
 
@@ -193,6 +191,9 @@ If method = "GET" Then
     """},""catalog"":" & catalogJson & "}"
 
 ElseIf method = "POST" Then
+  AdminSecurityRequireMutation "function-catalog", "catalog-publish"
+  EnsureCatalogTable
+  EnsureReleaseBindingTable
   Dim catalogText, versionText, noteText, normalized, securityCompact, encodedCatalog, protectedRs, activeRevisionId
   catalogText = CStr(Request.Form("catalogJson"))
   versionText = Left(Trim(CStr(Request.Form("version"))), 40)
@@ -266,6 +267,7 @@ ElseIf method = "POST" Then
   conn.CommitTrans
   On Error GoTo 0
 
+  AdminSecurityAudit "catalog-publish", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""version"":""" & JsonText(versionText) & _
     """,""message"":""功能目录已发布。""}"
 

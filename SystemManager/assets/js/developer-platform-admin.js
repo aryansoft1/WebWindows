@@ -23,10 +23,17 @@
 
   async function request(url, action, options, headers) {
     const separator = url.includes("?") ? "&" : "?";
-    const response = await fetch(`${url}${separator}action=${encodeURIComponent(action)}`, {
+    let requestOptions = {
       credentials: "same-origin", cache: "no-store", ...options,
       headers: { ...(headers || PLATFORM_HEADERS), ...(options?.headers || {}) }
-    });
+    };
+    if (String(requestOptions.method || "GET").toUpperCase() === "POST") {
+      requestOptions = await window.WebWindowsAdminSecurity.authorize(requestOptions);
+    }
+    const response = await fetch(
+      `${url}${separator}action=${encodeURIComponent(action)}`,
+      requestOptions
+    );
     const payload = await response.json();
     if (!response.ok || payload?.ok === false) {
       throw new Error(payload?.message || `请求失败（${response.status}）。`);

@@ -2,6 +2,7 @@
   "use strict";
   const API_URL = "/admin_api/adminAuth.asp";
   const HEADERS = { "X-WebWindows-Admin-Request": "admin-auth" };
+  let csrfToken = "";
 
   function setStatus(message, kind) {
     const status = document.getElementById("adminLoginStatus");
@@ -10,9 +11,12 @@
   }
 
   async function request(action, options) {
+    const mutationHeaders = options?.method === "POST"
+      ? { "X-WebWindows-CSRF": csrfToken }
+      : {};
     const response = await fetch(`${API_URL}?action=${encodeURIComponent(action)}`, {
       credentials: "same-origin", cache: "no-store", ...options,
-      headers: { ...HEADERS, ...(options?.headers || {}) }
+      headers: { ...HEADERS, ...mutationHeaders, ...(options?.headers || {}) }
     });
     const payload = await response.json();
     if (!response.ok || payload?.ok === false) {
@@ -29,6 +33,10 @@
     button.textContent = "正在刷新……";
     try {
       const payload = await request("captcha");
+      if (!/^[a-f0-9]{64}$/.test(payload.csrfToken || "")) {
+        throw new Error("后台安全令牌不可用。");
+      }
+      csrfToken = payload.csrfToken;
       button.textContent = payload.question;
       document.getElementById("adminCaptcha").value = "";
     } catch (error) {
@@ -56,6 +64,7 @@
     button.disabled = true;
     setStatus("正在验证管理员身份……");
     try {
+      if (!csrfToken) throw new Error("后台安全令牌不可用，请刷新验证码。");
       const body = new URLSearchParams();
       body.set("username", username);
       body.set("password", window.md5(passwordRaw));

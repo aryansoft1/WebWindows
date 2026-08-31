@@ -1,8 +1,10 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/admin-security.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "UTF-8"
+AdminSecurityRequireMutation "system-manager", "save-user"
 'On Error Resume Next
 
 '—— 小工具：转义单引号 MD5
@@ -61,6 +63,7 @@ conn.Execute sql
 If Err.Number <> 0 Then
   Response.Write "{""success"":false,""sql"":""" & sql & """,""error"":""" & Err.Description & """}"
 Else
+  AdminSecurityAudit "save-user", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""success"":true}"
 End If
 

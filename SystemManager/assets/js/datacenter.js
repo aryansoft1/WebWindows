@@ -31,10 +31,14 @@ function editDataCenter(id) {
 }
 
 
-function deleteDataCenter(id) {
+async function deleteDataCenter(id) {
   if (!confirm("确定要删除该数据中心？")) return;
-
-  fetch(`/admin_api/deleteDatacenter.asp?id=${id}`)
+  const body = new URLSearchParams({ id: String(id) });
+  const options = await window.WebWindowsAdminSecurity.authorize({
+    body,
+    headers: { "X-WebWindows-Admin-Request": "system-manager" }
+  });
+  fetch("/admin_api/deleteDatacenter.asp", options)
     .then(res => res.json())
     .then(res => {
       if (res.success) {
@@ -149,22 +153,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function renderDataCenters(data) {
   const tbody = document.getElementById("dataCenterTableBody");
-  tbody.innerHTML = "";
+  tbody.replaceChildren();
 
   data.forEach(dc => {
     const row = document.createElement("tr");
     row.setAttribute("data-api-url", dc.api_url);
-
-    row.innerHTML = `
-      <td class="p-2 border">${dc.name}</td>
-      <td class="p-2 border">${dc.api_url}</td>
-      <td class="p-2 border ${dc.status === '已启用' ? 'text-green-600' : dc.status === '维护中' ? 'text-yellow-600' : 'text-red-600'}">${dc.status}</td>
-      <td class="p-2 border connectivity-cell text-gray-500">检测中...</td> <!-- 接通状态列 -->
-      <td class="p-2 border">
-        <button class="text-blue-600 hover:underline mr-2" onclick="editDataCenter(${dc.id})">编辑</button>
-        <button class="text-red-600 hover:underline" onclick="deleteDataCenter(${dc.id})">删除</button>
-      </td>
-    `;
+    const nameCell = document.createElement("td");
+    nameCell.className = "p-2 border";
+    nameCell.textContent = dc.name || "";
+    const urlCell = document.createElement("td");
+    urlCell.className = "p-2 border";
+    urlCell.textContent = dc.api_url || "";
+    const statusCell = document.createElement("td");
+    statusCell.className = `p-2 border ${dc.status === "已启用" ? "text-green-600" : dc.status === "维护中" ? "text-yellow-600" : "text-red-600"}`;
+    statusCell.textContent = dc.status || "";
+    const connectivityCell = document.createElement("td");
+    connectivityCell.className = "p-2 border connectivity-cell text-gray-500";
+    connectivityCell.textContent = "检测中...";
+    const actions = document.createElement("td");
+    actions.className = "p-2 border";
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "text-blue-600 hover:underline mr-2";
+    edit.textContent = "编辑";
+    edit.addEventListener("click", () => editDataCenter(Number(dc.id)));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "text-red-600 hover:underline";
+    remove.textContent = "删除";
+    remove.addEventListener("click", () => deleteDataCenter(Number(dc.id)));
+    actions.append(edit, remove);
+    row.append(nameCell, urlCell, statusCell, connectivityCell, actions);
     tbody.appendChild(row);
   });
 
@@ -172,7 +191,7 @@ function renderDataCenters(data) {
   refreshAllConnectivity();
 }
 
-document.getElementById("dataCenterForm").addEventListener("submit", function (e) {
+document.getElementById("dataCenterForm").addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const name = document.getElementById("centerName").value;
@@ -185,10 +204,11 @@ document.getElementById("dataCenterForm").addEventListener("submit", function (e
   formData.append("status", status);
   if (currentEditId) formData.append("id", currentEditId);
 
-  fetch("/admin_api/saveDatacenter.asp", {
-    method: "POST",
+  const options = await window.WebWindowsAdminSecurity.authorize({
     body: formData,
-  })
+    headers: { "X-WebWindows-Admin-Request": "system-manager" }
+  });
+  fetch("/admin_api/saveDatacenter.asp", options)
     .then(res => res.json())
     .then(res => {
       if (res.success) {

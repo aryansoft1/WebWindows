@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/admin-security.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -62,17 +63,30 @@ If action = "captcha" And method = "GET" Then
   End If
   Session("admin_captcha_answer") = CStr(answer)
   Session("admin_captcha_created") = Now()
+  Dim captchaCsrfToken
+  captchaCsrfToken = AdminSecurityEnsureToken()
+  If captchaCsrfToken = "" Then
+    AdminSecurityFail 500, "CSRF_TOKEN_GENERATION_FAILED", _
+      "后台安全令牌不可用。", "unavailable", "not-checked"
+  End If
   Response.Write "{""ok"":true,""question"":""" & leftValue & " " & operation & _
-    " " & rightValue & " = ?""}"
+    " " & rightValue & " = ?"",""csrfToken"":""" & captchaCsrfToken & """}"
 
 ElseIf action = "status" And method = "GET" Then
   Dim authenticated
   authenticated = (Session("webwindows_admin") = True And _
-    LCase(Trim(CStr(Session("username")))) = "admin")
+    LCase(Trim(CStr(Session("username")))) = "admin" And _
+    AdminSecurityTokenShape(Session("webwindows_admin_authority")))
+  Dim statusTokenJson
+  statusTokenJson = ""
+  If authenticated Then
+    statusTokenJson = ",""csrfToken"":""" & AdminSecurityEnsureToken() & """"
+  End If
   Response.Write "{""ok"":true,""authenticated"":" & LCase(CStr(authenticated)) & _
-    ",""username"":""" & JsonText(Session("username")) & """}"
+    ",""username"":""" & JsonText(Session("username")) & """" & statusTokenJson & "}"
 
 ElseIf action = "login" And method = "POST" Then
+  AdminSecurityRequirePreAuthMutation "admin-auth", "login"
   Dim username, passwordHash, captchaValue, expectedCaptcha, captchaCreated
   username = LCase(Trim(CStr(Request.Form("username"))))
   passwordHash = LCase(Trim(CStr(Request.Form("password"))))
@@ -126,6 +140,7 @@ ElseIf action = "login" And method = "POST" Then
     Fail 401, "ADMIN_CREDENTIALS_INVALID", "管理员账号或密码错误。"
   End If
 
+  AdminSecurityRotateAuthority
   Session("user_id") = CLng(loginRs("id"))
   Session("username") = CStr(loginRs("username"))
   If IsNull(loginRs("nickname")) Then
@@ -139,12 +154,20 @@ ElseIf action = "login" And method = "POST" Then
   loginRs.Close
   Set loginRs = Nothing
   Set loginCmd = Nothing
+  AdminSecurityAudit "login", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""authenticated"":true,""username"":""admin""}"
 
 ElseIf action = "logout" And method = "POST" Then
+  AdminSecurityRequireMutation "admin-auth", "logout"
+  AdminSecurityAudit "logout", "success", "valid", AdminSecurityOriginCategory()
   Session("webwindows_admin") = Empty
   Session("webwindows_admin_since") = Empty
+  Session("user_id") = Empty
+  Session("username") = Empty
+  Session("nickname") = Empty
+  AdminSecurityInvalidate
   Response.Write "{""ok"":true}"
+  Session.Abandon
 
 Else
   Fail 405, "METHOD_NOT_ALLOWED", "不支持的后台认证操作。"

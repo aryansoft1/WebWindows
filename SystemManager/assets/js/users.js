@@ -18,21 +18,31 @@ function fetchUsers() {
 // 渲染用户表格
 function renderUsers(data) {
   const tbody = document.getElementById("userTableBody");
-  tbody.innerHTML = "";
+  tbody.replaceChildren();
 
   data.forEach(user => {
     const row = document.createElement("tr");
     row.className = "border-t";
-    row.innerHTML = `
-      <td class="p-2 border">${user.username}</td>
-      <td class="p-2 border">${user.nickname}</td>
-      <td class="p-2 border">${user.email || ''}</td>
-      <td class="p-2 border">${user.data_center_name || ''}</td>
-      <td class="p-2 border">
-        <button class="text-blue-600 hover:underline mr-2" onclick="editUser(${user.id})">编辑</button>
-        <button class="text-red-600 hover:underline" onclick="deleteUser(${user.id})">删除</button>
-      </td>
-    `;
+    for (const value of [user.username, user.nickname, user.email, user.data_center_name]) {
+      const cell = document.createElement("td");
+      cell.className = "p-2 border";
+      cell.textContent = value || "";
+      row.appendChild(cell);
+    }
+    const actions = document.createElement("td");
+    actions.className = "p-2 border";
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.className = "text-blue-600 hover:underline mr-2";
+    edit.textContent = "编辑";
+    edit.addEventListener("click", () => editUser(Number(user.id)));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "text-red-600 hover:underline";
+    remove.textContent = "删除";
+    remove.addEventListener("click", () => deleteUser(Number(user.id)));
+    actions.append(edit, remove);
+    row.appendChild(actions);
     tbody.appendChild(row);
   });
 }
@@ -92,10 +102,14 @@ async function editUser(id) {
 
 
 // 删除用户
-function deleteUser(id) {
+async function deleteUser(id) {
   if (!confirm("确定要删除该用户？")) return;
-
-  fetch("/admin_api/deleteUser.asp?id=" + id)
+  const body = new URLSearchParams({ id: String(id) });
+  const options = await window.WebWindowsAdminSecurity.authorize({
+    body,
+    headers: { "X-WebWindows-Admin-Request": "system-manager" }
+  });
+  fetch("/admin_api/deleteUser.asp", options)
     .then(res => res.json())
     .then(resp => {
       if (resp.success) {
@@ -107,7 +121,7 @@ function deleteUser(id) {
 }
 
 // 提交表单（新增或更新）
-function submitUserForm(e) {
+async function submitUserForm(e) {
   e.preventDefault();
   const form = document.getElementById("user-add-form");
 
@@ -117,11 +131,12 @@ function submitUserForm(e) {
     params.append(name, form.elements[name]?.value || "");
   });
 
-  fetch("/admin_api/saveUser.asp", {
-    method: "POST",
+  const options = await window.WebWindowsAdminSecurity.authorize({
     headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
     body: params.toString()
-  })
+  });
+  options.headers["X-WebWindows-Admin-Request"] = "system-manager";
+  fetch("/admin_api/saveUser.asp", options)
   .then(r => r.json())
   .then(resp => {
     if (resp.success) {

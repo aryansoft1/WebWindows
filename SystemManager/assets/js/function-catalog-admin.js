@@ -29,7 +29,7 @@
   }
 
   async function apiRequest(url, options) {
-    const response = await fetch(url, {
+    let requestOptions = {
       credentials: "same-origin",
       cache: "no-store",
       ...options,
@@ -37,7 +37,11 @@
         ...ADMIN_HEADERS,
         ...(options?.headers || {})
       }
-    });
+    };
+    if (String(requestOptions.method || "GET").toUpperCase() === "POST") {
+      requestOptions = await window.WebWindowsAdminSecurity.authorize(requestOptions);
+    }
+    const response = await fetch(url, requestOptions);
     let payload;
     try {
       payload = await response.json();

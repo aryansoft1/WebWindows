@@ -1,11 +1,13 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/admin-security.asp"-->
 <%
 Response.CodePage = 65001
 Response.CharSet = "UTF-8"
 Response.ContentType = "application/json"
 Server.ScriptTimeout = 30
 conn.Execute("SET NAMES 'utf8'")
+AdminSecurityRequireMutation "system-manager", "save-datacenter"
 
 ' 获取并转义输入参数（防止注入）
 Function SafeStr(s)
@@ -54,6 +56,7 @@ End If
 If Err.Number <> 0 Then
   Response.Write "{""success"":false,""error"":""" & Replace(Err.Description, """", "'") & """}"
 Else
+  AdminSecurityAudit "save-datacenter", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""success"":true}"
 End If
 %>

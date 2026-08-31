@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/admin-security.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -373,10 +374,14 @@ If Session("webwindows_admin") <> True Or _
   Fail 401, "ADMIN_LOGIN_REQUIRED", "请先登录 WebWindows 管理后台。"
 End If
 
-EnsureTables
 Dim action, method
 action = LCase(Trim(CStr(Request("action"))))
 method = UCase(Request.ServerVariables("REQUEST_METHOD"))
+
+If method = "POST" Then
+  AdminSecurityRequireMutation "developer-platform", action
+  EnsureTables
+End If
 
 If action = "developers" And method = "GET" Then
   Dim developerRs, developerJson, firstDeveloper
@@ -516,6 +521,7 @@ ElseIf action = "developer-status" And method = "POST" Then
     .Execute
   End With
   Set developerStatusCmd = Nothing
+  AdminSecurityAudit "developer-status:" & developerId, "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""status"":""" & JsonText(developerStatus) & """}"
 
 ElseIf action = "submission-status" And method = "POST" Then
@@ -650,6 +656,7 @@ ElseIf action = "submission-status" And method = "POST" Then
   Set currentRs = Nothing
   Set newDecisionRs = conn.Execute("SELECT review_decision_id FROM webwindows_review_decisions WHERE submission_id=" & _
     submissionId & " ORDER BY id DESC LIMIT 1")
+  AdminSecurityAudit "submission-status:" & submissionId, "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""status"":""" & JsonText(targetStatus) & _
     """,""reviewDecisionId"":""" & JsonText(newDecisionRs("review_decision_id")) & """}"
   newDecisionRs.Close
@@ -852,6 +859,7 @@ ElseIf action = "publish-release" And method = "POST" Then
   Set publishRs = Nothing
   Set publishedReleaseRs = conn.Execute("SELECT published_release_id FROM webwindows_published_releases WHERE submission_id=" & _
     publishSubmissionId & " ORDER BY id DESC LIMIT 1")
+  AdminSecurityAudit "publish-release:" & publishSubmissionId, "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""status"":""published"",""publishedReleaseId"":""" & _
     JsonText(publishedReleaseRs("published_release_id")) & """}"
   publishedReleaseRs.Close
@@ -964,6 +972,7 @@ ElseIf action = "release-status" And method = "POST" Then
   On Error GoTo 0
   releaseRs.Close
   Set releaseRs = Nothing
+  AdminSecurityAudit "release-status:" & releaseSubmissionId, "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""releaseStatus"":""" & JsonText(releaseTargetStatus) & """}"
 
 Else

@@ -7,13 +7,18 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputPath = path.join(root, "data", "deploy", "production-rehearsal-manifest-v1.json");
 
 const artifacts = [
+  ["deployment-contract", ".gitattributes", "operator-bundle"],
   ["host", "web.config"],
   ["admin-security", "SystemManager/login.html"],
   ["admin-security", "SystemManager/assets/js/admin-security.js"],
   ["admin-security", "inc/admin-security.asp"],
+  ["host-config", "inc/conn.asp"],
+  ["host-config", "inc/trust-schema.asp"],
+  ["host-config", "inc/validator-deployment-config.asp"],
   ["admin-api", "admin_api/adminAuth.asp"],
   ["admin-api", "admin_api/developerPlatform.asp"],
   ["admin-api", "admin_api/functionCatalog.asp"],
+  ["admin-api", "admin_api/developerPackage.asp"],
   ["developer-api", "developer_api/v1.asp"],
   ["runtime-api", "api/runtime-release.asp"],
   ["runtime-api", "api/function-package.asp"],
@@ -23,8 +28,8 @@ const artifacts = [
   ["runtime", "assets/js/package-runtime.js"],
   ["runtime", "dist-production-broker/production-battery-broker.global.js"],
   ["configuration", "data/config/runtime-features-v1.json"],
-  ["validator", "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe"],
-  ["validator", "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config"],
+  ["validator", "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe", "trusted-validator", "WebWindows.DeveloperPackageValidator.exe"],
+  ["validator", "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config", "trusted-validator", "WebWindows.DeveloperPackageValidator.exe.config"],
   ["sdk", "data/sdk/capability-broker-errors-v1.json"],
   ["sdk", "data/sdk/capability-broker-methods-v1.json"],
   ["sdk", "data/sdk/capability-broker-policy-v1.json"],
@@ -46,6 +51,15 @@ const artifacts = [
   ["sdk", "data/sdk/studio-validator-rules-v1.json"],
   ["sdk", "data/sdk/verified-runtime-package-identity-v1.json"],
   ["sdk", "data/sdk/webwindows-public-api-v1.d.ts"],
+  ["database-migration", "database/migrations/001_webwindows_trust_schema.sql", "operator-bundle"],
+  ["database-migration", "database/migrations/verify_webwindows_trust_schema.sql", "operator-bundle"],
+  ["deployment-contract", "data/deploy/production-environment-config-v1.json", "operator-bundle"],
+  ["deployment-tool", "tools/Invoke-WebWindowsTrustMigration.ps1", "operator-bundle"],
+  ["deployment-tool", "tools/Backup-WebWindowsTrustDatabase.ps1", "operator-bundle"],
+  ["deployment-tool", "tools/Restore-WebWindowsTrustDatabase.ps1", "operator-bundle"],
+  ["deployment-tool", "tools/Test-WebWindowsArtifactDeployment.ps1", "operator-bundle"],
+  ["deployment-tool", "tools/Test-WebWindowsValidatorDeployment.ps1", "operator-bundle"],
+  ["deployment-tool", "tools/Test-WebWindowsStagingHttp.ps1", "operator-bundle"],
 ];
 
 function sha256(bytes) {
@@ -53,12 +67,12 @@ function sha256(bytes) {
 }
 
 const records = [];
-for (const [role, relativePath] of artifacts) {
+for (const [role, relativePath, targetRoot = "site-root", targetPath = relativePath] of artifacts) {
   const absolutePath = path.join(root, ...relativePath.split("/"));
   const [bytes, metadata] = await Promise.all([readFile(absolutePath), stat(absolutePath)]);
   records.push({
     path: relativePath,
-    target: `site-root:/${relativePath}`,
+    target: `${targetRoot}:/${targetPath}`,
     role,
     bytes: metadata.size,
     sha256: sha256(bytes),
@@ -68,7 +82,7 @@ for (const [role, relativePath] of artifacts) {
 const manifest = {
   contract: "webwindows-production-rehearsal-manifest-v1",
   version: 1,
-  sourceBaselineCommit: "d9df03440ac929f7656556486574652bd01e58e9",
+  sourceBaselineCommit: "0a5ff3e64133ea01fb2738d7cc36af231b88d199",
   featureGate: {
     path: "data/config/runtime-features-v1.json",
     key: "productionCapabilityBrokerV1",

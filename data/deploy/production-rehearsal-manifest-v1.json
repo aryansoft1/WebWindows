@@ -1,7 +1,7 @@
 {
   "contract": "webwindows-production-rehearsal-manifest-v1",
   "version": 1,
-  "sourceBaselineCommit": "d9df03440ac929f7656556486574652bd01e58e9",
+  "sourceBaselineCommit": "0a5ff3e64133ea01fb2738d7cc36af231b88d199",
   "featureGate": {
     "path": "data/config/runtime-features-v1.json",
     "key": "productionCapabilityBrokerV1",
@@ -14,11 +14,18 @@
   },
   "artifacts": [
     {
+      "path": ".gitattributes",
+      "target": "operator-bundle:/.gitattributes",
+      "role": "deployment-contract",
+      "bytes": 370,
+      "sha256": "cd06e0d8782ef8988db9a09fd7586ba9e8c59e961393c0c613aa19f02398fbc7"
+    },
+    {
       "path": "web.config",
       "target": "site-root:/web.config",
       "role": "host",
-      "bytes": 1475,
-      "sha256": "2f5f6c31010f9eaebbb90831affb0d2736940b979c1c18b6d7f3f8d9ff6fe858"
+      "bytes": 3303,
+      "sha256": "0e356b2bd45f665c00bdb0a5854727684214396bf68be5a148dc0de977d0603c"
     },
     {
       "path": "SystemManager/login.html",
@@ -38,8 +45,29 @@
       "path": "inc/admin-security.asp",
       "target": "site-root:/inc/admin-security.asp",
       "role": "admin-security",
-      "bytes": 9648,
-      "sha256": "39c58930a4a24ff55f6d3be1cffa86884a165fa752af175f20a7fa7aabb0085a"
+      "bytes": 10648,
+      "sha256": "29862e816d9765bc842a28a23e06dc353e2cd64059cd44013a2a6b8d959bf5b5"
+    },
+    {
+      "path": "inc/conn.asp",
+      "target": "site-root:/inc/conn.asp",
+      "role": "host-config",
+      "bytes": 1423,
+      "sha256": "733abe5dc3f1d28c2051a443321e7ccbdc29e0d21f0d876191c568a7fdb9e405"
+    },
+    {
+      "path": "inc/trust-schema.asp",
+      "target": "site-root:/inc/trust-schema.asp",
+      "role": "host-config",
+      "bytes": 902,
+      "sha256": "5a525e4edf83a3710a5f3d1794735884aca8d3148a6cef5a03878782733c571e"
+    },
+    {
+      "path": "inc/validator-deployment-config.asp",
+      "target": "site-root:/inc/validator-deployment-config.asp",
+      "role": "host-config",
+      "bytes": 3515,
+      "sha256": "0a70ab12e946cc5f51916ada05518d3e6dbb148cae940f510138b46814a3013e"
     },
     {
       "path": "admin_api/adminAuth.asp",
@@ -52,43 +80,50 @@
       "path": "admin_api/developerPlatform.asp",
       "target": "site-root:/admin_api/developerPlatform.asp",
       "role": "admin-api",
-      "bytes": 55737,
-      "sha256": "9aed36bbdccb785cf2aa1dd71f04aafb4eeedce1eeb3e4af762a5b36ebbfc458"
+      "bytes": 44959,
+      "sha256": "d7e40c261a6d3aca900ef269c600e721b8771cdf2a178501d5a0066ac368b8b1"
     },
     {
       "path": "admin_api/functionCatalog.asp",
       "target": "site-root:/admin_api/functionCatalog.asp",
       "role": "admin-api",
-      "bytes": 11060,
-      "sha256": "91e34d6e76ddde99fd7c79068ea1b5615da9b639f3aac71d1380ac3bb8f947c5"
+      "bytes": 8333,
+      "sha256": "e2a2886006f3b147247e01741a83ee1b22a600b6216f7a5add7c79e010c9a586"
+    },
+    {
+      "path": "admin_api/developerPackage.asp",
+      "target": "site-root:/admin_api/developerPackage.asp",
+      "role": "admin-api",
+      "bytes": 2146,
+      "sha256": "4e711b7f13125ae7f9eecd3d694321529a15984daaff8e3d057cd5c989b16bcf"
     },
     {
       "path": "developer_api/v1.asp",
       "target": "site-root:/developer_api/v1.asp",
       "role": "developer-api",
-      "bytes": 33515,
-      "sha256": "88665c1ee1e3c7874a4ebc16ff9a4ca3cb7dca0467da10b8207e14d2f33cfb75"
+      "bytes": 28946,
+      "sha256": "70197fbe6a10c58f6afe89ddb5ca8c2486ea3ae5b34003ef3f3f764ad7a98d44"
     },
     {
       "path": "api/runtime-release.asp",
       "target": "site-root:/api/runtime-release.asp",
       "role": "runtime-api",
-      "bytes": 6675,
-      "sha256": "8c98bd207689ff070ed248ddb793fa57e1ccc31bf738df17bcd261612164b12f"
+      "bytes": 6894,
+      "sha256": "8b43b2fb4884daa6d666549f9bec8f19eeb114825d669b0bd6cb015d954887b5"
     },
     {
       "path": "api/function-package.asp",
       "target": "site-root:/api/function-package.asp",
       "role": "runtime-api",
-      "bytes": 5365,
-      "sha256": "87b6de8e622a82d82d0182ef8a04492591ea8b898a7eddd1361ed37aea6c1c14"
+      "bytes": 5584,
+      "sha256": "25e7a962665b2899897d06cc829b6f9bfaa4e7b67caca704758d95b2dea13703"
     },
     {
       "path": "api/function-catalog.asp",
       "target": "site-root:/api/function-catalog.asp",
       "role": "runtime-api",
-      "bytes": 8239,
-      "sha256": "5e99367269c6972f126b702f78f3537ef358f42a517758f7fb3d6a76395cc70e"
+      "bytes": 7366,
+      "sha256": "a7da287abd8eec6846abf8bef87e9a0472e16fcb5353565a06232c34d3664c12"
     },
     {
       "path": "package-runtime.html",
@@ -127,14 +162,14 @@
     },
     {
       "path": "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe",
-      "target": "site-root:/server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe",
+      "target": "trusted-validator:/WebWindows.DeveloperPackageValidator.exe",
       "role": "validator",
-      "bytes": 31744,
-      "sha256": "f5946c677486d92ec468f89a61879cd825592797b1756a667ea86ddd14cf1b4d"
+      "bytes": 32256,
+      "sha256": "b4e566d57c58870a68374c5dee228d1e097e421284ed5f3331bec8172b4c32b5"
     },
     {
       "path": "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config",
-      "target": "site-root:/server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config",
+      "target": "trusted-validator:/WebWindows.DeveloperPackageValidator.exe.config",
       "role": "validator",
       "bytes": 176,
       "sha256": "8305f905b29a9202d59bc06753ac1acc00b3b4c8b951d820ca7ac850e7a4f7cc"
@@ -285,6 +320,69 @@
       "role": "sdk",
       "bytes": 8849,
       "sha256": "6bdef7deed0a6cfcdb26e58294fd40d207676efa67fac3ed0b81cde9b6a8f090"
+    },
+    {
+      "path": "database/migrations/001_webwindows_trust_schema.sql",
+      "target": "operator-bundle:/database/migrations/001_webwindows_trust_schema.sql",
+      "role": "database-migration",
+      "bytes": 11405,
+      "sha256": "6cab4f9a9107f03bd6f9dd87ce0a45c0a7a506dc43d339a83d0266008e73b7a9"
+    },
+    {
+      "path": "database/migrations/verify_webwindows_trust_schema.sql",
+      "target": "operator-bundle:/database/migrations/verify_webwindows_trust_schema.sql",
+      "role": "database-migration",
+      "bytes": 2685,
+      "sha256": "defd4e1ccb274e748e1604060896ba520b568b78919420dcd4b5edaedd03ab41"
+    },
+    {
+      "path": "data/deploy/production-environment-config-v1.json",
+      "target": "operator-bundle:/data/deploy/production-environment-config-v1.json",
+      "role": "deployment-contract",
+      "bytes": 2102,
+      "sha256": "9cd8d3f21f605f87961ca72e6a9039fdab4ca3148ffdcda56e1270cd3171456a"
+    },
+    {
+      "path": "tools/Invoke-WebWindowsTrustMigration.ps1",
+      "target": "operator-bundle:/tools/Invoke-WebWindowsTrustMigration.ps1",
+      "role": "deployment-tool",
+      "bytes": 3553,
+      "sha256": "48c4635f769ad78dad2533aff021791adeeeed7841c8bccc27344d11bf6b16a1"
+    },
+    {
+      "path": "tools/Backup-WebWindowsTrustDatabase.ps1",
+      "target": "operator-bundle:/tools/Backup-WebWindowsTrustDatabase.ps1",
+      "role": "deployment-tool",
+      "bytes": 1620,
+      "sha256": "13b577394bc4b1001a0c3e9f7f04999685a99efe9f5c0e88a669282efe00fe45"
+    },
+    {
+      "path": "tools/Restore-WebWindowsTrustDatabase.ps1",
+      "target": "operator-bundle:/tools/Restore-WebWindowsTrustDatabase.ps1",
+      "role": "deployment-tool",
+      "bytes": 1341,
+      "sha256": "f08651d4be8f3ba6c484d83d323ad0302a706e6b22ef1a7719f89911ef2ce799"
+    },
+    {
+      "path": "tools/Test-WebWindowsArtifactDeployment.ps1",
+      "target": "operator-bundle:/tools/Test-WebWindowsArtifactDeployment.ps1",
+      "role": "deployment-tool",
+      "bytes": 2251,
+      "sha256": "f1fbf0d7d250c6f836addad0e7db91f4a67767a9db46fbe7fba1934053d8aa4f"
+    },
+    {
+      "path": "tools/Test-WebWindowsValidatorDeployment.ps1",
+      "target": "operator-bundle:/tools/Test-WebWindowsValidatorDeployment.ps1",
+      "role": "deployment-tool",
+      "bytes": 2786,
+      "sha256": "952a3cfdd3855662dbc215b6421b0837fe91252d8e8931301b95c22b1608f9b5"
+    },
+    {
+      "path": "tools/Test-WebWindowsStagingHttp.ps1",
+      "target": "operator-bundle:/tools/Test-WebWindowsStagingHttp.ps1",
+      "role": "deployment-tool",
+      "bytes": 2719,
+      "sha256": "b9b2d7970c07d7366683e411603f57aab82fefc68061ac8d0e111c03601f07ae"
     }
   ]
 }

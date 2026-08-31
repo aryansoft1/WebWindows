@@ -1,0 +1,101 @@
+{
+  "contract": "webwindows-production-prerequisite-readiness-v1",
+  "version": 1,
+  "phase": "2F.1",
+  "repositoryReady": true,
+  "stagingReady": false,
+  "productionVerified": false,
+  "phase2FPassed": false,
+  "limitedRolloutAllowed": false,
+  "productionCapabilityBrokerV1": false,
+  "repositoryVerification": {
+    "testsPassed": 77,
+    "testsFailed": 0,
+    "pinnedArtifacts": 53,
+    "validatorSha256": "b4e566d57c58870a68374c5dee228d1e097e421284ed5f3331bec8172b4c32b5",
+    "stagingEvidenceIncluded": false
+  },
+  "findings": [
+    {
+      "id": "WWDEP-H001",
+      "severity": "high",
+      "category": "environment-required",
+      "repositoryFix": "Production-like staging provisioning contract and checkers",
+      "environmentPrerequisite": "Isolated HTTPS IIS site, MySQL clone, identities and test accounts",
+      "status": "open-environment-required",
+      "evidenceRequired": "Completed staging requirements record and full Phase 2F rerun"
+    },
+    {
+      "id": "WWDEP-H002",
+      "severity": "high",
+      "category": "repository-fixable",
+      "repositoryFix": "All-artifact before/after SHA-256 deployment verification",
+      "environmentPrerequisite": "Deploy frozen manifest to staging and capture zero mismatches",
+      "status": "implemented-pending-staging-verification",
+      "evidenceRequired": "Pre-deploy and post-deploy verifier JSON"
+    },
+    {
+      "id": "WWDEP-H003",
+      "severity": "high",
+      "category": "repository-fixable",
+      "repositoryFix": "IIS HTTP mutation rejection and canonical HTTPS page redirect",
+      "environmentPrerequisite": "Real HTTP/HTTPS binding and proxy topology verification",
+      "status": "implemented-pending-staging-verification",
+      "evidenceRequired": "HTTP GET redirect, HTTP POST 403 and HTTPS success captures"
+    },
+    {
+      "id": "WWDEP-H004",
+      "severity": "high",
+      "category": "repository-fixable",
+      "repositoryFix": "Host-only absolute external Validator/quarantine configuration and ACL checker",
+      "environmentPrerequisite": "External directories and effective ACLs on staging",
+      "status": "implemented-pending-staging-verification",
+      "evidenceRequired": "Validator deployment checker JSON and IIS execution/cleanup test"
+    },
+    {
+      "id": "WWDEP-H005",
+      "severity": "high",
+      "category": "repository-fixable",
+      "repositoryFix": "Explicit checksummed trust-schema migration, verifier and request-time schema gate",
+      "environmentPrerequisite": "Backup, apply, verify and restore against a MySQL staging clone",
+      "status": "implemented-pending-staging-verification",
+      "evidenceRequired": "Backup hash, migration output, schema verifier output and restore evidence"
+    },
+    {
+      "id": "WWDEP-H006",
+      "severity": "high",
+      "category": "environment-required",
+      "repositoryFix": "Database connection secret externalized and fail-closed configuration",
+      "environmentPrerequisite": "64-bit app pool plus matching audited 64-bit MySQL Connector/ODBC",
+      "status": "open-environment-required",
+      "evidenceRequired": "ODBC registry, app-pool bitness and successful real DB route capture"
+    },
+    {
+      "id": "WWDEP-H007",
+      "severity": "high",
+      "category": "environment-required",
+      "repositoryFix": "Executable cookie/session/origin test protocol defined",
+      "environmentPrerequisite": "Authorized staging developer/admin/user accounts",
+      "status": "open-environment-required",
+      "evidenceRequired": "Authenticated browser and full release-chain audit evidence"
+    },
+    {
+      "id": "WWDEP-M001",
+      "severity": "medium",
+      "category": "repository-fixable",
+      "repositoryFix": "One-year HSTS header in IIS configuration",
+      "environmentPrerequisite": "HTTPS-only staging response and preload/domain policy review",
+      "status": "implemented-pending-staging-verification",
+      "evidenceRequired": "HTTPS response header capture"
+    },
+    {
+      "id": "WWDEP-M002",
+      "severity": "medium",
+      "category": "repository-fixable",
+      "repositoryFix": "Validator process self-timeout plus external quarantine cleanup contract",
+      "environmentPrerequisite": "Forced hang/crash/recycle and orphan cleanup exercise",
+      "status": "implemented-pending-staging-verification",
+      "evidenceRequired": "Bounded worker response, process exit and zero orphan files"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -55,6 +56,10 @@ Sub Fail(ByVal statusText, ByVal code, ByVal message)
   If conn.State <> 0 Then conn.Close
   Response.End
 End Sub
+
+If Not WebWindowsTrustSchemaReady() Then
+  Fail "500 Internal Server Error", "trust-schema-required", "WebWindows 信任数据库结构尚未完成部署迁移。"
+End If
 
 Dim releaseId, appIdHint, versionHint, releaseRegex, releaseCmd, releaseRs, effectiveStatus
 releaseId = Trim(CStr(Request.QueryString("release")))

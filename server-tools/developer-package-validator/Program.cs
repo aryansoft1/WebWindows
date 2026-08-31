@@ -8,6 +8,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 
 namespace WebWindows.DeveloperPackageValidator {
@@ -19,7 +20,10 @@ namespace WebWindows.DeveloperPackageValidator {
     static int Main(string[] args) {
       if (args.Length != 8) return 64;
       try {
-        var result = Validator.Validate(args[0], args[1], args[2], args[3], args[4], args[6], args[7]);
+        var validationTask = Task.Run(() => Validator.Validate(
+          args[0], args[1], args[2], args[3], args[4], args[6], args[7]));
+        if (!validationTask.Wait(TimeSpan.FromSeconds(30))) return 124;
+        var result = validationTask.Result;
         File.WriteAllText(args[5], Json.Serialize(result), new UTF8Encoding(false));
         return result.passed ? 0 : 2;
       } catch (Exception ex) {

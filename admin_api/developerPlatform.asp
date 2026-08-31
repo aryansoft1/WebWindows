@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
 <!--#include file="../inc/admin-security.asp"-->
 <%
 Response.ContentType = "application/json"
@@ -192,179 +193,6 @@ Function CanonicalPermissionSelection(ByVal requestedJson, ByVal selectedJson, B
   reason = ""
 End Function
 
-Sub EnsureTables()
-  On Error Resume Next
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_developers (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,user_id BIGINT NOT NULL,display_name VARCHAR(120) NOT NULL," & _
-    "status VARCHAR(20) NOT NULL DEFAULT 'pending',api_key_hash VARCHAR(64) NULL," & _
-    "api_key_prefix VARCHAR(20) NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),UNIQUE KEY uk_webwindows_developer_user(user_id)," & _
-    "KEY idx_webwindows_developer_status(status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    Dim schemaError
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "DEVELOPER_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_function_submissions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,developer_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
-    "app_version VARCHAR(40) NOT NULL,manifest_base64 LONGTEXT NOT NULL," & _
-    "integrity_sha256 VARCHAR(64) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'submitted'," & _
-    "review_note VARCHAR(255) NOT NULL DEFAULT '',created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," & _
-    "reviewed_by BIGINT NULL,reviewed_at DATETIME NULL,PRIMARY KEY(id)," & _
-    "KEY idx_function_submission_developer(developer_id,id)," & _
-    "KEY idx_function_submission_status(status,id)," & _
-    "KEY idx_function_submission_app(app_id,app_version)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "SUBMISSION_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_function_packages (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
-    "original_filename VARCHAR(180) NOT NULL,package_blob LONGBLOB NOT NULL," & _
-    "package_size BIGINT NOT NULL,package_sha256 VARCHAR(64) NOT NULL DEFAULT ''," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),UNIQUE KEY uk_function_package_submission(submission_id)," & _
-    "KEY idx_function_package_developer(developer_id,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "PACKAGE_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_function_ownership (" & _
-    "app_id VARCHAR(160) NOT NULL,developer_id BIGINT NOT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(app_id),KEY idx_function_ownership_developer(developer_id)) " & _
-    "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "OWNERSHIP_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_submission_validations (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
-    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NOT NULL," & _
-    "validator_version VARCHAR(20) NOT NULL,passed TINYINT(1) NOT NULL," & _
-    "report_base64 LONGTEXT NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
-    "KEY idx_submission_validation_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  Err.Clear
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_review_decisions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,review_decision_id VARCHAR(64) NOT NULL," & _
-    "submission_id BIGINT NOT NULL,publisher_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
-    "app_version VARCHAR(40) NOT NULL,package_sha256 VARCHAR(64) NOT NULL," & _
-    "source_manifest_sha256 VARCHAR(64) NOT NULL,source_manifest_integrity_version INT NOT NULL,validation_record_id BIGINT NOT NULL," & _
-    "validation_report_id VARCHAR(80) NOT NULL," & _
-    "manifest_version INT NOT NULL,sdk_version VARCHAR(20) NULL," & _
-    "requested_permissions_base64 LONGTEXT NOT NULL,approved_permissions_base64 LONGTEXT NOT NULL," & _
-    "denied_permissions_base64 LONGTEXT NOT NULL,review_policy_version INT NOT NULL," & _
-    "decision VARCHAR(20) NOT NULL,review_note VARCHAR(255) NOT NULL DEFAULT ''," & _
-    "reviewer_type VARCHAR(30) NOT NULL,reviewed_by BIGINT NULL,reviewer_identity VARCHAR(160) NOT NULL," & _
-    "risk_summary_base64 LONGTEXT NOT NULL,supersedes_id BIGINT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
-    "UNIQUE KEY uk_review_decision_identity(review_decision_id)," & _
-    "KEY idx_review_decision_submission(submission_id,id)," & _
-    "KEY idx_review_decision_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "REVIEW_DECISION_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_published_releases (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,published_release_id VARCHAR(64) NOT NULL," & _
-    "submission_id BIGINT NOT NULL,publisher_id BIGINT NOT NULL,app_id VARCHAR(160) NOT NULL," & _
-    "app_version VARCHAR(40) NOT NULL,package_sha256 VARCHAR(64) NOT NULL," & _
-    "source_manifest_sha256 VARCHAR(64) NOT NULL,source_manifest_integrity_version INT NOT NULL,manifest_version INT NOT NULL," & _
-    "sdk_version VARCHAR(20) NULL,validation_record_id BIGINT NOT NULL," & _
-    "validation_report_id VARCHAR(80) NOT NULL,review_decision_id BIGINT NOT NULL," & _
-    "approved_permissions_base64 LONGTEXT NOT NULL,review_policy_version INT NOT NULL," & _
-    "release_status VARCHAR(24) NOT NULL DEFAULT 'active',published_by BIGINT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
-    "UNIQUE KEY uk_published_release_identity(published_release_id)," & _
-    "UNIQUE KEY uk_published_release_version(app_id,app_version)," & _
-    "UNIQUE KEY uk_published_release_review(review_decision_id)," & _
-    "KEY idx_published_release_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "PUBLISHED_RELEASE_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_published_release_events (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,published_release_id BIGINT NOT NULL," & _
-    "release_status VARCHAR(24) NOT NULL,event_note VARCHAR(255) NOT NULL DEFAULT ''," & _
-    "acted_by BIGINT NULL,actor_identity VARCHAR(160) NOT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
-    "KEY idx_release_event_release(published_release_id,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "RELEASE_EVENT_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_function_catalog_versions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,catalog_version VARCHAR(40) NOT NULL," & _
-    "catalog_json LONGTEXT NOT NULL,storage_encoding VARCHAR(12) NOT NULL DEFAULT 'base64'," & _
-    "publish_note VARCHAR(255) NOT NULL DEFAULT '',published_by BIGINT NULL," & _
-    "is_active TINYINT(1) NOT NULL DEFAULT 0,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),KEY idx_function_catalog_active(is_active,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "CATALOG_SCHEMA_FAILED", schemaError
-  End If
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_catalog_release_bindings (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,catalog_revision_id BIGINT NOT NULL,catalog_entry_id VARCHAR(160) NOT NULL," & _
-    "source_type VARCHAR(30) NOT NULL,release_binding_state VARCHAR(30) NOT NULL," & _
-    "published_release_id BIGINT NULL,published_release_identity VARCHAR(64) NULL," & _
-    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NULL," & _
-    "manifest_version INT NULL,sdk_version VARCHAR(20) NULL,review_decision_identity VARCHAR(64) NULL," & _
-    "approved_permissions_base64 LONGTEXT NULL,review_policy_version INT NULL," & _
-    "package_download_url VARCHAR(500) NULL,release_status VARCHAR(24) NOT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
-    "UNIQUE KEY uk_catalog_binding_entry(catalog_revision_id,catalog_entry_id)," & _
-    "UNIQUE KEY uk_catalog_binding_release(catalog_revision_id,published_release_identity)," & _
-    "KEY idx_catalog_binding_release_identity(published_release_identity)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "CATALOG_BINDING_SCHEMA_FAILED", schemaError
-  End If
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_sha256 VARCHAR(64) NOT NULL DEFAULT ''"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_uploaded_at DATETIME NULL"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN validation_status VARCHAR(30) NOT NULL DEFAULT 'not-validated'"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN active_validation_id BIGINT NULL"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_submission_validations ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_review_decisions ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_published_releases ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_catalog_release_bindings ADD COLUMN source_manifest_integrity_version INT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "UPDATE webwindows_function_submissions SET validation_status='legacy-unverified' " & _
-    "WHERE status='published' AND validation_status='not-validated'"
-  Err.Clear
-  On Error GoTo 0
-End Sub
 
 If Request.ServerVariables("HTTP_X_WEBWINDOWS_ADMIN_REQUEST") <> "developer-platform" Then
   Fail 403, "ADMIN_REQUEST_REQUIRED", "无效的开发者平台管理请求。"
@@ -373,6 +201,9 @@ If Session("webwindows_admin") <> True Or _
    LCase(Trim(CStr(Session("username")))) <> "admin" Then
   Fail 401, "ADMIN_LOGIN_REQUIRED", "请先登录 WebWindows 管理后台。"
 End If
+If Not WebWindowsTrustSchemaReady() Then
+  Fail 500, "TRUST_SCHEMA_REQUIRED", "WebWindows 信任数据库结构尚未完成部署迁移。"
+End If
 
 Dim action, method
 action = LCase(Trim(CStr(Request("action"))))
@@ -380,7 +211,6 @@ method = UCase(Request.ServerVariables("REQUEST_METHOD"))
 
 If method = "POST" Then
   AdminSecurityRequireMutation "developer-platform", action
-  EnsureTables
 End If
 
 If action = "developers" And method = "GET" Then

@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
 <!--#include file="../inc/admin-security.asp"-->
 <%
 Response.ContentType = "application/json"
@@ -86,64 +87,6 @@ Sub FinishError(ByVal statusCode, ByVal code, ByVal message)
   Response.End
 End Sub
 
-Sub EnsureReleaseBindingTable()
-  On Error Resume Next
-  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_catalog_release_bindings (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,catalog_revision_id BIGINT NOT NULL,catalog_entry_id VARCHAR(160) NOT NULL," & _
-    "source_type VARCHAR(30) NOT NULL,release_binding_state VARCHAR(30) NOT NULL," & _
-    "published_release_id BIGINT NULL,published_release_identity VARCHAR(64) NULL," & _
-    "package_sha256 VARCHAR(64) NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NULL," & _
-    "manifest_version INT NULL,sdk_version VARCHAR(20) NULL,review_decision_identity VARCHAR(64) NULL," & _
-    "approved_permissions_base64 LONGTEXT NULL,review_policy_version INT NULL," & _
-    "package_download_url VARCHAR(500) NULL,release_status VARCHAR(24) NOT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,PRIMARY KEY(id)," & _
-    "UNIQUE KEY uk_catalog_binding_entry(catalog_revision_id,catalog_entry_id)," & _
-    "UNIQUE KEY uk_catalog_binding_release(catalog_revision_id,published_release_identity)," & _
-    "KEY idx_catalog_binding_release_identity(published_release_identity)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  If Err.Number <> 0 Then
-    Dim bindingError
-    bindingError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    FinishError 500, "CATALOG_BINDING_SCHEMA_FAILED", bindingError
-  End If
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_catalog_release_bindings ADD COLUMN source_manifest_integrity_version INT NULL DEFAULT 0"
-  On Error GoTo 0
-End Sub
-
-Function EnsureCatalogTable()
-  Dim schemaSql
-  schemaSql = "CREATE TABLE IF NOT EXISTS webwindows_function_catalog_versions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT," & _
-    "catalog_version VARCHAR(40) NOT NULL," & _
-    "catalog_json LONGTEXT NOT NULL," & _
-    "storage_encoding VARCHAR(12) NOT NULL DEFAULT 'base64'," & _
-    "publish_note VARCHAR(255) NOT NULL DEFAULT ''," & _
-    "published_by BIGINT NULL," & _
-    "is_active TINYINT(1) NOT NULL DEFAULT 0," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY (id)," & _
-    "KEY idx_function_catalog_active (is_active,id)" & _
-    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-
-  On Error Resume Next
-  conn.Execute schemaSql
-  If Err.Number <> 0 Then
-    Dim schemaError
-    schemaError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    FinishError 500, "CATALOG_SCHEMA_FAILED", "功能仓库数据表初始化失败：" & schemaError
-  End If
-  conn.Execute "ALTER TABLE webwindows_function_catalog_versions " & _
-    "ADD COLUMN storage_encoding VARCHAR(12) NOT NULL DEFAULT 'raw' AFTER catalog_json"
-  Err.Clear
-  conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 " & _
-    "WHERE is_active=1 AND storage_encoding<>'base64'"
-  Err.Clear
-  On Error GoTo 0
-End Function
 
 Dim adminName
 adminName = LCase(Trim(CStr(Session("username"))))
@@ -154,6 +97,9 @@ End If
 
 If Request.ServerVariables("HTTP_X_WEBWINDOWS_ADMIN_REQUEST") <> "function-catalog" Then
   FinishError 403, "ADMIN_REQUEST_REQUIRED", "无效的后台管理请求。"
+End If
+If Not WebWindowsTrustSchemaReady() Then
+  FinishError 500, "TRUST_SCHEMA_REQUIRED", "WebWindows 信任数据库结构尚未完成部署迁移。"
 End If
 
 Dim method
@@ -192,8 +138,6 @@ If method = "GET" Then
 
 ElseIf method = "POST" Then
   AdminSecurityRequireMutation "function-catalog", "catalog-publish"
-  EnsureCatalogTable
-  EnsureReleaseBindingTable
   Dim catalogText, versionText, noteText, normalized, securityCompact, encodedCatalog, protectedRs, activeRevisionId
   catalogText = CStr(Request.Form("catalogJson"))
   versionText = Left(Trim(CStr(Request.Form("version"))), 40)

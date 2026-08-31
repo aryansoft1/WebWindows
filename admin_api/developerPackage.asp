@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
 <%
 Response.Buffer = True
 Response.CodePage = 65001
@@ -21,6 +22,9 @@ End If
 If Session("webwindows_admin") <> True Or _
    LCase(Trim(CStr(Session("username")))) <> "admin" Then
   Fail "401 Unauthorized", "请先登录 WebWindows 管理后台。"
+End If
+If Not WebWindowsTrustSchemaReady() Then
+  Fail "500 Internal Server Error", "WebWindows 信任数据库结构尚未完成部署迁移。"
 End If
 
 Dim idText, idRegex, packageId, packageRs

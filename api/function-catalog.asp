@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -75,37 +76,6 @@ Function ValidCatalog(ByVal value)
     InStr(1, compact, """apps"":[", vbTextCompare) > 0)
 End Function
 
-Function EnsureCatalogTable()
-  Dim schemaSql
-  schemaSql = "CREATE TABLE IF NOT EXISTS webwindows_function_catalog_versions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT," & _
-    "catalog_version VARCHAR(40) NOT NULL," & _
-    "catalog_json LONGTEXT NOT NULL," & _
-    "storage_encoding VARCHAR(12) NOT NULL DEFAULT 'base64'," & _
-    "publish_note VARCHAR(255) NOT NULL DEFAULT ''," & _
-    "published_by BIGINT NULL," & _
-    "is_active TINYINT(1) NOT NULL DEFAULT 0," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY (id)," & _
-    "KEY idx_function_catalog_active (is_active,id)" & _
-    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-
-  On Error Resume Next
-  conn.Execute schemaSql
-  If Err.Number = 0 Then
-    conn.Execute "ALTER TABLE webwindows_function_catalog_versions " & _
-      "ADD COLUMN storage_encoding VARCHAR(12) NOT NULL DEFAULT 'raw' AFTER catalog_json"
-    Err.Clear
-    conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 " & _
-      "WHERE is_active=1 AND storage_encoding<>'base64'"
-    Err.Clear
-    EnsureCatalogTable = True
-  Else
-    EnsureCatalogTable = False
-  End If
-  Err.Clear
-  On Error GoTo 0
-End Function
 
 Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
   Dim rs, valid, bindingCount, referenceRegex, referenceMatches
@@ -194,7 +164,13 @@ End Sub
 Dim catalogText, tableReady, catalogSource, activeRevisionId
 catalogText = ""
 catalogSource = "unavailable"
-tableReady = EnsureCatalogTable()
+tableReady = WebWindowsTrustSchemaReady()
+If Not tableReady Then
+  Response.Status = "503 Service Unavailable"
+  Response.Write "{""ok"":false,""code"":""trust-schema-required"",""message"":""WebWindows 信任数据库结构尚未完成部署迁移。""}"
+  If conn.State <> 0 Then conn.Close
+  Response.End
+End If
 
 If tableReady Then
   catalogText = ActiveCatalog(activeRevisionId)

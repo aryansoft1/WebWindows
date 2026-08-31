@@ -1,5 +1,7 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
+<!--#include file="../inc/validator-deployment-config.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -159,135 +161,65 @@ End Function
 Function RunTrustedPackageValidator(ByVal packageBytes, ByVal outerManifest, ByVal expectedAppId, _
     ByVal expectedVersion, ByVal publisherId, ByVal submissionId, ByRef reportJson)
   Dim fso, quarantineRoot, nonce, zipPath, manifestPath, reportPath, exePath, rootPath
-  Dim shell, command, exitCode
+  Dim shell, command, exitCode, configFailure, nonceRs, operationError
   Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  quarantineRoot = Server.MapPath("../App_Data/developer-validation")
-  If Not fso.FolderExists(Server.MapPath("../App_Data")) Then fso.CreateFolder Server.MapPath("../App_Data")
-  If Not fso.FolderExists(quarantineRoot) Then fso.CreateFolder quarantineRoot
-  nonce = CStr(submissionId) & "-" & Replace(Replace(CStr(Timer), ".", ""), ",", "")
+  If Not ValidatorDeploymentLoad(exePath, quarantineRoot, configFailure) Then
+    Set fso = Nothing
+    Fail 500, configFailure, "服务器功能包验证器部署配置不可用。"
+  End If
+  nonce = ""
+  On Error Resume Next
+  Set nonceRs = conn.Execute("SELECT LOWER(HEX(RANDOM_BYTES(16))) AS validator_nonce")
+  If Err.Number = 0 Then
+    If Not nonceRs.EOF Then nonce = CStr(nonceRs("validator_nonce"))
+  End If
+  Err.Clear
+  If IsObject(nonceRs) Then nonceRs.Close
+  Set nonceRs = Nothing
+  On Error GoTo 0
+  If Len(nonce) <> 32 Then
+    Set fso = Nothing
+    Fail 500, "VALIDATOR_NONCE_UNAVAILABLE", "服务器验证隔离文件名生成失败。"
+  End If
+  nonce = CStr(submissionId) & "-" & nonce
   zipPath = fso.BuildPath(quarantineRoot, nonce & ".zip")
   manifestPath = fso.BuildPath(quarantineRoot, nonce & ".manifest.json")
   reportPath = fso.BuildPath(quarantineRoot, nonce & ".report.json")
-  exePath = Server.MapPath("../server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe")
   rootPath = Server.MapPath("..")
-  If Not fso.FileExists(exePath) Then
-    Set fso = Nothing
-    Fail 500, "SERVER_VALIDATOR_UNAVAILABLE", "受信任服务器功能包验证器尚未部署。"
-  End If
-  SaveBinaryFile zipPath, packageBytes
-  SaveUtf8File manifestPath, outerManifest
-  command = """" & exePath & """ """ & zipPath & """ """ & manifestPath & """ """ & _
-    expectedAppId & """ """ & expectedVersion & """ """ & CStr(publisherId) & """ """ & _
-    reportPath & """ """ & rootPath & """ """ & CStr(submissionId) & """"
-  Set shell = Server.CreateObject("WScript.Shell")
-  exitCode = shell.Run(command, 0, True)
-  Set shell = Nothing
-  If fso.FileExists(reportPath) Then reportJson = ReadUtf8File(reportPath) Else reportJson = ""
+  operationError = ""
+  exitCode = -1
   On Error Resume Next
+  SaveBinaryFile zipPath, packageBytes
+  If Err.Number <> 0 Then operationError = "quarantine-zip-write"
+  Err.Clear
+  If operationError = "" Then SaveUtf8File manifestPath, outerManifest
+  If Err.Number <> 0 Then operationError = "quarantine-manifest-write"
+  Err.Clear
+  If operationError = "" Then
+    command = """" & exePath & """ """ & zipPath & """ """ & manifestPath & """ """ & _
+      expectedAppId & """ """ & expectedVersion & """ """ & CStr(publisherId) & """ """ & _
+      reportPath & """ """ & rootPath & """ """ & CStr(submissionId) & """"
+    Set shell = Server.CreateObject("WScript.Shell")
+    exitCode = shell.Run(command, 0, True)
+    If Err.Number <> 0 Then operationError = "validator-process"
+    Err.Clear
+    Set shell = Nothing
+  End If
+  reportJson = ""
+  If operationError = "" And fso.FileExists(reportPath) Then reportJson = ReadUtf8File(reportPath)
+  If Err.Number <> 0 Then operationError = "validator-report-read"
+  Err.Clear
   If fso.FileExists(zipPath) Then fso.DeleteFile zipPath, True
   If fso.FileExists(manifestPath) Then fso.DeleteFile manifestPath, True
   If fso.FileExists(reportPath) Then fso.DeleteFile reportPath, True
+  Err.Clear
   On Error GoTo 0
   Set fso = Nothing
+  If operationError <> "" Then Fail 500, "SERVER_VALIDATOR_FAILED", "服务器功能包验证器执行失败。"
   If reportJson = "" Then Fail 500, "SERVER_VALIDATOR_FAILED", "服务器功能包验证器未生成报告。"
   RunTrustedPackageValidator = (exitCode = 0 And InStr(1, reportJson, """passed"":true", vbTextCompare) > 0)
 End Function
 
-Sub EnsureDeveloperTables()
-  Dim developerSql, submissionSql, packageSql, ownershipSql, validationSql
-  developerSql = "CREATE TABLE IF NOT EXISTS webwindows_developers (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,user_id BIGINT NOT NULL," & _
-    "display_name VARCHAR(120) NOT NULL,status VARCHAR(20) NOT NULL DEFAULT 'pending'," & _
-    "api_key_hash VARCHAR(64) NULL,api_key_prefix VARCHAR(20) NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),UNIQUE KEY uk_webwindows_developer_user(user_id)," & _
-    "KEY idx_webwindows_developer_status(status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  submissionSql = "CREATE TABLE IF NOT EXISTS webwindows_function_submissions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,developer_id BIGINT NOT NULL," & _
-    "app_id VARCHAR(160) NOT NULL,app_version VARCHAR(40) NOT NULL," & _
-    "manifest_base64 LONGTEXT NOT NULL,integrity_sha256 VARCHAR(64) NOT NULL," & _
-    "status VARCHAR(20) NOT NULL DEFAULT 'submitted',review_note VARCHAR(255) NOT NULL DEFAULT ''," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," & _
-    "reviewed_by BIGINT NULL,reviewed_at DATETIME NULL," & _
-    "PRIMARY KEY(id),KEY idx_function_submission_developer(developer_id,id)," & _
-    "KEY idx_function_submission_status(status,id)," & _
-    "KEY idx_function_submission_app(app_id,app_version)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  packageSql = "CREATE TABLE IF NOT EXISTS webwindows_function_packages (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
-    "original_filename VARCHAR(180) NOT NULL,package_blob LONGBLOB NOT NULL," & _
-    "package_size BIGINT NOT NULL,package_sha256 VARCHAR(64) NOT NULL DEFAULT ''," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),UNIQUE KEY uk_function_package_submission(submission_id)," & _
-    "KEY idx_function_package_developer(developer_id,id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  ownershipSql = "CREATE TABLE IF NOT EXISTS webwindows_function_ownership (" & _
-    "app_id VARCHAR(160) NOT NULL,developer_id BIGINT NOT NULL," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(app_id),KEY idx_function_ownership_developer(developer_id)) " & _
-    "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  validationSql = "CREATE TABLE IF NOT EXISTS webwindows_submission_validations (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT,submission_id BIGINT NOT NULL,developer_id BIGINT NOT NULL," & _
-    "package_sha256 VARCHAR(64) NOT NULL,source_manifest_sha256 VARCHAR(64) NULL,source_manifest_integrity_version INT NOT NULL," & _
-    "validator_version VARCHAR(20) NOT NULL,passed TINYINT(1) NOT NULL," & _
-    "report_base64 LONGTEXT NOT NULL,created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY(id),KEY idx_submission_validation_submission(submission_id,id)," & _
-    "KEY idx_submission_validation_package(package_sha256)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-  On Error Resume Next
-  conn.Execute developerSql
-  If Err.Number <> 0 Then
-    Dim tableError
-    tableError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "DEVELOPER_SCHEMA_FAILED", "开发者数据表初始化失败：" & tableError
-  End If
-  conn.Execute submissionSql
-  If Err.Number <> 0 Then
-    tableError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "SUBMISSION_SCHEMA_FAILED", "功能提交数据表初始化失败：" & tableError
-  End If
-  conn.Execute packageSql
-  If Err.Number <> 0 Then
-    tableError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "PACKAGE_SCHEMA_FAILED", "功能包数据表初始化失败：" & tableError
-  End If
-  conn.Execute ownershipSql
-  If Err.Number <> 0 Then
-    tableError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "OWNERSHIP_SCHEMA_FAILED", "功能 ID 所有权表初始化失败：" & tableError
-  End If
-  conn.Execute validationSql
-  If Err.Number <> 0 Then
-    tableError = Err.Description
-    Err.Clear
-    On Error GoTo 0
-    Fail 500, "VALIDATION_SCHEMA_FAILED", "验证记录数据表初始化失败：" & tableError
-  End If
-  conn.Execute "ALTER TABLE webwindows_submission_validations ADD COLUMN source_manifest_integrity_version INT NOT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_size BIGINT NOT NULL DEFAULT 0"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_sha256 VARCHAR(64) NOT NULL DEFAULT ''"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN package_uploaded_at DATETIME NULL"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN validation_status VARCHAR(30) NOT NULL DEFAULT 'not-validated'"
-  Err.Clear
-  conn.Execute "ALTER TABLE webwindows_function_submissions ADD COLUMN active_validation_id BIGINT NULL"
-  Err.Clear
-  conn.Execute "UPDATE webwindows_function_submissions SET validation_status='legacy-unverified' " & _
-    "WHERE status='published' AND validation_status='not-validated'"
-  Err.Clear
-  On Error GoTo 0
-End Sub
 
 Function SessionUserId()
   If Len(CStr(Session("user_id"))) = 0 Then
@@ -331,7 +263,9 @@ If Request.ServerVariables("HTTP_X_WEBWINDOWS_DEVELOPER_REQUEST") <> "v1" Then
   Fail 403, "DEVELOPER_REQUEST_REQUIRED", "缺少开发者 API 请求标识。"
 End If
 
-EnsureDeveloperTables
+If Not WebWindowsTrustSchemaReady() Then
+  Fail 500, "TRUST_SCHEMA_REQUIRED", "WebWindows 信任数据库结构尚未完成部署迁移。"
+End If
 
 Dim action, method
 action = LCase(Trim(CStr(Request.QueryString("action"))))

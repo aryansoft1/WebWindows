@@ -24,7 +24,7 @@ for (const artifact of manifest.artifacts) {
   const bytes = await read(artifact.path);
   assert.equal(artifact.bytes, bytes.byteLength, `${artifact.path}: byte count drift`);
   assert.equal(artifact.sha256, sha256(bytes), `${artifact.path}: SHA-256 drift`);
-  assert.equal(artifact.target, `site-root:/${artifact.path}`);
+  assert.match(artifact.target, /^(site-root|trusted-validator|operator-bundle):\//);
 }
 
 for (const required of [

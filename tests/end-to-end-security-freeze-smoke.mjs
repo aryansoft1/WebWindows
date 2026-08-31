@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [feature, methods, permissions, developer, admin, catalogAdmin, catalogApi, releaseApi, packageApi, runtime, registry, publicApi, native] = await Promise.all([
+const [feature, methods, permissions, developer, admin, catalogAdmin, catalogApi, releaseApi, packageApi, runtime, registry, publicApi, native, migration] = await Promise.all([
   read("data/config/runtime-features-v1.json").then(JSON.parse), read("data/sdk/capability-broker-methods-v1.json").then(JSON.parse),
   read("data/sdk/permissions-v1.json").then(JSON.parse), read("developer_api/v1.asp"), read("admin_api/developerPlatform.asp"),
   read("admin_api/functionCatalog.asp"), read("api/function-catalog.asp"), read("api/runtime-release.asp"),
   read("api/function-package.asp"), read("assets/js/package-runtime.js"), read("assets/js/app-registry.js"),
-  read("assets/js/device-api.js"), read("docs/NATIVE_BRIDGE_V1.md")
+  read("assets/js/device-api.js"), read("docs/NATIVE_BRIDGE_V1.md"),
+  read("database/migrations/001_webwindows_trust_schema.sql")
 ]);
 
 assert.equal(feature.productionCapabilityBrokerV1, false);
@@ -31,7 +32,7 @@ assert.match(admin, /LCase\(Trim\(CStr\(Session\("username"\)\)\)\) <> "admin"/)
 assert.match(admin, /MAX\(r2\.id\).*r2\.submission_id=s\.id/s);
 assert.match(admin, /LCase\(CStr\(publishRs\("decision"\)\)\) <> "approved"/);
 assert.match(admin, /active_validation_id.*validation_record_id/s);
-assert.match(admin, /UNIQUE KEY uk_published_release_version\(app_id,app_version\)/);
+assert.match(migration, /UNIQUE KEY uk_published_release_version \(app_id,app_version\)/);
 assert.match(admin, /conn\.BeginTrans[\s\S]*conn\.CommitTrans/);
 assert.match(admin, /conn\.RollbackTrans/);
 assert.doesNotMatch(admin, /UPDATE\s+webwindows_review_decisions|DELETE\s+FROM\s+webwindows_review_decisions/i);

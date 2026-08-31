@@ -2,21 +2,23 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [developerApi, adminApi, adminUi, rules, runtime, publicApi, nativeAdapter] = await Promise.all([
+const [developerApi, adminApi, adminUi, rules, runtime, publicApi, nativeAdapter, migration, validatorConfig] = await Promise.all([
   read("developer_api/v1.asp"), read("admin_api/developerPlatform.asp"),
   read("SystemManager/assets/js/developer-platform-admin.js"), read("data/sdk/studio-validator-rules-v1.json").then(JSON.parse),
-  read("assets/js/package-runtime.js"), read("assets/js/device-api.js"), read("docs/NATIVE_BRIDGE_V1.md")
+  read("assets/js/package-runtime.js"), read("assets/js/device-api.js"), read("docs/NATIVE_BRIDGE_V1.md"),
+  read("database/migrations/001_webwindows_trust_schema.sql"), read("inc/validator-deployment-config.asp")
 ]);
 
 assert.match(developerApi, /webwindows_submission_validations/);
-assert.match(developerApi, /validation_status VARCHAR\(30\)/);
-assert.match(developerApi, /active_validation_id BIGINT/);
+assert.match(migration, /validation_status VARCHAR\(30\)/);
+assert.match(migration, /active_validation_id BIGINT/);
 assert.match(developerApi, /RunTrustedPackageValidator\(packageBytes, outerManifest, expectedAppId/);
 assert.match(developerApi, /SELECT developer_id FROM webwindows_function_ownership WHERE app_id=\?/);
 assert.match(developerApi, /APP_ID_OWNED/);
-assert.match(developerApi, /App_Data\/developer-validation/);
-assert.match(developerApi, /developer-package-validator\/runtime\/WebWindows\.DeveloperPackageValidator\.exe/);
-assert.match(developerApi, /status='published' AND validation_status='not-validated'/);
+assert.match(validatorConfig, /WEBWINDOWS_VALIDATOR_QUARANTINE_PATH/);
+assert.match(validatorConfig, /WEBWINDOWS_VALIDATOR_EXECUTABLE_PATH/);
+assert.doesNotMatch(developerApi, /App_Data\/developer-validation/);
+assert.match(migration, /status = 'published' AND validation_status = 'not-validated'/);
 assert.match(developerApi, /validation_status='validating'/);
 assert.match(developerApi, /validation-failed/);
 assert.match(developerApi, /validationReport/);

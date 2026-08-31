@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [admin, ui, review, release, validation, runtime, publicApi, nativeContract, doc] = await Promise.all([
+const [admin, ui, review, release, validation, runtime, publicApi, nativeContract, doc, migration] = await Promise.all([
   read("admin_api/developerPlatform.asp"),
   read("SystemManager/assets/js/developer-platform-admin.js"),
   read("data/sdk/review-decision-v1.json").then(JSON.parse),
@@ -11,7 +11,8 @@ const [admin, ui, review, release, validation, runtime, publicApi, nativeContrac
   read("assets/js/package-runtime.js"),
   read("assets/js/device-api.js"),
   read("docs/NATIVE_BRIDGE_V1.md"),
-  read("docs/WEBWINDOWS_REVIEW_AND_RELEASE_V1.md")
+  read("docs/WEBWINDOWS_REVIEW_AND_RELEASE_V1.md"),
+  read("database/migrations/001_webwindows_trust_schema.sql")
 ]);
 
 assert.equal(review.contract, "webwindows-review-decision-v1");
@@ -36,7 +37,7 @@ assert.ok(validation.required.includes("requestedPermissions"));
 for (const table of [
   "webwindows_review_decisions", "webwindows_published_releases",
   "webwindows_published_release_events"
-]) assert.match(admin, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
+]) assert.match(migration, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
 
 assert.match(admin, /active_validation_id/);
 assert.match(admin, /validation_passed/);
@@ -61,7 +62,7 @@ assert.match(admin, /REVOKED_RELEASE_IMMUTABLE/);
 
 assert.match(admin, /RELEASE_PACKAGE_REPLACEMENT_FORBIDDEN/);
 assert.match(admin, /CATALOG_RELEASE_MISMATCH/);
-assert.match(admin, /UNIQUE KEY uk_published_release_version\(app_id,app_version\)/);
+assert.match(migration, /UNIQUE KEY uk_published_release_version \(app_id,app_version\)/);
 assert.match(admin, /APPROVED_REVIEW_REQUIRED/);
 assert.match(admin, /r\.approved_permissions_base64/);
 assert.match(admin, /releaseSql[\s\S]*conn\.BeginTrans[\s\S]*conn\.Execute releaseSql[\s\S]*webwindows_function_catalog_versions[\s\S]*status='published'[\s\S]*conn\.CommitTrans/,

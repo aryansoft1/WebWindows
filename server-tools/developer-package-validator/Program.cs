@@ -116,6 +116,7 @@ namespace WebWindows.DeveloperPackageValidator {
         else {
           try {
             manifestText = StrictUtf8.GetString(files["manifest.json"]);
+            StrictJson.EnsureUnambiguous(manifestText);
             manifest = Obj(Json.DeserializeObject(manifestText));
             var canonical = Canonical.Write(manifest);
             manifestHash = Sha(StrictUtf8.GetBytes(canonical));
@@ -130,7 +131,9 @@ namespace WebWindows.DeveloperPackageValidator {
             if (!String.Equals(appId, expectedId, StringComparison.Ordinal)) Error(diagnostics, "WWT002", "manifest.json$/id", "Request appId does not match ZIP Manifest id.");
             if (!String.Equals(version, expectedVersion, StringComparison.Ordinal)) Error(diagnostics, "WWT003", "manifest.json$/version", "Request version does not match ZIP Manifest version.");
             if (File.Exists(outerPath)) {
-              var outer = Obj(Json.DeserializeObject(StrictUtf8.GetString(File.ReadAllBytes(outerPath))));
+              var outerText = StrictUtf8.GetString(File.ReadAllBytes(outerPath));
+              StrictJson.EnsureUnambiguous(outerText);
+              var outer = Obj(Json.DeserializeObject(outerText));
               if (!String.Equals(Canonical.Write(outer), canonical, StringComparison.Ordinal)) Error(diagnostics, "WWT001", "manifest.json", "Outer submitted Manifest is not canonically equal to ZIP root manifest.json.");
             }
             var entry = Str(manifest, "entry");
@@ -256,13 +259,91 @@ namespace WebWindows.DeveloperPackageValidator {
       internal static void Error(List<Diagnostic> items, string rule, string path, string message, string severity = "error") { items.Add(new Diagnostic { ruleId = rule, severity = severity, path = path, message = message }); }
     }
 
+    internal static class StrictJson {
+      public static void EnsureUnambiguous(string text) { new Reader(text).ReadDocument(); }
+
+      sealed class Reader {
+        readonly string text; int offset;
+        public Reader(string value) { text = value ?? ""; }
+        public void ReadDocument() {
+          if (text.Length > 0 && text[0] == '\ufeff') throw new ArgumentException("JSON BOM is forbidden.");
+          White(); Value(0); White(); if (offset != text.Length) throw new ArgumentException("Trailing JSON data.");
+        }
+        void Value(int depth) {
+          if (depth > 100) throw new ArgumentException("JSON nesting limit."); White();
+          if (Peek('{')) { Object(depth); return; }
+          if (Peek('[')) { Array(depth); return; }
+          if (Peek('"')) { String(); return; }
+          foreach (var literal in new[] { "true", "false", "null" }) if (At(literal)) { offset += literal.Length; return; }
+          Number();
+        }
+        void Object(int depth) {
+          offset++; White(); var keys = new HashSet<string>(StringComparer.Ordinal);
+          if (Take('}')) return;
+          while (true) {
+            var key = String(); if (!keys.Add(key)) throw new ArgumentException("Duplicate JSON property.");
+            White(); Require(':'); Value(depth + 1); White(); if (Take('}')) return; Require(','); White();
+          }
+        }
+        void Array(int depth) {
+          offset++; White(); if (Take(']')) return;
+          while (true) { Value(depth + 1); White(); if (Take(']')) return; Require(','); White(); }
+        }
+        string String() {
+          Require('"'); var result = new StringBuilder();
+          while (offset < text.Length) {
+            var character = text[offset++];
+            if (character == '"') { Scalar(result); return result.ToString(); }
+            if (character < 0x20) throw new ArgumentException("JSON control character.");
+            if (character != '\\') { result.Append(character); continue; }
+            if (offset >= text.Length) throw new ArgumentException("JSON escape.");
+            var escape = text[offset++];
+            switch (escape) {
+              case '"': result.Append('"'); break; case '\\': result.Append('\\'); break; case '/': result.Append('/'); break;
+              case 'b': result.Append('\b'); break; case 'f': result.Append('\f'); break; case 'n': result.Append('\n'); break;
+              case 'r': result.Append('\r'); break; case 't': result.Append('\t'); break;
+              case 'u':
+                if (offset + 4 > text.Length) throw new ArgumentException("JSON Unicode escape.");
+                int code; if (!Int32.TryParse(text.Substring(offset, 4), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out code)) throw new ArgumentException("JSON Unicode escape.");
+                result.Append((char)code); offset += 4; break;
+              default: throw new ArgumentException("JSON escape.");
+            }
+          }
+          throw new ArgumentException("Unterminated JSON string.");
+        }
+        static void Scalar(StringBuilder value) {
+          for (var i = 0; i < value.Length; i++) {
+            var code = value[i];
+            if (Char.IsHighSurrogate(code)) { if (i + 1 >= value.Length || !Char.IsLowSurrogate(value[i + 1])) throw new ArgumentException("Unpaired JSON surrogate."); i++; }
+            else if (Char.IsLowSurrogate(code)) throw new ArgumentException("Unpaired JSON surrogate.");
+          }
+        }
+        void Number() {
+          var start = offset; if (Take('-')) { }
+          if (Take('0')) { if (offset < text.Length && Char.IsDigit(text[offset])) throw new ArgumentException("JSON number."); }
+          else { if (offset >= text.Length || text[offset] < '1' || text[offset] > '9') throw new ArgumentException("JSON value."); while (offset < text.Length && Char.IsDigit(text[offset])) offset++; }
+          if (Take('.')) { var fraction = offset; while (offset < text.Length && Char.IsDigit(text[offset])) offset++; if (fraction == offset) throw new ArgumentException("JSON number."); }
+          if (offset < text.Length && (text[offset] == 'e' || text[offset] == 'E')) { offset++; if (offset < text.Length && (text[offset] == '+' || text[offset] == '-')) offset++; var exponent = offset; while (offset < text.Length && Char.IsDigit(text[offset])) offset++; if (exponent == offset) throw new ArgumentException("JSON number."); }
+          if (offset == start) throw new ArgumentException("JSON value.");
+          double parsed; if (!Double.TryParse(text.Substring(start, offset - start), NumberStyles.Float, CultureInfo.InvariantCulture, out parsed) || Double.IsNaN(parsed) || Double.IsInfinity(parsed)) throw new ArgumentException("Non-finite JSON number.");
+        }
+        void White() { while (offset < text.Length && (text[offset] == ' ' || text[offset] == '\t' || text[offset] == '\r' || text[offset] == '\n')) offset++; }
+        bool Peek(char value) { return offset < text.Length && text[offset] == value; }
+        bool Take(char value) { if (!Peek(value)) return false; offset++; return true; }
+        void Require(char value) { if (!Take(value)) throw new ArgumentException("JSON syntax."); }
+        bool At(string value) { return offset + value.Length <= text.Length && System.String.CompareOrdinal(text, offset, value, 0, value.Length) == 0; }
+      }
+    }
+
     internal sealed class ZipRecord { public string Name; public uint Crc32; public long CompressedSize, UncompressedSize, LocalOffset, DataStart, DataEnd; public bool IsDirectory, IsSpecial; }
     internal static class ZipPreflight {
       public static List<ZipRecord> Read(byte[] data, List<Diagnostic> diagnostics) {
         var result = new List<ZipRecord>(); int eocd = Find(data, 0x06054b50, Math.Max(0, data.Length - 65557));
         if (eocd < 0 || eocd + 22 > data.Length) throw new InvalidDataException();
-        int count = U16(data, eocd + 10); long centralSize = U32(data, eocd + 12), centralOffset = U32(data, eocd + 16);
-        if (centralOffset + centralSize > eocd || count == 0xffff) throw new InvalidDataException();
+        int count = U16(data, eocd + 10), diskCount = U16(data, eocd + 8), commentLength = U16(data, eocd + 20);
+        long centralSize = U32(data, eocd + 12), centralOffset = U32(data, eocd + 16);
+        if (U16(data, eocd + 4) != 0 || U16(data, eocd + 6) != 0 || diskCount != count ||
+            eocd + 22 + commentLength != data.Length || centralOffset + centralSize != eocd || count == 0xffff) throw new InvalidDataException();
         int p = (int)centralOffset;
         for (int i = 0; i < count; i++) {
           if (p + 46 > data.Length || U32(data, p) != 0x02014b50) throw new InvalidDataException();
@@ -277,12 +358,18 @@ namespace WebWindows.DeveloperPackageValidator {
           try { name = ((flags & 0x800) != 0 ? StrictUtf8 : Encoding.GetEncoding(437, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback)).GetString(nameBytes); }
           catch { Validator.Error(diagnostics, "WWT012", "$package", "ZIP path encoding is invalid."); name = "invalid-path-" + i; }
           if (local + 30 > data.Length || U32(data, (int)local) != 0x04034b50) throw new InvalidDataException();
-          int localName = U16(data, (int)local + 26), localExtra = U16(data, (int)local + 28); long start = local + 30 + localName + localExtra, end = start + compressed;
+          int localName = U16(data, (int)local + 26), localExtra = U16(data, (int)local + 28);
+          if (local + 30 + localName + localExtra > data.Length) throw new InvalidDataException();
+          if (U16(data, (int)local + 6) != flags || U16(data, (int)local + 8) != method || localName != nameLen ||
+              !data.Skip((int)local + 30).Take(localName).SequenceEqual(nameBytes))
+            Validator.Error(diagnostics, "WWT009", "$package", "ZIP local and central directory records disagree.");
+          long start = local + 30 + localName + localExtra, end = start + compressed;
           if (end > centralOffset) throw new InvalidDataException();
           int unixType = (int)((external >> 16) & 0xF000); bool special = unixType != 0 && unixType != 0x8000 && unixType != 0x4000;
           result.Add(new ZipRecord { Name = name, Crc32 = U32(data, p + 16), CompressedSize = compressed, UncompressedSize = uncompressed, LocalOffset = local, DataStart = start, DataEnd = end, IsDirectory = name.EndsWith("/"), IsSpecial = special });
           p += 46 + nameLen + extraLen + commentLen;
         }
+        if (p != eocd) throw new InvalidDataException();
         var spans = result.OrderBy(r => r.LocalOffset).ToArray();
         for (int i = 1; i < spans.Length; i++) if (spans[i].LocalOffset < spans[i - 1].DataEnd) Validator.Error(diagnostics, "WWT009", "$package", "Overlapping ZIP entries are forbidden.");
         return result;

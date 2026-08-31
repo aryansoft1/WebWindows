@@ -15,6 +15,15 @@
       "assets/js/package-runtime.js#canonicalizeJson"
     ]
   },
+  "strictInputPolicy": {
+    "duplicateObjectProperties": "reject-before-canonicalization-including-escape-equivalent-keys",
+    "bom": "reject",
+    "invalidUtf8": "reject",
+    "unpairedUnicodeSurrogate": "reject",
+    "trailingNonWhitespaceData": "reject",
+    "malformedNumber": "reject",
+    "insignificantJsonWhitespace": "accepted-and-not-part-of-canonical-identity"
+  },
   "consumers": [
     "server-validation-report-v1", "review-decision-v1", "published-release-v1",
     "catalog-release-binding-v1", "runtime-release-api", "production-package-runtime"
@@ -25,6 +34,7 @@
     "one-field-one-digest-definition",
     "raw-manifest-bytes-are-not-the-sourceManifestSha256-authority",
     "all-downstream-records-copy-the-server-validator-digest-without-recomputation",
-    "runtime-recomputes-the-same-canonical-digest-from-the-verified-zip-root-manifest"
+    "runtime-recomputes-the-same-canonical-digest-from-the-verified-zip-root-manifest",
+    "ambiguous-json-never-reaches-json-object-construction-or-canonicalization"
   ]
 }

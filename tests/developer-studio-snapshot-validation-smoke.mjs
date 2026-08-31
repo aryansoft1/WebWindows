@@ -75,5 +75,11 @@ for (const forbidden of ["WebWindowsNative", "cookie", "localStorage", "apiKey",
   assert.doesNotMatch(serialized, new RegExp(forbidden, "i"));
 }
 
+const duplicateManifestText = JSON.stringify(invalidManifest).replace(`"id":"${invalidManifest.id}"`, `"id":"${invalidManifest.id}","\\u0069d":"com.attacker.duplicate"`);
+await repository.writeTextFile(project.uuid, "manifest.json", duplicateManifestText);
+const duplicateReport = await validateProjectSnapshot(await createProjectSnapshot(repository, project.uuid), { contracts });
+assert.equal(duplicateReport.passed, false);
+assert.equal(duplicateReport.diagnostics.some((item) => item.ruleId === "WWM001" && /Duplicate JSON property/.test(item.message)), true);
+
 await repository.close();
 console.log("developer studio snapshot and validation smoke test passed");

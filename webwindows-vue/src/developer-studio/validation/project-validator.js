@@ -4,6 +4,7 @@ import { selectManifestVersion } from "../manifest/manifest-version.js";
 import { normalizeProjectPath } from "../project/path-policy.js";
 import { getSnapshotFile } from "../snapshot/project-snapshot.js";
 import { loadStudioPlatformContracts } from "./platform-contracts.js";
+import { assertUnambiguousJson } from "../../shared/strict-json.js";
 
 export const VALIDATION_REPORT_CONTRACT = "webwindows-studio-validation-report-v1";
 
@@ -21,6 +22,7 @@ export async function validateProjectSnapshot(snapshot, options = {}) {
     add("WWP001", { path: "manifest.json", message: "ZIP root 必须包含 manifest.json。" });
   } else {
     try {
+      assertUnambiguousJson(manifestFile.content);
       manifest = JSON.parse(manifestFile.content);
     } catch (error) {
       add("WWM001", {

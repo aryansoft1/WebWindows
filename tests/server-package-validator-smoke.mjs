@@ -43,6 +43,30 @@ try {
   assert.equal(canonicalVector.report.sourceManifestSha256, sha(Buffer.from(canonicalize(canonicalVectorManifest))),
     "Server and browser must use the same RFC 8785/JCS UTF-8 manifest digest definition");
 
+  const numericBase = JSON.stringify({ ...baseV2, canonicalNumericVector: 1 });
+  const numericHashes = [];
+  for (const literal of ["1", "1.0", "1e0"]) {
+    const raw = numericBase.replace('"canonicalNumericVector":1', `"canonicalNumericVector":${literal}`);
+    const result = await validate(await zipFor(baseV2, { rawManifest:raw }), baseV2, { outerText:raw });
+    assert.equal(result.report.passed, true, JSON.stringify(result.report.diagnostics));
+    numericHashes.push(result.report.sourceManifestSha256);
+  }
+  assert.equal(new Set(numericHashes).size, 1, "1, 1.0 and 1e0 must have one JCS identity");
+  const reorderedRaw = `${JSON.stringify(reorder(baseV2), null, 2)}\r\n`;
+  const reorderedRawResult = await validate(await zipFor(baseV2, { rawManifest:reorderedRaw }), baseV2, { outerText:reorderedRaw });
+  assert.equal(reorderedRawResult.report.sourceManifestSha256, validV2.report.sourceManifestSha256);
+
+  const duplicateId = JSON.stringify(baseV2).replace(`"id":"${baseV2.id}"`, `"id":"${baseV2.id}","id":"com.attacker.substitute"`);
+  await rejected(await zipFor(baseV2, { rawManifest:duplicateId }), baseV2, "WWM001", { outerText:duplicateId });
+  const escapedDuplicate = JSON.stringify(baseV2).replace(`"id":"${baseV2.id}"`, `"id":"${baseV2.id}","\\u0069d":"com.attacker.escape"`);
+  await rejected(await zipFor(baseV2, { rawManifest:escapedDuplicate }), baseV2, "WWM001", { outerText:escapedDuplicate });
+  const bomManifest = `\ufeff${JSON.stringify(baseV2)}`;
+  await rejected(await zipFor(baseV2, { rawManifest:bomManifest }), baseV2, "WWM001", { outerText:bomManifest });
+  const loneSurrogate = JSON.stringify(baseV2).replace(`"name":"${baseV2.name}"`, `"name":"\\ud800"`);
+  await rejected(await zipFor(baseV2, { rawManifest:loneSurrogate }), baseV2, "WWM001", { outerText:loneSurrogate });
+  const overflowNumber = JSON.stringify({ ...baseV2, canonicalNumericVector:1 }).replace('"canonicalNumericVector":1', '"canonicalNumericVector":1e400');
+  await rejected(await zipFor(baseV2, { rawManifest:overflowNumber }), baseV2, "WWM001", { outerText:overflowNumber });
+
   const validV2Again = await validate(validV2.bytes, reorder(baseV2));
   for (const field of ["reportId", "validatorVersion", "packageSha256", "packageSize", "sourceManifestSha256", "sourceManifestIntegrityVersion", "manifestVersion", "appId", "version", "publisherId", "sdkVersion", "requestedPermissions", "schemaResult", "packagePolicyResult", "diagnostics", "passed"])
     assert.deepEqual(validV2Again.report[field], validV2.report[field], `stable report field ${field}`);
@@ -73,6 +97,9 @@ try {
   await rejected(badCrc, baseV1, "WWT007");
   const malformed = Buffer.from(await zipFor(baseV1)); malformed.fill(0, malformed.length - 22, malformed.length - 18);
   await rejected(malformed, baseV1, "WWT007");
+  const cleanArchive = Buffer.from(await zipFor(baseV1));
+  await rejected(Buffer.concat([cleanArchive, Buffer.from("appended-payload")]), baseV1, "WWT007");
+  await rejected(Buffer.concat([cleanArchive, cleanArchive]), baseV1, "WWT007");
   await rejected(patchCompression(await zipFor(baseV1), 99), baseV1, "WWT008");
   await rejected(patchOverlappingOffset(await zipFor(baseV1)), baseV1, "WWT009");
 
@@ -91,7 +118,7 @@ async function validate(bytes, outer, options = {}) {
   const marker = crypto.randomUUID();
   const zipPath = path.join(temp, `${marker}.zip`), outerPath = path.join(temp, `${marker}.json`), reportPath = path.join(temp, `${marker}.report.json`);
   await fs.writeFile(zipPath, bytes);
-  await fs.writeFile(outerPath, JSON.stringify(outer));
+  await fs.writeFile(outerPath, options.outerText ?? JSON.stringify(outer));
   const process = spawnSync(executable, [zipPath, outerPath, id, version, "publisher-17", reportPath, root, "submission-9"], { encoding: "utf8" });
   try { await fs.access(reportPath); } catch { throw new Error(`validator failed: status=${process.status} error=${process.error?.message || "none"} stderr=${process.stderr}`); }
   const report = JSON.parse(await fs.readFile(reportPath, "utf8"));
@@ -107,7 +134,7 @@ async function rejected(bytes, outer, ruleId, options) {
 
 async function zipFor(manifest, options = {}) {
   const zip = new JSZip();
-  if (!options.omitManifest) zip.file("manifest.json", JSON.stringify(manifest));
+  if (!options.omitManifest) zip.file("manifest.json", options.rawManifest ?? JSON.stringify(manifest));
   zip.file("index.html", "<!doctype html><link rel=\"stylesheet\" href=\"styles/app.css\"><script src=\"scripts/app.js\"></script>");
   zip.file("styles/app.css", "body{color:#123}");
   zip.file("scripts/app.js", "console.log('ok')");

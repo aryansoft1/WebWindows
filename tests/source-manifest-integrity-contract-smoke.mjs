@@ -14,6 +14,8 @@ const [contract, validator, runtime, validationContract, review, release, bindin
 assert.equal(contract.contract, "webwindows-source-manifest-integrity-v1");
 assert.equal(contract.sourceManifestSha256.rawBytesDigest, false);
 assert.equal(contract.sourceManifestIntegrityVersion, 1);
+assert.equal(contract.strictInputPolicy.duplicateObjectProperties, "reject-before-canonicalization-including-escape-equivalent-keys");
+assert.equal(contract.strictInputPolicy.bom, "reject");
 assert.match(contract.sourceManifestSha256.definition, /SHA-256\(RFC-8785-JCS/);
 assert.equal(identityDoc.sourceManifestAuthority.rawBytesDigest, false);
 assert.match(identityDoc.sourceManifestAuthority.digestDefinition, /zip-root:\/manifest\.json/);
@@ -23,9 +25,11 @@ for (const item of [validationContract, review, release, binding]) {
 }
 
 assert.match(validator, /var canonical = Canonical\.Write\(manifest\)/);
+assert.match(validator, /StrictJson\.EnsureUnambiguous\(manifestText\)/);
 assert.match(validator, /manifestHash = Sha\(StrictUtf8\.GetBytes\(canonical\)\)/);
 assert.match(validator, /static string EcmaNumber/);
 assert.match(runtime, /sha256Hex\(new TextEncoder\(\)\.encode\(canonicalizeJson\(manifest\)\)\)/);
+assert.match(runtime, /assertUnambiguousJson\(manifestText\)/);
 assert.match(developerApi, /source_manifest_sha256/);
 assert.match(admin, /source_manifest_sha256/);
 assert.match(lookup, /pr\.source_manifest_sha256/);

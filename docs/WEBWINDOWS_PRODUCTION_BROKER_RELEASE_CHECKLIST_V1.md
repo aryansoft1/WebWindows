@@ -22,7 +22,8 @@ The gate `productionCapabilityBrokerV1` must remain `false` until every mandator
 - [ ] `WScript.Shell` process policy permits only the pinned validator command/arguments.
 - [ ] Helper timeout and cleanup work for crash, hang and worker recycle.
 - [ ] Logs do not contain API keys, cookies, package bodies, Native objects or private filesystem paths.
-- [ ] Admin CSRF token or independently verified same-site Origin/Referer enforcement is active.
+- [x] Admin CSRF application contract requires a session-bound token, exact Origin/Referer, POST, Content-Type and Fetch Metadata checks.
+- [ ] Admin CSRF/canonical-origin behavior, Classic ASP Session cookies and reverse-proxy headers are verified on production IIS/HTTPS.
 
 ## Database
 
@@ -82,4 +83,9 @@ Populate from a clean checkout immediately before approval. Repository audit val
 | `api/runtime-release.asp` | `8c98bd207689ff070ed248ddb793fa57e1ccc31bf738df17bcd261612164b12f` |
 | `api/function-package.asp` | `87b6de8e622a82d82d0182ef8a04492591ea8b898a7eddd1361ed37aea6c1c14` |
 | `developer_api/v1.asp` | `88665c1ee1e3c7874a4ebc16ff9a4ca3cb7dca0467da10b8207e14d2f33cfb75` |
-| `admin_api/developerPlatform.asp` | `b6c073a427cf6190bbffdebcacf19b29d2cd49860724bb29453cea1d55b6caf4` |
+| `admin_api/developerPlatform.asp` | `9aed36bbdccb785cf2aa1dd71f04aafb4eeedce1eeb3e4af762a5b36ebbfc458` |
+| `admin_api/adminAuth.asp` | `09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d` |
+| `admin_api/functionCatalog.asp` | `91e34d6e76ddde99fd7c79068ea1b5615da9b639f3aac71d1380ac3bb8f947c5` |
+| `inc/admin-security.asp` | `39c58930a4a24ff55f6d3be1cffa86884a165fa752af175f20a7fa7aabb0085a` |
+| `SystemManager/assets/js/admin-security.js` | `1e5aebf0095af136205fdf446f5c77567fc94c5a13d48269889e6b6b3c12c140` |
+| `web.config` | `2f5f6c31010f9eaebbb90831affb0d2736940b979c1c18b6d7f3f8d9ff6fe858` |

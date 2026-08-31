@@ -5,7 +5,8 @@
     "build:guide": "node tools/build-guide.mjs",
     "build:developer-studio:validator": "node tools/build-developer-studio-validator.mjs",
     "build:developer-studio": "npm run build:developer-studio:validator && vite build --config webwindows-vue/vite.developer-studio.config.js",
-    "build:production-broker": "npm run build:developer-studio:validator && vite build --config webwindows-vue/vite.production-broker.config.js"
+    "build:production-broker": "npm run build:developer-studio:validator && vite build --config webwindows-vue/vite.production-broker.config.js",
+    "build:production-rehearsal-manifest": "node tools/build-production-rehearsal-manifest.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",

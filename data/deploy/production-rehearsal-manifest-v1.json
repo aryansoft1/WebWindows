@@ -1,0 +1,290 @@
+{
+  "contract": "webwindows-production-rehearsal-manifest-v1",
+  "version": 1,
+  "sourceBaselineCommit": "d9df03440ac929f7656556486574652bd01e58e9",
+  "featureGate": {
+    "path": "data/config/runtime-features-v1.json",
+    "key": "productionCapabilityBrokerV1",
+    "requiredValue": false
+  },
+  "deployment": {
+    "targetKind": "production-like-staging",
+    "siteRootAuthority": "operator-supplied",
+    "deployableWithoutTargetEvidence": false
+  },
+  "artifacts": [
+    {
+      "path": "web.config",
+      "target": "site-root:/web.config",
+      "role": "host",
+      "bytes": 1475,
+      "sha256": "2f5f6c31010f9eaebbb90831affb0d2736940b979c1c18b6d7f3f8d9ff6fe858"
+    },
+    {
+      "path": "SystemManager/login.html",
+      "target": "site-root:/SystemManager/login.html",
+      "role": "admin-security",
+      "bytes": 1626,
+      "sha256": "d0d0b58a7d23545b2b99f4ff12ceba178bfb847075dcd846c5744828a143304e"
+    },
+    {
+      "path": "SystemManager/assets/js/admin-security.js",
+      "target": "site-root:/SystemManager/assets/js/admin-security.js",
+      "role": "admin-security",
+      "bytes": 1422,
+      "sha256": "1e5aebf0095af136205fdf446f5c77567fc94c5a13d48269889e6b6b3c12c140"
+    },
+    {
+      "path": "inc/admin-security.asp",
+      "target": "site-root:/inc/admin-security.asp",
+      "role": "admin-security",
+      "bytes": 9648,
+      "sha256": "39c58930a4a24ff55f6d3be1cffa86884a165fa752af175f20a7fa7aabb0085a"
+    },
+    {
+      "path": "admin_api/adminAuth.asp",
+      "target": "site-root:/admin_api/adminAuth.asp",
+      "role": "admin-api",
+      "bytes": 6434,
+      "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d"
+    },
+    {
+      "path": "admin_api/developerPlatform.asp",
+      "target": "site-root:/admin_api/developerPlatform.asp",
+      "role": "admin-api",
+      "bytes": 55737,
+      "sha256": "9aed36bbdccb785cf2aa1dd71f04aafb4eeedce1eeb3e4af762a5b36ebbfc458"
+    },
+    {
+      "path": "admin_api/functionCatalog.asp",
+      "target": "site-root:/admin_api/functionCatalog.asp",
+      "role": "admin-api",
+      "bytes": 11060,
+      "sha256": "91e34d6e76ddde99fd7c79068ea1b5615da9b639f3aac71d1380ac3bb8f947c5"
+    },
+    {
+      "path": "developer_api/v1.asp",
+      "target": "site-root:/developer_api/v1.asp",
+      "role": "developer-api",
+      "bytes": 33515,
+      "sha256": "88665c1ee1e3c7874a4ebc16ff9a4ca3cb7dca0467da10b8207e14d2f33cfb75"
+    },
+    {
+      "path": "api/runtime-release.asp",
+      "target": "site-root:/api/runtime-release.asp",
+      "role": "runtime-api",
+      "bytes": 6675,
+      "sha256": "8c98bd207689ff070ed248ddb793fa57e1ccc31bf738df17bcd261612164b12f"
+    },
+    {
+      "path": "api/function-package.asp",
+      "target": "site-root:/api/function-package.asp",
+      "role": "runtime-api",
+      "bytes": 5365,
+      "sha256": "87b6de8e622a82d82d0182ef8a04492591ea8b898a7eddd1361ed37aea6c1c14"
+    },
+    {
+      "path": "api/function-catalog.asp",
+      "target": "site-root:/api/function-catalog.asp",
+      "role": "runtime-api",
+      "bytes": 8239,
+      "sha256": "5e99367269c6972f126b702f78f3537ef358f42a517758f7fb3d6a76395cc70e"
+    },
+    {
+      "path": "package-runtime.html",
+      "target": "site-root:/package-runtime.html",
+      "role": "runtime",
+      "bytes": 1430,
+      "sha256": "8402a4ba51145b3550bc3a99805af25a554da39d8d051874a7fc88e18ea63b9b"
+    },
+    {
+      "path": "assets/css/package-runtime.css",
+      "target": "site-root:/assets/css/package-runtime.css",
+      "role": "runtime",
+      "bytes": 921,
+      "sha256": "e472072499f2c74c318622aef140365dbbdd97c77c4bc608337c4913751fdd4b"
+    },
+    {
+      "path": "assets/js/package-runtime.js",
+      "target": "site-root:/assets/js/package-runtime.js",
+      "role": "runtime",
+      "bytes": 31366,
+      "sha256": "e8101b84264400e046b60c33f22b4302887ec10a25a5ac050b807d8b74d30513"
+    },
+    {
+      "path": "dist-production-broker/production-battery-broker.global.js",
+      "target": "site-root:/dist-production-broker/production-battery-broker.global.js",
+      "role": "runtime",
+      "bytes": 65341,
+      "sha256": "224ed27b85e1fc48ac1058a8267d0a2e6b94af6205fb61e2b3919915ec2d410d"
+    },
+    {
+      "path": "data/config/runtime-features-v1.json",
+      "target": "site-root:/data/config/runtime-features-v1.json",
+      "role": "configuration",
+      "bytes": 225,
+      "sha256": "285653d2742b6c8c13d3088d4fe2a83429d628b77a033c744fd11e9ffa480296"
+    },
+    {
+      "path": "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe",
+      "target": "site-root:/server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe",
+      "role": "validator",
+      "bytes": 31744,
+      "sha256": "f5946c677486d92ec468f89a61879cd825592797b1756a667ea86ddd14cf1b4d"
+    },
+    {
+      "path": "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config",
+      "target": "site-root:/server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config",
+      "role": "validator",
+      "bytes": 176,
+      "sha256": "8305f905b29a9202d59bc06753ac1acc00b3b4c8b951d820ca7ac850e7a4f7cc"
+    },
+    {
+      "path": "data/sdk/capability-broker-errors-v1.json",
+      "target": "site-root:/data/sdk/capability-broker-errors-v1.json",
+      "role": "sdk",
+      "bytes": 3147,
+      "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1"
+    },
+    {
+      "path": "data/sdk/capability-broker-methods-v1.json",
+      "target": "site-root:/data/sdk/capability-broker-methods-v1.json",
+      "role": "sdk",
+      "bytes": 3542,
+      "sha256": "c77b1e204e1f46e59a96e31e4b55157b3a1c41f36bc3ebd9f6944606c18a2b63"
+    },
+    {
+      "path": "data/sdk/capability-broker-policy-v1.json",
+      "target": "site-root:/data/sdk/capability-broker-policy-v1.json",
+      "role": "sdk",
+      "bytes": 4235,
+      "sha256": "1ad1b6e63fee05a9cbd481bb7d45f053abb41742afb554aabc8c7111d0f0af6b"
+    },
+    {
+      "path": "data/sdk/capability-broker-v1.schema.json",
+      "target": "site-root:/data/sdk/capability-broker-v1.schema.json",
+      "role": "sdk",
+      "bytes": 10279,
+      "sha256": "474c140b0e29db636315cd5fbe2753bc92a3a31ddee8a13f34066eeadde372c9"
+    },
+    {
+      "path": "data/sdk/catalog-release-binding-v1.json",
+      "target": "site-root:/data/sdk/catalog-release-binding-v1.json",
+      "role": "sdk",
+      "bytes": 2037,
+      "sha256": "791d467411d3333082a338434ec604904268cfad55c99cbdf5715b171546065c"
+    },
+    {
+      "path": "data/sdk/manifest-v1.schema.json",
+      "target": "site-root:/data/sdk/manifest-v1.schema.json",
+      "role": "sdk",
+      "bytes": 7419,
+      "sha256": "7ac345bdd704d0fcaa07b88ef1985aa363c6ece8a47fa0baa9709f618fef068a"
+    },
+    {
+      "path": "data/sdk/manifest-v2.schema.json",
+      "target": "site-root:/data/sdk/manifest-v2.schema.json",
+      "role": "sdk",
+      "bytes": 7864,
+      "sha256": "26eecc0326dc7cf99dd68d11612b16f7a4907e38afba807d7a086c3fd3713cc2"
+    },
+    {
+      "path": "data/sdk/package-runtime-policy-v1.json",
+      "target": "site-root:/data/sdk/package-runtime-policy-v1.json",
+      "role": "sdk",
+      "bytes": 860,
+      "sha256": "f2f2eb104903169bc6312370caf8406a1cd1dace862090da870bd249552de0d9"
+    },
+    {
+      "path": "data/sdk/permission-decision-v1.json",
+      "target": "site-root:/data/sdk/permission-decision-v1.json",
+      "role": "sdk",
+      "bytes": 3054,
+      "sha256": "3e9829365f307c7c49817eabb77b2b0e441a3a748e829375276405c2462674b6"
+    },
+    {
+      "path": "data/sdk/permissions-v1.json",
+      "target": "site-root:/data/sdk/permissions-v1.json",
+      "role": "sdk",
+      "bytes": 5540,
+      "sha256": "293b1cb84989cdf5890d554a5733365fbeef13fc21e96fff51d41495925d7f86"
+    },
+    {
+      "path": "data/sdk/persistent-grant-v1.json",
+      "target": "site-root:/data/sdk/persistent-grant-v1.json",
+      "role": "sdk",
+      "bytes": 2271,
+      "sha256": "e303632549666a55111177c1629dc104acf802da5c09e6a65ae332b9f737e11a"
+    },
+    {
+      "path": "data/sdk/production-broker-context-v1.json",
+      "target": "site-root:/data/sdk/production-broker-context-v1.json",
+      "role": "sdk",
+      "bytes": 3131,
+      "sha256": "fe2ed739b37e304c93e6b9576a5ba72e11e1e8bd6193cf4dcfb05dbcea8ba24a"
+    },
+    {
+      "path": "data/sdk/published-app-identity-v1.json",
+      "target": "site-root:/data/sdk/published-app-identity-v1.json",
+      "role": "sdk",
+      "bytes": 4212,
+      "sha256": "9ff6a0cf78f4a1c277828834c43e8c8683b61e00020750bd081bc2db6e278732"
+    },
+    {
+      "path": "data/sdk/published-release-v1.json",
+      "target": "site-root:/data/sdk/published-release-v1.json",
+      "role": "sdk",
+      "bytes": 1449,
+      "sha256": "fefbd3395f760e731d9b65177a5980545818d4f274d658934754d4833b94928d"
+    },
+    {
+      "path": "data/sdk/review-decision-v1.json",
+      "target": "site-root:/data/sdk/review-decision-v1.json",
+      "role": "sdk",
+      "bytes": 3427,
+      "sha256": "66f0e5b0070ed1296e4cfd14c5ac76af6be19b8d3b26b425457fed71f4d44ae7"
+    },
+    {
+      "path": "data/sdk/runtime-compatibility-v1.json",
+      "target": "site-root:/data/sdk/runtime-compatibility-v1.json",
+      "role": "sdk",
+      "bytes": 6173,
+      "sha256": "c1e6e5274d034432e8ae1a4ed435e91f3e05d7537e60513228b2d48968bcdb3e"
+    },
+    {
+      "path": "data/sdk/server-validation-report-v1.json",
+      "target": "site-root:/data/sdk/server-validation-report-v1.json",
+      "role": "sdk",
+      "bytes": 1481,
+      "sha256": "aeaf013837af60f83da726f8c200c55b2273b17155b8d44fc91e273de6f6cafe"
+    },
+    {
+      "path": "data/sdk/source-manifest-integrity-v1.json",
+      "target": "site-root:/data/sdk/source-manifest-integrity-v1.json",
+      "role": "sdk",
+      "bytes": 1782,
+      "sha256": "e521047cfd043a98d110a2486fab5354996eb55891b10af0dbd1f4b876577c96"
+    },
+    {
+      "path": "data/sdk/studio-validator-rules-v1.json",
+      "target": "site-root:/data/sdk/studio-validator-rules-v1.json",
+      "role": "sdk",
+      "bytes": 4111,
+      "sha256": "37d5aebb7d4f1f17cdc08e53fecd591413c182d3871bee801a356ffa1ed477b7"
+    },
+    {
+      "path": "data/sdk/verified-runtime-package-identity-v1.json",
+      "target": "site-root:/data/sdk/verified-runtime-package-identity-v1.json",
+      "role": "sdk",
+      "bytes": 1855,
+      "sha256": "e361c2ae321e73bb2354971dfbde7c27b60182d2df9f6ce8a280b0d917e6cf33"
+    },
+    {
+      "path": "data/sdk/webwindows-public-api-v1.d.ts",
+      "target": "site-root:/data/sdk/webwindows-public-api-v1.d.ts",
+      "role": "sdk",
+      "bytes": 8849,
+      "sha256": "6bdef7deed0a6cfcdb26e58294fd40d207676efa67fac3ed0b81cde9b6a8f090"
+    }
+  ]
+}

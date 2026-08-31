@@ -4,6 +4,30 @@
 Const WEBWINDOWS_ADMIN_TRUSTED_ORIGIN = "https://www.y0.hk"
 Const WEBWINDOWS_ADMIN_CSRF_HEADER = "HTTP_X_WEBWINDOWS_CSRF"
 
+Function AdminSecurityTrustedOrigin()
+  Dim trustedOrigin, shell, processEnvironment, deploymentEnvironment, stagingOrigin, regex
+  trustedOrigin = WEBWINDOWS_ADMIN_TRUSTED_ORIGIN
+  deploymentEnvironment = ""
+  stagingOrigin = ""
+  On Error Resume Next
+  Set shell = Server.CreateObject("WScript.Shell")
+  Set processEnvironment = shell.Environment("PROCESS")
+  deploymentEnvironment = LCase(Trim(CStr(processEnvironment("WEBWINDOWS_DEPLOYMENT_ENVIRONMENT"))))
+  stagingOrigin = LCase(Trim(CStr(processEnvironment("WEBWINDOWS_ADMIN_STAGING_ORIGIN"))))
+  Set processEnvironment = Nothing
+  Set shell = Nothing
+  Err.Clear
+  On Error GoTo 0
+  If deploymentEnvironment = "staging" And stagingOrigin <> "" Then
+    Set regex = New RegExp
+    regex.Pattern = "^https://[a-z0-9.-]+(:[0-9]{1,5})?$"
+    regex.IgnoreCase = False
+    If regex.Test(stagingOrigin) Then trustedOrigin = stagingOrigin
+    Set regex = Nothing
+  End If
+  AdminSecurityTrustedOrigin = LCase(trustedOrigin)
+End Function
+
 Function AdminSecurityJson(ByVal value)
   Dim text
   If IsNull(value) Then text = "" Else text = CStr(value)
@@ -101,10 +125,11 @@ Function AdminSecurityRefererOrigin(ByVal refererValue)
 End Function
 
 Function AdminSecurityOriginCategory()
-  Dim originValue, refererValue, parsedReferer
+  Dim originValue, refererValue, parsedReferer, trustedOrigin
+  trustedOrigin = AdminSecurityTrustedOrigin()
   originValue = LCase(Trim(CStr(Request.ServerVariables("HTTP_ORIGIN"))))
   If originValue <> "" Then
-    If originValue = LCase(WEBWINDOWS_ADMIN_TRUSTED_ORIGIN) Then
+    If originValue = trustedOrigin Then
       AdminSecurityOriginCategory = "origin-exact"
     Else
       AdminSecurityOriginCategory = "origin-mismatch"
@@ -117,7 +142,7 @@ Function AdminSecurityOriginCategory()
     Exit Function
   End If
   parsedReferer = AdminSecurityRefererOrigin(refererValue)
-  If parsedReferer = LCase(WEBWINDOWS_ADMIN_TRUSTED_ORIGIN) Then
+  If parsedReferer = trustedOrigin Then
     AdminSecurityOriginCategory = "referer-exact"
   ElseIf parsedReferer = "" Then
     AdminSecurityOriginCategory = "referer-malformed"

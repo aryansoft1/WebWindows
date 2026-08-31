@@ -1,19 +1,42 @@
 <%
+' Database credentials are deployment secrets inherited by the IIS worker process.
+' No HTTP header, query, form, cookie, or checked-in fallback can override this value.
+Dim conn, connStr, connShell, connEnvironment, connError
+connStr = ""
 On Error Resume Next
-Dim conn, connStr
-' conn.asp - 用于数据库连接
-Set conn = Server.CreateObject("ADODB.Connection")
-'connStr = "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=" & Server.MapPath("data/webwindows_admin.mdb")
-' 或改为 MySQL 连接字符串：
-'（服务器运行）
-connStr = "Driver={MySQL ODBC 5.1 Driver};Server=localhost;Port=3306;Database=aryansoft1;Uid=aryansoft1;Pwd=3270359;Option=3;CHARSET=utf8mb4"
-
-'（本地测试）
-'connStr = "Driver={MySQL ODBC 5.1 Driver};Server=sql.b73.vhostgo.com;Port=3306;Database=aryansoft1;Uid=aryansoft1;Pwd=3270359;Option=3;CHARSET=utf8mb4"
-
-conn.Open connStr
+Set connShell = Server.CreateObject("WScript.Shell")
+Set connEnvironment = connShell.Environment("PROCESS")
+connStr = Trim(CStr(connEnvironment("WEBWINDOWS_DB_CONNECTION_STRING")))
+Set connEnvironment = Nothing
+Set connShell = Nothing
 If Err.Number <> 0 Then
-  Response.Write "{""error"":""数据库连接失败：&quot;" & Err.Description & "&quot;""}"
+  Err.Clear
+  connStr = ""
+End If
+On Error GoTo 0
+
+If connStr = "" Then
+  Response.Status = "503 Service Unavailable"
+  Response.ContentType = "application/json"
+  Response.Write "{""ok"":false,""code"":""DATABASE_CONFIG_REQUIRED"",""message"":""WebWindows 数据库部署配置不可用。""}"
   Response.End
 End If
+
+Set conn = Server.CreateObject("ADODB.Connection")
+conn.ConnectionTimeout = 15
+conn.CommandTimeout = 30
+On Error Resume Next
+conn.Open connStr
+If Err.Number <> 0 Then
+  connError = Err.Number
+  Err.Clear
+  On Error GoTo 0
+  Set conn = Nothing
+  Response.Status = "503 Service Unavailable"
+  Response.ContentType = "application/json"
+  Response.Write "{""ok"":false,""code"":""DATABASE_UNAVAILABLE"",""message"":""WebWindows 数据库暂不可用。""}"
+  Response.AppendToLog "&wdb=connection-failed&we=" & Server.URLEncode(CStr(connError))
+  Response.End
+End If
+On Error GoTo 0
 %>

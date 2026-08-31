@@ -1,0 +1,59 @@
+{
+  "contract": "webwindows-production-environment-config-v1",
+  "version": 1,
+  "clientOverrideAllowed": false,
+  "forwardedHeadersTrustedByApplication": false,
+  "settings": [
+    {
+      "name": "WEBWINDOWS_DB_CONNECTION_STRING",
+      "classification": "secret",
+      "scope": "iis-worker-process",
+      "required": true,
+      "manifestAllowed": false,
+      "loggingAllowed": false
+    },
+    {
+      "name": "WEBWINDOWS_VALIDATOR_EXECUTABLE_PATH",
+      "classification": "trusted-host-path",
+      "scope": "iis-worker-process",
+      "required": true,
+      "constraints": ["drive-absolute", "outside-web-root", "outside-quarantine", "existing-file"]
+    },
+    {
+      "name": "WEBWINDOWS_VALIDATOR_QUARANTINE_PATH",
+      "classification": "trusted-host-path",
+      "scope": "iis-worker-process",
+      "required": true,
+      "constraints": ["drive-absolute", "outside-web-root", "existing-directory"]
+    },
+    {
+      "name": "WEBWINDOWS_DEPLOYMENT_ENVIRONMENT",
+      "classification": "trusted-host-mode",
+      "scope": "iis-worker-process",
+      "required": false,
+      "allowedValues": ["staging"]
+    },
+    {
+      "name": "WEBWINDOWS_ADMIN_STAGING_ORIGIN",
+      "classification": "trusted-host-origin",
+      "scope": "iis-worker-process",
+      "requiredWhen": "WEBWINDOWS_DEPLOYMENT_ENVIRONMENT=staging",
+      "constraints": ["https-exact-origin", "no-wildcard", "no-path", "no-userinfo"]
+    }
+  ],
+  "versionControlledDefaults": {
+    "productionAdminOrigin": "https://www.y0.hk",
+    "productionCapabilityBrokerV1": false,
+    "httpTrustApiBehavior": "reject-403",
+    "httpAdminPageBehavior": "redirect-canonical-https"
+  },
+  "allowedStagingArtifactDifferences": [
+    {
+      "artifact": "web.config",
+      "field": "system.webServer/rewrite/rules/Redirect insecure SystemManager pages/action@url",
+      "constraint": "exact declared WEBWINDOWS_ADMIN_STAGING_ORIGIN plus /{R:0}",
+      "evidence": "pre-approved overlay hash plus rendered web.config hash"
+    }
+  ],
+  "forbiddenSources": ["query", "form", "cookie", "manifest", "package", "forwarded-header"]
+}

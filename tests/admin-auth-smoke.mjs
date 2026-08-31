@@ -8,6 +8,9 @@ const loginScript = await fs.readFile(
 const shellScript = await fs.readFile(
   new URL("../SystemManager/assets/js/admin-shell.js", import.meta.url), "utf8"
 );
+const securityScript = await fs.readFile(
+  new URL("../SystemManager/assets/js/admin-security.js", import.meta.url), "utf8"
+);
 const authApi = await fs.readFile(new URL("../admin_api/adminAuth.asp", import.meta.url), "utf8");
 const catalogApi = await fs.readFile(
   new URL("../admin_api/functionCatalog.asp", import.meta.url), "utf8"
@@ -25,7 +28,9 @@ assert.match(authApi, /DateDiff\("n"/);
 assert.match(authApi, /Session\("webwindows_admin"\) = True/);
 assert.match(authApi, /username <> "admin"/);
 assert.match(authApi, /WHERE username=\? AND password=\?/);
-assert.match(shellScript, /action=status/);
+assert.match(securityScript, /action=status/);
+assert.match(securityScript, /X-WebWindows-CSRF/);
+assert.match(shellScript, /WebWindowsAdminSecurity\.ready/);
 assert.match(shellScript, /adminLogout/);
 assert.match(adminIndex, /admin-shell\.js/);
 assert.match(catalogApi, /Session\("webwindows_admin"\) <> True/);

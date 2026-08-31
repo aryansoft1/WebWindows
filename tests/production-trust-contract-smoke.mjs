@@ -55,11 +55,17 @@ assert.equal(appIdOnly.failures.includes("identity-missing:packageSha256"), true
 
 assert.equal(context({ identity, review, verifiedPackageSha256: "c".repeat(64), verifiedManifest }).failures.includes("package-hash-mismatch"), true);
 assert.equal(context({ identity, review, verifiedPackageSha256: A, verifiedManifest: { ...verifiedManifest, version: "2.0.0" } }).failures.includes("manifest-mismatch"), true);
+assert.equal(context({ identity, review, verifiedPackageSha256: A, verifiedManifest: { ...verifiedManifest, appId:"com.attacker.substitute" } }).failures.includes("manifest-mismatch"), true);
+assert.equal(context({ identity:{ ...identity, publisherId:"publisher-attacker" }, review, verifiedPackageSha256:A, verifiedManifest }).failures.includes("review-binding-mismatch:publisherId"), true);
+assert.equal(context({ identity:{ ...identity, reviewDecisionId:"review-substitute" }, review, verifiedPackageSha256:A, verifiedManifest }).failures.includes("review-binding-mismatch:reviewDecisionId"), true);
+assert.equal(context({ identity:{ ...identity, reviewPolicyVersion:2 }, review, verifiedPackageSha256:A, verifiedManifest }).failures.includes("review-binding-mismatch:reviewPolicyVersion"), true);
+assert.equal(context({ identity:{ ...identity, sourceManifestIntegrityVersion:2 }, review, verifiedPackageSha256:A, verifiedManifest }).failures.includes("manifest-mismatch"), true);
 assert.equal(context({ identity, review: { ...review, packageSha256: "c".repeat(64) }, verifiedPackageSha256: A, verifiedManifest }).failures.includes("review-binding-mismatch:packageSha256"), true);
 assert.equal(context({
   identity, review, verifiedPackageSha256: A,
   verifiedManifest: { ...verifiedManifest, requestedPermissions: ["permission.a"] }
 }).failures.includes("requested-permissions-mismatch"), true, "review requests must match the verified ZIP-root Manifest");
+assert.equal(context({ identity, review:{ ...review, approvedPermissions:[...review.approvedPermissions, "permission.unrequested"], deniedPermissions:["permission.c"] }, verifiedPackageSha256:A, verifiedManifest }).failures.includes("approved-not-requested"), true);
 
 const reviewDeny = context({
   identity, review: { ...review, approvedPermissions: ["permission.a"], deniedPermissions: ["permission.b", "permission.c"] },

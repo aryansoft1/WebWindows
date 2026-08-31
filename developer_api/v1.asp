@@ -9,6 +9,20 @@ Response.AddHeader "Pragma", "no-cache"
 Response.AddHeader "X-Content-Type-Options", "nosniff"
 Response.AddHeader "X-WebWindows-Developer-API", "v1"
 
+Dim uploadLockName
+uploadLockName = ""
+
+Sub ReleaseUploadLock()
+  If uploadLockName = "" Then Exit Sub
+  On Error Resume Next
+  If IsObject(conn) Then
+    If conn.State <> 0 Then conn.Execute "SELECT RELEASE_LOCK('" & Replace(uploadLockName, "'", "''") & "')"
+  End If
+  uploadLockName = ""
+  Err.Clear
+  On Error GoTo 0
+End Sub
+
 Function JsonText(ByVal value)
   Dim text
   If IsNull(value) Then text = "" Else text = CStr(value)
@@ -32,6 +46,7 @@ Sub Fail(ByVal statusCode, ByVal code, ByVal message)
   End Select
   Response.Write "{""ok"":false,""code"":""" & JsonText(code) & _
     """,""message"":""" & JsonText(message) & """}"
+  ReleaseUploadLock
   If IsObject(conn) Then
     If conn.State <> 0 Then conn.Close
   End If
@@ -525,6 +540,17 @@ ElseIf action = "upload-package" And method = "POST" Then
     Fail 400, "SUBMISSION_ID_INVALID", "提交 ID 无效。"
   End If
   submissionId = CLng(submissionIdText)
+  Dim uploadLockRs
+  uploadLockName = "webwindows-upload-submission-" & CStr(submissionId)
+  Set uploadLockRs = conn.Execute("SELECT GET_LOCK('" & uploadLockName & "',15) AS acquired")
+  If uploadLockRs.EOF Or IsNull(uploadLockRs("acquired")) Or CLng(uploadLockRs("acquired")) <> 1 Then
+    If Not uploadLockRs.EOF Then uploadLockRs.Close
+    Set uploadLockRs = Nothing
+    uploadLockName = ""
+    Fail 409, "PACKAGE_UPLOAD_BUSY", "该提交正在处理另一项功能包上传，请稍后重试。"
+  End If
+  uploadLockRs.Close
+  Set uploadLockRs = Nothing
   Set uploadSubmissionCmd = Server.CreateObject("ADODB.Command")
   With uploadSubmissionCmd
     .ActiveConnection = conn
@@ -642,12 +668,14 @@ ElseIf action = "upload-package" And method = "POST" Then
     validationStatusText & "',active_validation_id=" & validationId & "," & _
     "review_note='' WHERE id=" & submissionId
   If Not validationPassed Then
+    ReleaseUploadLock
     Response.Status = "400 Bad Request"
     Response.Write "{""ok"":false,""code"":""PACKAGE_VALIDATION_FAILED""," & _
       """submissionId"":" & submissionId & ",""validationReport"":" & validationReport & "}"
     If conn.State <> 0 Then conn.Close
     Response.End
   End If
+  ReleaseUploadLock
   Response.Write "{""ok"":true,""submissionId"":" & submissionId & _
     ",""packageSize"":" & totalBytes & ",""packageSha256"":""" & actualIntegrity & _
     """,""validationStatus"":""validated"",""validationReport"":" & validationReport & _

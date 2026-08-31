@@ -11,7 +11,7 @@ Status: Phase 2D.1 implemented for new Developer submissions. This does not enab
 
 ## Trusted validator
 
-`server-tools/developer-package-validator` is a .NET Framework 4.6.2 helper compatible with the current Windows/IIS host. It has no third-party runtime dependency. Classic ASP writes package bytes and the compatibility outer Manifest to a transient, non-public `App_Data/developer-validation` location, launches the helper synchronously, reads its JSON report, then deletes all transient files. The helper never executes package content and fails closed if unavailable.
+`server-tools/developer-package-validator` is a .NET Framework 4.6.2 helper compatible with the current Windows/IIS host. It has no third-party runtime dependency. Classic ASP writes package bytes and the compatibility outer Manifest only to the external directory configured by `WEBWINDOWS_VALIDATOR_QUARANTINE_PATH`, launches the exact helper configured by `WEBWINDOWS_VALIDATOR_EXECUTABLE_PATH`, reads its JSON report, then deletes all transient files. Both paths are trusted IIS process configuration, must be absolute and outside the Web root, and have no Web-root fallback. The helper never executes package content, bounds validation to 30 seconds, and fails closed if configuration or validation is unavailable.
 
 The helper independently loads `manifest-v1.schema.json`, `manifest-v2.schema.json`, `permissions-v1.json`, and `package-runtime-policy-v1.json`. ZIP-root `manifest.json` is the authority. Outer Manifest and request app/version are expected-value compatibility inputs only.
 
@@ -39,4 +39,4 @@ The source project and reproducible Release artifact are committed. Rebuild with
 dotnet build server-tools/developer-package-validator/WebWindows.DeveloperPackageValidator.csproj -c Release
 ```
 
-Deploy `server-tools/developer-package-validator/runtime/` with the site and grant the IIS application identity execute permission there plus create/write/delete permission only for `App_Data/developer-validation`. Do not grant write access to the helper executable or a public Web root.
+Deploy the contents of `server-tools/developer-package-validator/runtime/` to an external trusted executable directory. Grant the IIS application identity read/execute but no write/modify permission there, and create/read/write/delete permission only in a separate external quarantine directory. The anonymous identity receives no quarantine access. Set the two process environment variables to those exact paths and recycle the application pool. Verify paths and ACLs with `tools/Test-WebWindowsValidatorDeployment.ps1`; never grant write access to the helper executable or place quarantine below the Web root.

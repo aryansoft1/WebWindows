@@ -77,15 +77,15 @@ Populate from a clean checkout immediately before approval. Repository audit val
 
 | Artifact | SHA-256 |
 | --- | --- |
-| `server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe` | `f5946c677486d92ec468f89a61879cd825592797b1756a667ea86ddd14cf1b4d` |
+| `server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe` | `b4e566d57c58870a68374c5dee228d1e097e421284ed5f3331bec8172b4c32b5` |
 | `dist-production-broker/production-battery-broker.global.js` | `224ed27b85e1fc48ac1058a8267d0a2e6b94af6205fb61e2b3919915ec2d410d` |
 | `assets/js/package-runtime.js` | `e8101b84264400e046b60c33f22b4302887ec10a25a5ac050b807d8b74d30513` |
-| `api/runtime-release.asp` | `8c98bd207689ff070ed248ddb793fa57e1ccc31bf738df17bcd261612164b12f` |
-| `api/function-package.asp` | `87b6de8e622a82d82d0182ef8a04492591ea8b898a7eddd1361ed37aea6c1c14` |
-| `developer_api/v1.asp` | `88665c1ee1e3c7874a4ebc16ff9a4ca3cb7dca0467da10b8207e14d2f33cfb75` |
-| `admin_api/developerPlatform.asp` | `9aed36bbdccb785cf2aa1dd71f04aafb4eeedce1eeb3e4af762a5b36ebbfc458` |
+| `api/runtime-release.asp` | `8b43b2fb4884daa6d666549f9bec8f19eeb114825d669b0bd6cb015d954887b5` |
+| `api/function-package.asp` | `25e7a962665b2899897d06cc829b6f9bfaa4e7b67caca704758d95b2dea13703` |
+| `developer_api/v1.asp` | `70197fbe6a10c58f6afe89ddb5ca8c2486ea3ae5b34003ef3f3f764ad7a98d44` |
+| `admin_api/developerPlatform.asp` | `d7e40c261a6d3aca900ef269c600e721b8771cdf2a178501d5a0066ac368b8b1` |
 | `admin_api/adminAuth.asp` | `09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d` |
-| `admin_api/functionCatalog.asp` | `91e34d6e76ddde99fd7c79068ea1b5615da9b639f3aac71d1380ac3bb8f947c5` |
-| `inc/admin-security.asp` | `39c58930a4a24ff55f6d3be1cffa86884a165fa752af175f20a7fa7aabb0085a` |
+| `admin_api/functionCatalog.asp` | `e2a2886006f3b147247e01741a83ee1b22a600b6216f7a5add7c79e010c9a586` |
+| `inc/admin-security.asp` | `29862e816d9765bc842a28a23e06dc353e2cd64059cd44013a2a6b8d959bf5b5` |
 | `SystemManager/assets/js/admin-security.js` | `1e5aebf0095af136205fdf446f5c77567fc94c5a13d48269889e6b6b3c12c140` |
-| `web.config` | `2f5f6c31010f9eaebbb90831affb0d2736940b979c1c18b6d7f3f8d9ff6fe858` |
+| `web.config` | `0e356b2bd45f665c00bdb0a5854727684214396bf68be5a148dc0de977d0603c` |

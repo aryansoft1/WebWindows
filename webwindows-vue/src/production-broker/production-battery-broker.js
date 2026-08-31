@@ -12,6 +12,8 @@ export class ProductionBatteryBroker {
     this.now = options.now || (() => Date.now());
     this.setTimer = options.setTimer || ((callback, delay) => setTimeout(callback, delay));
     this.clearTimer = options.clearTimer || ((timer) => clearTimeout(timer));
+    this.setAuthorityTimer = options.setAuthorityTimer || ((callback, delay) => setTimeout(callback, delay));
+    this.clearAuthorityTimer = options.clearAuthorityTimer || ((timer) => clearTimeout(timer));
     this.onDiagnostic = typeof options.onDiagnostic === "function" ? options.onDiagnostic : null;
     this.binding = Object.freeze({
       sessionId:opaque("broker-session"), snapshotId:opaque("broker-binding"),
@@ -21,7 +23,7 @@ export class ProductionBatteryBroker {
     });
     this.methods = new Map(this.contracts.brokerMethods.methods.map((method) => [method.id, method]));
     this.errors = new Map(this.contracts.brokerErrors.errors.map((error) => [error.code, error]));
-    this.pending = new Map(); this.seen = new Set(); this.requestTimes = []; this.diagnostics = []; this.closed = false;
+    this.pending = new Map(); this.seen = new Set(); this.requestTimes = []; this.authorityChecks = 0; this.diagnostics = []; this.closed = false;
   }
 
   async createLaunchDescriptor() {
@@ -72,13 +74,16 @@ export class ProductionBatteryBroker {
     const decision = this.#authorize(method);
     if (decision.error) return this.#errorResponse(message, decision.error, method, decision);
     if (!validateEnvelope(message) || !validateRefreshParams(message.params)) return this.#errorResponse(message, "invalid-params", method, decision);
-    const active = await this.#releaseStillActive();
-    if (!active) return this.#errorResponse(message, "policy-denied", method, decision, "release-not-active");
     this.#pruneRateWindow();
     const limits = this.contracts.brokerPolicy.limits;
-    if (this.pending.size >= limits.maximumConcurrentRequests || this.requestTimes.length >= limits.maximumRequestsPerMinute)
+    if (this.pending.size + this.authorityChecks >= limits.maximumConcurrentRequests || this.requestTimes.length >= limits.maximumRequestsPerMinute)
       return this.#errorResponse(message, "rate-limited", method, decision);
     this.requestTimes.push(this.now());
+    this.authorityChecks += 1;
+    let active = false;
+    try { active = await this.#releaseStillActive(); }
+    finally { this.authorityChecks -= 1; }
+    if (!active) return this.#errorResponse(message, "policy-denied", method, decision, "release-not-active");
     return this.#dispatch(message, method, decision);
   }
 
@@ -107,13 +112,19 @@ export class ProductionBatteryBroker {
   }
 
   async #releaseStillActive() {
+    const controller = typeof AbortController === "function" ? new AbortController() : null;
+    let timer = null;
     try {
-      const fact = await this.releaseStatusProvider();
+      const timeoutMs = this.contracts.brokerPolicy.limits.maximumRequestTimeoutMs;
+      const timeout = new Promise((resolve) => { timer = this.setAuthorityTimer(() => { controller?.abort(); resolve(null); }, timeoutMs); });
+      const lookup = Promise.resolve().then(() => this.releaseStatusProvider({ signal:controller?.signal })).catch(() => null);
+      const fact = await Promise.race([lookup, timeout]);
       const fields = ["publishedReleaseId", "appId", "publisherId", "version", "packageSha256", "sourceManifestSha256",
         "sourceManifestIntegrityVersion", "reviewDecisionId", "reviewPolicyVersion"];
       return fact?.releaseStatus === "active" && fields.every((field) => fact[field] === this.context[field])
         && sameArray(fact.approvedPermissions, this.context.approvedPermissions);
     } catch { return false; }
+    finally { if (timer !== null) this.clearAuthorityTimer(timer); }
   }
 
   #dispatch(message, method, decision) {
@@ -123,8 +134,11 @@ export class ProductionBatteryBroker {
       const pending = { message, method, decision, startedAt, resolve, timer:null, settled:false };
       pending.timer = this.setTimer(() => this.#finish(pending, this.#errorResponse(message, "request-timeout", method, decision)), timeoutMs);
       this.pending.set(message.requestId, pending);
-      Promise.resolve().then(() => this.#battery().refresh()).then((raw) => {
+      Promise.resolve().then(() => this.#battery().refresh()).then(async (raw) => {
         if (pending.settled) { this.#record(message.requestId, method, decision, "late-result-ignored", this.now() - startedAt); return; }
+        const stillActive = await this.#releaseStillActive();
+        if (pending.settled) { this.#record(message.requestId, method, decision, "late-result-ignored", this.now() - startedAt); return; }
+        if (!stillActive) { this.#finish(pending, this.#errorResponse(message, "policy-denied", method, decision, "release-revoked-before-response")); return; }
         try { this.#finish(pending, this.#successResponse(message, sanitizeBatteryResult(raw, method))); }
         catch (error) { this.#finish(pending, this.#errorResponse(message, publicFailure(error), method, decision)); }
       }, () => {

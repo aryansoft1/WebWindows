@@ -55,12 +55,12 @@ const manifest = {
   placement: { desktop: false, startMenu: true, allFunctions: true, taskbar: false },
   window: { mode: "iframe", singleton: true, width: "800px", height: "600px" }
 };
-async function zipFor(sourceManifest = manifest, manifestPath = "manifest.json") {
+async function zipFor(sourceManifest = manifest, manifestPath = "manifest.json", compression = "DEFLATE") {
   const zip = new JSZip();
-  zip.file(manifestPath, JSON.stringify(sourceManifest));
+  zip.file(manifestPath, typeof sourceManifest === "string" ? sourceManifest : JSON.stringify(sourceManifest));
   zip.file("index.html", "<!doctype html><title>verified</title><script>globalThis.packageExecuted=true</script>");
   zip.file("icon.svg", "<svg xmlns='http://www.w3.org/2000/svg'/>");
-  return zip.generateAsync({ type: "uint8array", compression: "DEFLATE", platform: "UNIX" });
+  return zip.generateAsync({ type: "uint8array", compression, platform: "UNIX" });
 }
 const zipBytes = await zipFor();
 function identity(overrides = {}) {
@@ -117,6 +117,20 @@ assert.equal(verifiedIdentity.publishedReleaseId, releaseId);
 assert.equal(context.VerifiedRuntimePackageIdentity, undefined);
 assert.equal(context.runtimeTrustState, undefined);
 
+const originalIdentity = identity();
+for (const [name, replacement] of [
+  ["same-manifest-changed-js", await (async () => { const zip = new JSZip(); zip.file("manifest.json", JSON.stringify(manifest)); zip.file("index.html", "<!doctype html><script>globalThis.changed=true</script>"); zip.file("icon.svg", "<svg xmlns='http://www.w3.org/2000/svg'/>"); return zip.generateAsync({ type:"uint8array", compression:"DEFLATE", platform:"UNIX" }); })()],
+  ["changed-manifest", await zipFor({ ...manifest, description:"post-review replacement" })],
+  ["different-compression", await zipFor(manifest, "manifest.json", "STORE")],
+  ["truncated", zipBytes.slice(0, zipBytes.length - 8)],
+  ["appended", Uint8Array.from([...zipBytes, 0x41, 0x54, 0x54, 0x41, 0x43, 0x4b])],
+  ["zip-metadata", (() => { const copy = Uint8Array.from(zipBytes); copy[10] ^= 1; return copy; })()]
+]) {
+  activeBytes = replacement; activeIdentity = originalIdentity;
+  await assert.rejects(() => runtime.prepareVerified(params()), (error) => error.code === "package-integrity-failed", name);
+}
+activeBytes = zipBytes; activeIdentity = originalIdentity;
+
 for (const integrityVersion of [0, 2, undefined]) {
   activeIdentity = identity({ sourceManifestIntegrityVersion:integrityVersion });
   if (integrityVersion === undefined) delete activeIdentity.sourceManifestIntegrityVersion;
@@ -134,6 +148,16 @@ assert.equal(frame.srcdoc, "");
 const wrongManifest = { ...manifest, id: "com.example.other" };
 activeBytes = await zipFor(wrongManifest);
 activeIdentity = identity({ packageSha256: sha(activeBytes), sourceManifestSha256: manifestSha(wrongManifest) });
+await assert.rejects(() => runtime.prepareVerified(params()), (error) => error.code === "manifest-identity-mismatch");
+
+const duplicateManifest = JSON.stringify(manifest).replace(`"id":"${manifest.id}"`, `"id":"${manifest.id}","\\u0069d":"com.attacker.runtime"`);
+activeBytes = await zipFor(duplicateManifest);
+activeIdentity = identity({ packageSha256:sha(activeBytes) });
+await assert.rejects(() => runtime.prepareVerified(params()), (error) => error.code === "manifest-integrity-failed");
+
+const downgradedManifest = { ...manifest }; delete downgradedManifest.manifestVersion;
+activeBytes = await zipFor(downgradedManifest);
+activeIdentity = identity({ packageSha256:sha(activeBytes), sourceManifestSha256:manifestSha(downgradedManifest), manifestVersion:2 });
 await assert.rejects(() => runtime.prepareVerified(params()), (error) => error.code === "manifest-identity-mismatch");
 
 activeBytes = await zipFor(manifest, "nested/manifest.json");

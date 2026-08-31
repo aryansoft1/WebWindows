@@ -85,6 +85,26 @@
     if (Array.isArray(value)) return `[${value.map(canonicalizeJson).join(",")}]`;
     return `{${Object.keys(value).sort().map((key) => `${JSON.stringify(key)}:${canonicalizeJson(value[key])}`).join(",")}}`;
   }
+  function assertUnambiguousJson(text) {
+    if (typeof text !== "string" || text.charCodeAt(0) === 0xfeff) throw new SyntaxError("ambiguous-json");
+    let offset = 0;
+    const whitespace = () => { while (/[\u0009\u000a\u000d\u0020]/.test(text[offset] || "")) offset += 1; };
+    const scalar = (value) => { for (let i = 0; i < value.length; i++) { const code = value.charCodeAt(i); if (code >= 0xd800 && code <= 0xdbff) { const next = value.charCodeAt(i + 1); if (!(next >= 0xdc00 && next <= 0xdfff)) throw new SyntaxError("ambiguous-json"); i++; } else if (code >= 0xdc00 && code <= 0xdfff) throw new SyntaxError("ambiguous-json"); } };
+    const string = () => {
+      if (text[offset++] !== '"') throw new SyntaxError("ambiguous-json"); let result = "";
+      while (offset < text.length) { const character = text[offset++]; if (character === '"') { scalar(result); return result; } if (character.charCodeAt(0) < 0x20) throw new SyntaxError("ambiguous-json"); if (character !== "\\") { result += character; continue; } const escape = text[offset++]; const simple = { '"':'"', "\\":"\\", "/":"/", b:"\b", f:"\f", n:"\n", r:"\r", t:"\t" }; if (Object.prototype.hasOwnProperty.call(simple, escape)) { result += simple[escape]; continue; } if (escape !== "u") throw new SyntaxError("ambiguous-json"); const hex = text.slice(offset, offset + 4); if (!/^[0-9a-fA-F]{4}$/.test(hex)) throw new SyntaxError("ambiguous-json"); result += String.fromCharCode(Number.parseInt(hex, 16)); offset += 4; }
+      throw new SyntaxError("ambiguous-json");
+    };
+    const value = (depth = 0) => {
+      if (depth > 100) throw new SyntaxError("ambiguous-json"); whitespace();
+      if (text[offset] === "{") { offset++; whitespace(); const keys = new Set(); if (text[offset] === "}") { offset++; return; } while (true) { const key = string(); if (keys.has(key)) throw new SyntaxError("ambiguous-json"); keys.add(key); whitespace(); if (text[offset++] !== ":") throw new SyntaxError("ambiguous-json"); value(depth + 1); whitespace(); if (text[offset] === "}") { offset++; return; } if (text[offset++] !== ",") throw new SyntaxError("ambiguous-json"); whitespace(); } }
+      if (text[offset] === "[") { offset++; whitespace(); if (text[offset] === "]") { offset++; return; } while (true) { value(depth + 1); whitespace(); if (text[offset] === "]") { offset++; return; } if (text[offset++] !== ",") throw new SyntaxError("ambiguous-json"); whitespace(); } }
+      if (text[offset] === '"') { string(); return; }
+      for (const literal of ["true", "false", "null"]) if (text.startsWith(literal, offset)) { offset += literal.length; return; }
+      const number = text.slice(offset).match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/); if (!number || !Number.isFinite(Number(number[0]))) throw new SyntaxError("ambiguous-json"); offset += number[0].length;
+    };
+    whitespace(); value(); whitespace(); if (offset !== text.length) throw new SyntaxError("ambiguous-json");
+  }
   function deepFreeze(value) {
     if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
     Object.values(value).forEach(deepFreeze);
@@ -118,9 +138,9 @@
     }
     return identity;
   }
-  async function lookupExpectedIdentity(releaseId, appId, version) {
+  async function lookupExpectedIdentity(releaseId, appId, version, options = {}) {
     const url = `/api/runtime-release.asp?release=${encodeURIComponent(releaseId)}` + (appId ? `&appId=${encodeURIComponent(appId)}` : "") + (version ? `&version=${encodeURIComponent(version)}` : "");
-    const response = await fetch(url, { credentials:"same-origin", cache:"no-store" });
+    const response = await fetch(url, { credentials:"same-origin", cache:"no-store", signal:options.signal });
     let payload = null; try { payload = await response.json(); } catch (_) {}
     if (!response.ok || payload?.ok !== true) fail(payload?.code || (response.status === 404 ? "release-not-found" : "runtime-release-verification-failed"), payload?.message || "无法验证发布版本。");
     return validateExpectedIdentity(payload.identity, releaseId);
@@ -145,7 +165,7 @@
   async function verifySourceManifest(contents, expected, entryHint) {
     if (!contents.has("manifest.json")) fail("manifest-integrity-failed", "功能包根目录缺少 Manifest。");
     let manifest;
-    try { manifest = JSON.parse(new TextDecoder("utf-8", { fatal:true }).decode(contents.get("manifest.json"))); }
+    try { const manifestText = new TextDecoder("utf-8", { fatal:true }).decode(contents.get("manifest.json")); assertUnambiguousJson(manifestText); manifest = JSON.parse(manifestText); }
     catch (_) { fail("manifest-integrity-failed", "功能包 Manifest 无法读取。"); }
     if (await sha256Hex(new TextEncoder().encode(canonicalizeJson(manifest))) !== expected.sourceManifestSha256) fail("manifest-integrity-failed", "功能包 Manifest 完整性验证失败。");
     const manifestVersion = Object.prototype.hasOwnProperty.call(manifest, "manifestVersion") ? manifest.manifestVersion : 1;
@@ -338,9 +358,9 @@
     frame.hidden = false; document.getElementById("runtimeState").hidden = true;
   }
 
-  async function productionBrokerFeatureEnabled() {
+  async function productionBrokerFeatureEnabled(signal) {
     try {
-      const response = await fetch("/data/config/runtime-features-v1.json", { credentials:"same-origin", cache:"no-store" });
+      const response = await fetch("/data/config/runtime-features-v1.json", { credentials:"same-origin", cache:"no-store", signal });
       const config = response.ok ? await response.json() : null;
       return config?.contract === "webwindows-runtime-features-v1" && config.version === 1 && config.productionCapabilityBrokerV1 === true;
     } catch { return false; }
@@ -354,7 +374,10 @@
       context:productionBrokerContext,
       contracts:productionPolicyContracts,
       publicApi:window.WebWindows,
-      releaseStatusProvider:() => lookupExpectedIdentity(productionBrokerContext.publishedReleaseId, productionBrokerContext.appId, productionBrokerContext.version),
+      releaseStatusProvider:async ({ signal } = {}) => {
+        if (!(await productionBrokerFeatureEnabled(signal))) return null;
+        return lookupExpectedIdentity(productionBrokerContext.publishedReleaseId, productionBrokerContext.appId, productionBrokerContext.version, { signal });
+      },
       onDiagnostic:(diagnostic) => console.info("[WebWindows Production Broker]", JSON.stringify(diagnostic))
     });
     const launch = await broker.createLaunchDescriptor();

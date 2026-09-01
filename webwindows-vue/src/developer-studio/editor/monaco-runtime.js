@@ -46,6 +46,34 @@ async function configure() {
   ]);
   manifestContracts = { schemas: { 1: manifestV1, 2: manifestV2 }, permissionRegistry };
 
+  monaco.editor.defineTheme("webwindows-studio-light", {
+    base: "vs",
+    inherit: true,
+    rules: [
+      { token: "comment", foreground: "708090", fontStyle: "italic" },
+      { token: "keyword", foreground: "7C3AED" },
+      { token: "string", foreground: "087F5B" },
+      { token: "number", foreground: "B45309" },
+      { token: "tag", foreground: "0759B5" },
+      { token: "attribute.name", foreground: "9A4D00" },
+      { token: "attribute.value", foreground: "087F5B" }
+    ],
+    colors: {
+      "editor.background": "#FCFDFE",
+      "editor.foreground": "#1F2937",
+      "editor.lineHighlightBackground": "#F2F6FC",
+      "editorLineNumber.foreground": "#9AA7B8",
+      "editorLineNumber.activeForeground": "#315A8A",
+      "editor.selectionBackground": "#BBD7FF80",
+      "editor.inactiveSelectionBackground": "#DCE9FA80",
+      "editorIndentGuide.background1": "#E5EAF1",
+      "editorIndentGuide.activeBackground1": "#B8C5D6",
+      "editorBracketHighlight.foreground1": "#1769E0",
+      "editorBracketHighlight.foreground2": "#7C3AED",
+      "editorBracketHighlight.foreground3": "#B45309"
+    }
+  });
+
   javascriptDefaults.setEagerModelSync(true);
   javascriptDefaults.setCompilerOptions({
     allowNonTsExtensions: true,

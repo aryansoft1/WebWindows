@@ -4,13 +4,14 @@ import validateManifest from "../webwindows-vue/src/developer-studio/manifest/ge
 import { createHelloWebWindowsTemplate } from "../webwindows-vue/src/developer-studio/project/hello-template.js";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [sdk, monacoRuntime, studioHtml, studioSource, systemAppsSource, studioBundle] = await Promise.all([
+const [sdk, monacoRuntime, studioHtml, studioSource, systemAppsSource, studioBundle, workbenchCss] = await Promise.all([
   read("data/sdk/webwindows-public-api-v1.d.ts"),
   read("webwindows-vue/src/developer-studio/editor/monaco-runtime.js"),
   read("developer-studio.html"),
   read("webwindows-vue/src/developer-studio/DeveloperStudio.vue"),
   read("data/apps/system-apps.json"),
-  read("dist-developer-studio/developer-studio.js")
+  read("dist-developer-studio/developer-studio.js"),
+  read("dist-developer-studio/developer-studio-bundle.css")
 ]);
 
 assert.match(sdk, /readonly device: DeviceAPI/);
@@ -27,7 +28,10 @@ assert.match(monacoRuntime, /fileMatch: \["\*\*\/manifest\.json"\]/);
 assert.doesNotMatch(studioHtml, /https?:\/\//);
 assert.doesNotMatch(studioHtml, /unsafe-eval/);
 assert.match(studioHtml, /worker-src 'self'/);
-assert.match(studioSource, />Run<\/button>/);
+assert.match(studioHtml, /dist-developer-studio\/developer-studio-bundle\.css/);
+assert.match(workbenchCss, /\.monaco-editor/);
+assert.match(workbenchCss, /\.monaco-editor \.inputarea/);
+assert.match(studioSource, /runPreview\(\)/);
 assert.match(studioSource, /PreviewSessionController/);
 assert.doesNotMatch(studioSource, /WebWindowsNative|parent\.WebWindows|Capability Broker/);
 const entryReference = /import\s+["']\.\/([^"']+)["']/.exec(studioBundle)?.[1];

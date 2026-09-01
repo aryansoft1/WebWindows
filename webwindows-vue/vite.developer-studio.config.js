@@ -24,7 +24,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         chunkFileNames: "assets/[name]-[hash].js",
-        assetFileNames: "assets/[name]-[hash][extname]"
+        assetFileNames: (assetInfo) => assetInfo.name === "developer-studio-bundle.css"
+          ? "developer-studio-bundle.css"
+          : "assets/[name]-[hash][extname]"
       }
     }
   }

@@ -39,7 +39,7 @@ const previewSession = ref(null);
 const consoleEvents = ref([]);
 const brokerDiagnostics = ref([]);
 const bottomPanel = ref("problems");
-const inspectorMode = ref("preview");
+const inspectorMode = ref("manifest");
 const consoleLevel = ref("all");
 const status = ref("");
 const statusKind = ref("");
@@ -510,25 +510,29 @@ function finishDialog(result) {
   <main class="developer-studio">
     <header class="studio-toolbar">
       <div class="studio-brand"><strong>Developer Studio</strong><span>WebWindows Function IDE</span></div>
-      <button class="primary" type="button" @click="createProject">新建功能</button>
-      <select
-        aria-label="打开项目"
-        :value="activeProject?.uuid || ''"
-        @change="openProject($event.target.value).catch(showError)"
-      >
-        <option value="" disabled>打开项目…</option>
-        <option v-for="project in projects" :key="project.uuid" :value="project.uuid">
-          {{ project.displayName }}
-        </option>
-      </select>
-      <button type="button" :disabled="!activeProject" @click="renameProject">重命名项目</button>
-      <button type="button" :disabled="!activeProject" @click="deleteProject">删除项目</button>
+      <div class="toolbar-group project-actions">
+        <button class="primary" type="button" @click="createProject">＋ 新建功能</button>
+        <select
+          aria-label="打开项目"
+          :value="activeProject?.uuid || ''"
+          @change="openProject($event.target.value).catch(showError)"
+        >
+          <option value="" disabled>打开项目…</option>
+          <option v-for="project in projects" :key="project.uuid" :value="project.uuid">
+            {{ project.displayName }}
+          </option>
+        </select>
+        <button type="button" :disabled="!activeProject" @click="renameProject">重命名</button>
+        <button type="button" :disabled="!activeProject" @click="deleteProject">删除</button>
+      </div>
       <span class="toolbar-spacer"></span>
-      <button type="button" :disabled="!activeProject || taskBusy" @click="validateProject">Validate</button>
-      <button class="primary" type="button" :disabled="!activeProject || taskBusy" @click="buildProject">Build</button>
-      <button class="primary" type="button" :disabled="!activeProject || taskBusy || !previewHostReady" @click="runPreview()">Run</button>
-      <button type="button" :disabled="!previewSession || taskBusy" @click="runPreview({ reload: true })">Reload</button>
-      <button type="button" :disabled="!previewSession" @click="stopPreview">Stop</button>
+      <div class="toolbar-group run-actions">
+        <button type="button" :disabled="!activeProject || taskBusy" @click="validateProject">✓ Validate</button>
+        <button class="build-button" type="button" :disabled="!activeProject || taskBusy" @click="buildProject">Build</button>
+        <button class="run-button" type="button" :disabled="!activeProject || taskBusy || !previewHostReady" @click="runPreview()">▶ Run</button>
+        <button type="button" :disabled="!previewSession || taskBusy" @click="runPreview({ reload: true })">↻</button>
+        <button type="button" :disabled="!previewSession" @click="stopPreview">■</button>
+      </div>
     </header>
 
     <section v-if="activeProject" class="studio-main">
@@ -585,6 +589,13 @@ function finishDialog(result) {
             <p>Phase 1A 支持 HTML、CSS、JavaScript、JSON 和其他文本文件。</p>
           </div>
         </div>
+        <footer class="editor-statusbar">
+          <span class="status-path">{{ activeFile || 'No file selected' }}</span>
+          <span class="status-spacer"></span>
+          <span>Spaces: 2</span>
+          <span>UTF-8</span>
+          <span>{{ editorLanguage }}</span>
+        </footer>
       </section>
 
       <aside class="inspector-panel">
@@ -671,17 +682,17 @@ function finishDialog(result) {
       <button type="button" @click="repairProjectStorage">修复项目存储</button>
     </section>
 
-    <section v-else-if="storageStatus.degraded" class="storage-degraded" role="status">
-      <strong>浏览器 IndexedDB 当前不可用</strong>
-      <span>Developer Studio 已启用受限的本地降级工作区；项目仍会隔离保存，但容量低于正式工作区。</span>
-    </section>
-
     <section class="problems-panel">
       <div class="bottom-tabs">
         <button type="button" :class="{ active: bottomPanel === 'problems' }" @click="bottomPanel = 'problems'">Problems <span>{{ displayedProblems.length }}</span></button>
         <button type="button" :class="{ active: bottomPanel === 'console' }" @click="bottomPanel = 'console'">Console <span>{{ consoleEvents.length }}</span></button>
         <button type="button" :class="{ active: bottomPanel === 'broker' }" @click="bottomPanel = 'broker'">Permissions <span>{{ brokerDiagnostics.length }}</span></button>
         <span class="bottom-spacer"></span>
+        <span
+          v-if="storageStatus.degraded"
+          class="storage-mode-badge"
+          title="IndexedDB 不可用；项目正在使用容量受限的隔离 localStorage 工作区。"
+        >⚠ Local fallback</span>
         <template v-if="bottomPanel === 'console'">
           <select v-model="consoleLevel" aria-label="Console level">
             <option value="all">All levels</option>

@@ -1,7 +1,7 @@
-import { c as h } from "./workers-B7EOJHKo.js";
-import { C as c, H as u, D as p, a as m, R as f, b as _, c as w, d as k, F as v, e as D, S as P, f as R, g as I } from "./lspLanguageFeatures-BjYuljjf.js";
-import { h as H, i as U, j as y, t as T, k as x } from "./lspLanguageFeatures-BjYuljjf.js";
-import { l as s } from "./monaco-runtime-m4SUO6-V.js";
+import { c as h } from "./workers-teQvsEgY.js";
+import { C as c, H as u, D as p, a as m, R as f, b as _, c as w, d as k, F as v, e as D, S as P, f as R, g as I } from "./lspLanguageFeatures-ChAwsFKu.js";
+import { h as b, i as H, j as y, t as T, k as x } from "./lspLanguageFeatures-ChAwsFKu.js";
+import { l as s } from "./monaco-runtime-B3zY8a7K.js";
 const C = 120 * 1e3;
 class A {
   constructor(n) {
@@ -24,7 +24,7 @@ class A {
       moduleId: "vs/language/css/cssWorker",
       createWorker: () => new Worker(new URL(
         /* @vite-ignore */
-        "/assets/css.worker-CTtMUz-4.js",
+        "" + new URL("css.worker-CTtMUz-4.js", import.meta.url).href,
         import.meta.url
       ), { type: "module" }),
       label: this._defaults.languageId,
@@ -45,7 +45,7 @@ class A {
     }).then((a) => e);
   }
 }
-function E(o) {
+function L(o) {
   const n = [], e = [], a = new A(o);
   n.push(a);
   const r = (...t) => a.getLanguageServiceWorker(...t);
@@ -125,7 +125,7 @@ export {
   k as DocumentColorAdapter,
   R as DocumentFormattingEditProvider,
   p as DocumentHighlightAdapter,
-  H as DocumentLinkAdapter,
+  b as DocumentLinkAdapter,
   I as DocumentRangeFormattingEditProvider,
   _ as DocumentSymbolAdapter,
   v as FoldingRangeAdapter,
@@ -134,9 +134,9 @@ export {
   w as RenameAdapter,
   P as SelectionRangeAdapter,
   A as WorkerManager,
-  U as fromPosition,
+  H as fromPosition,
   y as fromRange,
-  E as setupMode,
+  L as setupMode,
   T as toRange,
   x as toTextEdit
 };

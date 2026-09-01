@@ -4095,7 +4095,7 @@ const Lu = { class: "tree-node" }, Du = ["title"], zu = {
     let s, o, c, n, i = !1, d;
     Wn(async () => {
       try {
-        const v = await import("./monaco-runtime-m4SUO6-V.js").then(($) => $.jz);
+        const v = await import("./monaco-runtime-B3zY8a7K.js").then(($) => $.jz);
         ({ monaco: c } = await v.configureStudioMonaco()), d = v.configureManifestSchemaForText, o = y(), h(o.getValue()), s = c.editor.create(l.value, {
           model: o,
           theme: r.theme === "dark" ? "webwindows-studio-dark" : "webwindows-studio-light",
@@ -9349,7 +9349,7 @@ const sf = { class: "studio-toolbar" }, rf = { class: "toolbar-group project-act
       if (!I.value) {
         I.value = !0;
         try {
-          const b = await Ur(), m = await As(), { buildProjectPackage: k } = await import("./deterministic-builder-Cm_HhqlU.js");
+          const b = await Ur(), m = await As(), { buildProjectPackage: k } = await import("./deterministic-builder-Dv2KjYWP.js");
           $.value = await k(b, { contracts: m }), v.value = $.value.validationReport, Fe($.value.artifactReady ? "确定性 ZIP 构建完成。" : "构建被验证错误阻止。");
         } catch (b) {
           re(b);

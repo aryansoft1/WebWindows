@@ -1,5 +1,5 @@
-import { e as w, U as F, a as P, M as v, l as f, t as M, R as O } from "./monaco-runtime-m4SUO6-V.js";
-import { c as K } from "./workers-B7EOJHKo.js";
+import { e as w, U as F, a as P, M as v, l as f, t as M, R as O } from "./monaco-runtime-B3zY8a7K.js";
+import { c as K } from "./workers-teQvsEgY.js";
 class E {
   constructor(e, t) {
     this._modeId = e, this._defaults = t, this._worker = null, this._client = null, this._configChangeListener = this._defaults.onDidChange(() => this._stopWorker()), this._updateExtraLibsToken = 0, this._extraLibsChangeListener = this._defaults.onDidExtraLibsChange(
@@ -24,7 +24,7 @@ class E {
       moduleId: "vs/language/typescript/tsWorker",
       createWorker: () => new Worker(new URL(
         /* @vite-ignore */
-        "/assets/ts.worker-vVNEBeBl.js",
+        "" + new URL("ts.worker-vVNEBeBl.js", import.meta.url).href,
         import.meta.url
       ), { type: "module" }),
       label: this._modeId,

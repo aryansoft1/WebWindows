@@ -8,6 +8,7 @@ const monaco = read("webwindows-vue/src/developer-studio/editor/monaco-runtime.j
 const tree = read("webwindows-vue/src/developer-studio/project/tree-model.js");
 const page = read("developer-studio.html");
 const locale = read("assets/js/tw.js");
+const viteConfig = read("webwindows-vue/vite.developer-studio.config.js");
 
 assert.match(studio, /WebWindows\?\.fileDialog/);
 assert.match(studio, /fileDialog\.saveBlob/);
@@ -33,7 +34,10 @@ assert.match(monaco, /tag\.html/);
 assert.match(monaco, /attribute\.name\.html/);
 assert.match(monaco, /attribute\.name\.css/);
 assert.match(monaco, /regexp/);
+assert.match(monaco, /setMonarchTokensProvider/);
+assert.doesNotMatch(monaco, /definitions\/(?:css|html|javascript)\/register\.js/);
 assert.match(tree, /svg:\s*"html"/);
+assert.match(viteConfig, /base:\s*"\.\/"/);
 
 assert.match(page, /assets\/js\/tw\.js/);
 assert.match(page, /assets\/js\/cloud-file-dialog\.js/);

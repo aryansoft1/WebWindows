@@ -6,12 +6,13 @@ import JsonWorker from "monaco-editor/language/json/json.worker.js?worker";
 import TypeScriptWorker from "monaco-editor/language/typescript/ts.worker.js?worker";
 import "monaco-editor/language/css/monaco.contribution.js";
 import "monaco-editor/language/html/monaco.contribution.js";
-// Language-service contributions provide diagnostics/completion; the basic
-// language registrations below provide Monarch tokenization. Keep this list
-// intentionally limited to the four Studio source formats.
-import "monaco-editor/languages/definitions/css/register.js";
-import "monaco-editor/languages/definitions/html/register.js";
-import "monaco-editor/languages/definitions/javascript/register.js";
+// Language-service contributions provide diagnostics/completion. Import the
+// three Monarch definitions directly so the Studio does not activate Monaco's
+// full basic-language extension registry (which expects services outside the
+// restricted editor.api build).
+import { conf as cssLanguageConfiguration, language as cssMonarchLanguage } from "monaco-editor/languages/definitions/css/css.js";
+import { conf as htmlLanguageConfiguration, language as htmlMonarchLanguage } from "monaco-editor/languages/definitions/html/html.js";
+import { conf as javascriptLanguageConfiguration, language as javascriptMonarchLanguage } from "monaco-editor/languages/definitions/javascript/javascript.js";
 import { jsonDefaults } from "monaco-editor/language/json/monaco.contribution.js";
 import {
   javascriptDefaults,
@@ -51,6 +52,8 @@ async function configure() {
     sdkResponse.text(), v1Response.json(), v2Response.json(), permissionsResponse.json()
   ]);
   manifestContracts = { schemas: { 1: manifestV1, 2: manifestV2 }, permissionRegistry };
+
+  registerStudioTokenizers();
 
   monaco.editor.defineTheme("webwindows-studio-light", {
     base: "vs",
@@ -140,6 +143,19 @@ async function configure() {
 
   configureManifestSchemaForText("{}");
   return { monaco, manifestSchemas: manifestContracts.schemas };
+}
+
+function registerStudioTokenizers() {
+  const knownLanguages = new Set(monaco.languages.getLanguages().map((item) => item.id));
+  for (const [id, extensions, mimetypes, configuration, language] of [
+    ["html", [".html", ".htm"], ["text/html"], htmlLanguageConfiguration, htmlMonarchLanguage],
+    ["css", [".css"], ["text/css"], cssLanguageConfiguration, cssMonarchLanguage],
+    ["javascript", [".js"], ["text/javascript"], javascriptLanguageConfiguration, javascriptMonarchLanguage]
+  ]) {
+    if (!knownLanguages.has(id)) monaco.languages.register({ id, extensions, mimetypes });
+    monaco.languages.setLanguageConfiguration(id, configuration);
+    monaco.languages.setMonarchTokensProvider(id, language);
+  }
 }
 
 export function configureManifestSchemaForText(text) {

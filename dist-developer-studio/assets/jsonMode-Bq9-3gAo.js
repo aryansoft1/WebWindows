@@ -1,7 +1,7 @@
-import { c as P } from "./workers-B7EOJHKo.js";
-import { f as Y, g as J, C as Q, H as y, b as G, d as X, F as Z, S as $, e as K } from "./lspLanguageFeatures-BjYuljjf.js";
-import { a as Oe, D as Ie, h as Ne, R as Le, c as Ee, i as Ue, j as De, t as Be, k as Re } from "./lspLanguageFeatures-BjYuljjf.js";
-import { l as _, e as B } from "./monaco-runtime-m4SUO6-V.js";
+import { c as P } from "./workers-teQvsEgY.js";
+import { f as Y, g as J, C as Q, H as y, b as G, d as X, F as Z, S as $, e as K } from "./lspLanguageFeatures-ChAwsFKu.js";
+import { a as Oe, D as Ie, h as Ne, R as Le, c as Ee, i as Ue, j as De, t as Be, k as Re } from "./lspLanguageFeatures-ChAwsFKu.js";
+import { l as _, e as B } from "./monaco-runtime-B3zY8a7K.js";
 const x = 120 * 1e3;
 class C {
   constructor(i) {
@@ -24,7 +24,7 @@ class C {
       moduleId: "vs/language/json/jsonWorker",
       createWorker: () => new Worker(new URL(
         /* @vite-ignore */
-        "/assets/json.worker-BY6TubKN.js",
+        "" + new URL("json.worker-BY6TubKN.js", import.meta.url).href,
         import.meta.url
       ), { type: "module" }),
       label: this._defaults.languageId,
@@ -48,8 +48,8 @@ class C {
 }
 function ee(e, i = !1) {
   const t = e.length;
-  let n = 0, u = "", p = 0, l = 16, o = 0, g = 0, w = 0, v = 0, c = 0;
-  function O(s, m) {
+  let n = 0, u = "", p = 0, l = 16, o = 0, m = 0, w = 0, v = 0, c = 0;
+  function O(s, g) {
     let a = 0, r = 0;
     for (; a < s; ) {
       let f = e.charCodeAt(n);
@@ -81,30 +81,30 @@ function ee(e, i = !1) {
           n++;
       else
         return c = 3, e.substring(s, n);
-    let m = n;
+    let g = n;
     if (n < e.length && (e.charCodeAt(n) === 69 || e.charCodeAt(n) === 101))
       if (n++, (n < e.length && e.charCodeAt(n) === 43 || e.charCodeAt(n) === 45) && n++, n < e.length && T(e.charCodeAt(n))) {
         for (n++; n < e.length && T(e.charCodeAt(n)); )
           n++;
-        m = n;
+        g = n;
       } else
         c = 3;
-    return e.substring(s, m);
+    return e.substring(s, g);
   }
   function q() {
-    let s = "", m = n;
+    let s = "", g = n;
     for (; ; ) {
       if (n >= t) {
-        s += e.substring(m, n), c = 2;
+        s += e.substring(g, n), c = 2;
         break;
       }
       const a = e.charCodeAt(n);
       if (a === 34) {
-        s += e.substring(m, n), n++;
+        s += e.substring(g, n), n++;
         break;
       }
       if (a === 92) {
-        if (s += e.substring(m, n), n++, n >= t) {
+        if (s += e.substring(g, n), n++, n >= t) {
           c = 2;
           break;
         }
@@ -141,12 +141,12 @@ function ee(e, i = !1) {
           default:
             c = 5;
         }
-        m = n;
+        g = n;
         continue;
       }
       if (a >= 0 && a <= 31)
         if (I(a)) {
-          s += e.substring(m, n), c = 2;
+          s += e.substring(g, n), c = 2;
           break;
         } else
           c = 6;
@@ -155,7 +155,7 @@ function ee(e, i = !1) {
     return s;
   }
   function D() {
-    if (u = "", c = 0, p = n, g = o, v = w, n >= t)
+    if (u = "", c = 0, p = n, m = o, v = w, n >= t)
       return p = t, l = 17;
     let s = e.charCodeAt(n);
     if (E(s)) {
@@ -186,11 +186,11 @@ function ee(e, i = !1) {
         return n++, u = q(), l = 10;
       // comments
       case 47:
-        const m = n - 1;
+        const g = n - 1;
         if (e.charCodeAt(n + 1) === 47) {
           for (n += 2; n < t && !I(e.charCodeAt(n)); )
             n++;
-          return u = e.substring(m, n), l = 12;
+          return u = e.substring(g, n), l = 12;
         }
         if (e.charCodeAt(n + 1) === 42) {
           n += 2;
@@ -204,7 +204,7 @@ function ee(e, i = !1) {
             }
             n++, I(f) && (f === 13 && e.charCodeAt(n) === 10 && n++, o++, w = n);
           }
-          return r || (n++, c = 1), u = e.substring(m, n), l = 13;
+          return r || (n++, c = 1), u = e.substring(g, n), l = 13;
         }
         return u += String.fromCharCode(s), n++, l = 16;
       // numbers
@@ -274,7 +274,7 @@ function ee(e, i = !1) {
     getTokenValue: () => u,
     getTokenOffset: () => p,
     getTokenLength: () => n - p,
-    getTokenStartLine: () => g,
+    getTokenStartLine: () => m,
     getTokenStartCharacter: () => p - v,
     getTokenError: () => c
   };
@@ -321,10 +321,10 @@ var j;
 function ie(e) {
   return {
     getInitialState: () => new N(null, null, !1, null),
-    tokenize: (i, t) => me(e, i, t)
+    tokenize: (i, t) => ge(e, i, t)
   };
 }
-const M = "delimiter.bracket.json", S = "delimiter.array.json", te = "delimiter.colon.json", se = "delimiter.comma.json", le = "keyword.json", ue = "keyword.json", oe = "string.value.json", ce = "number.json", fe = "string.key.json", pe = "comment.block.json", ge = "comment.line.json";
+const M = "delimiter.bracket.json", S = "delimiter.array.json", te = "delimiter.colon.json", se = "delimiter.comma.json", le = "keyword.json", ue = "keyword.json", oe = "string.value.json", ce = "number.json", fe = "string.key.json", pe = "comment.block.json", me = "comment.line.json";
 class b {
   constructor(i, t) {
     this.parent = i, this.type = t;
@@ -367,7 +367,7 @@ class N {
     this._state = i;
   }
 }
-function me(e, i, t, n = 0) {
+function ge(e, i, t, n = 0) {
   let u = 0, p = !1;
   switch (t.scanError) {
     case 2:
@@ -378,7 +378,7 @@ function me(e, i, t, n = 0) {
       break;
   }
   const l = ne(i);
-  let o = t.lastWasColon, g = t.parents;
+  let o = t.lastWasColon, m = t.parents;
   const w = {
     tokens: [],
     endState: t.clone()
@@ -394,24 +394,24 @@ function me(e, i, t, n = 0) {
       );
     switch (p && (v -= u), p = u > 0, O) {
       case 1:
-        g = b.push(
-          g,
+        m = b.push(
+          m,
           0
           /* Object */
         ), c = M, o = !1;
         break;
       case 2:
-        g = b.pop(g), c = M, o = !1;
+        m = b.pop(m), c = M, o = !1;
         break;
       case 3:
-        g = b.push(
-          g,
+        m = b.push(
+          m,
           1
           /* Array */
         ), c = S, o = !1;
         break;
       case 4:
-        g = b.pop(g), c = S, o = !1;
+        m = b.pop(m), c = S, o = !1;
         break;
       case 6:
         c = te, o = !0;
@@ -427,7 +427,7 @@ function me(e, i, t, n = 0) {
         c = ue, o = !1;
         break;
       case 10:
-        const L = (g ? g.type : 0) === 1;
+        const L = (m ? m.type : 0) === 1;
         c = o || L ? oe : fe, o = !1;
         break;
       case 11:
@@ -436,7 +436,7 @@ function me(e, i, t, n = 0) {
     }
     switch (O) {
       case 12:
-        c = ge;
+        c = me;
         break;
       case 13:
         c = pe;
@@ -446,7 +446,7 @@ function me(e, i, t, n = 0) {
       t.getStateData(),
       l.getTokenError(),
       o,
-      g
+      m
     ), w.tokens.push({
       startIndex: v,
       scopes: c

@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const currentDirectory = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  base: "./",
   plugins: [vue()],
   define: {
     "process.env.NODE_ENV": JSON.stringify("production")

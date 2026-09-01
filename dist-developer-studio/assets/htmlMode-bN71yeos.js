@@ -1,7 +1,7 @@
-import { c as D } from "./workers-B7EOJHKo.js";
-import { H as d, D as l, h as c, F as u, b as h, S as m, c as p, f as w, g as f, C as R } from "./lspLanguageFeatures-BjYuljjf.js";
-import { a as H, e as b, d as y, R as T, i as U, j as x, t as M, k as j } from "./lspLanguageFeatures-BjYuljjf.js";
-import { l as t } from "./monaco-runtime-m4SUO6-V.js";
+import { c as D } from "./workers-teQvsEgY.js";
+import { H as d, D as l, h as c, F as u, b as h, S as m, c as p, f as w, g as f, C as R } from "./lspLanguageFeatures-ChAwsFKu.js";
+import { a as H, e as b, d as y, R as U, i as T, j as x, t as M, k as j } from "./lspLanguageFeatures-ChAwsFKu.js";
+import { l as t } from "./monaco-runtime-B3zY8a7K.js";
 const I = 120 * 1e3;
 class _ {
   constructor(n) {
@@ -24,7 +24,7 @@ class _ {
       moduleId: "vs/language/html/htmlWorker",
       createWorker: () => new Worker(new URL(
         /* @vite-ignore */
-        "/assets/html.worker-BQ2fwXLZ.js",
+        "" + new URL("html.worker-BQ2fwXLZ.js", import.meta.url).href,
         import.meta.url
       ), { type: "module" }),
       // passed in to the create() method
@@ -50,7 +50,7 @@ class v extends R {
     super(n, [".", ":", "<", '"', "=", "/"]);
   }
 }
-function L(i) {
+function C(i) {
   const n = new _(i), e = (...o) => n.getLanguageServiceWorker(...o);
   let r = i.languageId;
   t.registerCompletionItemProvider(r, new v(e)), t.registerHoverProvider(r, new d(e)), t.registerDocumentHighlightProvider(
@@ -140,14 +140,14 @@ export {
   h as DocumentSymbolAdapter,
   u as FoldingRangeAdapter,
   d as HoverAdapter,
-  T as ReferenceAdapter,
+  U as ReferenceAdapter,
   p as RenameAdapter,
   m as SelectionRangeAdapter,
   _ as WorkerManager,
-  U as fromPosition,
+  T as fromPosition,
   x as fromRange,
   W as setupMode,
-  L as setupMode1,
+  C as setupMode1,
   M as toRange,
   j as toTextEdit
 };

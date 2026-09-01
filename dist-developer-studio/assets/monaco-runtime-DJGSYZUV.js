@@ -1,4 +1,4 @@
-import { a as H3 } from "./entry-CGcSuRL0.js";
+import { a as H3 } from "./entry-D3C2lKLz.js";
 function z3(s) {
   if (s.length === 0)
     throw new Error("Invalid tail call");
@@ -91349,7 +91349,7 @@ const AE = {
   PE
 );
 function OE() {
-  return import("./cssMode-BffdnbGm.js");
+  return import("./cssMode-CJs23N2Y.js");
 }
 ga.onLanguage("less", () => {
   OE().then((s) => s.setupMode(dce));
@@ -91437,7 +91437,7 @@ FE(
   n0(gA)
 );
 function gce() {
-  return import("./htmlMode-B6K1n-I4.js");
+  return import("./htmlMode-BLoUDPyK.js");
 }
 function FE(s, e = i0, t = n0(s)) {
   const i = new uce(s, e, t);
@@ -91501,7 +91501,7 @@ const pce = {
   _ce
 );
 function bce() {
-  return import("./jsonMode-CCy7FGMm.js");
+  return import("./jsonMode-BPvgVNIn.js");
 }
 ga.register({
   id: "json",
@@ -91642,7 +91642,7 @@ const N3 = {
   N3
 );
 function R3() {
-  return import("./tsMode-bJZXwJIM.js");
+  return import("./tsMode-DISVmoFp.js");
 }
 ga.onLanguage("typescript", () => R3().then((s) => s.setupTypeScript(Cce)));
 ga.onLanguage("javascript", () => R3().then((s) => s.setupJavaScript(T_)));

@@ -124,7 +124,7 @@
       "category": "system",
       "version": "1.0.0",
       "icon": "assets/icons/code.svg",
-      "entry": "developer-studio.html?v=20260829-1",
+      "entry": "developer-studio.html?v=20260901-storage-1",
       "install": {
         "defaultState": "installed",
         "source": "system",

@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { indexedDB } from "fake-indexeddb";
 import { createHelloWebWindowsTemplate } from "../webwindows-vue/src/developer-studio/project/hello-template.js";
-import { ProjectRepository } from "../webwindows-vue/src/developer-studio/project/project-repository.js";
+import {
+  ProjectRepository,
+  StudioStorageError
+} from "../webwindows-vue/src/developer-studio/project/project-repository.js";
 import { normalizeProjectPath } from "../webwindows-vue/src/developer-studio/project/path-policy.js";
 
 const databaseName = `webwindows-developer-studio-test-${Date.now()}`;
@@ -40,5 +43,38 @@ const reopenedRepository = new ProjectRepository({ indexedDB, databaseName });
 assert.equal((await reopenedRepository.getProject(projectB.uuid)).displayName, "Project B");
 assert.equal(await reopenedRepository.readTextFile(projectB.uuid, "only-b.txt"), "B only");
 await reopenedRepository.close();
+
+const retryDatabaseName = `webwindows-developer-studio-retry-${Date.now()}`;
+let openAttempts = 0;
+const transientIndexedDB = {
+  open(...args) {
+    openAttempts += 1;
+    if (openAttempts > 1) return indexedDB.open(...args);
+    const request = {};
+    queueMicrotask(() => {
+      request.error = new DOMException("Internal error.", "UnknownError");
+      request.onerror?.();
+    });
+    return request;
+  },
+  deleteDatabase: (...args) => indexedDB.deleteDatabase(...args)
+};
+const retryRepository = new ProjectRepository({ indexedDB: transientIndexedDB, databaseName: retryDatabaseName });
+const retriedProject = await retryRepository.createProject({ ...template, displayName: "Retry Project" });
+assert.equal(retriedProject.displayName, "Retry Project");
+assert.equal(openAttempts, 2, "UnknownError should close and retry the IndexedDB connection once");
+await retryRepository.close();
+
+await reopenedRepository.resetStorage();
+assert.deepEqual(await reopenedRepository.listProjects(), []);
+await reopenedRepository.close();
+
+const storageError = new StudioStorageError(
+  "create-project",
+  new DOMException("Internal error.", "UnknownError")
+);
+assert.equal(storageError.code, "studio-storage-failure");
+assert.equal(storageError.recoverable, true);
+assert.match(storageError.message, /UnknownError: Internal error\./);
 
 console.log("developer studio project isolation smoke test passed");

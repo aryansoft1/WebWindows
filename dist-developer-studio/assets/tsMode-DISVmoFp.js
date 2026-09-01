@@ -1,5 +1,5 @@
-import { e as w, U as F, a as P, M as v, l as f, t as M, R as O } from "./monaco-runtime-zBBsQfqc.js";
-import { c as K } from "./workers-DAqVin0m.js";
+import { e as w, U as F, a as P, M as v, l as f, t as M, R as O } from "./monaco-runtime-DJGSYZUV.js";
+import { c as K } from "./workers-C30BkZNL.js";
 class E {
   constructor(e, t) {
     this._modeId = e, this._defaults = t, this._worker = null, this._client = null, this._configChangeListener = this._defaults.onDidChange(() => this._stopWorker()), this._updateExtraLibsToken = 0, this._extraLibsChangeListener = this._defaults.onDidExtraLibsChange(

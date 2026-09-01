@@ -12,6 +12,34 @@ const PROJECT_STORE = "projects";
 const FILE_STORE = "files";
 const PROJECT_FILE_INDEX = "projectId";
 
+const STORAGE_STAGE_LABELS = Object.freeze({
+  open: "打开",
+  "open-blocked": "升级",
+  "create-project": "写入",
+  reset: "重建",
+  "reset-blocked": "重建"
+});
+
+export class StudioStorageError extends Error {
+  constructor(stage, cause, message) {
+    const causeName = String(cause?.name || "StorageError");
+    const causeMessage = String(cause?.message || message || "未知错误");
+    const stageLabel = STORAGE_STAGE_LABELS[stage] || "访问";
+    super(message || `Developer Studio 项目存储${stageLabel}失败（${causeName}: ${causeMessage}）。`);
+    this.name = "StudioStorageError";
+    this.code = "studio-storage-failure";
+    this.stage = stage;
+    this.causeName = causeName;
+    this.causeMessage = causeMessage;
+    this.recoverable = stage !== "open-blocked" && stage !== "reset-blocked";
+    this.cause = cause;
+  }
+}
+
+export function isStudioStorageError(error) {
+  return error?.code === "studio-storage-failure";
+}
+
 export class ProjectRepository {
   constructor(options = {}) {
     this.indexedDB = options.indexedDB || globalThis.indexedDB;
@@ -32,6 +60,10 @@ export class ProjectRepository {
   }
 
   async createProject(options = {}) {
+    return this.runStorageOperation("create-project", () => this.createProjectAttempt(options), { retry: true });
+  }
+
+  async createProjectAttempt(options = {}) {
     const uuid = secureUuid(this.crypto);
     const timestamp = this.now();
     const project = {
@@ -216,6 +248,20 @@ export class ProjectRepository {
     this.databasePromise = null;
   }
 
+  async resetStorage() {
+    await this.close();
+    await new Promise((resolve, reject) => {
+      const request = this.indexedDB.deleteDatabase(this.databaseName);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(storageError("reset", request.error));
+      request.onblocked = () => reject(storageError(
+        "reset-blocked",
+        null,
+        "Developer Studio 项目存储正在被其他窗口使用。请关闭其他 Developer Studio 窗口后重试。"
+      ));
+    });
+  }
+
   async open() {
     if (this.databasePromise) return this.databasePromise;
     this.databasePromise = new Promise((resolve, reject) => {
@@ -231,15 +277,36 @@ export class ProjectRepository {
         }
       };
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error || new Error("Developer Studio database failed to open."));
-      request.onblocked = () => reject(new Error("Developer Studio database upgrade is blocked."));
+      request.onerror = () => reject(storageError("open", request.error));
+      request.onblocked = () => reject(storageError(
+        "open-blocked",
+        null,
+        "Developer Studio 项目存储升级被其他窗口阻止。请关闭其他 Developer Studio 窗口后重试。"
+      ));
     });
     try {
-      return await this.databasePromise;
+      const database = await this.databasePromise;
+      database.onversionchange = () => database.close();
+      return database;
     } catch (error) {
       this.databasePromise = null;
       throw error;
     }
+  }
+
+  async runStorageOperation(stage, operation, options = {}) {
+    const attempts = options.retry ? 2 : 1;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      try {
+        return await operation();
+      } catch (error) {
+        if (!isIndexedDbFailure(error)) throw error;
+        const failure = isStudioStorageError(error) ? error : storageError(stage, error);
+        if (attempt + 1 >= attempts || !isTransientStorageFailure(failure)) throw failure;
+        await this.close();
+      }
+    }
+    throw storageError(stage, null);
   }
 
   async updateProject(projectId, mutate) {
@@ -396,10 +463,31 @@ function requestResult(request) {
 
 function transactionDone(transaction) {
   return new Promise((resolve, reject) => {
+    let transactionError = null;
     transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error || new Error("IndexedDB transaction failed."));
-    transaction.onabort = () => reject(transaction.error || new Error("IndexedDB transaction was aborted."));
+    transaction.onerror = () => {
+      transactionError = transaction.error || transactionError;
+    };
+    transaction.onabort = () => reject(transaction.error || transactionError || new DOMException(
+      "IndexedDB transaction was aborted.",
+      "AbortError"
+    ));
   });
+}
+
+function storageError(stage, cause, message) {
+  return new StudioStorageError(stage, cause, message);
+}
+
+function isIndexedDbFailure(error) {
+  if (isStudioStorageError(error)) return true;
+  return ["UnknownError", "InvalidStateError", "AbortError", "QuotaExceededError", "SecurityError"]
+    .includes(String(error?.name || "")) || /internal error/i.test(String(error?.message || ""));
+}
+
+function isTransientStorageFailure(error) {
+  return ["UnknownError", "InvalidStateError", "AbortError"].includes(String(error?.causeName || error?.name || ""))
+    || /internal error/i.test(String(error?.causeMessage || error?.message || ""));
 }
 
 function repositoryError(code, message) {

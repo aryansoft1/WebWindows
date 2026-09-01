@@ -7,7 +7,7 @@ import PermissionInspector from "./permissions/PermissionInspector.vue";
 import { validateManifestText } from "./manifest/manifest-validator.js";
 import { selectManifestVersion } from "./manifest/manifest-version.js";
 import { createHelloWebWindowsTemplate } from "./project/hello-template.js";
-import { childPath, ProjectRepository } from "./project/project-repository.js";
+import { childPath, isStudioStorageError, ProjectRepository } from "./project/project-repository.js";
 import { normalizeProjectPath, parentProjectPath, projectPathName } from "./project/path-policy.js";
 import { buildProjectTree, languageForPath } from "./project/tree-model.js";
 import { createProjectSnapshot } from "./snapshot/project-snapshot.js";
@@ -43,6 +43,7 @@ const inspectorMode = ref("preview");
 const consoleLevel = ref("all");
 const status = ref("");
 const statusKind = ref("");
+const storageRecoveryAvailable = ref(false);
 const dialog = ref(null);
 let dialogResolve = null;
 let saveTimer = 0;
@@ -309,8 +310,33 @@ function showStatus(message) {
 }
 
 function showError(error) {
+  console.error("[DeveloperStudio]", error);
+  storageRecoveryAvailable.value = isStudioStorageError(error) && error.recoverable !== false;
   status.value = error?.message || "操作失败。";
   statusKind.value = "error";
+}
+
+async function repairProjectStorage() {
+  const confirmed = await confirmAction(
+    "修复 Developer Studio 项目存储",
+    "这将永久删除当前浏览器中的所有 Developer Studio 项目和文件，并重新创建独立工作区。不会删除其他 WebWindows 数据。继续吗？"
+  );
+  if (!confirmed) return;
+  try {
+    await repository.resetStorage();
+    activeProject.value = null;
+    projects.value = [];
+    entries.value = [];
+    openFiles.value = [];
+    activeFile.value = "";
+    selectedPath.value = "";
+    editorText.value = "";
+    storageRecoveryAvailable.value = false;
+    await refreshProjects();
+    showStatus("Developer Studio 项目存储已重建，可以重新创建功能。");
+  } catch (error) {
+    showError(error);
+  }
 }
 
 async function createCurrentSnapshot() {
@@ -633,6 +659,14 @@ function finishDialog(result) {
       <h2>创建第一个 WebWindows 功能</h2>
       <p>项目保存在独立 IndexedDB 工作区，不会写入正式安装或功能目录。</p>
       <button class="primary" type="button" @click="createProject">新建 Hello WebWindows</button>
+    </section>
+
+    <section v-if="storageRecoveryAvailable" class="storage-recovery" role="alert">
+      <div>
+        <strong>项目存储需要修复</strong>
+        <span>仅在错误持续出现时使用；修复会删除此浏览器中的 Developer Studio 项目。</span>
+      </div>
+      <button type="button" @click="repairProjectStorage">修复项目存储</button>
     </section>
 
     <section class="problems-panel">

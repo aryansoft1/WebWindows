@@ -19,7 +19,7 @@ assert.equal(studioEntries.length, 1, "Developer Studio must have exactly one sy
 const studio = studioEntries[0];
 assert.equal(studio.type, "system");
 assert.deepEqual(studio.legacyIds, ["developer-studio"]);
-assert.equal(studio.entry, "developer-studio.html?v=20260901-ide-1");
+assert.equal(studio.entry, "developer-studio.html?v=20260901-workbench-1");
 assert.equal(studio.icon, "assets/icons/code.svg");
 assert.equal(studio.install.defaultState, "installed");
 assert.equal(studio.install.uninstallable, false);

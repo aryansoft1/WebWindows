@@ -362,6 +362,70 @@ Object.assign(languageCatalog.jp, {
   "当前浏览器或宿主不提供电源结构，相关项目明确显示为“未知”。": "このブラウザーまたはホストでは電源構成を取得できないため、関連項目は「不明」と表示します。"
 });
 
+// WebWindows Developer Studio workbench. The Studio consumes the same shell
+// language preference and translation service instead of maintaining a second
+// locale store.
+Object.assign(languageCatalog.en, {
+  "新建功能": "New Function", "打开项目": "Open Project", "打开项目…": "Open Project…", "重命名": "Rename", "删除": "Delete",
+  "验证": "Validate", "构建": "Build", "运行": "Run", "重新运行": "Reload", "停止": "Stop",
+  "文件": "File", "编辑": "Edit", "视图": "View", "语言": "Language", "保存": "Save", "新建文件": "New File", "新建目录": "New Folder",
+  "重命名所选项": "Rename Selection", "导出到云资料": "Export to Cloud Files", "验证项目": "Validate Project", "构建功能包": "Build Package",
+  "运行预览": "Run Preview", "停止预览": "Stop Preview", "浅色主题": "Light Theme", "深色主题": "Dark Theme",
+  "隐藏项目资源管理器": "Hide Explorer", "显示项目资源管理器": "Show Explorer", "隐藏底部面板": "Hide Bottom Panel", "显示底部面板": "Show Bottom Panel",
+  "隐藏检查器": "Hide Inspector", "显示检查器": "Show Inspector", "WebWindows 专用开发环境": "WebWindows development environment",
+  "项目": "Project", "选择文件开始编辑": "Select a file to start editing", "未选择文件": "No file selected", "检查器": "Inspector", "清单": "Manifest",
+  "权限": "Permissions", "预览": "Preview", "验证结果": "Validation", "构建结果": "Build Result", "结果": "Result", "通过": "Passed", "阻止": "Blocked",
+  "错误": "Errors", "警告": "Warnings", "文件数": "Files", "文件": "Files", "字节": "Bytes", "大小": "Size", "保存 ZIP 到云资料": "Save ZIP to Cloud Files",
+  "权限检查器": "Permission Inspector", "开发者预览": "Developer Preview", "无活动会话": "No active session", "问题": "Problems", "控制台": "Console",
+  "权限诊断": "Permission Diagnostics", "本地兼容存储": "Local fallback", "全部级别": "All levels", "清除": "Clear", "当前 Snapshot 未发现问题。": "No problems found in the current snapshot.",
+  "当前开发者预览尚无控制台输出。": "The current Developer Preview has no console output.", "当前预览尚无 Broker 权限诊断。": "The current preview has no Broker permission diagnostics.",
+  "表单": "Form", "名称": "Name", "版本": "Version", "描述": "Description", "分类": "Category", "入口": "Entry", "图标": "Icon", "窗口": "Window",
+  "宽度": "Width", "高度": "Height", "单实例": "Singleton", "显示位置": "Placement", "开始菜单": "Start Menu", "全部功能": "All Functions", "桌面": "Desktop", "任务栏": "Taskbar",
+  "请求的权限": "Requested Permissions", "风险": "Risk", "同意方式": "Consent", "已声明": "Declared", "策略": "Policy", "授权": "Grant", "运行时能力": "Runtime capability",
+  "生效结果": "Effective", "策略版本": "Policy version", "未评估": "Not evaluated", "未指定": "Unspecified", "是": "Yes", "否": "No",
+  "面板管理": "Panel management", "显示/隐藏项目资源管理器 (Ctrl+B)": "Show/hide Explorer (Ctrl+B)", "显示/隐藏底部面板 (Ctrl+J)": "Show/hide bottom panel (Ctrl+J)",
+  "显示/隐藏检查器 (Ctrl+Alt+I)": "Show/hide Inspector (Ctrl+Alt+I)", "Developer Studio 菜单栏": "Developer Studio menu bar",
+  "创建第一个 WebWindows 功能": "Create your first WebWindows Function", "项目保存在独立 IndexedDB 工作区，不会写入正式安装或功能目录。": "Projects are stored in an isolated IndexedDB workspace and never written to installed apps or the production catalog.",
+  "新建 Hello WebWindows": "Create Hello WebWindows", "当前 Snapshot 未发现问题。": "No problems found in the current snapshot.", "权限诊断": "Permission Diagnostics",
+  "打开的文件": "Open files", "输入值": "Input value", "取消": "Cancel", "确认": "Confirm", "继续": "Continue"
+  , "新建 WebWindows 功能": "New WebWindows Function", "项目名称": "Project name", "1（兼容隐式版本）": "1 (legacy implicit)",
+  "单实例": "Singleton", "Manifest v1 不承载权限。升级到 v2 必须由开发者显式确认权限，Studio 不会从源码自动推断。": "Manifest v1 does not carry permissions. Migrating to v2 requires explicit developer confirmation; Studio never infers permissions from source code.",
+  "catalog、package、runtime 为 published-only 字段，不在 Source Manifest 表单中开放。launch 保持平台保留。": "catalog, package, and runtime are published-only fields and are not editable in the Source Manifest form. launch remains platform-reserved.",
+  "个 Manifest 问题": " Manifest problems", "尚未创建 Snapshot 验证。": "No snapshot validation has been created.", "项目 UUID：": "Project UUID: ", "显示位置": "Placement", "单实例": "Singleton"
+});
+Object.assign(languageCatalog.tw, {
+  "新建功能": "新增功能", "打开项目": "開啟專案", "打开项目…": "開啟專案…", "重命名": "重新命名", "删除": "刪除", "验证": "驗證", "构建": "建置", "运行": "執行",
+  "文件": "檔案", "编辑": "編輯", "视图": "檢視", "语言": "語言", "保存": "儲存", "新建文件": "新增檔案", "新建目录": "新增資料夾", "导出到云资料": "匯出至雲端資料",
+  "浅色主题": "淺色主題", "深色主题": "深色主題", "项目": "專案", "检查器": "檢查器", "清单": "資訊清單", "权限": "權限", "预览": "預覽", "问题": "問題", "控制台": "主控台",
+  "构建结果": "建置結果", "验证结果": "驗證結果", "错误": "錯誤", "警告": "警告", "保存 ZIP 到云资料": "將 ZIP 儲存至雲端資料", "开发者预览": "開發者預覽",
+  "表单": "表單", "名称": "名稱", "版本": "版本", "描述": "描述", "分类": "分類", "入口": "進入點", "图标": "圖示", "窗口": "視窗", "宽度": "寬度", "高度": "高度",
+  "请求的权限": "要求的權限", "风险": "風險", "策略": "原則", "授权": "授權", "运行时能力": "執行階段能力",
+  "面板管理": "面板管理", "显示/隐藏项目资源管理器 (Ctrl+B)": "顯示/隱藏專案總管 (Ctrl+B)", "显示/隐藏底部面板 (Ctrl+J)": "顯示/隱藏底部面板 (Ctrl+J)",
+  "显示/隐藏检查器 (Ctrl+Alt+I)": "顯示/隱藏檢查器 (Ctrl+Alt+I)", "Developer Studio 菜单栏": "Developer Studio 選單列", "WebWindows 专用开发环境": "WebWindows 專用開發環境",
+  "创建第一个 WebWindows 功能": "建立第一個 WebWindows 功能", "项目保存在独立 IndexedDB 工作区，不会写入正式安装或功能目录。": "專案儲存在獨立的 IndexedDB 工作區，不會寫入正式安裝或功能目錄。",
+  "新建 Hello WebWindows": "新增 Hello WebWindows", "当前 Snapshot 未发现问题。": "目前 Snapshot 未發現問題。", "权限诊断": "權限診斷"
+  , "新建 WebWindows 功能": "新增 WebWindows 功能", "项目名称": "專案名稱", "1（兼容隐式版本）": "1（相容隱含版本）", "单实例": "單一執行個體",
+  "显示位置": "顯示位置", "开始菜单": "開始選單", "全部功能": "所有功能", "桌面": "桌面", "任务栏": "工作列", "项目 UUID：": "專案 UUID：",
+  "个 Manifest 问题": " 個 Manifest 問題", "尚未创建 Snapshot 验证。": "尚未建立 Snapshot 驗證。"
+});
+Object.assign(languageCatalog.jp, {
+  "新建功能": "新規機能", "打开项目": "プロジェクトを開く", "打开项目…": "プロジェクトを開く…", "重命名": "名前を変更", "删除": "削除", "验证": "検証", "构建": "ビルド", "运行": "実行",
+  "文件": "ファイル", "编辑": "編集", "视图": "表示", "语言": "言語", "保存": "保存", "新建文件": "新規ファイル", "新建目录": "新規フォルダー", "导出到云资料": "クラウド資料へ書き出す",
+  "浅色主题": "ライトテーマ", "深色主题": "ダークテーマ", "项目": "プロジェクト", "检查器": "インスペクター", "清单": "マニフェスト", "权限": "権限", "预览": "プレビュー", "问题": "問題", "控制台": "コンソール",
+  "构建结果": "ビルド結果", "验证结果": "検証結果", "错误": "エラー", "警告": "警告", "保存 ZIP 到云资料": "ZIP をクラウド資料に保存", "开发者预览": "開発者プレビュー",
+  "表单": "フォーム", "名称": "名前", "版本": "バージョン", "描述": "説明", "分类": "カテゴリ", "入口": "エントリ", "图标": "アイコン", "窗口": "ウィンドウ", "宽度": "幅", "高度": "高さ",
+  "请求的权限": "要求する権限", "风险": "リスク", "策略": "ポリシー", "授权": "許可", "运行时能力": "ランタイム能力",
+  "面板管理": "パネル管理", "显示/隐藏项目资源管理器 (Ctrl+B)": "エクスプローラーを表示/非表示 (Ctrl+B)", "显示/隐藏底部面板 (Ctrl+J)": "下部パネルを表示/非表示 (Ctrl+J)",
+  "显示/隐藏检查器 (Ctrl+Alt+I)": "インスペクターを表示/非表示 (Ctrl+Alt+I)", "Developer Studio 菜单栏": "Developer Studio メニューバー", "WebWindows 专用开发环境": "WebWindows 専用開発環境",
+  "创建第一个 WebWindows 功能": "最初の WebWindows 機能を作成", "项目保存在独立 IndexedDB 工作区，不会写入正式安装或功能目录。": "プロジェクトは独立した IndexedDB ワークスペースに保存され、正式なインストール先や機能カタログには書き込まれません。",
+  "新建 Hello WebWindows": "Hello WebWindows を作成", "当前 Snapshot 未发现问题。": "現在の Snapshot に問題はありません。", "权限诊断": "権限診断"
+  , "新建 WebWindows 功能": "WebWindows 機能を新規作成", "项目名称": "プロジェクト名", "输入值": "入力値", "取消": "キャンセル", "确认": "確認", "继续": "続行",
+  "1（兼容隐式版本）": "1（互換の暗黙バージョン）", "单实例": "シングルトン", "显示位置": "配置", "开始菜单": "スタートメニュー", "全部功能": "すべての機能", "桌面": "デスクトップ", "任务栏": "タスクバー",
+  "项目 UUID：": "プロジェクト UUID：", "打开的文件": "開いているファイル", "个 Manifest 问题": " 件の Manifest 問題", "尚未创建 Snapshot 验证。": "Snapshot 検証はまだ作成されていません。",
+  "Manifest v1 不承载权限。升级到 v2 必须由开发者显式确认权限，Studio 不会从源码自动推断。": "Manifest v1 は権限を保持しません。v2 への移行では開発者による明示的な確認が必要で、Studio がソースから権限を推測することはありません。",
+  "catalog、package、runtime 为 published-only 字段，不在 Source Manifest 表单中开放。launch 保持平台保留。": "catalog、package、runtime は公開時のみのフィールドで、Source Manifest フォームでは編集できません。launch はプラットフォーム予約のままです。"
+});
+
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;
@@ -394,10 +458,12 @@ function applyLanguage(language, container = document.body) {
   if (!container) return;
   const ownerDocument = container.ownerDocument || document;
   const walker = ownerDocument.createTreeWalker(container, NodeFilter.SHOW_TEXT);
-  const blockedTags = new Set(["SCRIPT", "STYLE"]);
+  const blockedTags = new Set(["SCRIPT", "STYLE", "CODE", "PRE"]);
+  const isTranslationBlocked = (element) => blockedTags.has(element?.tagName)
+    || Boolean(element?.closest?.(".monaco-editor, [data-i18n-ignore]"));
   while (walker.nextNode()) {
     const node = walker.currentNode;
-    if (!blockedTags.has(node.parentElement?.tagName)) {
+    if (!isTranslationBlocked(node.parentElement)) {
       const source = sourceText(node);
       node.nodeValue = language === "zh" ? source : translateText(source, language);
     }
@@ -407,6 +473,7 @@ function applyLanguage(language, container = document.body) {
     ? [container, ...container.querySelectorAll("*")]
     : [...container.querySelectorAll("*")];
   elements.forEach((element) => {
+    if (isTranslationBlocked(element)) return;
     translatedAttributes.forEach((attribute) => {
       if (element.hasAttribute(attribute)) {
         const source = sourceAttribute(element, attribute);
@@ -442,6 +509,7 @@ function observeDocument(targetDocument, language) {
     mutations.forEach((mutation) => {
       if (mutation.type === "characterData") {
         const node = mutation.target;
+        if (node.parentElement?.closest?.(".monaco-editor, [data-i18n-ignore]") || ["CODE", "PRE"].includes(node.parentElement?.tagName)) return;
         const remembered = originalText.get(node);
         const expected = remembered == null ? null : (language === "zh" ? remembered : translateText(remembered, language));
         if (remembered == null || node.nodeValue !== expected) originalText.set(node, node.nodeValue || "");
@@ -452,6 +520,7 @@ function observeDocument(targetDocument, language) {
       }
       if (mutation.type === "attributes") {
         const element = mutation.target;
+        if (element.closest?.(".monaco-editor, [data-i18n-ignore]")) return;
         const attribute = mutation.attributeName;
         if (!translatedAttributes.includes(attribute)) return;
         const remembered = originalAttributes.get(element)?.get(attribute);
@@ -468,9 +537,11 @@ function observeDocument(targetDocument, language) {
       }
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType === Node.TEXT_NODE) {
+          if (node.parentElement?.closest?.(".monaco-editor, [data-i18n-ignore]") || ["CODE", "PRE"].includes(node.parentElement?.tagName)) return;
           const source = sourceText(node);
           node.nodeValue = language === "zh" ? source : translateText(source, language);
         } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.matches?.(".monaco-editor, [data-i18n-ignore]") || node.closest?.(".monaco-editor, [data-i18n-ignore]")) return;
           applyLanguage(language, node);
           if (node.tagName === "IFRAME") syncIframeLanguage(node, language);
           node.querySelectorAll?.("iframe").forEach((iframe) => syncIframeLanguage(iframe, language));

@@ -29,7 +29,9 @@ export function languageForPath(path) {
     css: "css",
     js: "javascript",
     json: "json",
-    svg: "xml",
+    // Monaco's bundled HTML language service tokenizes SVG markup and keeps
+    // its worker local; the standalone XML language is not part of this build.
+    svg: "html",
     md: "markdown",
     txt: "plaintext"
   }[extension] || "plaintext";

@@ -1,4 +1,4 @@
-import { R as Ge, l as x, e as w, U as Je, M as R } from "./monaco-runtime-BcgZ2pqz.js";
+import { R as Ge, l as x, e as w, U as Je, M as R } from "./monaco-runtime-m4SUO6-V.js";
 var T;
 (function(e) {
   function n(i) {

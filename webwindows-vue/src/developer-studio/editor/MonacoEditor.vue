@@ -5,6 +5,7 @@ const props = defineProps({
   projectId: { type: String, required: true },
   path: { type: String, required: true },
   language: { type: String, default: "plaintext" },
+  theme: { type: String, default: "light" },
   value: { type: String, default: "" },
   markers: { type: Array, default: () => [] }
 });
@@ -27,7 +28,7 @@ onMounted(async () => {
     updateManifestSchema(model.getValue());
     editor = monaco.editor.create(host.value, {
       model,
-      theme: "webwindows-studio-light",
+      theme: props.theme === "dark" ? "webwindows-studio-dark" : "webwindows-studio-light",
       automaticLayout: true,
       minimap: { enabled: false },
       fontFamily: "Cascadia Code, Cascadia Mono, Consolas, ui-monospace, monospace",
@@ -82,6 +83,9 @@ watch(() => props.value, (value) => {
 });
 
 watch(() => props.markers, updateMarkers, { deep: true });
+watch(() => props.theme, (theme) => {
+  if (monaco) monaco.editor.setTheme(theme === "dark" ? "webwindows-studio-dark" : "webwindows-studio-light");
+});
 
 onBeforeUnmount(() => {
   changeSubscription?.dispose();

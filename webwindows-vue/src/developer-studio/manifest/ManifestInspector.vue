@@ -5,6 +5,7 @@ import { selectManifestVersion } from "./manifest-version.js";
 const props = defineProps({
   manifest: { type: Object, default: null },
   diagnostics: { type: Array, default: () => [] },
+  language: { type: String, default: "zh" },
   permissionRegistry: { type: Object, default: null },
   brokerMethods: { type: Object, default: null }
 });
@@ -14,9 +15,13 @@ const editable = computed(() => props.manifest && typeof props.manifest === "obj
 const manifestVersion = computed(() => {
   if (!editable.value) return "—";
   const version = selectManifestVersion(props.manifest);
-  if (version === 1) return "1 (legacy implicit)";
+  if (version === 1) return {
+    en: "1 (legacy implicit)",
+    tw: "1（相容隱含版本）",
+    jp: "1（互換の暗黙バージョン）"
+  }[props.language] || "1（兼容隐式版本）";
   if (version === 2) return "2";
-  return `Unsupported (${String(props.manifest.manifestVersion)})`;
+  return `不支持（${String(props.manifest.manifestVersion)}）`;
 });
 const isV2 = computed(() => selectManifestVersion(props.manifest) === 2);
 const permissions = computed(() => {
@@ -28,9 +33,9 @@ const permissions = computed(() => {
 function permissionPresentation(permission) {
   const methods = (props.brokerMethods?.methods || []).filter((method) => method.requiredPermission === permission.id);
   return {
-    description: permission.description || permission.publicApiTargets?.join(", ") || "No public API target registered",
-    consent: methods[0]?.consent || permission.prompt || "unspecified",
-    pilot: methods.some((method) => method.currentStatus === "enabled") ? "Preview Pilot enabled" : "Pilot contract only",
+    description: permission.description || permission.publicApiTargets?.join(", ") || "未登记公共 API 目标",
+    consent: methods[0]?.consent || permission.prompt || "未指定",
+    pilot: methods.some((method) => method.currentStatus === "enabled") ? "预览试点已启用" : "仅有试点契约",
     methods: methods.map((method) => method.id)
   };
 }
@@ -68,8 +73,8 @@ function update(path, value) {
     </div>
     <div v-else-if="!editable" class="inspector-note error">修复 JSON 错误后才能使用可视化表单。</div>
     <form v-else class="manifest-form" @submit.prevent>
-      <label>Manifest Version<input :value="manifestVersion" readonly></label>
-      <label v-if="isV2">SDK API Version<input :value="manifest.sdk?.apiVersion" readonly></label>
+      <label>Manifest 版本<input :value="manifestVersion" readonly></label>
+      <label v-if="isV2">SDK API 版本<input :value="manifest.sdk?.apiVersion" readonly></label>
       <label>ID<input :value="manifest.id" @input="update(['id'], $event.target.value)"></label>
       <label>名称<input :value="manifest.name" @input="update(['name'], $event.target.value)"></label>
       <label>版本<input :value="manifest.version" @input="update(['version'], $event.target.value)"></label>
@@ -78,20 +83,20 @@ function update(path, value) {
       <label>入口<input :value="manifest.entry" @input="update(['entry'], $event.target.value)"></label>
       <label>图标<input :value="manifest.icon" @input="update(['icon'], $event.target.value)"></label>
       <fieldset>
-        <legend>Window</legend>
+        <legend>窗口</legend>
         <label>宽度<input :value="manifest.window?.width" @input="update(['window', 'width'], $event.target.value)"></label>
         <label>高度<input :value="manifest.window?.height" @input="update(['window', 'height'], $event.target.value)"></label>
         <label class="check"><input type="checkbox" :checked="manifest.window?.singleton" @change="update(['window', 'singleton'], $event.target.checked)"> 单实例</label>
       </fieldset>
       <fieldset>
-        <legend>Placement</legend>
+        <legend>显示位置</legend>
         <label class="check"><input type="checkbox" :checked="manifest.placement?.startMenu" @change="update(['placement', 'startMenu'], $event.target.checked)"> 开始菜单</label>
         <label class="check"><input type="checkbox" :checked="manifest.placement?.allFunctions" @change="update(['placement', 'allFunctions'], $event.target.checked)"> 全部功能</label>
         <label class="check"><input type="checkbox" :checked="manifest.placement?.desktop" @change="update(['placement', 'desktop'], $event.target.checked)"> 桌面</label>
         <label class="check"><input type="checkbox" :checked="manifest.placement?.taskbar" @change="update(['placement', 'taskbar'], $event.target.checked)"> 任务栏</label>
       </fieldset>
       <fieldset v-if="isV2" class="permission-fieldset">
-        <legend>Requested Permissions</legend>
+        <legend>请求的权限</legend>
         <p class="inspector-note">声明仅表示请求授权，不表示 policy allowed、grant 或 Runtime capability。</p>
         <label v-for="permission in permissions" :key="permission.id" class="permission-option">
           <span class="permission-heading">

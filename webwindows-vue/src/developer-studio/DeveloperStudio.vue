@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import FileTreeNode from "./FileTreeNode.vue";
+import StudioIcon from "./StudioIcon.vue";
 import MonacoEditor from "./editor/MonacoEditor.vue";
 import ManifestInspector from "./manifest/ManifestInspector.vue";
 import PermissionInspector from "./permissions/PermissionInspector.vue";
@@ -46,6 +47,12 @@ const statusKind = ref("");
 const storageRecoveryAvailable = ref(false);
 const storageStatus = ref(repository.getStorageStatus());
 const dialog = ref(null);
+const explorerVisible = ref(true);
+const inspectorVisible = ref(true);
+const bottomPanelVisible = ref(true);
+const menuOpen = ref("");
+const studioTheme = ref("light");
+const studioLanguage = ref("zh");
 let dialogResolve = null;
 let saveTimer = 0;
 let manifestValidationSequence = 0;
@@ -66,8 +73,20 @@ const displayedProblems = computed(() => validationReport.value?.diagnostics || 
 const displayedConsoleEvents = computed(() => consoleLevel.value === "all"
   ? consoleEvents.value
   : consoleEvents.value.filter((event) => event.level === consoleLevel.value));
+const workspaceClasses = computed(() => ({
+  "explorer-hidden": !explorerVisible.value,
+  "inspector-hidden": !inspectorVisible.value
+}));
+const studioClasses = computed(() => ({
+  "theme-dark": studioTheme.value === "dark",
+  "bottom-panel-hidden": !bottomPanelVisible.value
+}));
 
 onMounted(async () => {
+  loadWorkbenchPreferences();
+  window.addEventListener("keydown", handleWorkbenchShortcut);
+  window.addEventListener("webwindows:language-changed", syncLanguage);
+  document.addEventListener("pointerdown", closeMenuOutside);
   try {
     const contracts = await loadStudioPlatformContracts();
     permissionRegistry.value = contracts.permissionRegistry;
@@ -82,9 +101,95 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearTimeout(saveTimer);
+  window.removeEventListener("keydown", handleWorkbenchShortcut);
+  window.removeEventListener("webwindows:language-changed", syncLanguage);
+  document.removeEventListener("pointerdown", closeMenuOutside);
   previewController?.dispose().catch(() => {});
   repository.close();
 });
+
+function loadWorkbenchPreferences() {
+  studioLanguage.value = localStorage.getItem("lang") || "zh";
+  const savedTheme = localStorage.getItem("webwindows-developer-studio-theme");
+  studioTheme.value = savedTheme === "dark" || savedTheme === "light"
+    ? savedTheme
+    : (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  try {
+    const saved = JSON.parse(localStorage.getItem("webwindows-developer-studio-layout") || "{}");
+    if (typeof saved.explorer === "boolean") explorerVisible.value = saved.explorer;
+    if (typeof saved.inspector === "boolean") inspectorVisible.value = saved.inspector;
+    if (typeof saved.bottom === "boolean") bottomPanelVisible.value = saved.bottom;
+  } catch (_) {}
+}
+
+function persistWorkbenchLayout() {
+  localStorage.setItem("webwindows-developer-studio-layout", JSON.stringify({
+    explorer: explorerVisible.value,
+    inspector: inspectorVisible.value,
+    bottom: bottomPanelVisible.value
+  }));
+}
+
+function togglePanel(panel) {
+  if (panel === "explorer") explorerVisible.value = !explorerVisible.value;
+  if (panel === "inspector") inspectorVisible.value = !inspectorVisible.value;
+  if (panel === "bottom") bottomPanelVisible.value = !bottomPanelVisible.value;
+  persistWorkbenchLayout();
+  menuOpen.value = "";
+}
+
+function setStudioTheme(theme) {
+  studioTheme.value = theme;
+  localStorage.setItem("webwindows-developer-studio-theme", theme);
+  menuOpen.value = "";
+}
+
+function setStudioLanguage(language) {
+  studioLanguage.value = language;
+  window.WebWindowsI18n?.setLanguage(language);
+  menuOpen.value = "";
+}
+
+function syncLanguage(event) {
+  studioLanguage.value = event.detail?.language || localStorage.getItem("lang") || "zh";
+}
+
+function toggleMenu(name) {
+  menuOpen.value = menuOpen.value === name ? "" : name;
+}
+
+function closeMenuOutside(event) {
+  if (!event.target.closest?.(".studio-menu")) menuOpen.value = "";
+}
+
+function handleWorkbenchShortcut(event) {
+  const command = event.ctrlKey || event.metaKey;
+  if (command && !event.altKey && event.key.toLowerCase() === "n") {
+    event.preventDefault();
+    createProject();
+  } else if (command && !event.altKey && event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    flushSave().then(() => showStatus("已保存。")).catch(showError);
+  } else if (command && event.shiftKey && event.key.toLowerCase() === "b") {
+    event.preventDefault();
+    buildProject();
+  } else if (command && !event.shiftKey && !event.altKey && event.key.toLowerCase() === "b") {
+    event.preventDefault();
+    togglePanel("explorer");
+  } else if (command && !event.altKey && event.key.toLowerCase() === "j") {
+    event.preventDefault();
+    togglePanel("bottom");
+  } else if (command && event.altKey && event.key.toLowerCase() === "i") {
+    event.preventDefault();
+    togglePanel("inspector");
+  } else if (event.key === "F5") {
+    event.preventDefault();
+    if (event.shiftKey) stopPreview();
+    else runPreview();
+  } else if (event.key === "Escape") {
+    menuOpen.value = "";
+  }
+}
 
 async function refreshProjects() {
   projects.value = await repository.listProjects();
@@ -380,17 +485,27 @@ async function buildProject() {
   }
 }
 
-function exportBuild() {
+async function exportBuild() {
   if (!buildResult.value?.artifactReady || !buildResult.value.zipBytes) return;
   const identity = buildResult.value.manifestIdentity;
   const baseName = `${identity?.id || "webwindows-function"}-${identity?.version || "build"}`.replace(/[^a-z0-9._-]+/gi, "-");
   const blob = new Blob([buildResult.value.zipBytes], { type: "application/zip" });
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = `${baseName}.zip`;
-  anchor.click();
-  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  const fileDialog = window.WebWindows?.fileDialog;
+  if (typeof fileDialog?.saveBlob !== "function") {
+    throw new Error("当前 WebWindows 环境不支持保存到云资料。");
+  }
+  try {
+    const resource = await fileDialog.saveBlob({
+      title: "将 WebWindows 功能包保存到云资料",
+      suggestedName: `${baseName}.zip`,
+      extensions: ["zip"],
+      purpose: "developer-studio-build-export",
+      location: "private"
+    }, blob);
+    if (resource) showStatus(`功能包已保存到云资料：${resource.path}`);
+  } catch (error) {
+    showError(error);
+  }
 }
 
 function invalidateBuildState() {
@@ -507,7 +622,7 @@ function finishDialog(result) {
 </script>
 
 <template>
-  <main class="developer-studio">
+  <main class="developer-studio" :class="studioClasses" @click.self="menuOpen = ''">
     <header class="studio-toolbar">
       <div class="studio-brand"><strong>Developer Studio</strong><span>WebWindows Function IDE</span></div>
       <div class="toolbar-group project-actions">
@@ -527,23 +642,80 @@ function finishDialog(result) {
       </div>
       <span class="toolbar-spacer"></span>
       <div class="toolbar-group run-actions">
-        <button type="button" :disabled="!activeProject || taskBusy" @click="validateProject">✓ Validate</button>
-        <button class="build-button" type="button" :disabled="!activeProject || taskBusy" @click="buildProject">Build</button>
-        <button class="run-button" type="button" :disabled="!activeProject || taskBusy || !previewHostReady" @click="runPreview()">▶ Run</button>
-        <button type="button" :disabled="!previewSession || taskBusy" @click="runPreview({ reload: true })">↻</button>
-        <button type="button" :disabled="!previewSession" @click="stopPreview">■</button>
+        <button type="button" :disabled="!activeProject || taskBusy" @click="validateProject">✓ 验证</button>
+        <button class="build-button" type="button" :disabled="!activeProject || taskBusy" @click="buildProject">构建</button>
+        <button class="run-button" type="button" :disabled="!activeProject || taskBusy || !previewHostReady" @click="runPreview()">▶ 运行</button>
+        <button type="button" title="重新运行 (F5)" :disabled="!previewSession || taskBusy" @click="runPreview({ reload: true })">↻</button>
+        <button type="button" title="停止 (Shift+F5)" :disabled="!previewSession" @click="stopPreview">■</button>
+      </div>
+      <div class="toolbar-group panel-toolbar" aria-label="面板管理">
+        <button type="button" :class="{ active: explorerVisible }" title="显示/隐藏项目资源管理器 (Ctrl+B)" @click="togglePanel('explorer')"><StudioIcon name="explorer" /></button>
+        <button type="button" :class="{ active: bottomPanelVisible }" title="显示/隐藏底部面板 (Ctrl+J)" @click="togglePanel('bottom')"><StudioIcon name="panel" /></button>
+        <button type="button" :class="{ active: inspectorVisible }" title="显示/隐藏检查器 (Ctrl+Alt+I)" @click="togglePanel('inspector')"><StudioIcon name="inspector" /></button>
       </div>
     </header>
 
-    <section v-if="activeProject" class="studio-main">
-      <aside class="explorer-panel">
+    <nav class="studio-menubar" aria-label="Developer Studio 菜单栏">
+      <div class="studio-menu">
+        <button type="button" @click="toggleMenu('file')">文件</button>
+        <div v-if="menuOpen === 'file'" class="studio-menu-popup">
+          <button type="button" @click="menuOpen = ''; createProject()"><span>新建功能</span><kbd>Ctrl+N</kbd></button>
+          <button type="button" :disabled="!activeProject" @click="menuOpen = ''; flushSave().then(() => showStatus('已保存。')).catch(showError)"><span>保存</span><kbd>Ctrl+S</kbd></button>
+          <button type="button" :disabled="!buildResult?.artifactReady" @click="menuOpen = ''; exportBuild()"><span>导出到云资料</span></button>
+        </div>
+      </div>
+      <div class="studio-menu">
+        <button type="button" @click="toggleMenu('edit')">编辑</button>
+        <div v-if="menuOpen === 'edit'" class="studio-menu-popup">
+          <button type="button" :disabled="!activeProject" @click="menuOpen = ''; createEntry('file')"><span>新建文件</span></button>
+          <button type="button" :disabled="!activeProject" @click="menuOpen = ''; createEntry('directory')"><span>新建目录</span></button>
+          <button type="button" :disabled="!selectedPath" @click="menuOpen = ''; renameSelectedEntry()"><span>重命名所选项</span></button>
+        </div>
+      </div>
+      <div class="studio-menu">
+        <button type="button" @click="toggleMenu('view')">视图</button>
+        <div v-if="menuOpen === 'view'" class="studio-menu-popup">
+          <button type="button" @click="togglePanel('explorer')"><span>{{ explorerVisible ? '隐藏' : '显示' }}项目资源管理器</span><kbd>Ctrl+B</kbd></button>
+          <button type="button" @click="togglePanel('bottom')"><span>{{ bottomPanelVisible ? '隐藏' : '显示' }}底部面板</span><kbd>Ctrl+J</kbd></button>
+          <button type="button" @click="togglePanel('inspector')"><span>{{ inspectorVisible ? '隐藏' : '显示' }}检查器</span><kbd>Ctrl+Alt+I</kbd></button>
+          <div class="menu-separator"></div>
+          <button type="button" @click="setStudioTheme('light')"><span>浅色主题</span><span>{{ studioTheme === 'light' ? '✓' : '' }}</span></button>
+          <button type="button" @click="setStudioTheme('dark')"><span>深色主题</span><span>{{ studioTheme === 'dark' ? '✓' : '' }}</span></button>
+        </div>
+      </div>
+      <div class="studio-menu">
+        <button type="button" @click="toggleMenu('build')">构建</button>
+        <div v-if="menuOpen === 'build'" class="studio-menu-popup">
+          <button type="button" :disabled="!activeProject || taskBusy" @click="menuOpen = ''; validateProject()"><span>验证项目</span></button>
+          <button type="button" :disabled="!activeProject || taskBusy" @click="menuOpen = ''; buildProject()"><span>构建功能包</span><kbd>Ctrl+Shift+B</kbd></button>
+        </div>
+      </div>
+      <div class="studio-menu">
+        <button type="button" @click="toggleMenu('run')">运行</button>
+        <div v-if="menuOpen === 'run'" class="studio-menu-popup">
+          <button type="button" :disabled="!activeProject || taskBusy || !previewHostReady" @click="menuOpen = ''; runPreview()"><span>运行预览</span><kbd>F5</kbd></button>
+          <button type="button" :disabled="!previewSession" @click="menuOpen = ''; stopPreview()"><span>停止预览</span><kbd>Shift+F5</kbd></button>
+        </div>
+      </div>
+      <div class="studio-menu">
+        <button type="button" @click="toggleMenu('language')">语言</button>
+        <div v-if="menuOpen === 'language'" class="studio-menu-popup">
+          <button v-for="item in [{ id: 'zh', name: '简体中文' }, { id: 'tw', name: '繁體中文' }, { id: 'en', name: 'English' }, { id: 'jp', name: '日本語' }]" :key="item.id" type="button" @click="setStudioLanguage(item.id)"><span>{{ item.name }}</span><span>{{ studioLanguage === item.id ? '✓' : '' }}</span></button>
+        </div>
+      </div>
+      <span class="menubar-spacer"></span>
+      <span class="menubar-hint">WebWindows 专用开发环境</span>
+    </nav>
+
+    <section v-if="activeProject" class="studio-main" :class="workspaceClasses">
+      <aside v-show="explorerVisible" class="explorer-panel">
         <div class="panel-heading">
-          <span>Project · {{ activeProject.displayName }}</span>
+          <span>项目 · {{ activeProject.displayName }}</span>
           <div class="panel-actions">
-            <button type="button" title="新建文件" @click="createEntry('file')">＋F</button>
-            <button type="button" title="新建目录" @click="createEntry('directory')">＋D</button>
-            <button type="button" title="重命名" :disabled="!selectedPath" @click="renameSelectedEntry">R</button>
-            <button type="button" title="删除" :disabled="!selectedPath" @click="deleteSelectedEntry">×</button>
+            <button type="button" title="新建文件" aria-label="新建文件" @click="createEntry('file')"><StudioIcon name="file-add" /></button>
+            <button type="button" title="新建目录" aria-label="新建目录" @click="createEntry('directory')"><StudioIcon name="folder-add" /></button>
+            <button type="button" title="重命名" aria-label="重命名" :disabled="!selectedPath" @click="renameSelectedEntry"><StudioIcon name="rename" /></button>
+            <button type="button" title="删除" aria-label="删除" :disabled="!selectedPath" @click="deleteSelectedEntry"><StudioIcon name="delete" /></button>
           </div>
         </div>
         <div class="file-tree">
@@ -580,6 +752,7 @@ function finishDialog(result) {
             :language="editorLanguage"
             :value="editorText"
             :markers="activeMarkers"
+            :theme="studioTheme"
             @update:value="updateEditor"
             @save="flushSave().then(() => showStatus('已保存。')).catch(showError)"
             @error="showError"
@@ -590,7 +763,7 @@ function finishDialog(result) {
           </div>
         </div>
         <footer class="editor-statusbar">
-          <span class="status-path">{{ activeFile || 'No file selected' }}</span>
+          <span class="status-path">{{ activeFile || '未选择文件' }}</span>
           <span class="status-spacer"></span>
           <span>Spaces: 2</span>
           <span>UTF-8</span>
@@ -598,13 +771,13 @@ function finishDialog(result) {
         </footer>
       </section>
 
-      <aside class="inspector-panel">
+      <aside v-show="inspectorVisible" class="inspector-panel">
         <div class="panel-heading">
-          <span>Inspector</span>
+          <span>检查器</span>
           <div class="panel-switcher">
-            <button type="button" :class="{ active: inspectorMode === 'manifest' }" @click="inspectorMode = 'manifest'">Manifest</button>
-            <button type="button" :class="{ active: inspectorMode === 'permissions' }" @click="inspectorMode = 'permissions'">Permissions</button>
-            <button type="button" :class="{ active: inspectorMode === 'preview' }" @click="inspectorMode = 'preview'">Preview</button>
+            <button type="button" :class="{ active: inspectorMode === 'manifest' }" @click="inspectorMode = 'manifest'">清单</button>
+            <button type="button" :class="{ active: inspectorMode === 'permissions' }" @click="inspectorMode = 'permissions'">权限</button>
+            <button type="button" :class="{ active: inspectorMode === 'preview' }" @click="inspectorMode = 'preview'">预览</button>
           </div>
         </div>
         <div v-show="inspectorMode === 'manifest'" class="inspector-content">
@@ -613,35 +786,36 @@ function finishDialog(result) {
           <ManifestInspector
             :manifest="manifestValue"
             :diagnostics="manifestDiagnostics"
+            :language="studioLanguage"
             :permission-registry="permissionRegistry"
             :broker-methods="brokerMethods"
             @update:manifest="updateManifestForm($event).catch(showError)"
             @open-json="openFile('manifest.json').catch(showError)"
           />
           <section class="build-inspector">
-            <h3>Validation</h3>
+            <h3>验证结果</h3>
             <p v-if="!validationReport">尚未创建 Snapshot 验证。</p>
             <dl v-else>
-              <div><dt>Result</dt><dd>{{ validationReport.passed ? 'Passed' : 'Blocked' }}</dd></div>
-              <div><dt>Errors</dt><dd>{{ validationReport.errorCount }}</dd></div>
-              <div><dt>Warnings</dt><dd>{{ validationReport.warningCount }}</dd></div>
-              <div><dt>Files</dt><dd>{{ validationReport.packageFacts.fileCount }}</dd></div>
-              <div><dt>Bytes</dt><dd>{{ validationReport.packageFacts.unpackedBytes }}</dd></div>
+              <div><dt>结果</dt><dd>{{ validationReport.passed ? '通过' : '阻止' }}</dd></div>
+              <div><dt>错误</dt><dd>{{ validationReport.errorCount }}</dd></div>
+              <div><dt>警告</dt><dd>{{ validationReport.warningCount }}</dd></div>
+              <div><dt>文件</dt><dd>{{ validationReport.packageFacts.fileCount }}</dd></div>
+              <div><dt>字节</dt><dd>{{ validationReport.packageFacts.unpackedBytes }}</dd></div>
             </dl>
             <template v-if="buildResult">
-              <h3>Build Result</h3>
+              <h3>构建结果</h3>
               <p v-if="!buildResult.artifactReady" class="build-blocked">验证未通过，没有生成可发布 ZIP。</p>
               <dl v-else>
-                <div><dt>Size</dt><dd>{{ buildResult.zipSize }} bytes</dd></div>
-                <div><dt>Files</dt><dd>{{ buildResult.fileCount }}</dd></div>
+                <div><dt>大小</dt><dd>{{ buildResult.zipSize }} 字节</dd></div>
+                <div><dt>文件</dt><dd>{{ buildResult.fileCount }}</dd></div>
                 <div class="hash-row"><dt>SHA-256</dt><dd>{{ buildResult.sha256 }}</dd></div>
               </dl>
-              <button type="button" :disabled="!buildResult.artifactReady" @click="exportBuild">Export ZIP</button>
+              <button type="button" :disabled="!buildResult.artifactReady" @click="exportBuild">保存 ZIP 到云资料</button>
             </template>
           </section>
         </div>
         <div v-show="inspectorMode === 'permissions'" class="inspector-content">
-          <h2>Permission Inspector</h2>
+          <h2>权限检查器</h2>
           <PermissionInspector
             :manifest="manifestValue"
             :permission-registry="permissionRegistry"
@@ -652,7 +826,7 @@ function finishDialog(result) {
         </div>
         <div v-show="inspectorMode === 'preview'" class="preview-inspector">
           <div class="preview-session-banner">
-            <strong>Developer Preview</strong>
+            <strong>开发者预览</strong>
             <span v-if="previewSession">{{ previewSession.state }} · {{ previewSession.snapshotId }}</span>
             <span v-else>无活动会话</span>
           </div>
@@ -682,25 +856,25 @@ function finishDialog(result) {
       <button type="button" @click="repairProjectStorage">修复项目存储</button>
     </section>
 
-    <section class="problems-panel">
+    <section v-show="bottomPanelVisible" class="problems-panel">
       <div class="bottom-tabs">
-        <button type="button" :class="{ active: bottomPanel === 'problems' }" @click="bottomPanel = 'problems'">Problems <span>{{ displayedProblems.length }}</span></button>
-        <button type="button" :class="{ active: bottomPanel === 'console' }" @click="bottomPanel = 'console'">Console <span>{{ consoleEvents.length }}</span></button>
-        <button type="button" :class="{ active: bottomPanel === 'broker' }" @click="bottomPanel = 'broker'">Permissions <span>{{ brokerDiagnostics.length }}</span></button>
+        <button type="button" :class="{ active: bottomPanel === 'problems' }" @click="bottomPanel = 'problems'">问题 <span>{{ displayedProblems.length }}</span></button>
+        <button type="button" :class="{ active: bottomPanel === 'console' }" @click="bottomPanel = 'console'">控制台 <span>{{ consoleEvents.length }}</span></button>
+        <button type="button" :class="{ active: bottomPanel === 'broker' }" @click="bottomPanel = 'broker'">权限诊断 <span>{{ brokerDiagnostics.length }}</span></button>
         <span class="bottom-spacer"></span>
         <span
           v-if="storageStatus.degraded"
           class="storage-mode-badge"
           title="IndexedDB 不可用；项目正在使用容量受限的隔离 localStorage 工作区。"
-        >⚠ Local fallback</span>
+        >⚠ 本地兼容存储</span>
         <template v-if="bottomPanel === 'console'">
-          <select v-model="consoleLevel" aria-label="Console level">
-            <option value="all">All levels</option>
+          <select v-model="consoleLevel" aria-label="控制台级别">
+            <option value="all">全部级别</option>
             <option v-for="level in ['log', 'info', 'warn', 'error', 'debug']" :key="level" :value="level">{{ level }}</option>
           </select>
-          <button type="button" @click="clearConsole">Clear</button>
+          <button type="button" @click="clearConsole">清除</button>
         </template>
-        <button v-else-if="bottomPanel === 'broker'" type="button" @click="clearBrokerDiagnostics">Clear</button>
+        <button v-else-if="bottomPanel === 'broker'" type="button" @click="clearBrokerDiagnostics">清除</button>
       </div>
       <template v-if="bottomPanel === 'problems'">
         <div v-if="!displayedProblems.length" class="problems-empty">当前 Snapshot 未发现问题。</div>
@@ -717,7 +891,7 @@ function finishDialog(result) {
         </button>
       </template>
       <template v-else-if="bottomPanel === 'console'">
-        <div v-if="!displayedConsoleEvents.length" class="problems-empty">当前 Developer Preview 尚无 Console 输出。</div>
+        <div v-if="!displayedConsoleEvents.length" class="problems-empty">当前开发者预览尚无控制台输出。</div>
         <div v-for="event in displayedConsoleEvents" :key="`${event.sessionId}:${event.sequence}`" class="console-row" :class="event.level">
           <time>{{ event.timestamp }}</time>
           <strong>{{ event.level }}</strong>
@@ -726,15 +900,15 @@ function finishDialog(result) {
         </div>
       </template>
       <template v-else>
-        <div v-if="!brokerDiagnostics.length" class="problems-empty">当前 Preview 尚无 Broker permission diagnostics。</div>
+        <div v-if="!brokerDiagnostics.length" class="problems-empty">当前预览尚无 Broker 权限诊断。</div>
         <div v-for="(item, index) in brokerDiagnostics" :key="`${item.sessionId}:${item.requestId}:${index}`" class="broker-row">
           <time>{{ item.timestamp }}</time>
           <code>{{ item.method || 'protocol' }}</code>
           <span>{{ item.permission || '—' }}</span>
-          <span>declared: {{ item.declared == null ? 'n/a' : item.declared ? 'yes' : 'no' }}</span>
-          <span>policy: {{ item.policyDecision }}</span>
-          <span>grant: {{ item.grantState || 'n/a' }}</span>
-          <span>capability: {{ item.capabilityState }}</span>
+          <span>已声明：{{ item.declared == null ? '不适用' : item.declared ? '是' : '否' }}</span>
+          <span>策略：{{ item.policyDecision }}</span>
+          <span>授权：{{ item.grantState || '不适用' }}</span>
+          <span>能力：{{ item.capabilityState }}</span>
           <strong :class="item.finalDecision">{{ item.denialReason || item.resultCategory }}</strong>
         </div>
       </template>

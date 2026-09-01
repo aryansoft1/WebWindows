@@ -25,8 +25,8 @@ const items = computed(() => {
         methods,
         latest,
         declared: Array.isArray(props.manifest?.permissions) && props.manifest.permissions.includes(permission.id),
-        consent: methods[0]?.consent || permission.prompt || "unspecified",
-        capability: latest?.capabilityState || (baseline.length ? baseline.join(" · ") : "unspecified")
+        consent: methods[0]?.consent || permission.prompt || "未指定",
+        capability: latest?.capabilityState || (baseline.length ? baseline.join(" · ") : "未指定")
       };
     });
 });
@@ -40,18 +40,18 @@ const items = computed(() => {
       <code>{{ permission.id }}</code>
       <p>{{ permission.description }}</p>
       <dl>
-        <div><dt>Risk</dt><dd>{{ permission.risk }}</dd></div>
-        <div><dt>Consent</dt><dd>{{ permission.consent }}</dd></div>
-        <div><dt>Declared</dt><dd>{{ permission.declared ? 'yes' : 'no' }}</dd></div>
-        <div><dt>Policy</dt><dd>{{ permission.latest?.policyDecision || 'not-evaluated' }}</dd></div>
-        <div><dt>Grant</dt><dd>{{ permission.latest?.grantState || 'not-evaluated' }}</dd></div>
-        <div><dt>Runtime capability</dt><dd>{{ permission.capability }}</dd></div>
-        <div><dt>Effective</dt><dd>{{ permission.latest ? permission.latest.finalDecision : 'not-evaluated' }}</dd></div>
-        <div><dt>Policy version</dt><dd>{{ permission.latest?.policyVersion || '—' }}</dd></div>
+        <div><dt>风险</dt><dd>{{ permission.risk }}</dd></div>
+        <div><dt>同意方式</dt><dd>{{ permission.consent }}</dd></div>
+        <div><dt>已声明</dt><dd>{{ permission.declared ? '是' : '否' }}</dd></div>
+        <div><dt>策略</dt><dd>{{ permission.latest?.policyDecision || '未评估' }}</dd></div>
+        <div><dt>授权</dt><dd>{{ permission.latest?.grantState || '未评估' }}</dd></div>
+        <div><dt>运行时能力</dt><dd>{{ permission.capability }}</dd></div>
+        <div><dt>生效结果</dt><dd>{{ permission.latest ? permission.latest.finalDecision : '未评估' }}</dd></div>
+        <div><dt>策略版本</dt><dd>{{ permission.latest?.policyVersion || '—' }}</dd></div>
       </dl>
-      <h4>Broker methods</h4>
+      <h4>Broker 方法</h4>
       <code v-for="method in permission.methods" :key="method.id" class="permission-method">{{ method.id }}</code>
     </article>
-    <div v-if="!items.length" class="problems-empty">当前 registry 没有可声明的 Preview permission。</div>
+    <div v-if="!items.length" class="problems-empty">当前权限注册表没有可声明的预览权限。</div>
   </div>
 </template>

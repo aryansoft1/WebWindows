@@ -44,6 +44,7 @@ const consoleLevel = ref("all");
 const status = ref("");
 const statusKind = ref("");
 const storageRecoveryAvailable = ref(false);
+const storageStatus = ref(repository.getStorageStatus());
 const dialog = ref(null);
 let dialogResolve = null;
 let saveTimer = 0;
@@ -87,6 +88,7 @@ onBeforeUnmount(() => {
 
 async function refreshProjects() {
   projects.value = await repository.listProjects();
+  storageStatus.value = repository.getStorageStatus();
 }
 
 async function createProject() {
@@ -667,6 +669,11 @@ function finishDialog(result) {
         <span>仅在错误持续出现时使用；修复会删除此浏览器中的 Developer Studio 项目。</span>
       </div>
       <button type="button" @click="repairProjectStorage">修复项目存储</button>
+    </section>
+
+    <section v-else-if="storageStatus.degraded" class="storage-degraded" role="status">
+      <strong>浏览器 IndexedDB 当前不可用</strong>
+      <span>Developer Studio 已启用受限的本地降级工作区；项目仍会隔离保存，但容量低于正式工作区。</span>
     </section>
 
     <section class="problems-panel">

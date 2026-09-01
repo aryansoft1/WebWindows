@@ -1,1 +1,1 @@
-import "./assets/entry-D3C2lKLz.js";
+import "./assets/entry-BfI_Dvj3.js";

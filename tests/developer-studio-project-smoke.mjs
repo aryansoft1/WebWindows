@@ -77,4 +77,54 @@ assert.equal(storageError.code, "studio-storage-failure");
 assert.equal(storageError.recoverable, true);
 assert.match(storageError.message, /UnknownError: Internal error\./);
 
+class MemoryStorage {
+  constructor() { this.values = new Map(); }
+  getItem(key) { return this.values.has(key) ? this.values.get(key) : null; }
+  setItem(key, value) { this.values.set(key, String(value)); }
+  removeItem(key) { this.values.delete(key); }
+}
+
+const unavailableIndexedDB = {
+  open() {
+    const request = {};
+    queueMicrotask(() => {
+      request.error = new DOMException("Internal error.", "UnknownError");
+      request.onerror?.();
+    });
+    return request;
+  },
+  deleteDatabase() {
+    const request = {};
+    queueMicrotask(() => {
+      request.error = new DOMException("Internal error.", "UnknownError");
+      request.onerror?.();
+    });
+    return request;
+  }
+};
+const fallbackStorage = new MemoryStorage();
+const fallbackDatabaseName = `webwindows-developer-studio-fallback-${Date.now()}`;
+const fallbackRepository = new ProjectRepository({
+  indexedDB: unavailableIndexedDB,
+  localStorage: fallbackStorage,
+  databaseName: fallbackDatabaseName
+});
+assert.deepEqual(await fallbackRepository.listProjects(), []);
+assert.equal(fallbackRepository.getStorageStatus().mode, "localstorage-fallback");
+const fallbackProject = await fallbackRepository.createProject({ ...template, displayName: "Fallback Project" });
+await fallbackRepository.writeTextFile(fallbackProject.uuid, "index.html", "fallback content");
+await fallbackRepository.close();
+
+const reopenedFallbackRepository = new ProjectRepository({
+  indexedDB: unavailableIndexedDB,
+  localStorage: fallbackStorage,
+  databaseName: fallbackDatabaseName
+});
+assert.equal((await reopenedFallbackRepository.getProject(fallbackProject.uuid)).displayName, "Fallback Project");
+assert.equal(await reopenedFallbackRepository.readTextFile(fallbackProject.uuid, "index.html"), "fallback content");
+assert.equal(reopenedFallbackRepository.getStorageStatus().degraded, true);
+await reopenedFallbackRepository.resetStorage();
+assert.deepEqual(await reopenedFallbackRepository.listProjects(), []);
+await reopenedFallbackRepository.close();
+
 console.log("developer studio project isolation smoke test passed");

@@ -405,6 +405,24 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .storage-recovery span { font-size: 12px; color: #7a5155; }
 .storage-recovery button { white-space: nowrap; }
 
+.storage-degraded {
+  position: fixed;
+  right: 16px;
+  bottom: 72px;
+  z-index: 21;
+  display: grid;
+  gap: 3px;
+  max-width: min(620px, calc(100vw - 32px));
+  padding: 11px 14px;
+  border: 1px solid #d7b46a;
+  border-radius: 10px;
+  background: #fff9e8;
+  color: #725019;
+  box-shadow: 0 12px 30px rgb(42 55 82 / 14%);
+}
+
+.storage-degraded span { font-size: 12px; color: #806940; }
+
 .studio-dialog-backdrop {
   position: fixed;
   inset: 0;

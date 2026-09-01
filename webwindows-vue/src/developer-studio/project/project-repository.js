@@ -3,10 +3,12 @@ import {
   normalizeProjectPath,
   parentProjectPath
 } from "./path-policy.js";
+import { LocalStorageProjectDatabase } from "./local-storage-database.js";
 
 export const STUDIO_DATABASE_NAME = "webwindows-developer-studio-v1";
 export const STUDIO_STORAGE_VERSION = 1;
 export const STUDIO_SCHEMA_VERSION = 1;
+export const STUDIO_FALLBACK_STORAGE_SUFFIX = "localstorage-fallback-v1";
 
 const PROJECT_STORE = "projects";
 const FILE_STORE = "files";
@@ -43,11 +45,26 @@ export function isStudioStorageError(error) {
 export class ProjectRepository {
   constructor(options = {}) {
     this.indexedDB = options.indexedDB || globalThis.indexedDB;
+    this.localStorage = options.localStorage || globalThis.localStorage;
     this.crypto = options.crypto || globalThis.crypto;
     this.databaseName = options.databaseName || STUDIO_DATABASE_NAME;
+    this.fallbackStorageKey = `${this.databaseName}:${STUDIO_FALLBACK_STORAGE_SUFFIX}`;
     this.now = options.now || (() => new Date().toISOString());
     this.databasePromise = null;
-    if (!this.indexedDB) throw new Error("IndexedDB is required by Developer Studio.");
+    this.storageMode = "indexeddb";
+    this.storageModeCause = null;
+    if (!this.indexedDB && !this.localStorage) {
+      throw new Error("IndexedDB or localStorage is required by Developer Studio.");
+    }
+  }
+
+  getStorageStatus() {
+    return Object.freeze({
+      mode: this.storageMode,
+      degraded: this.storageMode !== "indexeddb",
+      causeName: this.storageModeCause?.causeName || this.storageModeCause?.name || null,
+      causeMessage: this.storageModeCause?.causeMessage || this.storageModeCause?.message || null
+    });
   }
 
   async listProjects() {
@@ -250,6 +267,14 @@ export class ProjectRepository {
 
   async resetStorage() {
     await this.close();
+    if (this.storageMode === "localstorage-fallback") {
+      try {
+        this.localStorage.removeItem(this.fallbackStorageKey);
+        return;
+      } catch (error) {
+        throw storageError("reset", error, "Developer Studio 浏览器降级存储重建失败。");
+      }
+    }
     await new Promise((resolve, reject) => {
       const request = this.indexedDB.deleteDatabase(this.databaseName);
       request.onsuccess = () => resolve();
@@ -264,6 +289,10 @@ export class ProjectRepository {
 
   async open() {
     if (this.databasePromise) return this.databasePromise;
+    if (this.storageMode === "localstorage-fallback") return this.openFallback(this.storageModeCause);
+    if (!this.indexedDB) {
+      return this.openFallback(storageError("open", null, "当前浏览器不支持 IndexedDB。"));
+    }
     this.databasePromise = new Promise((resolve, reject) => {
       const request = this.indexedDB.open(this.databaseName, STUDIO_STORAGE_VERSION);
       request.onupgradeneeded = () => {
@@ -290,7 +319,27 @@ export class ProjectRepository {
       return database;
     } catch (error) {
       this.databasePromise = null;
+      if (canUseLocalStorageFallback(error, this.localStorage)) return this.openFallback(error);
       throw error;
+    }
+  }
+
+  async openFallback(cause) {
+    if (!this.localStorage) throw cause;
+    try {
+      const firstActivation = this.storageMode !== "localstorage-fallback";
+      const database = new LocalStorageProjectDatabase(this.localStorage, this.fallbackStorageKey);
+      database.readDocument();
+      this.storageMode = "localstorage-fallback";
+      this.storageModeCause = cause;
+      this.databasePromise = Promise.resolve(database);
+      if (firstActivation) {
+        console.warn("[DeveloperStudio] IndexedDB 不可用，启用受限的 localStorage 项目工作区。", cause);
+      }
+      return database;
+    } catch (error) {
+      this.databasePromise = null;
+      throw storageError("open", error, "Developer Studio 的 IndexedDB 与浏览器降级存储均不可用。");
     }
   }
 
@@ -487,6 +536,13 @@ function isIndexedDbFailure(error) {
 
 function isTransientStorageFailure(error) {
   return ["UnknownError", "InvalidStateError", "AbortError"].includes(String(error?.causeName || error?.name || ""))
+    || /internal error/i.test(String(error?.causeMessage || error?.message || ""));
+}
+
+function canUseLocalStorageFallback(error, localStorageObject) {
+  if (!localStorageObject || !isIndexedDbFailure(error)) return false;
+  const name = String(error?.causeName || error?.name || "");
+  return ["UnknownError", "InvalidStateError", "SecurityError"].includes(name)
     || /internal error/i.test(String(error?.causeMessage || error?.message || ""));
 }
 

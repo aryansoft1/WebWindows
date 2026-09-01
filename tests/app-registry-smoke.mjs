@@ -134,7 +134,7 @@ await apps.launch("webwindows.system.developer-studio");
 assert.deepEqual(openedWindows.at(-1), [
   "developer-studio",
   "Developer Studio",
-  "developer-studio.html?v=20260901-workbench-1",
+  "developer-studio.html?v=20260901-workbench-2",
   "assets/icons/code.svg",
   true,
   "",

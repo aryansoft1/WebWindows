@@ -1,6 +1,9 @@
 # Dreama Runtime Storage/SAF Capability v1 Contract Design Audit
 
-Status: **contract proposal only**. This document audits the implementation at
+Status: **Storage Capability v1 Frozen**. Final adjudication accepted the
+22 Pass / 0 Fail / 4 Blocked / 0 N/A validation matrix; the Blocked rows are
+documented validation-environment limitations rather than reproduced defects.
+This document audits the implementation at
 website commit `76ce102366ff391db58c322d86ece02d01ca36a9` and Android commit
 `61347865e678f5d965271413022ff9c9b876b1cd`. It does not authorize or implement
 production Storage changes.
@@ -713,9 +716,9 @@ separate Web platform feature.
 
 ## 17. Phase 2 data contract hardening
 
-Phase 2 status: **Storage Capability v1 Frozen Candidate**. Final/Frozen status
-still requires the remaining lifecycle/compatibility phases and real-device SAF
-verification.
+Phase 2 historical status was **Storage Capability v1 Frozen Candidate**. It is
+superseded by the final **Storage Capability v1 Frozen** adjudication recorded
+in the real-device validation document.
 
 Phase 2 freezes the five existing Native methods without adding a method or
 changing Native Bridge v1. Native Volume, Permission, Directory Entry, Metadata,

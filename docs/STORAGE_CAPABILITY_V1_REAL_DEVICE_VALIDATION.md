@@ -1,8 +1,9 @@
 # Storage Capability v1 — Android Real-device Validation Record
 
-Status: **validation preparation only**. This document records evidence for the
-existing Frozen Candidate contract. It does not change the public API, Native
-ABI, Native Bridge v1, RuntimeInfo, or production behavior.
+Status: **Storage Capability v1 Frozen**. Final adjudication accepted the
+validation matrix with four documented validation-environment limitations.
+This document does not change the public API, Native ABI, Native Bridge v1,
+RuntimeInfo, or production behavior.
 
 ## Current device baseline
 
@@ -20,7 +21,7 @@ ABI, Native Bridge v1, RuntimeInfo, or production behavior.
 
 - Native Bridge v1 is **Frozen**.
 - Battery, Network, Display, and Audio contracts are unchanged.
-- Storage v1 is **Frozen Candidate**, not Final/Frozen.
+- Storage v1 is **Frozen**.
 - Storage write, streaming, and forget/release are unsupported.
 - The maximum read is exactly **8,388,608 raw bytes**.
 - Volumes use opaque IDs and exact-origin isolation.
@@ -112,16 +113,66 @@ an environment/test-runner limitation, not a Storage contract failure.
 For provider or lifecycle failures, preserve public error code plus redacted
 capture. Do not add URI logging or a debugging API solely for validation.
 
+## Canonical Frozen identity and contract
+
+The sole canonical deployed Storage provider identity is:
+
+- file: `assets/js/device-storage-provider.js`;
+- size: **21,102 bytes**;
+- SHA-256:
+  `5318CB616D738DB2BF207338EB488601BAB6C4C7383A91BA8D604477DF5263E4`;
+- release token: `20260825-storage-2`.
+
+The Frozen public API is `storage.isSupported()`, `storage.getCapabilities()`,
+`storage.getState()`, `storage.refresh()`, `storage.listVolumes()`,
+`storage.pickDirectory()`, `storage.requestPermission()`,
+`storage.listDirectory()`, `storage.openFile()`, and `storage.getMetadata()`.
+The Frozen Native read contract is `storageListVolumes`,
+`storagePickDirectory`, `storageListDirectory`, `storageGetMetadata`, and
+`storageOpenFile`.
+
+Frozen semantics are exact-origin ownership/isolation; opaque volume IDs;
+strict path-segment, Volume, Metadata, and canonical Base64 validation; public
+`ArrayBuffer` mapping; an exact whole-file maximum of 8,388,608 raw bytes
+(8 MiB succeeds and 8 MiB + 1 is rejected); picker lifecycle/tombstone and
+timeout behavior; public error normalization; and no URI, filesystem path,
+document ID, provider-private value, or platform exception leakage. Write and
+streaming remain unsupported, and the contract assumes no new Native method.
+
+The historical 21,567-byte CRLF payload with SHA-256
+`F08E943A940D40FB1070630D4457C7645F096516791E5C3D1AC05CB67562834E`
+is provenance-drift evidence only and is not a second Frozen identity. The
+drift arose because a clean deployment worktree used `core.autocrlf=true`
+without that branch's required line-ending protection. FTP
+`curl --upload-file` transferred raw bytes and did not cause the conversion.
+
+## Accepted validation-environment limitations
+
+The four Blocked rows remain Blocked, not Pass, Fail, waived defects, or known
+product bugs:
+
+- RD-08: the tested environment exposed no safe, natural mechanism to revoke
+  one persisted SAF grant without manipulating app/provider internal state.
+- RD-20: no tested real provider naturally returned an unknown/null file size.
+- RD-21: no tested real provider naturally returned an unknown/zero
+  modification time.
+- RD-25: Battery, Network, Display, and Audio read/set/refresh passed, but the
+  emulator could not substitute for a physical STREAM_MUSIC volume-key event.
+
+A future provider exposing unknown size/time, a device exposing a safe
+persisted-grant revoke path, or a physical Android volume key may close these
+evidence gaps opportunistically without reopening Frozen Storage v1. Any
+future behavior that violates the Frozen contract is triaged separately as a
+defect.
+
+One emulator cold start temporarily selected the Browser adapter and recovered
+after reload; a subsequent independent cold start did not reproduce it. This
+is retained only as a non-reproducible Native Runtime bootstrap/lifecycle
+observation, not as a Storage defect, Pass condition, or resolved defect.
+
 ## Freeze gate
 
-Current validation outcome: **BLOCKED**. The exact-byte Production Gate and
-RD-26 retry pass, and there are no remaining Fail rows. Storage v1 remains
-**Frozen Candidate**; this document does not promote it to Final/Frozen.
-RD-08, RD-20, RD-21, and the physical-key portion of RD-25 remain Blocked.
-
-Do not promote Storage v1 to Final/Frozen until the applicable rows pass,
-including dual-origin isolation, restart/reauthorization identity, stale
-callback disposal, revoked-grant behavior, 8 MiB boundary, provider variability,
-HTML upload isolation, and Launcher regressions. A blocked row must include its
-device/provider limitation and does not become a pass merely because automatic
-tests passed.
+Final Freeze Gate: **PASS — accepted with documented validation limitations**.
+The preserved matrix is **22 Pass, 0 Fail, 4 Blocked, 0 N/A**. Final GPT
+adjudication promotes Storage v1 from Frozen Candidate to **Frozen** without
+rewriting any Blocked row as Pass.

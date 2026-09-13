@@ -1,55 +1,65 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.08.26.1",
-  "catalogVersion": "2026.08.26.1",
-  "generatedAt": "2026-08-26T01:05:36.410Z",
+  "releaseScope": "camera-registry",
+  "releaseVersion": "2026.09.13.1",
+  "catalogVersion": "2026.09.13.1",
+  "generatedAt": "2026-09-13T00:58:28.244Z",
   "root": "/wwwroot",
   "requiredFiles": [
-    "deploy/ftp-manifest.json",
-    "index.html",
+    "admin_api/adminGuard.asp",
+    "admin_api/deleteDatacenter.asp",
+    "admin_api/getDatacenters.asp",
+    "admin_api/saveDatacenter.asp",
+    "api/dt_discovery.asp",
+    "api/dt_fetch_links.asp",
+    "api/dt_presence_mem.asp",
     "api/function-catalog.asp",
-    "data/apps/system-apps.json",
-    "assets/js/app-registry.js",
-    "assets/js/tw.js",
-    "assets/js/file-query-parser.js",
-    "assets/js/file-search.js",
-    "assets/js/ai-tool-registry.js",
-    "assets/js/ai-file-tools.js",
-    "assets/js/desktalk.js",
-    "assets/js/taskbar-experience.js",
-    "assets/js/vendor/html2canvas.min.js",
-    "assets/js/sysinfo.js",
-    "assets/js/auth-session.js",
-    "assets/js/connectivity.js",
-    "assets/js/contextmenu-guard.js",
-    "assets/js/desktop-functions.js",
-    "assets/js/device-api.js",
-    "assets/js/device-controls.js",
-    "assets/js/device-storage-provider.js",
-    "assets/js/function-sync.js",
-    "assets/js/locale-region.js",
-    "assets/js/main.js",
-    "assets/js/login.js",
-    "assets/js/news.js",
-    "assets/js/network-speed.js",
-    "assets/js/settings.js",
-    "assets/js/snap_drag.js",
-    "assets/js/start-menu-functions.js",
-    "assets/js/system-session.js",
-    "assets/js/webwindows-message.js",
-    "assets/js/wallpaper.js",
-    "assets/js/cloud-file-dialog.js",
-    "assets/js/resource-open.js",
-    "assets/js/function-center.js",
-    "assets/js/guide.js",
+    "api/mobile-version.asp",
+    "api/release-version.asp",
+    "api/storage-quota.asp",
+    "aplay.html",
+    "assets/css/context_menu.css",
+    "assets/css/desktalk.css",
+    "assets/css/developer-studio.css",
     "assets/css/function-center.css",
     "assets/css/guide.css",
     "assets/css/main.css",
-    "assets/css/sysinfo.css",
-    "assets/css/context_menu.css",
-    "assets/css/desktalk.css",
     "assets/css/news.css",
     "assets/css/settings.css",
+    "assets/css/sysinfo.css",
+    "assets/icons/149071.png",
+    "assets/icons/aplay.png",
+    "assets/icons/cloud_secretary.png",
+    "assets/icons/cloud.png",
+    "assets/icons/code.png",
+    "assets/icons/code.svg",
+    "assets/icons/contact.png",
+    "assets/icons/desktalk.png",
+    "assets/icons/dreama.png",
+    "assets/icons/explorer.png",
+    "assets/icons/function-center.svg",
+    "assets/icons/guide.svg",
+    "assets/icons/japan.png",
+    "assets/icons/logo_large.png",
+    "assets/icons/logo.png",
+    "assets/icons/mailbox.png",
+    "assets/icons/news.png",
+    "assets/icons/power.png",
+    "assets/icons/settings-display.svg",
+    "assets/icons/settings-functions.svg",
+    "assets/icons/settings-guide.svg",
+    "assets/icons/settings-language.svg",
+    "assets/icons/settings-network.svg",
+    "assets/icons/settings-power.svg",
+    "assets/icons/settings-sound.svg",
+    "assets/icons/settings-wallpaper.svg",
+    "assets/icons/settings.png",
+    "assets/icons/sheeteditor.png",
+    "assets/icons/slideeditor.svg",
+    "assets/icons/sysinfo.png",
+    "assets/icons/wall_aryan.jpg",
+    "assets/icons/web.png",
+    "assets/icons/writeeditor.svg",
     "assets/images/case1.jpg",
     "assets/images/case2.jpg",
     "assets/images/case3.jpg",
@@ -64,67 +74,41 @@
     "assets/img/software/software3.jpg",
     "assets/img/software/software4.jpg",
     "assets/img/software/software5.jpg",
-    "assets/icons/149071.png",
-    "assets/icons/aplay.png",
-    "assets/icons/cloud.png",
-    "assets/icons/cloud_secretary.png",
-    "assets/icons/code.png",
-    "assets/icons/contact.png",
-    "assets/icons/desktalk.png",
-    "assets/icons/explorer.png",
-    "assets/icons/japan.png",
-    "assets/icons/logo.png",
-    "assets/icons/logo_large.png",
-    "assets/icons/news.png",
-    "assets/icons/power.png",
-    "assets/icons/settings.png",
-    "assets/icons/settings-display.svg",
-    "assets/icons/settings-functions.svg",
-    "assets/icons/settings-guide.svg",
-    "assets/icons/settings-language.svg",
-    "assets/icons/settings-network.svg",
-    "assets/icons/settings-power.svg",
-    "assets/icons/settings-sound.svg",
-    "assets/icons/settings-wallpaper.svg",
-    "assets/icons/sheeteditor.png",
-    "assets/icons/sysinfo.png",
-    "assets/icons/wall_aryan.jpg",
-    "assets/icons/web.png",
-    "assets/icons/function-center.svg",
-    "assets/icons/guide.svg",
-    "assets/icons/writeeditor.svg",
-    "assets/icons/slideeditor.svg",
-    "assets/icons/dreama.png",
-    "assets/icons/mailbox.png",
-    "function-center.html",
-    "guide.html",
-    "dreama.html",
-    "sysinfo.html",
-    "login.html",
-    "settings.html",
-    "aplay.html",
-    "news.html",
-    "web.html",
+    "assets/js/ai-file-tools.js",
+    "assets/js/ai-tool-registry.js",
+    "assets/js/app-registry.js",
+    "assets/js/auth-session.js",
+    "assets/js/cloud-file-dialog.js",
+    "assets/js/connectivity.js",
+    "assets/js/contextmenu-guard.js",
+    "assets/js/desktalk.js",
+    "assets/js/desktop-functions.js",
+    "assets/js/device-api.js",
+    "assets/js/device-controls.js",
+    "assets/js/device-storage-provider.js",
+    "assets/js/file-query-parser.js",
+    "assets/js/file-search.js",
+    "assets/js/function-center.js",
+    "assets/js/function-sync.js",
+    "assets/js/guide.js",
+    "assets/js/locale-region.js",
+    "assets/js/login.js",
+    "assets/js/main.js",
+    "assets/js/network-speed.js",
+    "assets/js/news_view.js",
+    "assets/js/news.js",
+    "assets/js/resource-open.js",
+    "assets/js/settings.js",
+    "assets/js/snap_drag.js",
+    "assets/js/start-menu-functions.js",
+    "assets/js/sysinfo.js",
+    "assets/js/system-session.js",
+    "assets/js/taskbar-experience.js",
+    "assets/js/tw.js",
+    "assets/js/vendor/html2canvas.min.js",
+    "assets/js/wallpaper.js",
+    "assets/js/webwindows-message.js",
     "cloud.html",
-    "software.html",
-    "japan.html",
-    "contact.html",
-    "inc/sysinfo.asp",
-    "worker_SheetCreater.html",
-    "worker_WriteEditor.html",
-    "worker_SlideEditor.html",
-    "cloud/browser/files.asp",
-    "cloud/browser/private-files.asp",
-    "cloud/browser/private-resource.asp",
-    "cloud/browser/search.asp",
-    "cloud/browser/search-ui.js",
-    "cloud/browser/file-search.css",
-    "cloud/browser/styles.css",
-    "cloud/browser/toolbar.js",
-    "cloud/browser/device-locations.js",
-    "cloud/browser/private-files.css",
-    "cloud/browser/FILE_DIALOG_API.md",
-    "cloud/browser/FILE_SEARCH_QUERY_V2.md",
     "cloud/browser/assets/archive.svg",
     "cloud/browser/assets/back.svg",
     "cloud/browser/assets/cloud.svg",
@@ -150,33 +134,135 @@
     "cloud/browser/assets/sort.svg",
     "cloud/browser/assets/up.svg",
     "cloud/browser/assets/word.svg",
+    "cloud/browser/device-locations.js",
+    "cloud/browser/FILE_DIALOG_API.md",
+    "cloud/browser/FILE_SEARCH_QUERY_V2.md",
+    "cloud/browser/file-search.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/openResource.asp",
+    "cloud/browser/private-files.asp",
+    "cloud/browser/private-files.css",
+    "cloud/browser/private-resource.asp",
+    "cloud/browser/search-ui.js",
+    "cloud/browser/search.asp",
+    "cloud/browser/styles.css",
+    "cloud/browser/toolbar.js",
+    "contact.html",
+    "data/apps/system-apps.json",
+    "data/sdk/capability-broker-errors-v1.json",
+    "data/sdk/capability-broker-methods-v1.json",
+    "data/sdk/capability-broker-policy-v1.json",
+    "data/sdk/capability-broker-v1.schema.json",
+    "data/sdk/manifest-v1.schema.json",
+    "data/sdk/manifest-v2.schema.json",
+    "data/sdk/package-runtime-policy-v1.json",
+    "data/sdk/permission-decision-v1.json",
+    "data/sdk/permissions-v1.json",
+    "data/sdk/runtime-compatibility-v1.json",
+    "data/sdk/studio-validator-rules-v1.json",
+    "data/sdk/webwindows-public-api-v1.d.ts",
+    "deploy/ftp-manifest.json",
+    "developer-studio.html",
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js",
+    "dist-developer-studio/assets/cssMode-BffdnbGm.js",
+    "dist-developer-studio/assets/deterministic-builder-rPCWXDht.js",
+    "dist-developer-studio/assets/developer-studio-bundle-JQHyfORd.css",
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js",
+    "dist-developer-studio/assets/entry-CGcSuRL0.js",
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js",
+    "dist-developer-studio/assets/htmlMode-B6K1n-I4.js",
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js",
+    "dist-developer-studio/assets/jsonMode-CCy7FGMm.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-D5n6O-aA.js",
+    "dist-developer-studio/assets/monaco-runtime-zBBsQfqc.js",
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js",
+    "dist-developer-studio/assets/tsMode-bJZXwJIM.js",
+    "dist-developer-studio/assets/workers-DAqVin0m.js",
+    "dist-developer-studio/developer-studio.js",
     "dist-menus/desktop-menus.global.js",
+    "dist-weather/weather-widget.css",
+    "dist-weather/weather-widget.global.js",
+    "dist-weather/weather-widget.umd.js",
     "dist-widget/weather-widget.css",
     "dist-window/window-manager-widget.css",
     "dist-window/window-manager-widget.js",
-    "dist-weather/weather-widget.umd.js",
-    "dist-weather/weather-widget.global.js",
-    "dist-weather/weather-widget.css",
-    "cloud/browser/openResource.asp",
-    "SystemManager/assets/js/datacenter.js",
-    "SystemManager/datacenter.html",
-    "admin_api/adminGuard.asp",
-    "admin_api/deleteDatacenter.asp",
-    "admin_api/getDatacenters.asp",
-    "admin_api/saveDatacenter.asp",
-    "api/storage-quota.asp",
+    "dist-window/window-manager-widget.umd.js",
+    "dreama.html",
+    "function-center.html",
+    "guide.html",
+    "inc/sysinfo.asp",
+    "index.html",
+    "japan.html",
+    "login.html",
+    "news_view.html",
+    "news.html",
+    "settings.html",
+    "software.html",
+    "sysinfo.html",
     "SystemManager/assets/css/admin.css",
     "SystemManager/assets/css/global.css",
-    "assets/js/news_view.js",
-    "news_view.html",
-    "api/dt_fetch_links.asp",
-    "api/dt_presence_mem.asp",
-    "api/dt_discovery.asp",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
-    "dist-window/window-manager-widget.umd.js"
+    "SystemManager/assets/js/datacenter.js",
+    "SystemManager/datacenter.html",
+    "web.html",
+    "worker_SheetCreater.html",
+    "worker_SlideEditor.html",
+    "worker_WriteEditor.html",
+    "dist-developer-studio/assets/cssMode-CJs23N2Y.js",
+    "dist-developer-studio/assets/deterministic-builder-BYHR4q3g.js",
+    "dist-developer-studio/assets/entry-D3C2lKLz.js",
+    "dist-developer-studio/assets/htmlMode-BLoUDPyK.js",
+    "dist-developer-studio/assets/jsonMode-BPvgVNIn.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-k5gY9p5b.js",
+    "dist-developer-studio/assets/monaco-runtime-DJGSYZUV.js",
+    "dist-developer-studio/assets/tsMode-DISVmoFp.js",
+    "dist-developer-studio/assets/workers-C30BkZNL.js",
+    "dist-developer-studio/assets/cssMode-KZipYaso.js",
+    "dist-developer-studio/assets/deterministic-builder-CqNlQNu7.js",
+    "dist-developer-studio/assets/entry-BfI_Dvj3.js",
+    "dist-developer-studio/assets/htmlMode-CTZ1YUNy.js",
+    "dist-developer-studio/assets/jsonMode-DxfkKOCv.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-DuLl0eFI.js",
+    "dist-developer-studio/assets/monaco-runtime-WWUG700c.js",
+    "dist-developer-studio/assets/tsMode-BNaR7XjO.js",
+    "dist-developer-studio/assets/workers-C2QXFWPI.js",
+    "dist-developer-studio/developer-studio-bundle.css",
+    "dist-developer-studio/assets/cssMode-WkHhmquM.js",
+    "dist-developer-studio/assets/deterministic-builder-CxlcHDXA.js",
+    "dist-developer-studio/assets/entry-BYK2OcgE.js",
+    "dist-developer-studio/assets/htmlMode-DW19n7tW.js",
+    "dist-developer-studio/assets/jsonMode-D2hI-fZU.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-DCT48yIQ.js",
+    "dist-developer-studio/assets/monaco-runtime-BcgZ2pqz.js",
+    "dist-developer-studio/assets/tsMode-zLg9Kmz0.js",
+    "dist-developer-studio/assets/workers-Dfla6ehT.js",
+    "dist-developer-studio/assets/css-DEPFDJfb.js",
+    "dist-developer-studio/assets/cssMode-BxAJKmZB.js",
+    "dist-developer-studio/assets/deterministic-builder-Cm_HhqlU.js",
+    "dist-developer-studio/assets/entry-Hyq_mgfy.js",
+    "dist-developer-studio/assets/html-Cotw2RoW.js",
+    "dist-developer-studio/assets/htmlMode-B_sKsBvG.js",
+    "dist-developer-studio/assets/javascript-DTUvgCdd.js",
+    "dist-developer-studio/assets/jsonMode-C050J1-0.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-BjYuljjf.js",
+    "dist-developer-studio/assets/monaco-runtime-m4SUO6-V.js",
+    "dist-developer-studio/assets/tsMode-BDjN3z_V.js",
+    "dist-developer-studio/assets/workers-B7EOJHKo.js",
+    "dist-developer-studio/assets/cssMode-B8VvReKw.js",
+    "dist-developer-studio/assets/deterministic-builder-Dv2KjYWP.js",
+    "dist-developer-studio/assets/entry-CH-KDpPm.js",
+    "dist-developer-studio/assets/htmlMode-bN71yeos.js",
+    "dist-developer-studio/assets/jsonMode-Bq9-3gAo.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-ChAwsFKu.js",
+    "dist-developer-studio/assets/monaco-runtime-B3zY8a7K.js",
+    "dist-developer-studio/assets/tsMode-DFsjp8fx.js",
+    "dist-developer-studio/assets/workers-teQvsEgY.js",
+    "camera.html",
+    "assets/css/camera.css",
+    "assets/icons/camera.svg",
+    "assets/js/camera-app.js",
+    "assets/js/camera-core.js"
   ],
-  "previousReleaseVersion": "2026.08.23.6",
+  "previousReleaseVersion": "2026.09.01.6",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -186,17 +272,13 @@
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
       "size": 8808
     },
-    "data/apps/system-apps.json": {
-      "sha256": "ff0d453c960073041a86ae716571109ef86a4bab31ede34ee9abd551815705cb",
-      "size": 13461
-    },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "5ec0ea9be370357f711332b6ce6a8f2c002e9e4705edd69244787313a2ddf83c",
-      "size": 67344
+      "sha256": "b5dfcec15c7e815f966719d19b72f1a933724a96090807c0c04026ff3500ad66",
+      "size": 61375
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -853,23 +935,359 @@
     "dist-window/window-manager-widget.umd.js": {
       "sha256": "a9b468d2cbd3ab224332da610ac0e228d9c8e7459e514f2431408a38ef72884c",
       "size": 88189
+    },
+    "assets/css/developer-studio.css": {
+      "sha256": "984eca1759b841302004164db17d9c9af398290d99ef134900e6fd1e43822870",
+      "size": 21517
+    },
+    "assets/icons/code.svg": {
+      "sha256": "00203861474fdb00cbdd2b677a9813c3cb7b2d7f2ace30c4fbf5f423489e39b8",
+      "size": 162
+    },
+    "data/apps/system-apps.json": {
+      "sha256": "7bc6590b96ece40ed04dc5958c8cfd3c1a489757300245cfc412203b7bb8d236",
+      "size": 14481
+    },
+    "data/sdk/capability-broker-errors-v1.json": {
+      "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
+      "size": 3147
+    },
+    "data/sdk/capability-broker-methods-v1.json": {
+      "sha256": "c77b1e204e1f46e59a96e31e4b55157b3a1c41f36bc3ebd9f6944606c18a2b63",
+      "size": 3542
+    },
+    "data/sdk/capability-broker-policy-v1.json": {
+      "sha256": "1ad1b6e63fee05a9cbd481bb7d45f053abb41742afb554aabc8c7111d0f0af6b",
+      "size": 4235
+    },
+    "data/sdk/capability-broker-v1.schema.json": {
+      "sha256": "474c140b0e29db636315cd5fbe2753bc92a3a31ddee8a13f34066eeadde372c9",
+      "size": 10279
+    },
+    "data/sdk/manifest-v1.schema.json": {
+      "sha256": "7ac345bdd704d0fcaa07b88ef1985aa363c6ece8a47fa0baa9709f618fef068a",
+      "size": 7419
+    },
+    "data/sdk/manifest-v2.schema.json": {
+      "sha256": "26eecc0326dc7cf99dd68d11612b16f7a4907e38afba807d7a086c3fd3713cc2",
+      "size": 7864
+    },
+    "data/sdk/package-runtime-policy-v1.json": {
+      "sha256": "f2f2eb104903169bc6312370caf8406a1cd1dace862090da870bd249552de0d9",
+      "size": 860
+    },
+    "data/sdk/permission-decision-v1.json": {
+      "sha256": "3e9829365f307c7c49817eabb77b2b0e441a3a748e829375276405c2462674b6",
+      "size": 3054
+    },
+    "data/sdk/permissions-v1.json": {
+      "sha256": "293b1cb84989cdf5890d554a5733365fbeef13fc21e96fff51d41495925d7f86",
+      "size": 5540
+    },
+    "data/sdk/runtime-compatibility-v1.json": {
+      "sha256": "c1e6e5274d034432e8ae1a4ed435e91f3e05d7537e60513228b2d48968bcdb3e",
+      "size": 6173
+    },
+    "data/sdk/studio-validator-rules-v1.json": {
+      "sha256": "37d5aebb7d4f1f17cdc08e53fecd591413c182d3871bee801a356ffa1ed477b7",
+      "size": 4111
+    },
+    "data/sdk/webwindows-public-api-v1.d.ts": {
+      "sha256": "6bdef7deed0a6cfcdb26e58294fd40d207676efa67fac3ed0b81cde9b6a8f090",
+      "size": 8849
+    },
+    "developer-studio.html": {
+      "sha256": "90326ec9d6890bd3b98ce37560f7145d461c02abb9d61167383bcb1dee44de6f",
+      "size": 1054
+    },
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js": {
+      "sha256": "9139f4992654e5ccb2a47ee0b28568632d80d58ec5db79a8f1c044400a8d20de",
+      "size": 1051259
+    },
+    "dist-developer-studio/assets/cssMode-BffdnbGm.js": {
+      "sha256": "a79605c0651aacf79d23a66743791bf40174faf39c067e01a3e5eef53e7734c3",
+      "size": 4144
+    },
+    "dist-developer-studio/assets/deterministic-builder-rPCWXDht.js": {
+      "sha256": "9884534845a18405ef8354fd6089f9fc0994e8cb801dacc56dc4b616e7d8e458",
+      "size": 145620
+    },
+    "dist-developer-studio/assets/developer-studio-bundle-JQHyfORd.css": {
+      "sha256": "3e483b644d0d6ae20313b99f06920bf49871397f22c42f2c5d8f31eda99d40df",
+      "size": 345185
+    },
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js": {
+      "sha256": "82457d2d0252fa37d9253cd19d40813bedbba5e7a5e8756766d8beef71fb271a",
+      "size": 272644
+    },
+    "dist-developer-studio/assets/entry-CGcSuRL0.js": {
+      "sha256": "3ea7be44a1e77f0e3f82f812223d230c133d3334e75bb45e0e6a660a49e0b13b",
+      "size": 373284
+    },
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js": {
+      "sha256": "05ddd6275aa868afbfc19f30c55803c6be87a23a904f6b075d8afe7064634da9",
+      "size": 714011
+    },
+    "dist-developer-studio/assets/htmlMode-B6K1n-I4.js": {
+      "sha256": "42f7e081af81cc051b8d0f0940f64f722960996ead4b62acfba55a67811055f4",
+      "size": 4598
+    },
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js": {
+      "sha256": "fdc6841ad8d8be7ec5418ca53cc11feb71ce2a8210e8d9e7fe0c6f87b7bb492b",
+      "size": 403940
+    },
+    "dist-developer-studio/assets/jsonMode-CCy7FGMm.js": {
+      "sha256": "eed5a29fd0374ad24e1324b25bc9888adaf2b76c6b1aaee0ec76f97f011b6212",
+      "size": 18197
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-D5n6O-aA.js": {
+      "sha256": "7b7cabfc52f681d58bc431f438b42cd1c3d699a93371d11e34bfbf3b10264b00",
+      "size": 38399
+    },
+    "dist-developer-studio/assets/monaco-runtime-zBBsQfqc.js": {
+      "sha256": "4227dd472022726de81031220926b10884904b02de93c05c4b651757d7d56feb",
+      "size": 3577331
+    },
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js": {
+      "sha256": "7a61db7a7a09a9143c04cd72274d06a70d477b1dc964bd192d24c76451b69f43",
+      "size": 7032927
+    },
+    "dist-developer-studio/assets/tsMode-bJZXwJIM.js": {
+      "sha256": "7662b79f8422e288899782cee8f24c17e64186a95391d1443c8a2a91878cfa69",
+      "size": 28936
+    },
+    "dist-developer-studio/assets/workers-DAqVin0m.js": {
+      "sha256": "e7c9b342135bf93cf44d53392cf3da31e848ebcbd33bb173205e5defca62f022",
+      "size": 1569880
+    },
+    "dist-developer-studio/developer-studio.js": {
+      "sha256": "a6085d59cd14991e0ec45637c9feb70311acae593de0e285f9f8841b7a931def",
+      "size": 37
+    },
+    "dist-developer-studio/assets/cssMode-CJs23N2Y.js": {
+      "sha256": "fe97fdcb8ec1f59dd816986cec2d59856cc4374bfc5eaae53fd3deb6e59af3b3",
+      "size": 4144
+    },
+    "dist-developer-studio/assets/deterministic-builder-BYHR4q3g.js": {
+      "sha256": "4d257fe126dc249b8c7bd31d9606435597050f287decf1479bc643161116eaa9",
+      "size": 145620
+    },
+    "dist-developer-studio/assets/entry-D3C2lKLz.js": {
+      "sha256": "4d70bac5a0717e8d474c6f6cb1778a1ae7165ab611c5440602d2cd3091954a5c",
+      "size": 379465
+    },
+    "dist-developer-studio/assets/htmlMode-BLoUDPyK.js": {
+      "sha256": "541bb8e2701cf0cfcf13c54cb2ee99fd1c626e23f00869a0394ce8807dc97bc7",
+      "size": 4598
+    },
+    "dist-developer-studio/assets/jsonMode-BPvgVNIn.js": {
+      "sha256": "347ebef074c3182c7b932b053539af8198ffd1517400443add6542045874a3d9",
+      "size": 18197
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-k5gY9p5b.js": {
+      "sha256": "eeee28f0c73fc1f29a6403662a9b8ef0e6e0797fb32c443ecbd3f3eafb9cbcf2",
+      "size": 38399
+    },
+    "dist-developer-studio/assets/monaco-runtime-DJGSYZUV.js": {
+      "sha256": "59433ef2d889bada8e92b3411555d7c080ab00d921e5d77b4c9b809a6d00464b",
+      "size": 3577331
+    },
+    "dist-developer-studio/assets/tsMode-DISVmoFp.js": {
+      "sha256": "2d184c637fcc791d37b870d2250d97970e8f734bac9753c11d3ba59703a8e1a1",
+      "size": 28936
+    },
+    "dist-developer-studio/assets/workers-C30BkZNL.js": {
+      "sha256": "930817359d87c310244b59dc7e3a98661494656a1b58eda4bb42a15784786e26",
+      "size": 1569880
+    },
+    "dist-developer-studio/assets/cssMode-KZipYaso.js": {
+      "sha256": "633c46bf9d4e6fec08731d90b65e444c6b1f2fb89208d70daaaf1e31eabcbe20",
+      "size": 4144
+    },
+    "dist-developer-studio/assets/deterministic-builder-CqNlQNu7.js": {
+      "sha256": "8c51a5d13eea58d83e6a370a7d644d6631bd8b91778b2073586c19d56de81284",
+      "size": 145620
+    },
+    "dist-developer-studio/assets/entry-BfI_Dvj3.js": {
+      "sha256": "a0bc0068b98e39b89639857a5655d1a4c53ac97cc42cf4773030c63ac9b1980d",
+      "size": 386016
+    },
+    "dist-developer-studio/assets/htmlMode-CTZ1YUNy.js": {
+      "sha256": "201d8cd747815c6e3e944ec047ad8c8473b17050d8734f509e1f59d8cf166d26",
+      "size": 4598
+    },
+    "dist-developer-studio/assets/jsonMode-DxfkKOCv.js": {
+      "sha256": "29aa462b7588e5f11627df4429ccd756abaf8e40e961bc6a46a7cba73a4e63ca",
+      "size": 18197
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-DuLl0eFI.js": {
+      "sha256": "79eeaa15c2953395e69897b69d53535a1f6e6e14148182c37a6fe6920d3b40d7",
+      "size": 38399
+    },
+    "dist-developer-studio/assets/monaco-runtime-WWUG700c.js": {
+      "sha256": "38ae9238ee3f16c1be2abfdf89633cf4972d621dadc5ecace8aa04f8755a0d53",
+      "size": 3577331
+    },
+    "dist-developer-studio/assets/tsMode-BNaR7XjO.js": {
+      "sha256": "e9ec45d2da62719e394c272db2d234fdb47d7e016b40064cdb25334a0db014b9",
+      "size": 28936
+    },
+    "dist-developer-studio/assets/workers-C2QXFWPI.js": {
+      "sha256": "fa415fec38b82196783711f5ac5ccdfb2769c11f8cb5699f7a0c0eccd5edded8",
+      "size": 1569880
+    },
+    "dist-developer-studio/developer-studio-bundle.css": {
+      "sha256": "050ef2c1bbfa12a0748bebf5f79750c3cbff067d8048fc665f8abee13af601ff",
+      "size": 345319
+    },
+    "dist-developer-studio/assets/cssMode-WkHhmquM.js": {
+      "sha256": "6d2ecc8634a63d48bd1899be13e4d54e4da3de080a68aabb321bf3985a2a506c",
+      "size": 4144
+    },
+    "dist-developer-studio/assets/deterministic-builder-CxlcHDXA.js": {
+      "sha256": "2df979be377d6482a6879166421810b52c876d1b5b961b0c4edaa793ca810e0a",
+      "size": 145620
+    },
+    "dist-developer-studio/assets/entry-BYK2OcgE.js": {
+      "sha256": "4824f458dfb71c4a82cec31994a973ea6223b3ee500b87840a2c4001cf37fc09",
+      "size": 387870
+    },
+    "dist-developer-studio/assets/htmlMode-DW19n7tW.js": {
+      "sha256": "5f6f7f020821d7762fb85c3a443ecf577abed05091e800a6ac11ea1dd784b42e",
+      "size": 4598
+    },
+    "dist-developer-studio/assets/jsonMode-D2hI-fZU.js": {
+      "sha256": "a2f4fbdef164a87f72ea7fd6b554f27beb372a4772092d6ad0d5317339f7624e",
+      "size": 18197
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-DCT48yIQ.js": {
+      "sha256": "c834460c9da758bcd8e11372650884136aa82155fad83da515cbe46948ebced3",
+      "size": 38399
+    },
+    "dist-developer-studio/assets/monaco-runtime-BcgZ2pqz.js": {
+      "sha256": "7868b70f197c91aafbdec94160959f6f73b1ffc3c2417bc86560b6085993447b",
+      "size": 3578437
+    },
+    "dist-developer-studio/assets/tsMode-zLg9Kmz0.js": {
+      "sha256": "9dcba7722ec2cad01f548984a92c4fe968110e852fd90004129d13a234d24f91",
+      "size": 28936
+    },
+    "dist-developer-studio/assets/workers-Dfla6ehT.js": {
+      "sha256": "e1f54c04d6a5c0f24bbe5218239fd1cc4f156820c1a3b6e8f085716aa77219d7",
+      "size": 1569880
+    },
+    "dist-developer-studio/assets/css-DEPFDJfb.js": {
+      "sha256": "be72aa0b2b90da036061065b369b6d308958e3c2b8b5c97e5fd19e38c282f6a3",
+      "size": 6095
+    },
+    "dist-developer-studio/assets/cssMode-BxAJKmZB.js": {
+      "sha256": "14374bc1a66c98c408cb78e1a3d2d853039996de4e73588de12cc6e6aee4eda9",
+      "size": 4144
+    },
+    "dist-developer-studio/assets/deterministic-builder-Cm_HhqlU.js": {
+      "sha256": "73977332172bbe159111c5a6002fd4b39abbfd1fa1ef5a7048d77e04a193d424",
+      "size": 145620
+    },
+    "dist-developer-studio/assets/entry-Hyq_mgfy.js": {
+      "sha256": "f7cb6d79f17f8d55b8606ea2a5f6d29d0570f2d5c0f90c585206a59cc52ad7c3",
+      "size": 403100
+    },
+    "dist-developer-studio/assets/html-Cotw2RoW.js": {
+      "sha256": "d4ca43d16f14b173fd039d0642923ca6576d1356b763d3b1b6f7299945755988",
+      "size": 7488
+    },
+    "dist-developer-studio/assets/htmlMode-B_sKsBvG.js": {
+      "sha256": "c4f267698dfecd1a26c3451336e9eb08e739ab9922cfd3726da23dc8479840d5",
+      "size": 4598
+    },
+    "dist-developer-studio/assets/javascript-DTUvgCdd.js": {
+      "sha256": "98e47df649aa77f985db3c2da36666417e383d260d75af3fda2d5f927a020717",
+      "size": 7503
+    },
+    "dist-developer-studio/assets/jsonMode-C050J1-0.js": {
+      "sha256": "c4cfbe5dc256ab8afe245ccca608b52b700bb499e745da99ea6bb4480818fab4",
+      "size": 18197
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-BjYuljjf.js": {
+      "sha256": "7f1166af2dfb56724619ef89a486b6cc5d14a776fb08d6c5b3ec0b616922fe2e",
+      "size": 38399
+    },
+    "dist-developer-studio/assets/monaco-runtime-m4SUO6-V.js": {
+      "sha256": "269306203c2bcc38ca8fb652981136380d3f37e69de3058f877f97ba62e9a1a2",
+      "size": 3582321
+    },
+    "dist-developer-studio/assets/tsMode-BDjN3z_V.js": {
+      "sha256": "2396d96ba75afb5ab8e6b953bc3cc721c39d120121afff2cb5ce43d05b6f2156",
+      "size": 28936
+    },
+    "dist-developer-studio/assets/workers-B7EOJHKo.js": {
+      "sha256": "de021a9105bbca2ef5a243244432afaeeb922e161b09288c2645e01fdf900854",
+      "size": 1569880
+    },
+    "dist-developer-studio/assets/cssMode-B8VvReKw.js": {
+      "sha256": "71bb74e90f26cd6f033d3cc05666f97faa28bab10b3070aab676e1f31ccc18dd",
+      "size": 4172
+    },
+    "dist-developer-studio/assets/deterministic-builder-Dv2KjYWP.js": {
+      "sha256": "53a4edb02bcb5c71d769b85f5561bb4e0fd2dad64fac50bdb6a19fad4ec11929",
+      "size": 145620
+    },
+    "dist-developer-studio/assets/entry-CH-KDpPm.js": {
+      "sha256": "0b23611b32557ae735d732cad31453f8139dcb27ce917e8a671092a6c4eb220d",
+      "size": 403100
+    },
+    "dist-developer-studio/assets/htmlMode-bN71yeos.js": {
+      "sha256": "783b4231bed1b9e181927cc66c172518367fefd7dcaafe7457a9ba4dee145d5c",
+      "size": 4626
+    },
+    "dist-developer-studio/assets/jsonMode-Bq9-3gAo.js": {
+      "sha256": "1d8ba009104b3d063452ef2c7283f418d221123bed5cb7cc494af36463cb8e70",
+      "size": 18225
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-ChAwsFKu.js": {
+      "sha256": "0c797ab11e3e2b62994417b3f4e4444101f1a9a98fbbfe564b6bed96e624b296",
+      "size": 38399
+    },
+    "dist-developer-studio/assets/monaco-runtime-B3zY8a7K.js": {
+      "sha256": "6ec06da316220ad035635bd8c929bf41976edcc8fa0cc9ccddac50339378f8e0",
+      "size": 3602176
+    },
+    "dist-developer-studio/assets/tsMode-DFsjp8fx.js": {
+      "sha256": "31308fc02607956eb2e3fdab3080d16df7a50f5230ffebb57584f1d52004b0fd",
+      "size": 28964
+    },
+    "dist-developer-studio/assets/workers-teQvsEgY.js": {
+      "sha256": "0f772770e1c21d073183940b6305a9d1215c3dfbf166e6bb3ced29c89522470f",
+      "size": 1569880
+    },
+    "camera.html": {
+      "sha256": "083dc1728f245584965f03519f9a9b16f220c623f67ee19cb8e7e4f6abcf1540",
+      "size": 5657
+    },
+    "assets/css/camera.css": {
+      "sha256": "4465ecf306c91e6a0d4be821397edbc6382db42fc1ee26888170f46c26e3e63c",
+      "size": 3400
+    },
+    "assets/icons/camera.svg": {
+      "sha256": "e7763cc6d7301dad90cfc01a850db24e5907d216fdecaa8c0307fe365975831a",
+      "size": 567
+    },
+    "assets/js/camera-app.js": {
+      "sha256": "db6cacc346cb8270c71875918f6b040d28ce1c005d58e6df73af06743513f87a",
+      "size": 19319
+    },
+    "assets/js/camera-core.js": {
+      "sha256": "e87721d7ca1f231a4d79be44ddab7dc71485b1bf6ae8dc536db9b6bc594f5c0d",
+      "size": 16865
     }
   },
   "uploadFiles": [
-    "index.html",
-    "news.html",
-    "news_view.html",
-    "assets/js/news.js",
-    "assets/js/news_view.js",
-    "assets/js/device-storage-provider.js",
     "data/apps/system-apps.json",
-    "dist-window/window-manager-widget.css",
-    "dist-window/window-manager-widget.js",
-    "dist-window/window-manager-widget.umd.js",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
+    "camera.html",
+    "assets/css/camera.css",
+    "assets/icons/camera.svg",
+    "assets/js/camera-app.js",
+    "assets/js/camera-core.js",
     "deploy/ftp-manifest.json"
   ]
 }

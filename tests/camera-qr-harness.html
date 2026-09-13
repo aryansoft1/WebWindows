@@ -1,0 +1,11 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>Camera QR Harness</title>
+<canvas id="qr" width="240" height="240"></canvas><output id="result">running</output>
+<script src="../assets/js/camera-core.js"></script><script>
+(async function () {
+  const expected = "https://www.y0.hk/camera.html?loginChallenge=" + "a".repeat(48);
+  WebWindowsCameraCore.renderQrCode(document.getElementById("qr"), expected);
+  if (!("BarcodeDetector" in window)) { result.textContent = "generated; detector unavailable"; return; }
+  const found = await new BarcodeDetector({ formats: ["qr_code"] }).detect(qr);
+  result.textContent = found[0]?.rawValue === expected ? "decoded: ok" : `decoded: failed (${found.length})`;
+})().catch((error) => { result.textContent = `error: ${error.message}`; });
+</script></html>

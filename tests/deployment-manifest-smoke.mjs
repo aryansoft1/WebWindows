@@ -37,15 +37,28 @@ assert.notEqual(manifest.previousReleaseVersion, manifest.releaseVersion);
 assert.ok(manifest.releaseVersion.localeCompare(manifest.previousReleaseVersion, undefined, { numeric: true }) > 0,
   "the release version must advance beyond the production version");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-for (const onlineReleaseFile of [
+const onlineReleaseFiles = [
   "sysinfo.html",
   "assets/js/sysinfo.js",
   "api/release-version.asp",
   "api/mobile-version.asp",
   "data/apps/system-apps.json",
-]) {
-  assert.ok(uploadFiles.includes(onlineReleaseFile),
-    "Android online-version fallback must deploy together: " + onlineReleaseFile);
+];
+if (manifest.releaseScope === "camera-registry") {
+  assert.deepEqual(uploadFiles, [
+    "data/apps/system-apps.json",
+    "camera.html",
+    "assets/css/camera.css",
+    "assets/icons/camera.svg",
+    "assets/js/camera-app.js",
+    "assets/js/camera-core.js",
+    "deploy/ftp-manifest.json",
+  ], "camera-registry releases must not include unrelated runtime files");
+} else {
+  for (const onlineReleaseFile of onlineReleaseFiles) {
+    assert.ok(uploadFiles.includes(onlineReleaseFile),
+      "Android online-version fallback must deploy together: " + onlineReleaseFile);
+  }
 }
 for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
   assert.ok(manifest.requiredFiles.includes(realtimeDependency),
@@ -60,7 +73,10 @@ for (const runtimeDependency of [
   assert.ok(manifest.requiredFiles.includes(runtimeDependency),
     `runtime dependency must be in deployment manifest: ${runtimeDependency}`);
 }
-for (const app of catalog.apps) {
+const appsToVerify = manifest.releaseScope === "camera-registry"
+  ? catalog.apps.filter((app) => app.id === "webwindows.system.camera")
+  : catalog.apps;
+for (const app of appsToVerify) {
   const entry = String(app.entry || "").split("?")[0];
   if (entry && entry !== "about:blank") await access(resolve(root, entry));
   if (app.icon) await access(resolve(root, String(app.icon).split("?")[0]));

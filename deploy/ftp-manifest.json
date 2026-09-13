@@ -339,8 +339,8 @@
       "size": 3461
     },
     "assets/js/device-storage-provider.js": {
-      "sha256": "f08e943a940d40fb1070630d4457c7645f096516791e5c3d1ac05cb67562834e",
-      "size": 21567
+      "sha256": "5318cb616d738db2bf207338eb488601bab6c4c7383a91ba8d604477df5263e4",
+      "size": 21102
     },
     "assets/js/function-sync.js": {
       "sha256": "98fab91c5f04245d99d3719813847063482133687aad23e919248244bafe8279",
@@ -1305,5 +1305,8 @@
     "assets/js/tw.js",
     "settings.html",
     "deploy/ftp-manifest.json"
+  ],
+  "reconciledFiles": [
+    "assets/js/device-storage-provider.js"
   ]
 }

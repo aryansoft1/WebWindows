@@ -3,7 +3,7 @@
   "releaseScope": "camera-registry",
   "releaseVersion": "2026.09.13.1",
   "catalogVersion": "2026.09.13.1",
-  "generatedAt": "2026-09-13T00:58:28.244Z",
+  "generatedAt": "2026-09-13T07:38:17.495Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -260,7 +260,9 @@
     "assets/css/camera.css",
     "assets/icons/camera.svg",
     "assets/js/camera-app.js",
-    "assets/js/camera-core.js"
+    "assets/js/camera-core.js",
+    "App_Code/WebWindowsNetworkSpeed.cs",
+    "api/network-speed.ashx"
   ],
   "previousReleaseVersion": "2026.09.01.6",
   "integrity": {
@@ -277,8 +279,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "b5dfcec15c7e815f966719d19b72f1a933724a96090807c0c04026ff3500ad66",
-      "size": 61375
+      "sha256": "a0d8dc6f2693f5a3172577f38c80b6c2b92c74384818eb89f3dc1c6e073d0a9b",
+      "size": 75994
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -361,8 +363,8 @@
       "size": 5179
     },
     "assets/js/network-speed.js": {
-      "sha256": "2ca5e8ebcbbd44e6964dd401aa6d5431ee3cf931cdafac035da1f492c32590e4",
-      "size": 3295
+      "sha256": "682bdace74792ebd28b8a0452fd811bce37fb742138939c6849ad99d57ef6ccb",
+      "size": 18049
     },
     "assets/js/settings.js": {
       "sha256": "58ef8dc3025aec0c521a9738ba4e32e27a162b521390a43696985752dca135c2",
@@ -433,8 +435,8 @@
       "size": 7666
     },
     "assets/css/settings.css": {
-      "sha256": "a23fbf44427551379ceab83358c5e3cad3c9ab0abf2c0dee49e3e4a5b2861d78",
-      "size": 10654
+      "sha256": "a521e93b4fb343e621a9fdbf03708fd43a814d0c675c2a56649c1b97805e2d43",
+      "size": 14793
     },
     "assets/images/case1.jpg": {
       "sha256": "63fc2370b66b3515c03897d17b6d45708ebb3ff058664a708527cc71debdf33f",
@@ -641,8 +643,8 @@
       "size": 1970
     },
     "settings.html": {
-      "sha256": "f031fecea7aaa9fe4017bdde177be9ab55035588974407b3ec2ad00a36ec9d03",
-      "size": 14864
+      "sha256": "3b90d96cd58180da2fc60964ae152517e9f90ee0e71fef4946a9ff7302a5d653",
+      "size": 18260
     },
     "aplay.html": {
       "sha256": "c7800f5c46c8f916dda4423f738655cb6f94ec3f3dd7a2e7227072336ea1905e",
@@ -945,8 +947,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "7bc6590b96ece40ed04dc5958c8cfd3c1a489757300245cfc412203b7bb8d236",
-      "size": 14481
+      "sha256": "ef6c5f5f31a32bf8f2a1e0a6f2d476f73a364f9daafb442416437086ac8f7a0c",
+      "size": 14553
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1261,8 +1263,8 @@
       "size": 1569880
     },
     "camera.html": {
-      "sha256": "083dc1728f245584965f03519f9a9b16f220c623f67ee19cb8e7e4f6abcf1540",
-      "size": 5657
+      "sha256": "6ec6f1f66f6f953bc4d404f0252384b8912bd0631762401f9699cbb8b2fc9bc5",
+      "size": 5659
     },
     "assets/css/camera.css": {
       "sha256": "4465ecf306c91e6a0d4be821397edbc6382db42fc1ee26888170f46c26e3e63c",
@@ -1273,12 +1275,20 @@
       "size": 567
     },
     "assets/js/camera-app.js": {
-      "sha256": "db6cacc346cb8270c71875918f6b040d28ce1c005d58e6df73af06743513f87a",
-      "size": 19319
+      "sha256": "5791d0389b19054ea1c1a766b2f4cfc006fd3ccb8544ca8525297bb0c995476f",
+      "size": 19324
     },
     "assets/js/camera-core.js": {
       "sha256": "e87721d7ca1f231a4d79be44ddab7dc71485b1bf6ae8dc536db9b6bc594f5c0d",
       "size": 16865
+    },
+    "App_Code/WebWindowsNetworkSpeed.cs": {
+      "sha256": "015922628ba018c0e2959a4f858516893c11c1d0327d8dc0f25ccc332c1f5cdc",
+      "size": 9140
+    },
+    "api/network-speed.ashx": {
+      "sha256": "b4e307ed9ef0ea45123042463121227a546f4f39a2947659b2320d9b20c11e91",
+      "size": 64
     }
   },
   "uploadFiles": [
@@ -1288,6 +1298,12 @@
     "assets/icons/camera.svg",
     "assets/js/camera-app.js",
     "assets/js/camera-core.js",
+    "App_Code/WebWindowsNetworkSpeed.cs",
+    "api/network-speed.ashx",
+    "assets/css/settings.css",
+    "assets/js/network-speed.js",
+    "assets/js/tw.js",
+    "settings.html",
     "deploy/ftp-manifest.json"
   ]
 }

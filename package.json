@@ -1,7 +1,8 @@
 {
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "test:network-speed": "node tests/network-speed-smoke.mjs"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",

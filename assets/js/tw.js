@@ -343,6 +343,50 @@ Object.assign(languageCatalog.jp, {
   "测速已取消，已停止继续下载。": "速度テストをキャンセルし、ダウンロードを停止しました。", "测速失败：": "速度テスト失敗：", "网络请求失败": "ネットワーク要求に失敗しました"
 });
 
+// 链路测速 v2：完整短语优先，避免动态状态被逐词替换后出现混合语言。
+Object.assign(languageCatalog.tw, {
+  "到 WebWindows 服务节点的链路速度": "到 WebWindows 服務節點的連線速度",
+  "仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。": "只在你點擊後測試，不取得或顯示 IP。平均值只統計預熱後的穩定取樣區間；行動網路可能產生流量費用。",
+  "测试档位": "測試級別", "测速流量档位": "測速流量級別", "轻量（约 2–4 MB）": "輕量（約 2–4 MB）",
+  "标准（自适应，最多约 24 MB）": "標準（自適應，最多約 24 MB）", "实时上下行链路速度": "即時上下行連線速度",
+  "横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。": "橫軸為測試時間，縱軸為 Mbps；藍線表示下載，綠線表示上傳。",
+  "链路速度统计": "連線速度統計", "下载": "下載", "上传": "上傳", "当前": "目前", "平均": "平均", "峰值": "峰值", "延迟": "延遲", "抖动": "抖動", "时间": "時間", "秒": "秒", "当前下载": "目前下載", "当前上传": "目前上傳",
+  "正在使用": "正在使用", "轻量": "輕量", "标准": "標準", "档测试到 WebWindows 服务节点的链路速度。": "級別測試到 WebWindows 服務節點的連線速度。", "下载稳定采样": "下載穩定取樣", "上传稳定采样": "上傳穩定取樣", "稳定区间平均": "穩定區間平均",
+  "测量延迟与抖动": "測量延遲與抖動", "下载预热（不计入平均值）": "下載預熱（不計入平均值）", "上传预热（不计入平均值）": "上傳預熱（不計入平均值）",
+  "测速完成。平均值仅统计预热后的稳定采样区间。重测可观察不同时间的波动。": "測速完成。平均值只統計預熱後的穩定取樣區間；重新測試可觀察不同時間的波動。",
+  "测速已取消，已停止所有请求。": "測速已取消，所有請求均已停止。", "测速超时，已停止所有请求。": "測速逾時，所有請求均已停止。",
+  "结果仅代表当前设备到 WebWindows 服务节点的链路。": "結果只代表目前裝置到 WebWindows 服務節點的連線。",
+  "重新测速": "重新測速", "已停止": "已停止", "完成": "完成", "失败": "失敗"
+});
+Object.assign(languageCatalog.en, {
+  "到 WebWindows 服务节点的链路速度": "Link speed to the WebWindows service node",
+  "仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。": "Runs only when you click. It does not obtain or display your IP. Averages include only the stable interval after warm-up; mobile data charges may apply.",
+  "测试档位": "Test profile", "测速流量档位": "Speed-test traffic profile", "轻量（约 2–4 MB）": "Light (about 2–4 MB)",
+  "标准（自适应，最多约 24 MB）": "Standard (adaptive, up to about 24 MB)", "实时上下行链路速度": "Live download and upload link speed",
+  "横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。": "The horizontal axis is time and the vertical axis is Mbps; blue is download and green is upload.",
+  "链路速度统计": "Link-speed statistics", "下载": "Download", "上传": "Upload", "当前": "Current", "平均": "Average", "峰值": "Peak", "延迟": "Latency", "抖动": "Jitter", "时间": "Time", "秒": "s", "当前下载": "Current download", "当前上传": "Current upload",
+  "正在使用": "Running the ", "轻量": "light", "标准": "standard", "档测试到 WebWindows 服务节点的链路速度。": " profile to test the link to the WebWindows service node.", "下载稳定采样": "Stable download sample", "上传稳定采样": "Stable upload sample", "稳定区间平均": "Stable-interval average",
+  "测量延迟与抖动": "Measuring latency and jitter", "下载预热（不计入平均值）": "Download warm-up (excluded from average)", "上传预热（不计入平均值）": "Upload warm-up (excluded from average)",
+  "测速完成。平均值仅统计预热后的稳定采样区间。重测可观察不同时间的波动。": "Test complete. Averages include only the stable interval after warm-up; retest to observe variation over time.",
+  "测速已取消，已停止所有请求。": "Speed test canceled; all requests have stopped.", "测速超时，已停止所有请求。": "Speed test timed out; all requests have stopped.",
+  "结果仅代表当前设备到 WebWindows 服务节点的链路。": "The result represents only this device's link to the WebWindows service node.",
+  "重新测速": "Retest", "已停止": "Stopped", "完成": "Complete", "失败": "Failed"
+});
+Object.assign(languageCatalog.jp, {
+  "到 WebWindows 服务节点的链路速度": "WebWindows サービスノードまでのリンク速度",
+  "仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。": "クリックした場合のみ測定し、IP は取得・表示しません。平均値はウォームアップ後の安定区間のみを対象とします。モバイル通信料が発生する場合があります。",
+  "测试档位": "テストモード", "测速流量档位": "速度テストの通信量モード", "轻量（约 2–4 MB）": "軽量（約 2～4 MB）",
+  "标准（自适应，最多约 24 MB）": "標準（自動調整、最大約 24 MB）", "实时上下行链路速度": "リアルタイムのダウンロード・アップロード速度",
+  "横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。": "横軸はテスト時間、縦軸は Mbps です。青線はダウンロード、緑線はアップロードを示します。",
+  "链路速度统计": "リンク速度の統計", "下载": "ダウンロード", "上传": "アップロード", "当前": "現在", "平均": "平均", "峰值": "ピーク", "延迟": "遅延", "抖动": "ジッター", "时间": "時間", "秒": "秒", "当前下载": "現在のダウンロード", "当前上传": "現在のアップロード",
+  "正在使用": "", "轻量": "軽量", "标准": "標準", "档测试到 WebWindows 服务节点的链路速度。": "モードで WebWindows サービスノードまでのリンク速度を測定しています。", "下载稳定采样": "ダウンロード安定サンプル", "上传稳定采样": "アップロード安定サンプル", "稳定区间平均": "安定区間の平均",
+  "测量延迟与抖动": "遅延とジッターを測定中", "下载预热（不计入平均值）": "ダウンロードのウォームアップ（平均値から除外）", "上传预热（不计入平均值）": "アップロードのウォームアップ（平均値から除外）",
+  "测速完成。平均值仅统计预热后的稳定采样区间。重测可观察不同时间的波动。": "速度テストが完了しました。平均値はウォームアップ後の安定区間のみを対象とします。再テストで時間帯による変動を確認できます。",
+  "测速已取消，已停止所有请求。": "速度テストをキャンセルし、すべてのリクエストを停止しました。", "测速超时，已停止所有请求。": "速度テストがタイムアウトし、すべてのリクエストを停止しました。",
+  "结果仅代表当前设备到 WebWindows 服务节点的链路。": "結果はこのデバイスから WebWindows サービスノードまでのリンクのみを示します。",
+  "重新测速": "再テスト", "已停止": "停止しました", "完成": "完了", "失败": "失敗"
+});
+
 Object.assign(languageCatalog.tw, {
   "电源管理": "電源管理", "当前电源": "目前電源", "交流电连接": "交流電連線", "电池": "電池",
   "电池电量": "電池電量", "充电状态": "充電狀態", "已连接": "已連線", "未连接": "未連線",

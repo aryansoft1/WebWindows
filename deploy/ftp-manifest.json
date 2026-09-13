@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
-  "releaseScope": "camera-registry",
-  "releaseVersion": "2026.09.13.1",
-  "catalogVersion": "2026.09.13.1",
-  "generatedAt": "2026-09-13T07:38:17.495Z",
+  "releaseScope": "camera-network-experience",
+  "releaseVersion": "2026.09.13.2",
+  "catalogVersion": "2026.09.13.2",
+  "generatedAt": "2026-09-13T13:17:16.188Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -264,7 +264,7 @@
     "App_Code/WebWindowsNetworkSpeed.cs",
     "api/network-speed.ashx"
   ],
-  "previousReleaseVersion": "2026.09.01.6",
+  "previousReleaseVersion": "2026.09.13.1",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -279,8 +279,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "a0d8dc6f2693f5a3172577f38c80b6c2b92c74384818eb89f3dc1c6e073d0a9b",
-      "size": 75994
+      "sha256": "f2ec0b0a375031796d5b55e76c4344fb12fe55adaa00af350143378610f896b2",
+      "size": 86576
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -363,8 +363,8 @@
       "size": 5179
     },
     "assets/js/network-speed.js": {
-      "sha256": "682bdace74792ebd28b8a0452fd811bce37fb742138939c6849ad99d57ef6ccb",
-      "size": 18049
+      "sha256": "3bae1453ed88635593befe2bba6defbb04a2f6e0a587f38ecbd7de9c6edcc7a1",
+      "size": 22042
     },
     "assets/js/settings.js": {
       "sha256": "58ef8dc3025aec0c521a9738ba4e32e27a162b521390a43696985752dca135c2",
@@ -435,8 +435,8 @@
       "size": 7666
     },
     "assets/css/settings.css": {
-      "sha256": "a521e93b4fb343e621a9fdbf03708fd43a814d0c675c2a56649c1b97805e2d43",
-      "size": 14793
+      "sha256": "17dea7a844dfc965136d740ba80c53ea221fde86d70d0ad7d3603eb415b05b2e",
+      "size": 16383
     },
     "assets/images/case1.jpg": {
       "sha256": "63fc2370b66b3515c03897d17b6d45708ebb3ff058664a708527cc71debdf33f",
@@ -643,8 +643,8 @@
       "size": 1970
     },
     "settings.html": {
-      "sha256": "3b90d96cd58180da2fc60964ae152517e9f90ee0e71fef4946a9ff7302a5d653",
-      "size": 18260
+      "sha256": "a4f576ef9f7c7b65c753a3fd6ee746df5761285285dac0401569edc62315e8cb",
+      "size": 19086
     },
     "aplay.html": {
       "sha256": "c7800f5c46c8f916dda4423f738655cb6f94ec3f3dd7a2e7227072336ea1905e",
@@ -851,8 +851,8 @@
       "size": 3634
     },
     "dist-window/window-manager-widget.js": {
-      "sha256": "fd2568a858e19dc88af9f24bffd580555c4d3584df01e795378a42181b159f6d",
-      "size": 88120
+      "sha256": "e91d860bfe47ac58ecd395abe67306679f1f30ff94cff90452a748a61daadad3",
+      "size": 88208
     },
     "dist-weather/weather-widget.umd.js": {
       "sha256": "9f7b7a07ef084e13dc352271375aca2395cec5b26e8e2391ebcc1575786a0c99",
@@ -935,8 +935,8 @@
       "size": 1495
     },
     "dist-window/window-manager-widget.umd.js": {
-      "sha256": "a9b468d2cbd3ab224332da610ac0e228d9c8e7459e514f2431408a38ef72884c",
-      "size": 88189
+      "sha256": "3f24a847e4467971b31f1dd17e79b35ba8dbb5d4af9d94444589bf16addf1667",
+      "size": 88277
     },
     "assets/css/developer-studio.css": {
       "sha256": "984eca1759b841302004164db17d9c9af398290d99ef134900e6fd1e43822870",
@@ -947,8 +947,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "ef6c5f5f31a32bf8f2a1e0a6f2d476f73a364f9daafb442416437086ac8f7a0c",
-      "size": 14553
+      "sha256": "ba3ca5d69e31c2b9dedfb9ddfe132da243006cfe08db08eed74fe6e69c6a00e2",
+      "size": 14549
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1263,20 +1263,20 @@
       "size": 1569880
     },
     "camera.html": {
-      "sha256": "6ec6f1f66f6f953bc4d404f0252384b8912bd0631762401f9699cbb8b2fc9bc5",
-      "size": 5659
+      "sha256": "3f4f49aaa79f7e9b57886d54634e36545c4f3317ceb5313d1474683bb37296bf",
+      "size": 5890
     },
     "assets/css/camera.css": {
-      "sha256": "4465ecf306c91e6a0d4be821397edbc6382db42fc1ee26888170f46c26e3e63c",
-      "size": 3400
+      "sha256": "4dcd58bae436c8edb1d21a0ca24b7e7ca6bbe44470dcb93d35da70b90189fc83",
+      "size": 5828
     },
     "assets/icons/camera.svg": {
       "sha256": "e7763cc6d7301dad90cfc01a850db24e5907d216fdecaa8c0307fe365975831a",
       "size": 567
     },
     "assets/js/camera-app.js": {
-      "sha256": "5791d0389b19054ea1c1a766b2f4cfc006fd3ccb8544ca8525297bb0c995476f",
-      "size": 19324
+      "sha256": "2f66e7d805498d6c3044c4b1b10bd0fcbd20844ecc3fba7fd0e8a185d40a7fff",
+      "size": 21558
     },
     "assets/js/camera-core.js": {
       "sha256": "e87721d7ca1f231a4d79be44ddab7dc71485b1bf6ae8dc536db9b6bc594f5c0d",
@@ -1292,18 +1292,17 @@
     }
   },
   "uploadFiles": [
-    "data/apps/system-apps.json",
     "camera.html",
     "assets/css/camera.css",
-    "assets/icons/camera.svg",
     "assets/js/camera-app.js",
-    "assets/js/camera-core.js",
-    "App_Code/WebWindowsNetworkSpeed.cs",
-    "api/network-speed.ashx",
+    "assets/js/tw.js",
+    "data/apps/system-apps.json",
+    "settings.html",
     "assets/css/settings.css",
     "assets/js/network-speed.js",
-    "assets/js/tw.js",
-    "settings.html",
+    "dist-window/window-manager-widget.css",
+    "dist-window/window-manager-widget.js",
+    "dist-window/window-manager-widget.umd.js",
     "deploy/ftp-manifest.json"
   ],
   "reconciledFiles": [

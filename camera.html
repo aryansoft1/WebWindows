@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
   <title>照相机与扫描</title>
-  <link rel="stylesheet" href="assets/css/camera.css?v=20260913-1">
+  <link rel="stylesheet" href="assets/css/camera.css?v=20260913-2">
 </head>
 <body>
   <header class="app-header">
@@ -25,15 +25,16 @@
         <video id="video" playsinline muted></video>
         <canvas id="preview"></canvas>
         <div id="arOverlay" class="ar-overlay" hidden></div>
-        <div id="emptyCamera" class="empty">点击“启用相机”后才会请求权限。也可以从相册选择。</div>
+        <div id="emptyCamera" class="empty">点击“启用相机”后才会请求权限。也可以从云资料选择图片。</div>
       </div>
       <div class="toolbar">
         <button id="startCamera" class="primary">启用相机</button>
         <select id="cameraSelect" aria-label="摄像头" disabled><option>授权后显示真实设备名</option></select>
         <button id="switchCamera" disabled>切换前后镜头</button>
-        <label class="file-button">从相册选择<input id="imageInput" type="file" accept="image/*" hidden></label>
+        <button id="openCloudImage" class="file-button" type="button">从云资料选择图片</button>
         <button id="capture" disabled>拍摄</button>
         <button id="stopCamera" disabled>停止</button>
+        <button id="cameraExit" type="button" hidden>退出取景</button>
       </div>
       <p id="cameraStatus" class="status" role="status">尚未访问摄像头。</p>
     </section>
@@ -72,7 +73,9 @@
       <p class="hint">一期是定时取帧、OCR、翻译和屏幕 2D 叠加，不是 WebXR，也没有空间锚定；移动镜头后文字位置可能漂移。</p>
     </section>
   </main>
-  <script src="assets/js/camera-core.js?v=20260913-1"></script>
-  <script src="assets/js/camera-app.js?v=20260913-1"></script>
+  <script defer src="assets/js/cloud-file-dialog.js?v=20260901-storage-hotfix-1"></script>
+  <script defer src="assets/js/tw.js?v=20260913-camera-network-2"></script>
+  <script defer src="assets/js/camera-core.js?v=20260913-2"></script>
+  <script defer src="assets/js/camera-app.js?v=20260913-2"></script>
 </body>
 </html>

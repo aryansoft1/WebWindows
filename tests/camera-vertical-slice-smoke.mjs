@@ -3,10 +3,11 @@ import fs from "node:fs/promises";
 import vm from "node:vm";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [coreSource, appSource, html, registrySource, endpoint, migration, design] = await Promise.all([
+const [coreSource, appSource, html, registrySource, endpoint, migration, design, cameraCss, windowItem, legacyWindow] = await Promise.all([
   read("assets/js/camera-core.js"), read("assets/js/camera-app.js"), read("camera.html"),
   read("data/apps/system-apps.json"), read("api/camera-login.asp"),
-  read("database/migrations/002_camera_login_challenges.sql"), read("docs/CAMERA_VERTICAL_SLICE_V1.md")
+  read("database/migrations/002_camera_login_challenges.sql"), read("docs/CAMERA_VERTICAL_SLICE_V1.md"),
+  read("assets/css/camera.css"), read("webwindows-vue/src/desktop/WindowItem.vue"), read("webwindows-vue/src/stores/legacyWindow.js")
 ]);
 
 const context = { console, TextEncoder, Blob, Uint8Array, URL, atob, globalThis: null };
@@ -53,6 +54,11 @@ const camera = registry.apps.find((app) => app.id === "webwindows.system.camera"
 assert.ok(camera && camera.type === "system" && camera.install.uninstallable === false);
 assert.match(html, /Content-Security-Policy/);
 assert.match(html, /图像默认只在此设备处理/);
+assert.match(html, /assets\/js\/tw\.js/);
+assert.match(html, /assets\/js\/cloud-file-dialog\.js/);
+assert.match(html, /id="openCloudImage"/);
+assert.match(html, /id="cameraExit"/);
+assert.doesNotMatch(html, /type="file"/);
 assert.match(appSource, /getUserMedia/);
 assert.match(appSource, /enumerateDevices/);
 assert.match(appSource, /devicechange/);
@@ -63,6 +69,17 @@ assert.match(appSource, /WebWindowsCameraProviders/);
 assert.match(appSource, /OCR 提供方响应超时/);
 assert.match(appSource, /state\.stream = previousStream/);
 assert.match(appSource, /fileDialog/);
+assert.match(appSource, /api\.open/);
+assert.match(appSource, /api\.read/);
+assert.match(appSource, /requestFullscreen/);
+assert.match(appSource, /exitFullscreen/);
+assert.match(appSource, /camera-capture-mode/);
+assert.doesNotMatch(appSource, /showOpenFilePicker|showDirectoryPicker/);
+assert.match(cameraCss, /:fullscreen/);
+assert.match(cameraCss, /object-fit:\s*cover/);
+assert.match(cameraCss, /safe-area-inset-bottom/);
+assert.match(windowItem, /camera; fullscreen/);
+assert.match(legacyWindow, /camera; fullscreen/);
 assert.doesNotMatch(appSource, /https?:\/\/(?:api\.|translate\.|ocr\.)/i);
 
 assert.match(endpoint, /challenge = RandomHex\(24\)/i);

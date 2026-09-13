@@ -110,7 +110,7 @@ await apps.launch("webwindows.system.settings");
 assert.deepEqual(openedWindows.at(-1), [
   "settings",
   "设置",
-  "settings.html?v=20260729-3",
+  "settings.html?v=20260913-2",
   "assets/icons/settings.png",
   true,
   "",

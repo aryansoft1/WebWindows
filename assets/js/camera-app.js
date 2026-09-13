@@ -3,8 +3,10 @@
   const core = window.WebWindowsCameraCore;
   const $ = (selector) => document.querySelector(selector);
   const video = $("#video"), preview = $("#preview"), empty = $("#emptyCamera");
+  const capturePanel = $(".capture-panel");
   const LOGIN_BACKEND_ENABLED = false;
   const state = { stream: null, facing: "environment", pages: [], activePage: -1, qrTimer: null, arTimer: null, login: null };
+  const t = (value) => window.WebWindowsI18n?.translate(String(value)) || String(value);
   function withTimeout(promise, milliseconds, message) {
     let timer;
     return Promise.race([
@@ -14,8 +16,22 @@
   }
 
   function setStatus(message, error) {
-    $("#cameraStatus").textContent = message;
+    $("#cameraStatus").textContent = t(message);
     $("#cameraStatus").classList.toggle("error", Boolean(error));
+  }
+  async function enterCaptureMode() {
+    document.body.classList.add("camera-capture-mode");
+    $("#cameraExit").hidden = false;
+    if (!document.fullscreenElement && capturePanel?.requestFullscreen) {
+      try { await capturePanel.requestFullscreen({ navigationUI: "hide" }); } catch (_) {}
+    }
+  }
+  async function exitCaptureMode() {
+    document.body.classList.remove("camera-capture-mode");
+    $("#cameraExit").hidden = true;
+    if (document.fullscreenElement && document.exitFullscreen) {
+      try { await document.exitFullscreen(); } catch (_) {}
+    }
   }
   function showCanvas(canvas) {
     preview.width = canvas.width; preview.height = canvas.height;
@@ -48,7 +64,7 @@
     const select = $("#cameraSelect"); select.replaceChildren();
     devices.forEach((device, index) => {
       const option = document.createElement("option"); option.value = device.deviceId;
-      option.textContent = device.label || `摄像头 ${index + 1}`; select.append(option);
+      option.textContent = device.label || `${t("摄像头")} ${index + 1}`; select.append(option);
     });
     select.disabled = devices.length < 2; $("#switchCamera").disabled = devices.length < 2;
     const activeId = state.stream?.getVideoTracks()[0]?.getSettings()?.deviceId;
@@ -77,8 +93,8 @@
       const devices = await listCameras();
       setStatus(`相机已启用，共发现 ${devices.length} 个视频设备。设备名仅在授权后读取。`);
     } catch (error) {
-      const message = error.name === "NotAllowedError" ? "摄像头权限被拒绝。仍可从相册选择图片。" :
-        error.name === "NotFoundError" ? "没有检测到摄像头。仍可从相册选择图片。" : `无法启用摄像头：${error.message}`;
+      const message = error.name === "NotAllowedError" ? "摄像头权限被拒绝。仍可从云资料选择图片。" :
+        error.name === "NotFoundError" ? "没有检测到摄像头。仍可从云资料选择图片。" : `无法启用摄像头：${error.message}`;
       state.stream = previousStream;
       $("#capture").disabled = !previousStream; $("#stopCamera").disabled = !previousStream;
       setStatus(message, true); throw error;
@@ -89,7 +105,30 @@
     const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
     const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
     const canvas = document.createElement("canvas"); canvas.width = Math.round(bitmap.width * scale); canvas.height = Math.round(bitmap.height * scale);
-    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close?.(); showCanvas(canvas); setStatus("已从相册载入图片；尚未上传。");
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height); bitmap.close?.(); showCanvas(canvas); setStatus("已从云资料载入图片；尚未上传。");
+  }
+  function sharedFileDialog() {
+    try {
+      if (window.parent !== window && window.parent.location.origin === location.origin) {
+        return window.parent.WebWindows?.fileDialog || window.WebWindows?.fileDialog;
+      }
+    } catch (_) {}
+    return window.WebWindows?.fileDialog;
+  }
+  async function openCloudImage() {
+    const api = sharedFileDialog();
+    if (!api?.open || !api?.read) throw new Error("云资料公共选择窗口未就绪。");
+    const resource = await api.open({
+      title: "从云资料选择图片",
+      extensions: ["jpg", "jpeg", "png", "webp", "gif", "bmp", "heic", "heif"],
+      purpose: "camera-image-open"
+    });
+    if (!resource) return;
+    const blob = await api.read(resource);
+    const extension = String(resource.name || resource.path || "").split(".").pop().toLowerCase();
+    const mimeByExtension = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", webp: "image/webp", gif: "image/gif", bmp: "image/bmp", heic: "image/heic", heif: "image/heif" };
+    const image = blob.type?.startsWith("image/") ? blob : blob.slice(0, blob.size, mimeByExtension[extension] || "application/octet-stream");
+    await loadImage(image);
   }
 
   function renderPages() {
@@ -178,19 +217,20 @@
     document.querySelectorAll(".tabs button,.tab-panel").forEach((item) => item.classList.remove("active"));
     button.classList.add("active"); $(`#${button.dataset.tab}`).classList.add("active");
   });
-  $("#startCamera").onclick = () => startCamera().catch(() => {});
-  $("#stopCamera").onclick = () => { stopCamera(); setStatus("相机已停止。"); };
+  $("#startCamera").onclick = async () => { await enterCaptureMode(); startCamera().catch(() => exitCaptureMode()); };
+  $("#stopCamera").onclick = () => { stopCamera(); exitCaptureMode(); setStatus("相机已停止。"); };
+  $("#cameraExit").onclick = () => { stopCamera(); exitCaptureMode(); setStatus("相机已停止。"); };
   $("#cameraSelect").onchange = (event) => startCamera(event.target.value).catch(() => {});
   $("#switchCamera").onclick = async () => { const devices = await listCameras(), current = $("#cameraSelect").selectedIndex; if (devices.length) startCamera(devices[(current + 1) % devices.length].deviceId).catch(() => {}); };
-  $("#imageInput").onchange = (event) => loadImage(event.target.files[0]).catch((error) => setStatus(error.message, true));
-  $("#capture").onclick = () => { showCanvas(currentCanvas()); setStatus("已拍摄；画面仍只在本地内存中。"); };
+  $("#openCloudImage").onclick = () => openCloudImage().catch((error) => setStatus(error.message, true));
+  $("#capture").onclick = () => { showCanvas(currentCanvas()); exitCaptureMode(); setStatus("已拍摄；画面仍只在本地内存中。"); };
   $("#detectEdges").onclick = () => { try { const canvas = currentCanvas(), data = canvas.getContext("2d", { willReadFrequently: true }).getImageData(0, 0, canvas.width, canvas.height); showCanvas(core.warpPerspective(canvas, core.detectDocumentCorners(data))); setStatus("已在本地完成边缘估计与四角校正。"); } catch (error) { setStatus(error.message, true); } };
   $("#rotate").onclick = () => { try { showCanvas(core.rotateCanvas(currentCanvas(), 90)); } catch (error) { setStatus(error.message, true); } };
   $("#filter").onchange = () => { try { showCanvas(core.applyFilter(cloneCanvas(currentCanvas()), $("#filter").value)); } catch (error) { setStatus(error.message, true); } };
   $("#addPage").onclick = () => { try { state.pages.push(processedCurrent()); state.activePage = state.pages.length - 1; renderPages(); setStatus(`已加入第 ${state.pages.length} 页。`); } catch (error) { setStatus(error.message, true); } };
   $("#downloadImage").onclick = async () => { try { download(await canvasBlob(processedCurrent(), "image/jpeg", .92), "WebWindows-Scan.jpg"); } catch (error) { setStatus(error.message, true); } };
   $("#downloadPdf").onclick = async () => { try { download(await pdfBlob(), "WebWindows-Scan.pdf"); } catch (error) { setStatus(error.message, true); } };
-  $("#saveCloud").onclick = async () => { try { const api = window.parent?.WebWindows?.fileDialog; if (!api?.saveBlob) throw new Error("私人云资料保存接口未就绪。"); const blob = await pdfBlob(); if (!confirm(`将把 ${state.pages.length || 1} 页 PDF 保存到你的私人云资料。原始相机流不会上传。继续？`)) return; const saved = await api.saveBlob({ title: "保存扫描 PDF", suggestedName: "WebWindows-Scan.pdf", extensions: ["pdf"], purpose: "camera-scan-pdf" }, blob); if (saved) setStatus("PDF 已保存到私人云资料。"); } catch (error) { setStatus(error.message, true); } };
+  $("#saveCloud").onclick = async () => { try { const api = sharedFileDialog(); if (!api?.saveBlob) throw new Error("私人云资料保存接口未就绪。"); const blob = await pdfBlob(); if (!confirm(`将把 ${state.pages.length || 1} 页 PDF 保存到你的私人云资料。原始相机流不会上传。继续？`)) return; const saved = await api.saveBlob({ title: "保存扫描 PDF", suggestedName: "WebWindows-Scan.pdf", extensions: ["pdf"], purpose: "camera-scan-pdf" }, blob); if (saved) setStatus("PDF 已保存到私人云资料。"); } catch (error) { setStatus(error.message, true); } };
   $("#scanQr").onclick = () => detectQr().catch((error) => renderQrVerdict({ risk: "blocked", raw: "", reason: error.message }));
   $("#toggleQrLive").onclick = () => { if (state.qrTimer) { clearInterval(state.qrTimer); state.qrTimer = null; $("#toggleQrLive").textContent = "开始实时识别"; return; } state.qrTimer = setInterval(() => detectQr().catch(() => {}), 700); $("#toggleQrLive").textContent = "停止实时识别"; };
   $("#runOcr").onclick = async () => { try { $("#translationStatus").textContent = "正在本地识别；若使用已配置提供方，最长等待 12 秒。"; const result = await runOcr(currentCanvas()); $("#ocrText").value = result.text || ""; $("#translationStatus").textContent = `OCR 完成：${result.provider || "已配置提供方"}；语言估计 ${core.detectTextLanguage(result.text)}`; } catch (error) { $("#translationStatus").textContent = error.message; } };
@@ -201,6 +241,7 @@
   $("#consumeLogin").onclick = async () => { try { await loginRequest("consume", { challenge: state.login?.challenge || "" }); const result = await loginRequest("finalize"); sessionStorage.setItem("webwindows_user", JSON.stringify(result.user)); sessionStorage.setItem("webwindows_user_nickname", result.user.nickname); if (window.parent !== window && typeof window.parent.initUserStatus === "function") window.parent.initUserStatus(); $("#loginStatus").textContent = "登录完成。旧会话已废弃，新会话已建立；该票据不能重放。"; $("#consumeLogin").disabled = true; $("#revokeLogin").disabled = true; } catch (error) { $("#loginStatus").textContent = error.message; } };
   $("#revokeLogin").onclick = async () => { try { await loginRequest("revoke", { challenge: state.login?.challenge || "" }); $("#loginStatus").textContent = "挑战已撤销。"; $("#consumeLogin").disabled = true; $("#revokeLogin").disabled = true; } catch (error) { $("#loginStatus").textContent = error.message; } };
   navigator.mediaDevices?.addEventListener?.("devicechange", () => { if (state.stream) listCameras().catch(() => {}); });
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement) { document.body.classList.remove("camera-capture-mode"); $("#cameraExit").hidden = true; } });
   const incoming = new URLSearchParams(location.search).get("loginChallenge"); if (LOGIN_BACKEND_ENABLED && incoming && /^[a-f0-9]{48}$/i.test(incoming)) { document.querySelector('[data-tab="login"]').click(); $("#challengeInput").value = incoming; }
   window.addEventListener("pagehide", stopCamera, { once: true });
 })();

@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/css/settings.css?v=20260913-network-speed-1" />
+    <link rel="stylesheet" href="assets/css/settings.css?v=20260913-camera-network-2" />
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
-    <script defer src="assets/js/tw.js?v=20260913-network-speed-1"></script>
+    <script defer src="assets/js/tw.js?v=20260913-camera-network-2"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
-    <script defer src="assets/js/network-speed.js?v=20260913-network-speed-1"></script>
+    <script defer src="assets/js/network-speed.js?v=20260913-camera-network-2"></script>
     <script defer="True" src="assets/js/settings.js?v=20260819-language-source-1"></script>
 </head>
 <body>
@@ -168,13 +168,22 @@
                             <span>延迟 <strong id="networkSpeedLatency">—</strong></span>
                             <span>抖动 <strong id="networkSpeedJitter">—</strong></span>
                         </div>
+                        <div id="networkSpeedRating" class="network-speed-rating is-waiting" aria-live="polite">
+                            <span>网络体验</span>
+                            <strong id="networkSpeedRatingLabel">等待测速</strong>
+                            <small id="networkSpeedRatingDetail">完成后将明确显示慢、一般、良好、快或极快。</small>
+                        </div>
                         <div class="network-speed-chart-wrap">
                             <svg id="networkSpeedChart" class="network-speed-chart" role="img" aria-labelledby="networkSpeedChartTitle networkSpeedChartDesc" viewBox="0 0 720 220" preserveAspectRatio="none">
                                 <title id="networkSpeedChartTitle">实时上下行链路速度</title>
                                 <desc id="networkSpeedChartDesc">横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。</desc>
                                 <g class="network-chart-grid" aria-hidden="true"><path d="M8 26H712 M8 72H712 M8 118H712 M8 164H712 M8 210H712" /></g>
+                                <path class="network-chart-download-area" aria-hidden="true" />
+                                <path class="network-chart-upload-area" aria-hidden="true" />
                                 <path class="network-chart-download" aria-hidden="true" />
                                 <path class="network-chart-upload" aria-hidden="true" />
+                                <circle class="network-chart-download-point" r="5" hidden aria-hidden="true" />
+                                <circle class="network-chart-upload-point" r="5" hidden aria-hidden="true" />
                                 <text class="network-chart-max" x="8" y="18">1.00 Mbps</text>
                                 <text class="network-chart-duration" x="712" y="216" text-anchor="end">1.0 s</text>
                             </svg>

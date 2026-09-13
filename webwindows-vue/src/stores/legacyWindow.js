@@ -629,6 +629,10 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
         ifr.style.width = '100%';
         ifr.style.height = '100%';
         ifr.style.border = '0';
+        if (/^camera\.html(?:[?#]|$)/i.test(url)) {
+            ifr.allow = 'camera; fullscreen';
+            ifr.allowFullscreen = true;
+        }
         content.appendChild(ifr);
     } else if (url) {
         content.textContent = url;

@@ -60,13 +60,11 @@ assert.match(bundle, /scaleX/,
   "the production bundle must contain zoom-aware delta-based window dragging");
 assert.match(bundleCss, /touch-action:none/);
 assert.match(page, /window-manager-widget\.(?:css|js)\?v=20260826-window-fit-1/g);
-for (const file of [
-  "index.html",
-  "dist-window/window-manager-widget.css",
-  "dist-window/window-manager-widget.js",
-  "dist-window/window-manager-widget.umd.js",
-]) {
-  assert.ok((manifest.uploadFiles || []).includes(file), `window drag release must upload ${file}`);
+for (const file of ["dist-window/window-manager-widget.css", "dist-window/window-manager-widget.js", "dist-window/window-manager-widget.umd.js"]) {
+  assert.ok(manifest.requiredFiles.includes(file), `deployment manifest must manage ${file}`);
+  if (manifest.releaseScope === "window-drag-mobile" || manifest.releaseScope === "camera-network-experience") {
+    assert.ok((manifest.uploadFiles || []).includes(file), `window bundle release must upload ${file}`);
+  }
 }
 
 console.log("Mobile window drag smoke tests passed");

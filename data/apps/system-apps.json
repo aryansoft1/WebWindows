@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.09.13.1",
-    "updatedAt": "2026-09-13T00:00:00+09:00"
+    "catalogVersion": "2026.09.13.2",
+    "updatedAt": "2026-09-13T22:00:00+09:00"
   },
   "apps": [
     {
@@ -40,7 +40,7 @@
       "type": "system",
       "name": "设置",
       "icon": "assets/icons/settings.png",
-      "entry": "settings.html?v=20260729-3",
+      "entry": "settings.html?v=20260913-2",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -154,7 +154,7 @@
       "category": "system",
       "version": "1.0.0",
       "icon": "assets/icons/camera.svg",
-      "entry": "camera.html?v=20260913-1",
+      "entry": "camera.html?v=20260913-2",
       "install": {
         "defaultState": "installed",
         "source": "system",

@@ -116,6 +116,36 @@
       }
     },
     {
+      "id": "webwindows.system.developer-studio",
+      "legacyIds": ["developer-studio"],
+      "type": "system",
+      "name": "Developer Studio",
+      "description": "创建和编辑 WebWindows 功能项目。",
+      "category": "system",
+      "version": "1.0.0",
+      "icon": "assets/icons/code.svg",
+      "entry": "developer-studio.html?v=20260914-dialog-api-1",
+      "install": {
+        "defaultState": "installed",
+        "source": "system",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 27,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1280px",
+        "height": "800px"
+      }
+    },
+    {
       "id": "webwindows.system.camera",
       "legacyIds": ["camera"],
       "type": "system",

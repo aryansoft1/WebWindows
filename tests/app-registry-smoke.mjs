@@ -99,8 +99,8 @@ await apps.ready();
 await new Promise((resolve) => setTimeout(resolve, 0));
 vm.runInContext(resourceOpenSource, context, { filename: "resource-open.js" });
 
-assert.equal((await apps.listInstalled()).length, 16);
-assert.equal((await apps.listCatalog()).length, 16);
+assert.equal((await apps.listInstalled()).length, 17);
+assert.equal((await apps.listCatalog()).length, 17);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), true);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", false);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), false);
@@ -128,6 +128,18 @@ assert.deepEqual(openedWindows.at(-1), [
   "",
   "980px",
   "700px"
+]);
+
+await apps.launch("webwindows.system.developer-studio");
+assert.deepEqual(openedWindows.at(-1), [
+  "developer-studio",
+  "Developer Studio",
+  "developer-studio.html?v=20260914-dialog-api-1",
+  "assets/icons/code.svg",
+  true,
+  "",
+  "1280px",
+  "800px"
 ]);
 
 await apps.launch("webwindows.system.guide", { url: "guide.html?topic=cloud-files" });

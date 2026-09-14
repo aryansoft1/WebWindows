@@ -2,61 +2,63 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.14.2",
   "catalogVersion": "2026.09.14.2",
-  "generatedAt": "2026-09-14T07:53:22.131Z",
+  "generatedAt": "2026-09-14T07:59:36.275Z",
   "root": "/wwwroot",
   "requiredFiles": [
-    "deploy/ftp-manifest.json",
-    "index.html",
-    "camera.html",
+    "admin_api/adminGuard.asp",
+    "admin_api/deleteDatacenter.asp",
+    "admin_api/getDatacenters.asp",
+    "admin_api/saveDatacenter.asp",
+    "api/dt_discovery.asp",
+    "api/dt_fetch_links.asp",
+    "api/dt_presence_mem.asp",
     "api/function-catalog.asp",
-    "api/camera-login.asp",
-    "api/network-speed.ashx",
-    "App_Code/WebWindowsNetworkSpeed.cs",
-    "data/apps/system-apps.json",
-    "assets/js/app-registry.js",
-    "assets/js/camera-app.js",
-    "assets/js/camera-core.js",
-    "assets/js/tw.js",
-    "assets/js/file-query-parser.js",
-    "assets/js/file-search.js",
-    "assets/js/ai-tool-registry.js",
-    "assets/js/ai-file-tools.js",
-    "assets/js/desktalk.js",
-    "assets/js/taskbar-experience.js",
-    "assets/js/vendor/html2canvas.min.js",
-    "assets/js/sysinfo.js",
-    "assets/js/auth-session.js",
-    "assets/js/connectivity.js",
-    "assets/js/contextmenu-guard.js",
-    "assets/js/desktop-functions.js",
-    "assets/js/device-api.js",
-    "assets/js/device-controls.js",
-    "assets/js/device-storage-provider.js",
-    "assets/js/function-sync.js",
-    "assets/js/locale-region.js",
-    "assets/js/main.js",
-    "assets/js/login.js",
-    "assets/js/news.js",
-    "assets/js/network-speed.js",
-    "assets/js/settings.js",
-    "assets/js/snap_drag.js",
-    "assets/js/start-menu-functions.js",
-    "assets/js/system-session.js",
-    "assets/js/webwindows-message.js",
-    "assets/js/wallpaper.js",
-    "assets/js/cloud-file-dialog.js",
-    "assets/js/resource-open.js",
-    "assets/js/function-center.js",
-    "assets/js/guide.js",
-    "assets/css/function-center.css",
-    "assets/css/camera.css",
-    "assets/css/guide.css",
-    "assets/css/main.css",
-    "assets/css/sysinfo.css",
+    "api/mobile-version.asp",
+    "api/release-version.asp",
+    "api/storage-quota.asp",
+    "aplay.html",
     "assets/css/context_menu.css",
     "assets/css/desktalk.css",
+    "assets/css/developer-studio.css",
+    "assets/css/function-center.css",
+    "assets/css/guide.css",
+    "assets/css/main.css",
     "assets/css/news.css",
     "assets/css/settings.css",
+    "assets/css/sysinfo.css",
+    "assets/icons/149071.png",
+    "assets/icons/aplay.png",
+    "assets/icons/cloud_secretary.png",
+    "assets/icons/cloud.png",
+    "assets/icons/code.png",
+    "assets/icons/code.svg",
+    "assets/icons/contact.png",
+    "assets/icons/desktalk.png",
+    "assets/icons/dreama.png",
+    "assets/icons/explorer.png",
+    "assets/icons/function-center.svg",
+    "assets/icons/guide.svg",
+    "assets/icons/japan.png",
+    "assets/icons/logo_large.png",
+    "assets/icons/logo.png",
+    "assets/icons/mailbox.png",
+    "assets/icons/news.png",
+    "assets/icons/power.png",
+    "assets/icons/settings-display.svg",
+    "assets/icons/settings-functions.svg",
+    "assets/icons/settings-guide.svg",
+    "assets/icons/settings-language.svg",
+    "assets/icons/settings-network.svg",
+    "assets/icons/settings-power.svg",
+    "assets/icons/settings-sound.svg",
+    "assets/icons/settings-wallpaper.svg",
+    "assets/icons/settings.png",
+    "assets/icons/sheeteditor.png",
+    "assets/icons/slideeditor.svg",
+    "assets/icons/sysinfo.png",
+    "assets/icons/wall_aryan.jpg",
+    "assets/icons/web.png",
+    "assets/icons/writeeditor.svg",
     "assets/images/case1.jpg",
     "assets/images/case2.jpg",
     "assets/images/case3.jpg",
@@ -71,69 +73,41 @@
     "assets/img/software/software3.jpg",
     "assets/img/software/software4.jpg",
     "assets/img/software/software5.jpg",
-    "assets/icons/149071.png",
-    "assets/icons/aplay.png",
-    "assets/icons/camera.svg",
-    "assets/icons/cloud.png",
-    "assets/icons/cloud_secretary.png",
-    "assets/icons/code.png",
-    "assets/icons/contact.png",
-    "assets/icons/desktalk.png",
-    "assets/icons/explorer.png",
-    "assets/icons/japan.png",
-    "assets/icons/logo.png",
-    "assets/icons/logo_large.png",
-    "assets/icons/news.png",
-    "assets/icons/power.png",
-    "assets/icons/settings.png",
-    "assets/icons/settings-display.svg",
-    "assets/icons/settings-functions.svg",
-    "assets/icons/settings-guide.svg",
-    "assets/icons/settings-language.svg",
-    "assets/icons/settings-network.svg",
-    "assets/icons/settings-power.svg",
-    "assets/icons/settings-sound.svg",
-    "assets/icons/settings-wallpaper.svg",
-    "assets/icons/sheeteditor.png",
-    "assets/icons/sysinfo.png",
-    "assets/icons/wall_aryan.jpg",
-    "assets/icons/web.png",
-    "assets/icons/function-center.svg",
-    "assets/icons/guide.svg",
-    "assets/icons/writeeditor.svg",
-    "assets/icons/slideeditor.svg",
-    "assets/icons/dreama.png",
-    "assets/icons/mailbox.png",
-    "function-center.html",
-    "guide.html",
-    "dreama.html",
-    "sysinfo.html",
-    "login.html",
-    "settings.html",
-    "aplay.html",
-    "news.html",
-    "web.html",
+    "assets/js/ai-file-tools.js",
+    "assets/js/ai-tool-registry.js",
+    "assets/js/app-registry.js",
+    "assets/js/auth-session.js",
+    "assets/js/cloud-file-dialog.js",
+    "assets/js/connectivity.js",
+    "assets/js/contextmenu-guard.js",
+    "assets/js/desktalk.js",
+    "assets/js/desktop-functions.js",
+    "assets/js/device-api.js",
+    "assets/js/device-controls.js",
+    "assets/js/device-storage-provider.js",
+    "assets/js/file-query-parser.js",
+    "assets/js/file-search.js",
+    "assets/js/function-center.js",
+    "assets/js/function-sync.js",
+    "assets/js/guide.js",
+    "assets/js/locale-region.js",
+    "assets/js/login.js",
+    "assets/js/main.js",
+    "assets/js/network-speed.js",
+    "assets/js/news_view.js",
+    "assets/js/news.js",
+    "assets/js/resource-open.js",
+    "assets/js/settings.js",
+    "assets/js/snap_drag.js",
+    "assets/js/start-menu-functions.js",
+    "assets/js/sysinfo.js",
+    "assets/js/system-session.js",
+    "assets/js/taskbar-experience.js",
+    "assets/js/tw.js",
+    "assets/js/vendor/html2canvas.min.js",
+    "assets/js/wallpaper.js",
+    "assets/js/webwindows-message.js",
     "cloud.html",
-    "software.html",
-    "japan.html",
-    "contact.html",
-    "inc/sysinfo.asp",
-    "worker_SheetCreater.html",
-    "worker_WriteEditor.html",
-    "worker_SlideEditor.html",
-    "cloud/browser/files.asp",
-    "cloud/browser/private-files.asp",
-    "cloud/browser/i18n.js",
-    "cloud/browser/private-resource.asp",
-    "cloud/browser/search.asp",
-    "cloud/browser/search-ui.js",
-    "cloud/browser/file-search.css",
-    "cloud/browser/styles.css",
-    "cloud/browser/toolbar.js",
-    "cloud/browser/device-locations.js",
-    "cloud/browser/private-files.css",
-    "cloud/browser/FILE_DIALOG_API.md",
-    "cloud/browser/FILE_SEARCH_QUERY_V2.md",
     "cloud/browser/assets/archive.svg",
     "cloud/browser/assets/back.svg",
     "cloud/browser/assets/cloud.svg",
@@ -159,73 +133,107 @@
     "cloud/browser/assets/sort.svg",
     "cloud/browser/assets/up.svg",
     "cloud/browser/assets/word.svg",
+    "cloud/browser/device-locations.js",
+    "cloud/browser/FILE_DIALOG_API.md",
+    "cloud/browser/FILE_SEARCH_QUERY_V2.md",
+    "cloud/browser/file-search.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/openResource.asp",
+    "cloud/browser/private-files.asp",
+    "cloud/browser/private-files.css",
+    "cloud/browser/private-resource.asp",
+    "cloud/browser/search-ui.js",
+    "cloud/browser/search.asp",
+    "cloud/browser/styles.css",
+    "cloud/browser/toolbar.js",
+    "contact.html",
+    "data/apps/system-apps.json",
+    "data/sdk/capability-broker-errors-v1.json",
+    "data/sdk/capability-broker-methods-v1.json",
+    "data/sdk/capability-broker-policy-v1.json",
+    "data/sdk/capability-broker-v1.schema.json",
+    "data/sdk/manifest-v1.schema.json",
+    "data/sdk/manifest-v2.schema.json",
+    "data/sdk/package-runtime-policy-v1.json",
+    "data/sdk/permission-decision-v1.json",
+    "data/sdk/permissions-v1.json",
+    "data/sdk/runtime-compatibility-v1.json",
+    "data/sdk/studio-validator-rules-v1.json",
+    "data/sdk/webwindows-public-api-v1.d.ts",
+    "deploy/ftp-manifest.json",
+    "developer-studio.html",
     "dist-menus/desktop-menus.global.js",
+    "dist-weather/weather-widget.css",
+    "dist-weather/weather-widget.global.js",
+    "dist-weather/weather-widget.umd.js",
     "dist-widget/weather-widget.css",
     "dist-window/window-manager-widget.css",
     "dist-window/window-manager-widget.js",
-    "dist-weather/weather-widget.umd.js",
-    "dist-weather/weather-widget.global.js",
-    "dist-weather/weather-widget.css",
-    "cloud/browser/openResource.asp",
-    "SystemManager/assets/js/datacenter.js",
-    "SystemManager/datacenter.html",
-    "admin_api/adminGuard.asp",
-    "admin_api/deleteDatacenter.asp",
-    "admin_api/getDatacenters.asp",
-    "admin_api/saveDatacenter.asp",
-    "api/storage-quota.asp",
+    "dist-window/window-manager-widget.umd.js",
+    "dreama.html",
+    "function-center.html",
+    "guide.html",
+    "inc/sysinfo.asp",
+    "index.html",
+    "japan.html",
+    "login.html",
+    "news_view.html",
+    "news.html",
+    "settings.html",
+    "software.html",
+    "sysinfo.html",
     "SystemManager/assets/css/admin.css",
     "SystemManager/assets/css/global.css",
-    "assets/js/news_view.js",
-    "news_view.html",
-    "api/dt_fetch_links.asp",
-    "api/dt_presence_mem.asp",
-    "api/dt_discovery.asp",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
-    "dist-window/window-manager-widget.umd.js"
+    "SystemManager/assets/js/datacenter.js",
+    "SystemManager/datacenter.html",
+    "web.html",
+    "worker_SheetCreater.html",
+    "worker_SlideEditor.html",
+    "worker_WriteEditor.html",
+    "camera.html",
+    "assets/css/camera.css",
+    "assets/icons/camera.svg",
+    "assets/js/camera-app.js",
+    "assets/js/camera-core.js",
+    "App_Code/WebWindowsNetworkSpeed.cs",
+    "api/network-speed.ashx",
+    "api/camera-login.asp",
+    "cloud/browser/i18n.js",
+    "assets/css/developer-preview-host.css",
+    "assets/js/developer-preview-host.js",
+    "cloud/browser/node-config.asp",
+    "developer-preview-host.html",
+    "docs/SYSTEM_DIALOG_API.md",
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js",
+    "dist-developer-studio/assets/cssMode-CnOg0bur.js",
+    "dist-developer-studio/assets/deterministic-builder-D5B_uga0.js",
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js",
+    "dist-developer-studio/assets/entry-DgBfoI8G.js",
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js",
+    "dist-developer-studio/assets/htmlMode-BpT7noKD.js",
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js",
+    "dist-developer-studio/assets/jsonMode-BDdpFM2J.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-BaOBOmE6.js",
+    "dist-developer-studio/assets/monaco-runtime-D4730T7L.js",
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js",
+    "dist-developer-studio/assets/tsMode-LWAdGrsf.js",
+    "dist-developer-studio/assets/workers-Dure_1W5.js",
+    "dist-developer-studio/developer-studio-bundle.css",
+    "dist-developer-studio/developer-studio.js"
   ],
-  "previousReleaseVersion": "2026.09.14.1",
+  "previousReleaseVersion": "2026.09.13.2",
   "integrity": {
     "index.html": {
-      "sha256": "80f52357a6b30ea68280b383d11e1ce6c3162bc5d882c0afa8b3d83a32c56e47",
-      "size": 33083
-    },
-    "camera.html": {
-      "sha256": "0909cd2d823ff21ccc4c90723ec341f9c99fdb126049010121a8a2f89ea452cf",
-      "size": 6174
+      "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
+      "size": 33735
     },
     "api/function-catalog.asp": {
-      "sha256": "70682f590ad7cbdefe091db3b610c103829a138caf8c3b08483bda5ab4572c58",
-      "size": 8807
-    },
-    "api/camera-login.asp": {
-      "sha256": "cfca0af2f6af02a4624b6ffc2761d34af1a7de7bc80fe38ec87d04241a7f67c4",
-      "size": 13510
-    },
-    "api/network-speed.ashx": {
-      "sha256": "b4e307ed9ef0ea45123042463121227a546f4f39a2947659b2320d9b20c11e91",
-      "size": 64
-    },
-    "App_Code/WebWindowsNetworkSpeed.cs": {
-      "sha256": "015922628ba018c0e2959a4f858516893c11c1d0327d8dc0f25ccc332c1f5cdc",
-      "size": 9140
-    },
-    "data/apps/system-apps.json": {
-      "sha256": "37d217660f57c30c5fc06c7cb315aeafd0a5206899e92f530ded0ec513a2b13c",
-      "size": 13831
+      "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
+      "size": 8808
     },
     "assets/js/app-registry.js": {
       "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
       "size": 20725
-    },
-    "assets/js/camera-app.js": {
-      "sha256": "af1e5d7df432a717699f7a1ba346415a49036a1628deb1432bc5daf64a2a930a",
-      "size": 24522
-    },
-    "assets/js/camera-core.js": {
-      "sha256": "e87721d7ca1f231a4d79be44ddab7dc71485b1bf6ae8dc536db9b6bc594f5c0d",
-      "size": 16865
     },
     "assets/js/tw.js": {
       "sha256": "697eb4f769d080af26ef68907b800e4eec2d38bc210f8d0a54c93075cb4694a3",
@@ -248,8 +256,8 @@
       "size": 10216
     },
     "assets/js/desktalk.js": {
-      "sha256": "890408cdc6afc2c82a2cbb327a1733fdc00245cb5fcd8efb7ea133ad128e0f99",
-      "size": 114552
+      "sha256": "461115f9034424068d9941578748d8fdc28e4838e978144b7d7b223518b95c8c",
+      "size": 116114
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "16cd610f120d2b60270ee267df8facca00ccc7668ab31ea9639fc6e1b866e5bd",
@@ -268,40 +276,40 @@
       "size": 4654
     },
     "assets/js/connectivity.js": {
-      "sha256": "b1babdb2f3828e4874745936594bdaf7db55b4d11b3d5d11600759b53f22f6cf",
-      "size": 5357
+      "sha256": "0770ef208fb8ed7e6828a2162597726b71d845c0861afefd2311070e39d715a8",
+      "size": 5534
     },
     "assets/js/contextmenu-guard.js": {
-      "sha256": "c1ce447d4a883f04e68c05a9e98accb032c384f01baa52c4049a4b1793b7a9fb",
-      "size": 1898
+      "sha256": "93b6d2f2ed1e5337dcc70aa85d288654a44c0279069da7948f4290b9d4f7078f",
+      "size": 1965
     },
     "assets/js/desktop-functions.js": {
-      "sha256": "f8d932fc7b12bfdeb591c7027f4c9287f0175505ee92b54aaadff815b78162f0",
-      "size": 5504
+      "sha256": "1ab2c62e010987f4369784d9588da35e744e521a7d74c036a626b59b76a42e89",
+      "size": 5673
     },
     "assets/js/device-api.js": {
       "sha256": "8ad1d8f833e0d3c4470a7ae0471db19bd234fefe1f0c3ff4f5b83e0c9a5a649c",
       "size": 19357
     },
     "assets/js/device-controls.js": {
-      "sha256": "32433271e558af0fae4d9854ee71fd574a26f1422984e63b79d896074afd1b91",
-      "size": 3378
+      "sha256": "322818e1b37468c17f633603f04005b905e855c1bb87754e941ebe4463e63fd6",
+      "size": 3461
     },
     "assets/js/device-storage-provider.js": {
-      "sha256": "f08e943a940d40fb1070630d4457c7645f096516791e5c3d1ac05cb67562834e",
-      "size": 21567
+      "sha256": "5318cb616d738db2bf207338eb488601bab6c4c7383a91ba8d604477df5263e4",
+      "size": 21102
     },
     "assets/js/function-sync.js": {
-      "sha256": "7e7a0a65e10b80bcc41b86e39eac227ec63dcda143f9a3d981975b01b8fd7d66",
-      "size": 8930
+      "sha256": "98fab91c5f04245d99d3719813847063482133687aad23e919248244bafe8279",
+      "size": 9206
     },
     "assets/js/locale-region.js": {
-      "sha256": "465294d1006f2bb341426312f08753edc0974503be71d5573d1ae946f90630b2",
-      "size": 5952
+      "sha256": "950cd8da2f6f1b7b51ab5deae05bde328b5e2dc975dc57494f5bb7d33468e3e5",
+      "size": 6039
     },
     "assets/js/main.js": {
-      "sha256": "e16cbc1339a78ee576b6ef12546019dd16395182597d6b98f046842e47f6de21",
-      "size": 23021
+      "sha256": "e0dd75f16d4cf4ba9329ca7413b05d38488dce9aa750a695adca4f330b64a28b",
+      "size": 23610
     },
     "assets/js/login.js": {
       "sha256": "2299f0c3a5c1f07bed23047515dcf75a5a30554a6ccc01ee23ffc5ecdc7cabba",
@@ -312,24 +320,24 @@
       "size": 5179
     },
     "assets/js/network-speed.js": {
-      "sha256": "45613f858bd5a20192ee01923ee881a7ad6d10d299abdaf0f6ddcd19c07ede56",
-      "size": 21892
+      "sha256": "3bae1453ed88635593befe2bba6defbb04a2f6e0a587f38ecbd7de9c6edcc7a1",
+      "size": 22042
     },
     "assets/js/settings.js": {
-      "sha256": "55e927be6f5f614782ec7d03da400dc0d9f24804e25f0e8e1639ec35422032de",
-      "size": 21684
+      "sha256": "58ef8dc3025aec0c521a9738ba4e32e27a162b521390a43696985752dca135c2",
+      "size": 22153
     },
     "assets/js/snap_drag.js": {
       "sha256": "db2279015ffce0c7bc57935799262d25a44ee226202607ff5adb03b07119dae5",
       "size": 2301
     },
     "assets/js/start-menu-functions.js": {
-      "sha256": "c6b052d2bfc0eede2ff3a57786ea65057a22ef9eabd0fc813118761804ec998e",
-      "size": 6360
+      "sha256": "ebd3852508f28749ebe6e6f89eec208a90114d997ebf9182b8eb3e9d756621f1",
+      "size": 6571
     },
     "assets/js/system-session.js": {
-      "sha256": "a18d516bbf9c8e97bebc239350b1e6d8f4a176e29fadd15b76238f6ce3e467e6",
-      "size": 9436
+      "sha256": "09494ebdc48cb8b772429b50b48a9925983ed2cdda071f2b8f17063a951b41d6",
+      "size": 9661
     },
     "assets/js/webwindows-message.js": {
       "sha256": "bdd1dea9b0f37689697e6fe1a4659cca0ada9f80998c237bd2752c6017ef3f34",
@@ -344,12 +352,12 @@
       "size": 12618
     },
     "assets/js/resource-open.js": {
-      "sha256": "3b40a0ad99dfb345bfd42578ba483a48136a958c673d3671b6d97ab31ef4c67b",
-      "size": 7676
+      "sha256": "0875efe1a83ea62dbcc6739355c104de91f5c20db2b86fb8357150506074c1a1",
+      "size": 7893
     },
     "assets/js/function-center.js": {
-      "sha256": "1f7c3d9d044d10d93e050c4b71f8aa581dc1e5c03e3a39b153b797f6834759d9",
-      "size": 11212
+      "sha256": "756e39f1696bf274eb4da8d4177278a9bda76e10549d9e485e8360142cc03a1e",
+      "size": 11213
     },
     "assets/js/guide.js": {
       "sha256": "b8abaac57ab48020cd2e12d412dbd2771f9f94d2a51b8fb58caeb42782107261",
@@ -359,37 +367,33 @@
       "sha256": "65f0c322b418508c26a4622620fa17afe0aaf51ac1226bcbd6f5c0bff92ac224",
       "size": 7867
     },
-    "assets/css/camera.css": {
-      "sha256": "463baad801552b58df642e43003c487db1fa0f1a47aaebe3e0682fdcc82660ea",
-      "size": 5841
-    },
     "assets/css/guide.css": {
       "sha256": "d026b79ec80c1dc2a42fdb10bda03ebbc4fdb126af91ea5e901dad95684a3897",
       "size": 5128
     },
     "assets/css/main.css": {
-      "sha256": "b9176ef8198359934b25e7479d31e9f5a0707345fdc8716e41fb44c3a16a33d3",
-      "size": 30463
+      "sha256": "5e4f790f66f7e12a8a9637cef0eb4f9512b0fb24efb2874494c4d3e01dcc0aa2",
+      "size": 31739
     },
     "assets/css/sysinfo.css": {
       "sha256": "5fcb411d4eabafc7548a7cea9352c2956eb57b39091577ad29de24940f673b14",
       "size": 3113
     },
     "assets/css/context_menu.css": {
-      "sha256": "8de2961f5e171b70440643509ebe8dcd9d10690fe74409e785afa01e15634262",
-      "size": 3570
+      "sha256": "3ed164b4ac80066f6d96100d5122ea073af598a47a69b976082d1ea90ed0774d",
+      "size": 3739
     },
     "assets/css/desktalk.css": {
-      "sha256": "2b666d66ab89352bbcf0d8a596f8ef2541260564efc5fbd1c765b288abf75772",
-      "size": 22133
+      "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
+      "size": 22651
     },
     "assets/css/news.css": {
       "sha256": "25051efec335935b78287bba240a42a7f1a3ae8fc52a34bc5738cba34bb180fe",
       "size": 7666
     },
     "assets/css/settings.css": {
-      "sha256": "9adacb1f2dab147b6d82cb90251e7f612202d02ba9eca36e617897df97f6891b",
-      "size": 15809
+      "sha256": "17dea7a844dfc965136d740ba80c53ea221fde86d70d0ad7d3603eb415b05b2e",
+      "size": 16383
     },
     "assets/images/case1.jpg": {
       "sha256": "63fc2370b66b3515c03897d17b6d45708ebb3ff058664a708527cc71debdf33f",
@@ -454,10 +458,6 @@
     "assets/icons/aplay.png": {
       "sha256": "670bfe992fe38acae20bb24fc6cda2535c92dbc259c67b00fbff291fa9005620",
       "size": 28732
-    },
-    "assets/icons/camera.svg": {
-      "sha256": "e7763cc6d7301dad90cfc01a850db24e5907d216fdecaa8c0307fe365975831a",
-      "size": 567
     },
     "assets/icons/cloud.png": {
       "sha256": "cfaddd3126b048e443cffca36a5977708d8e8b0203d6f27eef0e94cbb802ae2f",
@@ -600,8 +600,8 @@
       "size": 1970
     },
     "settings.html": {
-      "sha256": "f0c1fcf72faba5973c9e5dd3e5ade626032bf75c471549eab9af97807e6f93f4",
-      "size": 18816
+      "sha256": "a4f576ef9f7c7b65c753a3fd6ee746df5761285285dac0401569edc62315e8cb",
+      "size": 19086
     },
     "aplay.html": {
       "sha256": "c7800f5c46c8f916dda4423f738655cb6f94ec3f3dd7a2e7227072336ea1905e",
@@ -644,8 +644,8 @@
       "size": 27286
     },
     "worker_SlideEditor.html": {
-      "sha256": "55f303158628e282b3e1912e49eb146222af9a725d710c93c7ad194a5f7c3f92",
-      "size": 17100
+      "sha256": "1e8c7e1b032eaf395aa6e57f2042fbf8aec21355f44aff871a1b7c88bce64024",
+      "size": 17101
     },
     "cloud/browser/files.asp": {
       "sha256": "045705d18b86b02b848598158e48be98900962af184d99e530fe252f4bd42a4a",
@@ -655,13 +655,9 @@
       "sha256": "5acc4b19dc547316255794ea5153de3e86317e5680f285b35c7be63cde3db753",
       "size": 45274
     },
-    "cloud/browser/i18n.js": {
-      "sha256": "f5f2ca5047d72f57795aae7e9eee0f4bedf75bbb10d15bdb55a748663504c48a",
-      "size": 16397
-    },
     "cloud/browser/private-resource.asp": {
-      "sha256": "9b088759c1cdad6b9f85f31a8a9f440c6553ee732b40758e9f2d0b0a7c5b2631",
-      "size": 24990
+      "sha256": "6792d580192df1cb5e172d24df5551c725d07e4528a3a35e5e324b0626eefe28",
+      "size": 25629
     },
     "cloud/browser/search.asp": {
       "sha256": "31e1ca25c4f7f6161083db6356baa9f67ceb414b5fcead255469f9fdde22c19d",
@@ -812,8 +808,8 @@
       "size": 3634
     },
     "dist-window/window-manager-widget.js": {
-      "sha256": "3aa78f1bc05d135d4b62def62eafd6d8fdd1abbc62811443f4e53861515fa8cf",
-      "size": 88220
+      "sha256": "e91d860bfe47ac58ecd395abe67306679f1f30ff94cff90452a748a61daadad3",
+      "size": 88208
     },
     "dist-weather/weather-widget.umd.js": {
       "sha256": "9f7b7a07ef084e13dc352271375aca2395cec5b26e8e2391ebcc1575786a0c99",
@@ -828,12 +824,12 @@
       "size": 912
     },
     "cloud/browser/openResource.asp": {
-      "sha256": "1937d1981064db9e4140260cc538b380ee3a20346d1c392a552d8726d769a661",
-      "size": 2824
+      "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
+      "size": 2894
     },
     "SystemManager/assets/js/datacenter.js": {
-      "sha256": "8b8053688451ee6a9aa842728571a6e57e39cb7f5fd547316dfcfc7b9aa04031",
-      "size": 6751
+      "sha256": "03e295d22b96c1394a0b0e5c75b84d3eb4d8690c7819241fc9587f113aa735e5",
+      "size": 6960
     },
     "SystemManager/datacenter.html": {
       "sha256": "1b84b9e737ece77ed04af6d482c891fab88e3ac60d18a668ac5c45a96110f0a3",
@@ -896,9 +892,238 @@
       "size": 1495
     },
     "dist-window/window-manager-widget.umd.js": {
-      "sha256": "92bff8c46bd9bb221315c164744436bbcda05a66e00e86d5884cc061163c9657",
-      "size": 88289
+      "sha256": "3f24a847e4467971b31f1dd17e79b35ba8dbb5d4af9d94444589bf16addf1667",
+      "size": 88277
+    },
+    "assets/css/developer-studio.css": {
+      "sha256": "f74878a1d78bb72aeea81629b586782fbe25af8665b66dd3dc4364dc5f2452b1",
+      "size": 22180
+    },
+    "assets/icons/code.svg": {
+      "sha256": "00203861474fdb00cbdd2b677a9813c3cb7b2d7f2ace30c4fbf5f423489e39b8",
+      "size": 162
+    },
+    "data/apps/system-apps.json": {
+      "sha256": "b15e56c3e71f73a1b908ee235bcf520f17507fd98ecb6a6a5e968719ccf39b31",
+      "size": 14676
+    },
+    "data/sdk/capability-broker-errors-v1.json": {
+      "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
+      "size": 3147
+    },
+    "data/sdk/capability-broker-methods-v1.json": {
+      "sha256": "c77b1e204e1f46e59a96e31e4b55157b3a1c41f36bc3ebd9f6944606c18a2b63",
+      "size": 3542
+    },
+    "data/sdk/capability-broker-policy-v1.json": {
+      "sha256": "1ad1b6e63fee05a9cbd481bb7d45f053abb41742afb554aabc8c7111d0f0af6b",
+      "size": 4235
+    },
+    "data/sdk/capability-broker-v1.schema.json": {
+      "sha256": "474c140b0e29db636315cd5fbe2753bc92a3a31ddee8a13f34066eeadde372c9",
+      "size": 10279
+    },
+    "data/sdk/manifest-v1.schema.json": {
+      "sha256": "7ac345bdd704d0fcaa07b88ef1985aa363c6ece8a47fa0baa9709f618fef068a",
+      "size": 7419
+    },
+    "data/sdk/manifest-v2.schema.json": {
+      "sha256": "26eecc0326dc7cf99dd68d11612b16f7a4907e38afba807d7a086c3fd3713cc2",
+      "size": 7864
+    },
+    "data/sdk/package-runtime-policy-v1.json": {
+      "sha256": "f2f2eb104903169bc6312370caf8406a1cd1dace862090da870bd249552de0d9",
+      "size": 860
+    },
+    "data/sdk/permission-decision-v1.json": {
+      "sha256": "3e9829365f307c7c49817eabb77b2b0e441a3a748e829375276405c2462674b6",
+      "size": 3054
+    },
+    "data/sdk/permissions-v1.json": {
+      "sha256": "293b1cb84989cdf5890d554a5733365fbeef13fc21e96fff51d41495925d7f86",
+      "size": 5540
+    },
+    "data/sdk/runtime-compatibility-v1.json": {
+      "sha256": "c1e6e5274d034432e8ae1a4ed435e91f3e05d7537e60513228b2d48968bcdb3e",
+      "size": 6173
+    },
+    "data/sdk/studio-validator-rules-v1.json": {
+      "sha256": "37d5aebb7d4f1f17cdc08e53fecd591413c182d3871bee801a356ffa1ed477b7",
+      "size": 4111
+    },
+    "data/sdk/webwindows-public-api-v1.d.ts": {
+      "sha256": "b5dd5c89b2c5d088b034ae61fa6a83918c7f20f2785d7f1a1089d00d958b1f6a",
+      "size": 9632
+    },
+    "developer-studio.html": {
+      "sha256": "171dcd6b470738414f03c2219012d3791efa1f1bf0b50fbac7958d8bdd90ad0e",
+      "size": 1074
+    },
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js": {
+      "sha256": "67768c1ac2bc5e4d258c18485bfc28c1c47ee411f51cfc0ac26bf01c55fba7f9",
+      "size": 1051356
+    },
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js": {
+      "sha256": "c707581cf73d830ceef855895db8ba1dd0af1290130d0815b29f7b7101c82450",
+      "size": 272674
+    },
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js": {
+      "sha256": "65b817c9823a0454d677523bbe7e01712f1bc8528cb0bfbe49a619899d8d00c8",
+      "size": 714485
+    },
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js": {
+      "sha256": "598139c9a57cd2bb3e96d69dcf4bc70c26fa6219d07346049d01852bead5a76e",
+      "size": 404002
+    },
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js": {
+      "sha256": "aca437c0b701b9a761c742217b9a86da8c2518e2d17844dc5b8e2b5a4178df1e",
+      "size": 7100662
+    },
+    "dist-developer-studio/developer-studio.js": {
+      "sha256": "b57bd6c8fe0bb92526c73568dbb277b5cabf2be6066d0d09bbd8a78035dfb6fa",
+      "size": 38
+    },
+    "dist-developer-studio/developer-studio-bundle.css": {
+      "sha256": "518c1109a4d8bf2e8fa5508366415c0dac86bdd10077b24d4e85ef8b9de3f438",
+      "size": 345320
+    },
+    "camera.html": {
+      "sha256": "0909cd2d823ff21ccc4c90723ec341f9c99fdb126049010121a8a2f89ea452cf",
+      "size": 6174
+    },
+    "assets/css/camera.css": {
+      "sha256": "4dcd58bae436c8edb1d21a0ca24b7e7ca6bbe44470dcb93d35da70b90189fc83",
+      "size": 5828
+    },
+    "assets/icons/camera.svg": {
+      "sha256": "e7763cc6d7301dad90cfc01a850db24e5907d216fdecaa8c0307fe365975831a",
+      "size": 567
+    },
+    "assets/js/camera-app.js": {
+      "sha256": "af1e5d7df432a717699f7a1ba346415a49036a1628deb1432bc5daf64a2a930a",
+      "size": 24522
+    },
+    "assets/js/camera-core.js": {
+      "sha256": "e87721d7ca1f231a4d79be44ddab7dc71485b1bf6ae8dc536db9b6bc594f5c0d",
+      "size": 16865
+    },
+    "App_Code/WebWindowsNetworkSpeed.cs": {
+      "sha256": "015922628ba018c0e2959a4f858516893c11c1d0327d8dc0f25ccc332c1f5cdc",
+      "size": 9140
+    },
+    "api/network-speed.ashx": {
+      "sha256": "b4e307ed9ef0ea45123042463121227a546f4f39a2947659b2320d9b20c11e91",
+      "size": 64
+    },
+    "api/camera-login.asp": {
+      "sha256": "cfca0af2f6af02a4624b6ffc2761d34af1a7de7bc80fe38ec87d04241a7f67c4",
+      "size": 13510
+    },
+    "assets/css/developer-preview-host.css": {
+      "sha256": "2913f819f6a10d08f447135fa0b341f22d90c692b48ccbb0a1af9785548fa572",
+      "size": 1088
+    },
+    "assets/js/developer-preview-host.js": {
+      "sha256": "ad9ae6d16634cc42504a1f4229614c91232a46ad025f3d00ed897ca9d21f0338",
+      "size": 9986
+    },
+    "cloud/browser/i18n.js": {
+      "sha256": "f5f2ca5047d72f57795aae7e9eee0f4bedf75bbb10d15bdb55a748663504c48a",
+      "size": 16397
+    },
+    "cloud/browser/node-config.asp": {
+      "sha256": "2ae96bc0706b869742ef01de5022e0c2575901a0825d52945cc82bd2e660c0a6",
+      "size": 13673
+    },
+    "developer-preview-host.html": {
+      "sha256": "31ca6e5ec4e4325001e2b9477def1b79853261f39ad12a2f0a4dea820a78a890",
+      "size": 951
+    },
+    "dist-developer-studio/assets/cssMode-CnOg0bur.js": {
+      "sha256": "689fe50d363a27be5be3820da60a80113496980a0b3b525646438f73c11a6583",
+      "size": 4314
+    },
+    "dist-developer-studio/assets/deterministic-builder-D5B_uga0.js": {
+      "sha256": "f8f2428bed81f86f358765ed0f3d76c71a47102a9adcfa21b4b79582a9482a78",
+      "size": 147995
+    },
+    "dist-developer-studio/assets/entry-DgBfoI8G.js": {
+      "sha256": "2f16e7e0cae2943b2c8209296cf489c58f381e3376f73aefcc536668aea07a10",
+      "size": 413584
+    },
+    "dist-developer-studio/assets/htmlMode-BpT7noKD.js": {
+      "sha256": "092d3c916355f4fdc449d6412f1ba1d0879fb1c0fff0f11cbae69d61df5e1d3a",
+      "size": 4779
+    },
+    "dist-developer-studio/assets/jsonMode-BDdpFM2J.js": {
+      "sha256": "fc5deef8d6690f233f937f15bbbfe61396f8321ffb01c3eb4660d0b72a6c2c56",
+      "size": 18803
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-BaOBOmE6.js": {
+      "sha256": "79328edbbcb7ceb00edfbc6ecb90d37276f3d0ef5490a9f4022895842d230fdb",
+      "size": 39857
+    },
+    "dist-developer-studio/assets/monaco-runtime-D4730T7L.js": {
+      "sha256": "da48050875203a5827c2c81e8689cf21e16d8820cf96f57cadbb8244929b08d6",
+      "size": 3695415
+    },
+    "dist-developer-studio/assets/tsMode-LWAdGrsf.js": {
+      "sha256": "986da7482a80724740099650b22177fb4d9c196d5fc99c4bda40f01ea3ad5399",
+      "size": 29908
+    },
+    "dist-developer-studio/assets/workers-Dure_1W5.js": {
+      "sha256": "8e2dd6200282369a2ed03a7f8bf99b90e473f7996dfd1ed9ee1da0740b3f6ce9",
+      "size": 1610786
+    },
+    "docs/SYSTEM_DIALOG_API.md": {
+      "sha256": "7ec9444f109b749494867fef07b8da5e0a05a734fee6dc611f19a039e2956a99",
+      "size": 1117
     }
   },
-  "releaseScope": "camera-dialog-localization"
+  "releaseScope": "camera-dialog-localization",
+  "uploadFiles": [
+    "api/camera-login.asp",
+    "api/mobile-version.asp",
+    "api/release-version.asp",
+    "assets/css/developer-preview-host.css",
+    "assets/css/developer-studio.css",
+    "assets/js/camera-app.js",
+    "assets/js/cloud-file-dialog.js",
+    "assets/js/developer-preview-host.js",
+    "assets/js/sysinfo.js",
+    "assets/js/tw.js",
+    "assets/js/webwindows-message.js",
+    "camera.html",
+    "cloud/browser/device-locations.js",
+    "cloud/browser/FILE_DIALOG_API.md",
+    "cloud/browser/files.asp",
+    "cloud/browser/i18n.js",
+    "cloud/browser/node-config.asp",
+    "cloud/browser/private-files.asp",
+    "cloud/browser/search-ui.js",
+    "cloud/browser/toolbar.js",
+    "data/apps/system-apps.json",
+    "data/sdk/webwindows-public-api-v1.d.ts",
+    "developer-preview-host.html",
+    "developer-studio.html",
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js",
+    "dist-developer-studio/assets/cssMode-CnOg0bur.js",
+    "dist-developer-studio/assets/deterministic-builder-D5B_uga0.js",
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js",
+    "dist-developer-studio/assets/entry-DgBfoI8G.js",
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js",
+    "dist-developer-studio/assets/htmlMode-BpT7noKD.js",
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js",
+    "dist-developer-studio/assets/jsonMode-BDdpFM2J.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-BaOBOmE6.js",
+    "dist-developer-studio/assets/monaco-runtime-D4730T7L.js",
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js",
+    "dist-developer-studio/assets/tsMode-LWAdGrsf.js",
+    "dist-developer-studio/assets/workers-Dure_1W5.js",
+    "dist-developer-studio/developer-studio-bundle.css",
+    "dist-developer-studio/developer-studio.js",
+    "docs/SYSTEM_DIALOG_API.md",
+    "sysinfo.html",
+    "deploy/ftp-manifest.json"
+  ]
 }

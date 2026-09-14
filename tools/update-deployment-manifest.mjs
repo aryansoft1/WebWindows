@@ -11,6 +11,7 @@ const releaseVersion = args.find((value) => !value.startsWith("--"));
 const productionIndex = args.indexOf("--production");
 const filesIndex = args.indexOf("--files");
 const scopeIndex = args.indexOf("--scope");
+const prunePrefixIndex = args.indexOf("--prune-prefix");
 const reconcileIndex = args.indexOf("--reconcile-directory");
 const productionSource = productionIndex >= 0 ? args[productionIndex + 1] : "";
 const reconcileDirectory = reconcileIndex >= 0 ? args[reconcileIndex + 1] : "";
@@ -18,6 +19,17 @@ const selectedFiles = filesIndex >= 0
   ? String(args[filesIndex + 1] || "").split(",").map((value) => value.trim()).filter(Boolean)
   : [];
 const releaseScope = scopeIndex >= 0 ? String(args[scopeIndex + 1] || "").trim() : "";
+const prunePrefixes = prunePrefixIndex >= 0
+  ? String(args[prunePrefixIndex + 1] || "").split(",").map((value) => value.trim()).filter(Boolean)
+  : [];
+
+if (prunePrefixes.some((prefix) => prefix.startsWith("/") || prefix.includes("..") || prefix.includes("\\"))) {
+  throw new Error("Prune prefixes must be safe repository-relative paths.");
+}
+
+function isPruned(relative) {
+  return prunePrefixes.some((prefix) => relative.startsWith(prefix));
+}
 
 if (releaseScope) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(releaseScope)) throw new Error("Release scope must use lowercase kebab-case.");
@@ -75,8 +87,8 @@ if (reconcileDirectory) {
   manifest.previousReleaseVersion = production.releaseVersion;
   manifest.root = production.root || manifest.root;
   manifest.requiredFiles = [...new Set([
-    ...(production.requiredFiles || []),
-    ...(manifest.requiredFiles || []),
+    ...(production.requiredFiles || []).filter((relative) => !isPruned(relative)),
+    ...(manifest.requiredFiles || []).filter((relative) => !isPruned(relative)),
     "deploy/ftp-manifest.json",
     ...selectedFiles
   ])];
@@ -108,6 +120,9 @@ if (reconcileDirectory) {
       size: bytes.length
     };
   }
+}
+for (const relative of Object.keys(integrity)) {
+  if (!manifest.requiredFiles.includes(relative)) delete integrity[relative];
 }
 manifest.integrity = integrity;
 manifest.generatedAt = new Date().toISOString();

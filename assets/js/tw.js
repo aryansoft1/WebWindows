@@ -614,7 +614,12 @@ Object.assign(languageCatalog.en, {
   "网页与标清视频基本可用。": "Web browsing and SD video should be usable.",
   "高清视频和常规云资料传输较顺畅。": "HD video and everyday Cloud Files transfers should run smoothly.",
   "4K 视频与大文件传输较顺畅。": "4K video and large-file transfers should run smoothly.",
-  "当前链路适合高码率和大型传输任务。": "This connection is suitable for high-bitrate and large transfer workloads."
+  "当前链路适合高码率和大型传输任务。": "This connection is suitable for high-bitrate and large transfer workloads.",
+  "保存扫描图片": "Save scanned image", "保存扫描 PDF": "Save scanned PDF", "图片已保存到云资料。": "The image was saved to Cloud Files.",
+  "WebWindows 系统确认对话框未就绪。": "The WebWindows system confirmation dialog is not ready.",
+  "即将打开以下网站：\n{host}\n\n完整地址：\n{url}\n\n确定继续？": "You are about to open this website:\n{host}\n\nFull address:\n{url}\n\nContinue?",
+  "确认让以下设备登录？\n{device}\n\n创建时间：{createdAt}\n此操作不会向二维码写入你的 cookie。": "Allow this device to sign in?\n{device}\n\nCreated: {createdAt}\nYour cookie will not be written to the QR code.",
+  "已确认。请回到发起设备完成登录。": "Confirmed. Return to the requesting device to finish signing in."
 });
 
 Object.assign(languageCatalog.jp, {
@@ -690,7 +695,12 @@ Object.assign(languageCatalog.jp, {
   "网页与标清视频基本可用。": "Web閲覧と標準画質動画はおおむね利用できます。",
   "高清视频和常规云资料传输较顺畅。": "HD動画と通常のクラウド資料転送を快適に利用できます。",
   "4K 视频与大文件传输较顺畅。": "4K動画と大容量ファイル転送を快適に利用できます。",
-  "当前链路适合高码率和大型传输任务。": "高ビットレートや大容量転送に適した接続です。"
+  "当前链路适合高码率和大型传输任务。": "高ビットレートや大容量転送に適した接続です。",
+  "保存扫描图片": "スキャン画像を保存", "保存扫描 PDF": "スキャンPDFを保存", "图片已保存到云资料。": "画像をクラウド資料に保存しました。",
+  "WebWindows 系统确认对话框未就绪。": "WebWindows の確認ダイアログを利用できません。",
+  "即将打开以下网站：\n{host}\n\n完整地址：\n{url}\n\n确定继续？": "次のサイトを開きます：\n{host}\n\n完全なアドレス：\n{url}\n\n続行しますか？",
+  "确认让以下设备登录？\n{device}\n\n创建时间：{createdAt}\n此操作不会向二维码写入你的 cookie。": "次のデバイスのログインを許可しますか？\n{device}\n\n作成日時：{createdAt}\nCookie がQRコードに書き込まれることはありません。",
+  "已确认。请回到发起设备完成登录。": "確認しました。要求元のデバイスに戻ってログインを完了してください。"
 });
 
 Object.assign(languageCatalog.tw, {
@@ -764,7 +774,12 @@ Object.assign(languageCatalog.tw, {
   "网页与标清视频基本可用。": "網頁與標準畫質影片基本可用。",
   "高清视频和常规云资料传输较顺畅。": "高畫質影片和一般雲資料傳輸較順暢。",
   "4K 视频与大文件传输较顺畅。": "4K 影片與大型檔案傳輸較順暢。",
-  "当前链路适合高码率和大型传输任务。": "目前連線適合高位元率和大型傳輸工作。"
+  "当前链路适合高码率和大型传输任务。": "目前連線適合高位元率和大型傳輸工作。",
+  "保存扫描图片": "儲存掃描圖片", "保存扫描 PDF": "儲存掃描 PDF", "图片已保存到云资料。": "圖片已儲存到雲資料。",
+  "WebWindows 系统确认对话框未就绪。": "WebWindows 系統確認對話框尚未就緒。",
+  "即将打开以下网站：\n{host}\n\n完整地址：\n{url}\n\n确定继续？": "即將開啟以下網站：\n{host}\n\n完整位址：\n{url}\n\n確定繼續？",
+  "确认让以下设备登录？\n{device}\n\n创建时间：{createdAt}\n此操作不会向二维码写入你的 cookie。": "確認允許以下裝置登入？\n{device}\n\n建立時間：{createdAt}\n此操作不會把你的 cookie 寫入二維碼。",
+  "已确认。请回到发起设备完成登录。": "已確認。請返回發起裝置完成登入。"
 });
 
 function translateText(text, language) {

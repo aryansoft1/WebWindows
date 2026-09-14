@@ -23,7 +23,7 @@ const userFunctions = visible.filter(
 
 assert.deepEqual(
   systemFunctions.map((app) => app.name),
-  ["云资料", "设置", "系统信息", "功能中心", "Developer Studio", "照相机与扫描", "云秘书", "讯筒", "认识我", "使用向导", "新闻中心"]
+  ["云资料", "设置", "系统信息", "功能中心", "照相机与扫描", "云秘书", "讯筒", "认识我", "使用向导", "新闻中心"]
 );
 assert.deepEqual(
   userFunctions.map((app) => app.name),

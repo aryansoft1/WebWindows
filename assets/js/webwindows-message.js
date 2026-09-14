@@ -11,6 +11,21 @@
   let previousFocus = null;
   let elements = null;
 
+  const actionLabels = {
+    zh: { confirm: "确定", cancel: "取消" },
+    tw: { confirm: "確定", cancel: "取消" },
+    jp: { confirm: "確認", cancel: "キャンセル" },
+    en: { confirm: "OK", cancel: "Cancel" }
+  };
+
+  function currentLanguage() {
+    const language = String(global.WebWindowsI18n?.getLanguage?.() || global.localStorage?.getItem("lang") || "zh").toLowerCase();
+    if (language === "jp" || language.startsWith("ja")) return "jp";
+    if (language === "tw" || language.includes("hant")) return "tw";
+    if (language.startsWith("en")) return "en";
+    return "zh";
+  }
+
   function ensureUi() {
     if (elements) return elements;
 
@@ -71,6 +86,7 @@
       .ww-system-dialog__actions {
         display: flex;
         justify-content: flex-end;
+        gap: 8px;
         padding: 10px 18px 18px;
       }
       .ww-system-dialog__button {
@@ -86,6 +102,12 @@
         cursor: pointer;
       }
       .ww-system-dialog__button:hover { filter: brightness(1.06); }
+      .ww-system-dialog__button--secondary {
+        border-color: #aebdce;
+        color: #25364d;
+        background: #fff;
+        box-shadow: none;
+      }
       .ww-system-dialog__button:focus-visible {
         outline: 3px solid rgba(26, 134, 229, .3);
         outline-offset: 2px;
@@ -118,7 +140,8 @@
         </div>
         <p class="ww-system-dialog__message" id="ww-system-dialog-message"></p>
         <div class="ww-system-dialog__actions">
-          <button class="ww-system-dialog__button" type="button">确定</button>
+          <button class="ww-system-dialog__button ww-system-dialog__button--secondary" type="button" data-dialog-action="cancel">取消</button>
+          <button class="ww-system-dialog__button" type="button" data-dialog-action="confirm">确定</button>
         </div>
       </section>
     `;
@@ -129,17 +152,26 @@
       host,
       title: host.querySelector("#ww-system-dialog-title"),
       message: host.querySelector("#ww-system-dialog-message"),
-      button: host.querySelector(".ww-system-dialog__button")
+      confirmButton: host.querySelector('[data-dialog-action="confirm"]'),
+      cancelButton: host.querySelector('[data-dialog-action="cancel"]')
     };
-    elements.button.addEventListener("click", closeActive);
+    elements.confirmButton.addEventListener("click", () => closeActive(true));
+    elements.cancelButton.addEventListener("click", () => closeActive(false));
     host.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" || event.key === "Enter") {
+      if (event.key === "Escape") {
         event.preventDefault();
-        closeActive();
+        closeActive(false);
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        closeActive(true);
       }
       if (event.key === "Tab") {
         event.preventDefault();
-        elements.button.focus();
+        const target = document.activeElement === elements.confirmButton && !elements.cancelButton.hidden
+          ? elements.cancelButton
+          : elements.confirmButton;
+        target.focus();
       }
     });
     return elements;
@@ -152,12 +184,16 @@
     previousFocus = document.activeElement;
     ui.title.textContent = activeRequest.title || "WebWindows";
     ui.message.textContent = activeRequest.message;
+    const labels = actionLabels[currentLanguage()];
+    ui.confirmButton.textContent = activeRequest.confirmLabel || labels.confirm;
+    ui.cancelButton.textContent = activeRequest.cancelLabel || labels.cancel;
+    ui.cancelButton.hidden = activeRequest.type !== "confirm";
     ui.host.dataset.open = "true";
     document.documentElement.dataset.wwSystemDialogOpen = "true";
-    requestAnimationFrame(() => ui.button.focus());
+    requestAnimationFrame(() => ui.confirmButton.focus());
   }
 
-  function closeActive() {
+  function closeActive(confirmed) {
     if (!activeRequest || !elements) return;
     const request = activeRequest;
     activeRequest = null;
@@ -169,15 +205,31 @@
       // The original control may have been removed with its window.
     }
     previousFocus = null;
-    request.resolve();
+    request.resolve(request.type === "confirm" ? confirmed === true : undefined);
     showNext();
   }
 
   function showAlert(message, options) {
     return new Promise((resolve) => {
       queue.push({
+        type: "alert",
         message: String(message ?? ""),
         title: String(options?.title || "WebWindows"),
+        confirmLabel: options?.confirmLabel ? String(options.confirmLabel) : "",
+        resolve
+      });
+      showNext();
+    });
+  }
+
+  function showConfirm(message, options) {
+    return new Promise((resolve) => {
+      queue.push({
+        type: "confirm",
+        message: String(message ?? ""),
+        title: String(options?.title || "WebWindows"),
+        confirmLabel: options?.confirmLabel ? String(options.confirmLabel) : "",
+        cancelLabel: options?.cancelLabel ? String(options.cancelLabel) : "",
         resolve
       });
       showNext();
@@ -186,7 +238,8 @@
 
   const api = Object.freeze({
     alert: showAlert,
-    close: closeActive
+    confirm: showConfirm,
+    close: () => closeActive(false)
   });
 
   global.WebWindows = global.WebWindows || {};

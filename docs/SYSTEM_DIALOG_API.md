@@ -28,7 +28,7 @@ if (accepted) {
 ```
 
 `confirm()` 返回 `Promise<boolean>`。确认按钮或 Enter 返回 `true`；取消按钮、
-Escape、API `close()` 返回 `false`。应用必须 `await` 结果，不能把它当作浏览器
+Escape 或对话框被关闭时返回 `false`。应用必须 `await` 结果，不能把它当作浏览器
 原生同步 `confirm()` 使用。
 
 同源应用窗口会获得相同的 `WebWindows.dialog` 对象。跨源页面不会被注入此 API。

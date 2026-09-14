@@ -69,6 +69,17 @@ if (manifest.releaseScope === "camera-registry") {
     "dist-window/window-manager-widget.umd.js",
     "deploy/ftp-manifest.json",
   ], "camera and network experience release must upload only its runtime slice");
+} else if (manifest.releaseScope === "camera-recovery") {
+  assert.deepEqual(uploadFiles, [
+    "assets/js/camera-app.js",
+    "assets/js/tw.js",
+    "camera.html",
+    "data/apps/system-apps.json",
+    "dist-window/window-manager-widget.css",
+    "dist-window/window-manager-widget.js",
+    "dist-window/window-manager-widget.umd.js",
+    "deploy/ftp-manifest.json",
+  ], "camera recovery releases must upload only the camera and window runtime slice");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),
@@ -88,7 +99,7 @@ for (const runtimeDependency of [
   assert.ok(manifest.requiredFiles.includes(runtimeDependency),
     `runtime dependency must be in deployment manifest: ${runtimeDependency}`);
 }
-const appsToVerify = manifest.releaseScope === "camera-registry" || manifest.releaseScope === "camera-network-experience"
+const appsToVerify = ["camera-registry", "camera-network-experience", "camera-recovery"].includes(manifest.releaseScope)
   ? catalog.apps.filter((app) => app.id === "webwindows.system.camera")
   : catalog.apps;
 for (const app of appsToVerify) {

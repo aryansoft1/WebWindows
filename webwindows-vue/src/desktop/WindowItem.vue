@@ -19,7 +19,7 @@
       <iframe
         v-if="win.url"
         :src="win.url"
-        :allow="isCameraWindow ? 'camera; fullscreen' : undefined"
+        :allow="isCameraWindow ? 'camera; fullscreen; translator' : undefined"
         :allowfullscreen="isCameraWindow"
         frameborder="0"
         style="width:100%;height:100%"

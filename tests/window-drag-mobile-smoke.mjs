@@ -62,7 +62,7 @@ assert.match(bundleCss, /touch-action:none/);
 assert.match(page, /window-manager-widget\.(?:css|js)\?v=20260826-window-fit-1/g);
 for (const file of ["dist-window/window-manager-widget.css", "dist-window/window-manager-widget.js", "dist-window/window-manager-widget.umd.js"]) {
   assert.ok(manifest.requiredFiles.includes(file), `deployment manifest must manage ${file}`);
-  if (manifest.releaseScope === "window-drag-mobile" || manifest.releaseScope === "camera-network-experience") {
+  if (["window-drag-mobile", "camera-network-experience", "camera-recovery"].includes(manifest.releaseScope)) {
     assert.ok((manifest.uploadFiles || []).includes(file), `window bundle release must upload ${file}`);
   }
 }

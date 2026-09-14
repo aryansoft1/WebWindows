@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
   <title>照相机与扫描</title>
-  <link rel="stylesheet" href="assets/css/camera.css?v=20260913-2">
+  <link rel="stylesheet" href="assets/css/camera.css?v=20260914-1">
 </head>
 <body>
   <header class="app-header">
@@ -46,7 +46,7 @@
         <button id="addPage" class="primary">加入多页文档</button>
       </div>
       <div id="pages" class="pages" aria-live="polite"></div>
-      <div class="controls"><button id="downloadImage">导出当前图片</button><button id="downloadPdf">导出 PDF</button><button id="saveCloud">保存 PDF 到私人云资料</button></div>
+      <div class="controls"><button id="downloadImage">图片另存到云资料</button><button id="downloadPdf">PDF 另存到云资料</button></div>
       <p class="hint">自动边缘为本地启发式估计；复杂背景可能需要重新取景。第一期校正为四角映射，不上传原图。</p>
     </section>
 
@@ -56,9 +56,9 @@
     </section>
 
     <section id="translate" class="tab-panel">
-      <div class="controls"><button id="runOcr" class="primary">OCR 当前图片</button><label>目标语言 <select id="targetLanguage"><option value="zh">中文</option><option value="ja">日本語</option><option value="en">English</option></select></label><button id="runTranslate">翻译</button></div>
+      <div class="controls"><button id="runOcr" class="primary">OCR 当前图片</button><label>源语言 <select id="sourceLanguage"><option value="auto">自动识别</option><option value="zh">中文</option><option value="ja">日本語</option><option value="en">English</option></select></label><label>目标语言 <select id="targetLanguage"><option value="zh">中文</option><option value="ja">日本語</option><option value="en">English</option></select></label><button id="runTranslate">翻译</button></div>
       <div class="translation-grid"><label>原文<textarea id="ocrText" placeholder="OCR 结果会出现在这里；也可手工校正或输入。"></textarea></label><label>译文<textarea id="translatedText" readonly></textarea></label></div>
-      <p id="translationStatus" class="hint">优先使用设备上的 TextDetector、LanguageDetector 和 Translator；不可用时不会把图片发送到网络。</p>
+      <p id="translationStatus" class="hint">优先使用设备上的 TextDetector 和 Translator；首次翻译可能需要下载设备语言模型，不会把图片发送到网络。</p>
     </section>
 
     <section id="login" class="tab-panel">
@@ -74,8 +74,8 @@
     </section>
   </main>
   <script defer src="assets/js/cloud-file-dialog.js?v=20260901-storage-hotfix-1"></script>
-  <script defer src="assets/js/tw.js?v=20260913-camera-network-2"></script>
-  <script defer src="assets/js/camera-core.js?v=20260913-2"></script>
-  <script defer src="assets/js/camera-app.js?v=20260913-2"></script>
+  <script defer src="assets/js/tw.js?v=20260914-camera-1"></script>
+  <script defer src="assets/js/camera-core.js?v=20260914-1"></script>
+  <script defer src="assets/js/camera-app.js?v=20260914-1"></script>
 </body>
 </html>

@@ -10,12 +10,19 @@ const args = process.argv.slice(2);
 const releaseVersion = args.find((value) => !value.startsWith("--"));
 const productionIndex = args.indexOf("--production");
 const filesIndex = args.indexOf("--files");
+const scopeIndex = args.indexOf("--scope");
 const reconcileIndex = args.indexOf("--reconcile-directory");
 const productionSource = productionIndex >= 0 ? args[productionIndex + 1] : "";
 const reconcileDirectory = reconcileIndex >= 0 ? args[reconcileIndex + 1] : "";
 const selectedFiles = filesIndex >= 0
   ? String(args[filesIndex + 1] || "").split(",").map((value) => value.trim()).filter(Boolean)
   : [];
+const releaseScope = scopeIndex >= 0 ? String(args[scopeIndex + 1] || "").trim() : "";
+
+if (releaseScope) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(releaseScope)) throw new Error("Release scope must use lowercase kebab-case.");
+  manifest.releaseScope = releaseScope;
+}
 
 async function readJsonSource(source) {
   if (/^https:\/\//i.test(source)) {

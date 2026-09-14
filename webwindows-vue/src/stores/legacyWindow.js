@@ -630,7 +630,7 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
         ifr.style.height = '100%';
         ifr.style.border = '0';
         if (/^camera\.html(?:[?#]|$)/i.test(url)) {
-            ifr.allow = 'camera; fullscreen';
+            ifr.allow = 'camera; fullscreen; translator';
             ifr.allowFullscreen = true;
         }
         content.appendChild(ifr);

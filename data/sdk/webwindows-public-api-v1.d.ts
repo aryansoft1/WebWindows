@@ -296,9 +296,24 @@ declare global {
       saveBlob(options: CloudFileDialogOptions, content: BlobPart | Blob): Promise<CloudResource | null>;
     }
 
+    interface SystemDialogAlertOptions {
+      title?: string;
+      confirmLabel?: string;
+    }
+
+    interface SystemDialogConfirmOptions extends SystemDialogAlertOptions {
+      cancelLabel?: string;
+    }
+
+    interface SystemDialogAPI {
+      alert(message: string, options?: SystemDialogAlertOptions): Promise<void>;
+      confirm(message: string, options?: SystemDialogConfirmOptions): Promise<boolean>;
+    }
+
     interface WebWindowsNamespace {
       readonly device: DeviceAPI;
       readonly fileDialog: CloudFileDialogAPI;
+      readonly dialog: SystemDialogAPI;
     }
   }
 

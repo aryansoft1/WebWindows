@@ -16,6 +16,7 @@ const [sdk, monacoRuntime, studioHtml, studioSource, systemAppsSource, studioBun
 
 assert.match(sdk, /readonly device: DeviceAPI/);
 assert.match(sdk, /readonly fileDialog: CloudFileDialogAPI/);
+assert.match(sdk, /readonly dialog: SystemDialogAPI/);
 for (const privateSurface of ["WebWindowsNative", "NativeAdapter", "invokeNative", "WebWindows.apps", "readonly apps:"]) {
   assert.doesNotMatch(sdk, new RegExp(privateSurface.replace(".", "\\.")), privateSurface);
   assert.doesNotMatch(monacoRuntime, new RegExp(privateSurface.replace(".", "\\.")), privateSurface);
@@ -42,6 +43,11 @@ assert.ok(Buffer.byteLength(studioBundle) + Buffer.byteLength(lazyEntryBundle) <
   "Studio entry should not eagerly contain Monaco or JSZip");
 
 const template = createHelloWebWindowsTemplate();
+const templateScript = template.files.find((entry) => entry.path === "scripts/app.js").content;
+assert.match(templateScript, /await window\.WebWindows\.dialog\.confirm\(/);
+assert.match(templateScript, /confirmLabel:\s*"开始"/);
+assert.match(templateScript, /cancelLabel:\s*"稍后"/);
+assert.doesNotMatch(templateScript, /(?:^|[^\w$.])(?:window\s*\.\s*)?(?:alert|confirm|prompt)\s*\(/m);
 const sourceManifest = JSON.parse(template.files.find((entry) => entry.path === "manifest.json").content);
 assert.equal(validateManifest(sourceManifest), true, JSON.stringify(validateManifest.errors));
 assert.equal(validateManifest({ ...sourceManifest, version: "not-a-version" }), false);

@@ -24,7 +24,7 @@ for (const forbidden of [
   assert.equal(sdk.includes(forbidden), false, `private ABI member leaked into SDK: ${forbidden}`);
 }
 
-assert.match(sdk, /interface WebWindowsNamespace\s*{\s*readonly device: DeviceAPI;\s*readonly fileDialog: CloudFileDialogAPI;\s*}/);
+assert.match(sdk, /interface WebWindowsNamespace\s*{\s*readonly device: DeviceAPI;\s*readonly fileDialog: CloudFileDialogAPI;\s*readonly dialog: SystemDialogAPI;\s*}/);
 assert.doesNotMatch(sdk, /readonly apps:|\bAppRegistry\b|\bopenWindow\b|WebWindowsDeviceOperations/);
 assert.doesNotMatch(sdk, /\[key:\s*string\]:\s*unknown/);
 
@@ -37,5 +37,12 @@ for (const method of ["getAdapter", "getCapabilities", "on", "ready"]) {
 for (const method of ["open", "save", "write", "read", "saveBlob"]) {
   assert.match(sdk, new RegExp(`\\b${method}\\(`), `missing fileDialog method ${method}`);
 }
+
+assert.match(sdk, /alert\(message: string, options\?: SystemDialogAlertOptions\): Promise<void>/);
+assert.match(sdk, /confirm\(message: string, options\?: SystemDialogConfirmOptions\): Promise<boolean>/);
+for (const option of ["title", "confirmLabel", "cancelLabel"]) {
+  assert.match(sdk, new RegExp("\\b" + option + "\\?: string"), "missing dialog option " + option);
+}
+assert.doesNotMatch(sdk, /\bprompt\s*\(/);
 
 console.log("public API SDK boundary smoke test passed");

@@ -102,8 +102,17 @@ button {
         content: `const button = document.getElementById("hello");
 const status = document.getElementById("status");
 
-button.addEventListener("click", () => {
-  status.textContent = "Hello from WebWindows.";
+button.addEventListener("click", async () => {
+  if (!window.WebWindows?.dialog) {
+    status.textContent = "当前预览环境未提供系统对话框 API。";
+    return;
+  }
+  const confirmed = await window.WebWindows.dialog.confirm("开始体验这个 WebWindows 功能吗？", {
+    title: "Hello WebWindows",
+    confirmLabel: "开始",
+    cancelLabel: "稍后"
+  });
+  status.textContent = confirmed ? "Hello from WebWindows." : "已取消。";
 });
 `
       },

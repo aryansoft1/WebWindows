@@ -47,12 +47,12 @@ End Function
 
 Dim relativePath, physicalPath, fso, folder, files, subfolders, sortBy, viewMode, language
 Dim pickerMode, pickerAccept, pickerPurpose, pickerTitle, pickerMultiple, pickerRequestId, pickerAction
+language = CloudRequestLanguage()
 If Not CloudTryNormalizePath(Request.QueryString("path"), relativePath) Then
   Response.Status = "400 Bad Request"
-  Response.Write "<!doctype html><meta charset=""utf-8""><p>资料位置无效。</p>"
+  Response.Write "<!doctype html><meta charset=""utf-8""><p>" & CloudHtml(CloudUiMessage("invalid-location", language)) & "</p>"
   Response.End
 End If
-language = CloudRequestLanguage()
 pickerMode = (LCase(Trim(CStr(Request.QueryString("mode")))) = "picker")
 pickerPurpose = Trim(CStr(Request.QueryString("purpose")))
 pickerTitle = Trim(CStr(Request.QueryString("title")))
@@ -64,20 +64,28 @@ If pickerAction <> "save" Then pickerAction = "open"
 If pickerMode Then
   If Not NormalizePickerAccept(Request.QueryString("accept"), pickerAccept) Then
     Response.Status = "400 Bad Request"
-    Response.Write "<!doctype html><meta charset=""utf-8""><p>文件类型筛选无效。</p>"
+    Response.Write "<!doctype html><meta charset=""utf-8""><p>" & CloudHtml(CloudUiMessage("invalid-filter", language)) & "</p>"
     Response.End
   End If
   If Not IsValidPickerPurpose(pickerPurpose) Then
     Response.Status = "400 Bad Request"
-    Response.Write "<!doctype html><meta charset=""utf-8""><p>选择用途无效。</p>"
+    Response.Write "<!doctype html><meta charset=""utf-8""><p>" & CloudHtml(CloudUiMessage("invalid-purpose", language)) & "</p>"
     Response.End
   End If
   If Not ValidPickerToken(pickerRequestId) Then
     Response.Status = "400 Bad Request"
-    Response.Write "<!doctype html><meta charset=""utf-8""><p>文件对话框请求编号无效。</p>"
+    Response.Write "<!doctype html><meta charset=""utf-8""><p>" & CloudHtml(CloudUiMessage("invalid-request-id", language)) & "</p>"
     Response.End
   End If
-  If pickerTitle = "" Then pickerTitle = "从云资料打开"
+  If pickerTitle = "" Then
+    If language = "jp" Then
+      pickerTitle = "クラウドから開く"
+    ElseIf language = "en" Then
+      pickerTitle = "Open from cloud"
+    Else
+      pickerTitle = "从云资料打开"
+    End If
+  End If
   If Len(pickerTitle) > 80 Then pickerTitle = Left(pickerTitle, 80)
 End If
 
@@ -89,7 +97,7 @@ If viewMode <> "small" And viewMode <> "detail" Then viewMode = "large"
 Set fso = Server.CreateObject("Scripting.FileSystemObject")
 If Not fso.FolderExists(CloudPublicRoot()) Then
   Response.Status = "503 Service Unavailable"
-  Response.Write "<!doctype html><meta charset=""utf-8""><p>公共区域尚未部署。</p>"
+  Response.Write "<!doctype html><meta charset=""utf-8""><p>" & CloudHtml(CloudUiMessage("public-not-deployed", language)) & "</p>"
   Set fso = Nothing
   Response.End
 End If
@@ -97,7 +105,7 @@ End If
 physicalPath = CloudPhysicalPath(relativePath)
 If Not fso.FolderExists(physicalPath) Then
   Response.Status = "404 Not Found"
-  Response.Write "<!doctype html><meta charset=""utf-8""><p>资料夹不存在。</p>"
+  Response.Write "<!doctype html><meta charset=""utf-8""><p>" & CloudHtml(CloudUiMessage("folder-not-found", language)) & "</p>"
   Set fso = Nothing
   Response.End
 End If
@@ -157,6 +165,7 @@ itemCount = subfolders.Count + visibleFileCount
   <link rel="stylesheet" href="styles.css?v=20260815-toolbar-layout-1">
   <link rel="stylesheet" href="file-search.css?v=20260815-toolbar-layout-1">
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
+  <script src="i18n.js?v=20260914-cloud-language-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-storage-provider.js?v=20260809-storage-2"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
@@ -181,25 +190,25 @@ itemCount = subfolders.Count + visibleFileCount
         <h1><img src="assets/cloud.svg" alt=""><span data-directory-name="Public"><%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></span></h1>
       </div>
       <div class="resource-header-actions">
-        <% If Not pickerMode Then %><a class="private-resource-link" href="private-files.asp" data-cloud-i18n="privateFiles">我的私人文件</a><% End If %>
+        <% If Not pickerMode Then %><a class="private-resource-link" href="private-files.asp?lang=<%=Server.URLEncode(language)%>" data-cloud-i18n="privateFiles">我的私人文件</a><% End If %>
         <% If pickerMode Then %>
-          <a class="private-resource-link" href="private-files.asp?mode=picker&amp;action=<%=Server.URLEncode(pickerAction)%>&amp;accept=<%=Server.URLEncode(pickerAccept)%>&amp;multiple=<% If pickerMultiple Then Response.Write "1" Else Response.Write "0" %>&amp;purpose=<%=Server.URLEncode(pickerPurpose)%>&amp;requestId=<%=Server.URLEncode(pickerRequestId)%>&amp;title=<%=Server.URLEncode(pickerTitle)%>" data-cloud-i18n="privateFiles">我的私人文件</a>
+          <a class="private-resource-link" href="private-files.asp?mode=picker&amp;action=<%=Server.URLEncode(pickerAction)%>&amp;accept=<%=Server.URLEncode(pickerAccept)%>&amp;multiple=<% If pickerMultiple Then Response.Write "1" Else Response.Write "0" %>&amp;purpose=<%=Server.URLEncode(pickerPurpose)%>&amp;requestId=<%=Server.URLEncode(pickerRequestId)%>&amp;title=<%=Server.URLEncode(pickerTitle)%>&amp;lang=<%=Server.URLEncode(language)%>" data-cloud-i18n="privateFiles">我的私人文件</a>
           <span class="picker-type-badge"<% If pickerAction = "save" Then Response.Write " data-cloud-i18n=""publicAreaReadOnly""" %>><% If pickerAction = "save" Then Response.Write "公共区域只读" Else Response.Write CloudHtml(pickerAccept) %></span>
         <% End If %>
         <span class="read-only-badge"><img src="assets/eye.svg" alt=""><span data-cloud-i18n="publicReadOnly">所有人可查看</span></span>
       </div>
     </header>
 
-    <nav class="toolbar" aria-label="<%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%>工具栏">
+    <nav class="toolbar" aria-label="<%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%>工具栏" data-cloud-i18n-aria-label="publicToolbar">
       <div class="toolbar-left">
         <button type="button" class="icon-btn" data-action="back" title="返回" aria-label="返回" data-cloud-i18n-title="back"><img src="assets/back.svg" alt=""></button>
         <button type="button" class="icon-btn" data-action="forward" title="前进" aria-label="前进" data-cloud-i18n-title="forward"><img src="assets/forward.svg" alt=""></button>
         <button type="button" class="icon-btn" data-action="up" title="上一级" aria-label="上一级" data-cloud-i18n-title="up"><img src="assets/up.svg" alt=""></button>
-        <div id="breadcrumbs" class="breadcrumbs" aria-label="资料位置"></div>
+        <div id="breadcrumbs" class="breadcrumbs" aria-label="资料位置" data-cloud-i18n-aria-label="breadcrumbs"></div>
       </div>
       <div class="toolbar-right" data-search-host>
         <label class="sort-control">
-          <span class="sr-only">排序方式</span>
+          <span class="sr-only" data-cloud-i18n="sortLabel">排序方式</span>
           <img src="assets/sort.svg" alt="">
           <select id="sort-select">
             <option value="name" data-cloud-i18n="sortName"<% If sortBy = "name" Then Response.Write " selected" %>>按名称</option>
@@ -214,14 +223,14 @@ itemCount = subfolders.Count + visibleFileCount
     </nav>
 
     <main class="main">
-      <aside id="sidebar" aria-label="公共资料夹">
+      <aside id="sidebar" aria-label="公共资料夹" data-cloud-i18n-aria-label="publicFolders">
         <div class="sidebar-title" data-cloud-i18n="locations">资料位置</div>
         <button type="button" id="public-root-button" class="root-node selected"><img src="assets/home.svg" alt=""><span data-directory-name="Public"><%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></span></button>
-        <% If Not pickerMode Then %><button type="button" id="device-root-button" class="root-node device-root-node" hidden><span class="device-root-icon" aria-hidden="true">▣</span><span>此设备</span></button><% End If %>
+        <% If Not pickerMode Then %><button type="button" id="device-root-button" class="root-node device-root-node" hidden><span class="device-root-icon" aria-hidden="true">▣</span><span data-cloud-i18n="device">此设备</span></button><% End If %>
         <ul id="folder-tree"></ul>
       </aside>
 
-      <section class="file-list <%=viewMode%>" aria-label="资料内容" data-directory-content>
+      <section class="file-list <%=viewMode%>" aria-label="资料内容" data-cloud-i18n-aria-label="resourceContent" data-directory-content>
         <%
         Dim childFolder, childPath, folderUrl
         For Each childFolder In subfolders
@@ -243,7 +252,7 @@ itemCount = subfolders.Count + visibleFileCount
             <img src="assets/folder.svg" alt="">
             <span class="file-name" data-physical-name="<%=CloudHtml(childFolder.Name)%>"><%=CloudHtml(CloudDisplayName(childFolder.Name, language))%></span>
             <% If viewMode = "detail" Then %>
-              <span class="file-meta">资料夹</span>
+              <span class="file-meta" data-cloud-i18n="folder">资料夹</span>
               <span class="file-meta"><%=CloudHtml(CStr(childFolder.DateLastModified))%></span>
             <% End If %>
           </a>
@@ -351,19 +360,19 @@ itemCount = subfolders.Count + visibleFileCount
         <% End If %>
       </section>
       <% If Not pickerMode Then %>
-      <section id="device-panel" class="device-panel" aria-label="此设备" hidden>
+      <section id="device-panel" class="device-panel" aria-label="此设备" data-cloud-i18n-aria-label="devicePanel" hidden>
         <div class="device-panel-heading">
-          <div><h2>此设备</h2><p>仅显示你主动授权给 WebWindows 的本地位置。</p></div>
-          <button type="button" id="device-add-location" class="device-primary-action">添加本地位置</button>
+          <div><h2 data-cloud-i18n="device">此设备</h2><p data-cloud-i18n="deviceDescription">仅显示你主动授权给 WebWindows 的本地位置。</p></div>
+          <button type="button" id="device-add-location" class="device-primary-action" data-cloud-i18n="addLocation">添加本地位置</button>
         </div>
         <div id="device-breadcrumbs" class="device-breadcrumbs"></div>
-        <div id="device-status" class="device-status" role="status" aria-live="polite">正在检查本地存储能力…</div>
+        <div id="device-status" class="device-status" role="status" aria-live="polite" data-cloud-i18n="checkingDevice">正在检查本地存储能力…</div>
         <div id="device-content" class="device-content"></div>
       </section>
       <% End If %>
     </main>
     <% If pickerMode Then %>
-      <footer class="picker-bar" aria-label="云资料选择操作">
+      <footer class="picker-bar" aria-label="云资料选择操作" data-cloud-i18n-aria-label="pickerActions">
         <div class="picker-selection">
           <strong id="picker-title"><%=CloudHtml(pickerTitle)%></strong>
           <span id="picker-selection-text" data-cloud-i18n="nothingSelected">尚未选择资料</span>
@@ -376,7 +385,7 @@ itemCount = subfolders.Count + visibleFileCount
     <% End If %>
   </div>
 
-  <div id="resource-context-menu" class="context-menu" role="menu" aria-label="云资料操作" hidden>
+  <div id="resource-context-menu" class="context-menu" role="menu" aria-label="云资料操作" data-cloud-i18n-aria-label="cloudActions" hidden>
     <button type="button" role="menuitem" data-context-action="open">
       <img src="assets/open.svg" alt=""><span data-cloud-i18n="open">打开</span>
     </button>

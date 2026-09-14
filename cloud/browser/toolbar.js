@@ -69,8 +69,9 @@
     if (language.startsWith("en")) return "en";
     return "zh";
   };
+  const cloudI18n = window.WebWindowsCloudI18n;
   let currentLanguage = normalizeLanguage(
-    window.localStorage.getItem("lang") || document.body.dataset.language
+    cloudI18n?.language() || window.localStorage.getItem("lang") || document.body.dataset.language
   );
   const navigationStorageKey = `webwindows-cloud-navigation:${window.location.pathname}`;
   const currentUrl = () => new URL(window.location.href);
@@ -86,7 +87,7 @@
   }
 
   function text(key) {
-    return uiText[key]?.[currentLanguage] || uiText[key]?.zh || key;
+    return cloudI18n?.labels?.[currentLanguage]?.[key] || uiText[key]?.[currentLanguage] || uiText[key]?.zh || key;
   }
 
   function displayPath(path) {
@@ -186,7 +187,7 @@
 
   function showMessage(text) {
     const overlay = document.getElementById("message-box");
-    document.getElementById("message-text").textContent = text || "操作未完成";
+    document.getElementById("message-text").textContent = text || cloudI18n.text("operationFailed", null, currentLanguage);
     overlay.hidden = false;
     document.getElementById("message-close").focus();
   }
@@ -253,13 +254,13 @@
       });
       const payload = await response.json();
       if (!response.ok || !Array.isArray(payload)) {
-        throw new Error(payload?.error?.message || "资料夹列表不可用");
+        throw new Error(cloudI18n.text("folderListUnavailable", null, currentLanguage));
       }
       payload.forEach((folder) => renderFolderNode(folder, list));
     } catch (error) {
       const item = document.createElement("li");
       item.className = "tree-error";
-      item.textContent = "资料夹列表加载失败";
+      item.textContent = cloudI18n.text("folderListFailed", null, currentLanguage);
       list.appendChild(item);
     }
   }
@@ -283,7 +284,7 @@
       return;
     }
     if (openMode !== "preview" && openMode !== "app") {
-      showMessage("此类资料暂时没有可用的预览方式，可使用右键菜单保存副本到私人云资料。");
+      showMessage(cloudI18n.text("previewUnavailable", null, currentLanguage));
       return;
     }
 
@@ -334,7 +335,7 @@
       } catch (_) {
         // A cross-origin host cannot provide the shared cloud dialog.
       }
-      if (!api) throw new Error("通用云文件对话框尚未加载。");
+      if (!api) throw new Error(cloudI18n.text("fileDialogUnavailable", null, currentLanguage));
       const readUrl = new URL(item.dataset.resourceUrl, window.location.href);
       readUrl.searchParams.set("raw", "1");
       const name = item.dataset.name || "资料";
@@ -348,14 +349,14 @@
       };
       const content = await api.read(resource);
       const saved = await api.saveBlob({
-        title: "保存公共资料副本",
-        fileTypes: [{ name: "云资料", extensions: [extension] }],
+        title: cloudI18n.text("savePublicCopy", null, currentLanguage),
+        fileTypes: [{ name: cloudI18n.text("cloudFiles", null, currentLanguage), extensions: [extension] }],
         suggestedName: name,
         purpose: "public-cloud-save-copy"
       }, content);
-      if (saved) showMessage("资料副本已保存到私人云资料。");
+      if (saved) showMessage(cloudI18n.text("copySaved", null, currentLanguage));
     } catch (error) {
-      showMessage(error.message || "保存资料副本失败。");
+      showMessage(error.message || cloudI18n.text("copySaveFailed", null, currentLanguage));
     }
   }
 
@@ -405,7 +406,7 @@
       const canOpen =
         contextTarget.dataset.kind === "folder" || Boolean(contextTarget.dataset.openMode);
       contextOpen.disabled = !canOpen;
-      contextOpen.title = canOpen ? "" : "此类资料暂时没有可用的打开方式";
+      contextOpen.title = canOpen ? "" : cloudI18n.text("openUnavailable", null, currentLanguage);
     }
     placeContextMenu(event.clientX, event.clientY);
     const firstAction = contextMenu.querySelector("button:not([hidden]):not(:disabled)");
@@ -427,7 +428,7 @@
       document.execCommand("copy");
       input.remove();
     }
-    showMessage("资料位置已复制。");
+    showMessage(cloudI18n.text("copied", null, currentLanguage));
   }
 
   function cloudWallpaper(item) {
@@ -464,9 +465,9 @@
     if (applyNow) {
       host.localStorage?.setItem("selectedWallpaper", wallpaper.url);
       host.setWallpaperByPath?.(wallpaper.url);
-      showMessage("已保存到壁纸库并设置为桌面壁纸。");
+      showMessage(cloudI18n.text("wallpaperApplied", null, currentLanguage));
     } else {
-      showMessage("已保存到设置中的壁纸库。");
+      showMessage(cloudI18n.text("wallpaperSaved", null, currentLanguage));
     }
   }
 
@@ -494,10 +495,13 @@
         break;
       case "info":
         if (item) {
-          const kind = item.dataset.kind === "folder" ? "资料夹" : "资料";
-          showMessage(
-            `名称：${item.dataset.name}\n显示名称：${item.dataset.kind === "file" ? fileDisplayName(item.dataset.name) : directoryDisplayName(item.dataset.name)}\n类型：${kind}\n位置：${displayPath(item.dataset.path)}`
-          );
+          const kind = cloudI18n.text(item.dataset.kind === "folder" ? "infoFolder" : "infoFile", null, currentLanguage);
+          showMessage(cloudI18n.text("infoTemplate", {
+            name: item.dataset.name,
+            displayName: item.dataset.kind === "file" ? fileDisplayName(item.dataset.name) : directoryDisplayName(item.dataset.name),
+            kind,
+            path: displayPath(item.dataset.path)
+          }, currentLanguage));
         }
         break;
       case "root":
@@ -539,9 +543,9 @@
     const selections = Array.from(pickerSelections);
     document.getElementById("picker-selection-text").textContent = selections.length
       ? (pickerMultiple
-        ? `已选择 ${selections.length} 项`
+        ? cloudI18n.text("selectedCount", { count: selections.length }, currentLanguage)
         : `${selections[0].dataset.name} · ${Math.ceil(Number(selections[0].dataset.size || 0) / 1024)} KB`)
-      : "尚未选择资料";
+      : cloudI18n.text("nothingSelected", null, currentLanguage);
     document.getElementById("picker-confirm").disabled = selections.length === 0;
   }
 
@@ -570,7 +574,7 @@
       readUrl.searchParams.set("raw", "1");
       if (readUrl.origin !== window.location.origin ||
           !readUrl.pathname.endsWith("/cloud/browser/openResource.asp")) {
-        throw new Error("云资料读取地址无效。");
+        throw new Error(cloudI18n.text("invalidReadUrl", null, currentLanguage));
       }
       return {
         name: selection.dataset.name,
@@ -604,6 +608,7 @@
       element.title = label;
       element.setAttribute("aria-label", label);
     });
+    cloudI18n.apply(document, currentLanguage);
     renderBreadcrumbs();
   }
 

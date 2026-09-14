@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.08.26.1",
   "catalogVersion": "2026.08.26.1",
-  "generatedAt": "2026-08-26T01:05:36.410Z",
+  "generatedAt": "2026-09-14T00:39:05.955Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "deploy/ftp-manifest.json",
@@ -115,6 +115,7 @@
     "worker_SlideEditor.html",
     "cloud/browser/files.asp",
     "cloud/browser/private-files.asp",
+    "cloud/browser/i18n.js",
     "cloud/browser/private-resource.asp",
     "cloud/browser/search.asp",
     "cloud/browser/search-ui.js",
@@ -307,8 +308,8 @@
       "size": 2982
     },
     "assets/js/cloud-file-dialog.js": {
-      "sha256": "8277c8376452f4a8651aadaa532cbd89d4d99f8c115d6d6428be7b9aa146b0d8",
-      "size": 9734
+      "sha256": "3deef1fc31d464a57dd3396076f64103bee41d62d9b513dff6dc76befba4a351",
+      "size": 12618
     },
     "assets/js/resource-open.js": {
       "sha256": "0875efe1a83ea62dbcc6739355c104de91f5c20db2b86fb8357150506074c1a1",
@@ -607,12 +608,16 @@
       "size": 17101
     },
     "cloud/browser/files.asp": {
-      "sha256": "2c5a3837dadc6e53862adb82cfa0ac8feb489a5b0e571f439eaaee26d7997f6b",
-      "size": 24287
+      "sha256": "557598a3f3986acbeaf189882b017c4ec6cbb79621f3194ebb16523b55f090c0",
+      "size": 25305
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "f5c5dc355f4e5a08ca70586e7cc2dd96e4afbbd045460d08d16a8eb9e96842da",
-      "size": 42055
+      "sha256": "d3649d9b00fbf12ade36401a2ccfe434250c045ff4646f55e877f66ae6eb0520",
+      "size": 45978
+    },
+    "cloud/browser/i18n.js": {
+      "sha256": "f5f2ca5047d72f57795aae7e9eee0f4bedf75bbb10d15bdb55a748663504c48a",
+      "size": 16397
     },
     "cloud/browser/private-resource.asp": {
       "sha256": "6792d580192df1cb5e172d24df5551c725d07e4528a3a35e5e324b0626eefe28",
@@ -623,8 +628,8 @@
       "size": 17718
     },
     "cloud/browser/search-ui.js": {
-      "sha256": "e71672d8ecfed763e19057dd4843c097f653183ac41de2424acf3258186cc759",
-      "size": 10888
+      "sha256": "4e066d4765f15720ac939217c9de85b6bc63fd4470f1dccf9ddf816fc28e5e8f",
+      "size": 11253
     },
     "cloud/browser/file-search.css": {
       "sha256": "bb73e90f72f2cd15471806a4be3e7f8ff0614eb48364f9ce7f56593ecc7d772b",
@@ -635,12 +640,12 @@
       "size": 13738
     },
     "cloud/browser/toolbar.js": {
-      "sha256": "db75341e9dd75025c90d0d341ead344075568c8a51107b18501a716b6c4a9457",
-      "size": 28977
+      "sha256": "e480cac09509f365e47f4af0d6227301043e714dbfa03073e9cfeea1cc0599a5",
+      "size": 29523
     },
     "cloud/browser/device-locations.js": {
-      "sha256": "057dfb6ce67887673fa01fa76bf9f6c4bf5d9905618d7ec7a46d962c6b6b4332",
-      "size": 13251
+      "sha256": "53224a7f39279107fd9c8444aea2a36ca3841cf79f49c0dc2e425e0b0fd76fd0",
+      "size": 13889
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -854,22 +859,5 @@
       "sha256": "a9b468d2cbd3ab224332da610ac0e228d9c8e7459e514f2431408a38ef72884c",
       "size": 88189
     }
-  },
-  "uploadFiles": [
-    "index.html",
-    "news.html",
-    "news_view.html",
-    "assets/js/news.js",
-    "assets/js/news_view.js",
-    "assets/js/device-storage-provider.js",
-    "data/apps/system-apps.json",
-    "dist-window/window-manager-widget.css",
-    "dist-window/window-manager-widget.js",
-    "dist-window/window-manager-widget.umd.js",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
-    "deploy/ftp-manifest.json"
-  ]
+  }
 }

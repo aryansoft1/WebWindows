@@ -33,7 +33,8 @@
   };
 
   function language() {
-    const value = String(global.localStorage?.getItem("lang") || document.body.dataset.language || "zh").toLowerCase();
+    if (global.WebWindowsCloudI18n) return global.WebWindowsCloudI18n.language();
+    const value = String(global.WebWindowsI18n?.getLanguage?.() || global.localStorage?.getItem("lang") || document.body.dataset.language || "zh").toLowerCase();
     if (value === "jp" || value.startsWith("ja")) return "jp";
     if (value.startsWith("en")) return "en";
     return "zh";
@@ -295,6 +296,16 @@
     renderVolumes();
   }
 
+  function applyLanguage() {
+    const ui = elements();
+    const label = ui.root?.querySelector("span:last-child");
+    if (label) label.textContent = text("device");
+    if (!ui.panel?.hidden) {
+      if (activeVolume) openDirectory(activeVolume, activePath);
+      else renderVolumes();
+    }
+  }
+
   global.WebWindowsDeviceLocations = Object.freeze({
     initialize,
     availability,
@@ -302,6 +313,9 @@
     permissionState,
     deviceUrl
   });
+
+  global.addEventListener("storage", (event) => { if (event.key === "lang") applyLanguage(); });
+  global.addEventListener("message", (event) => { if (event.data?.type === "change-language") applyLanguage(); });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => initialize().catch((error) => console.warn("[DeviceLocations]", error)), { once: true });
   else initialize().catch((error) => console.warn("[DeviceLocations]", error));

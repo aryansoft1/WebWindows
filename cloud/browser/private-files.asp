@@ -1,6 +1,9 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <%
 Option Explicit
+%>
+<!--#include file="node-config.asp"-->
+<%
 Response.CodePage = 65001
 Response.Charset = "utf-8"
 Response.AddHeader "X-WebWindows-Private-Files-Version", "2026.08.10.4"
@@ -31,9 +34,21 @@ End Function
 Function PrivateFolderDisplayName(ByVal value)
   Select Case LCase(CStr(value))
     Case "documents"
-      PrivateFolderDisplayName = "文档"
+      If language = "jp" Then
+        PrivateFolderDisplayName = "ドキュメント"
+      ElseIf language = "en" Then
+        PrivateFolderDisplayName = "Documents"
+      Else
+        PrivateFolderDisplayName = "文档"
+      End If
     Case "spreadsheets"
-      PrivateFolderDisplayName = "表格"
+      If language = "jp" Then
+        PrivateFolderDisplayName = "スプレッドシート"
+      ElseIf language = "en" Then
+        PrivateFolderDisplayName = "Spreadsheets"
+      Else
+        PrivateFolderDisplayName = "表格"
+      End If
     Case Else
       PrivateFolderDisplayName = CStr(value)
   End Select
@@ -137,7 +152,8 @@ End Function
 
 Dim relativePath, privateRoot, physicalPath, fso, folder, usernameFolder, normalizedUsername
 Dim pickerMode, pickerAccept, pickerPurpose, pickerTitle, pickerRequestId
-Dim pickerMultiple, pickerAction, pickerSuggestedName, viewMode, sortBy
+Dim pickerMultiple, pickerAction, pickerSuggestedName, viewMode, sortBy, language
+language = CloudRequestLanguage()
 relativePath = ""
 viewMode = LCase(Trim(CStr(Request.QueryString("view"))))
 If viewMode <> "detail" And viewMode <> "small" Then viewMode = "large"
@@ -155,21 +171,27 @@ pickerSuggestedName = Trim(CStr(Request.QueryString("suggestedName")))
 If pickerMode Then
   If Not NormalizePickerAccept(Request.QueryString("accept"), pickerAccept) Then
     Response.Status = "400 Bad Request"
-    Response.Write "文件类型筛选无效。"
+    Response.Write CloudUiMessage("invalid-filter", language)
     Response.End
   End If
   If Not ValidPickerPurpose(pickerPurpose) Then
     Response.Status = "400 Bad Request"
-    Response.Write "选择用途无效。"
+    Response.Write CloudUiMessage("invalid-purpose", language)
     Response.End
   End If
   If Not ValidPickerRequestId(pickerRequestId) Then
     Response.Status = "400 Bad Request"
-    Response.Write "文件对话框请求编号无效。"
+    Response.Write CloudUiMessage("invalid-request-id", language)
     Response.End
   End If
   If pickerTitle = "" Then
-    If pickerAction = "save" Then pickerTitle = "保存到云资料" Else pickerTitle = "从云资料打开"
+    If language = "jp" Then
+      If pickerAction = "save" Then pickerTitle = "クラウドに保存" Else pickerTitle = "クラウドから開く"
+    ElseIf language = "en" Then
+      If pickerAction = "save" Then pickerTitle = "Save to cloud" Else pickerTitle = "Open from cloud"
+    Else
+      If pickerAction = "save" Then pickerTitle = "保存到云资料" Else pickerTitle = "从云资料打开"
+    End If
   End If
   If Len(pickerTitle) > 80 Then pickerTitle = Left(pickerTitle, 80)
   If Len(pickerSuggestedName) > 120 Then pickerSuggestedName = Left(pickerSuggestedName, 120)
@@ -179,7 +201,7 @@ If loggedIn Then
   If Not TryPath(usernameFolder, normalizedUsername) Or normalizedUsername = "" Or _
      normalizedUsername <> usernameFolder Or InStr(normalizedUsername, "/") > 0 Then
     Response.Status = "403 Forbidden"
-    Response.Write "登录用户名无法映射到云资料目录。"
+    Response.Write CloudUiMessage("invalid-username", language)
     Response.End
   End If
   If Not TryPath(Request.QueryString("path"), relativePath) Then
@@ -200,12 +222,13 @@ If loggedIn Then
 End If
 %>
 <!doctype html>
-<html lang="zh-CN">
+<html lang="<% If language = "jp" Then Response.Write "ja-JP" Else If language = "en" Then Response.Write "en" Else Response.Write "zh-CN" %>">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>我的私人文件</title>
+  <title data-cloud-i18n="privateTitle">我的私人文件</title>
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
+  <script src="i18n.js?v=20260914-cloud-language-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
   <script defer src="../../assets/js/file-query-parser.js?v=20260811-query-v2-3"></script>
@@ -241,6 +264,7 @@ End If
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
       data-private-files-version="2026.08.10.4"
+      data-language="<%=Html(language)%>"
       data-path="<%=Html(relativePath)%>" data-mode="<% If pickerMode Then Response.Write "picker" %>"
       data-picker-purpose="<%=Html(pickerPurpose)%>"
       data-picker-title="<%=Html(pickerTitle)%>"
@@ -251,29 +275,29 @@ End If
       data-picker-suggested-name="<%=Html(pickerSuggestedName)%>">
 <% If Not loggedIn Then %>
   <div class="login">
-    <h1>请先登录</h1>
-    <p>私人文件使用 WebWindows 登录会话保护。登录后重新打开此页面即可使用。</p>
-    <a class="link primary" href="../../login.html?return=<%=Server.URLEncode("cloud/browser/private-files.asp?" & CStr(Request.ServerVariables("QUERY_STRING")))%>">前往登录</a>
-    <a class="link" href="<%=Html(PublicFolderUrl(""))%>">返回公共区域</a>
+    <h1 data-cloud-i18n="loginTitle">请先登录</h1>
+    <p data-cloud-i18n="loginDescription">私人文件使用 WebWindows 登录会话保护。登录后重新打开此页面即可使用。</p>
+    <a class="link primary" href="../../login.html?return=<%=Server.URLEncode("cloud/browser/private-files.asp?" & CStr(Request.ServerVariables("QUERY_STRING")))%>" data-cloud-i18n="loginAction">前往登录</a>
+    <a class="link" href="<%=Html(PublicFolderUrl(""))%>" data-cloud-i18n="publicArea">返回公共区域</a>
   </div>
 <% Else %>
   <div class="private-wrapper">
   <header class="private-resource-header">
-    <div><div class="private-eyebrow">WebWindows 私人云资料</div><h1><img src="assets/cloud.svg" alt=""><span>我的私人文件</span></h1></div>
+    <div><div class="private-eyebrow" data-cloud-i18n="privateEyebrow">WebWindows 私人云资料</div><h1><img src="assets/cloud.svg" alt=""><span data-cloud-i18n="privateTitle">我的私人文件</span></h1></div>
     <div class="private-header-actions">
       <% If pickerMode Then %>
-        <% If pickerAction = "open" Then %><a class="private-header-link" href="<%=Html(PublicFolderUrl(""))%>">公共区域</a><% End If %>
+        <% If pickerAction = "open" Then %><a class="private-header-link" href="<%=Html(PublicFolderUrl(""))%>" data-cloud-i18n="publicArea">公共区域</a><% End If %>
         <span class="picker-note"><%=Html(pickerAccept)%></span>
       <% Else %>
-      <a class="private-header-link" href="files.asp">公共区域</a><span class="private-badge"><img src="assets/eye.svg" alt="">仅当前账号可读写</span><% End If %>
+      <a class="private-header-link" href="files.asp?lang=<%=Server.URLEncode(language)%>" data-cloud-i18n="publicArea">公共区域</a><span class="private-badge"><img src="assets/eye.svg" alt=""><span data-cloud-i18n="privateAccess">仅当前账号可读写</span></span><% End If %>
     </div>
   </header>
-  <nav class="private-toolbar" aria-label="私人云资料工具栏">
+  <nav class="private-toolbar" aria-label="私人云资料工具栏" data-cloud-i18n-aria-label="privateToolbar">
     <div class="private-toolbar-left">
-      <button type="button" class="private-icon-btn" data-private-action="back" title="返回" aria-label="返回"><img src="assets/back.svg" alt=""></button>
-      <button type="button" class="private-icon-btn" data-private-action="forward" title="前进" aria-label="前进"><img src="assets/forward.svg" alt=""></button>
-      <button type="button" class="private-icon-btn" data-private-action="up" title="上一级" aria-label="上一级"<% If relativePath = "" Then Response.Write " disabled" %>><img src="assets/up.svg" alt=""></button>
-      <div class="private-breadcrumbs"><a href="<%=Html(PrivateFolderUrl(""))%>">我的文件</a>
+      <button type="button" class="private-icon-btn" data-private-action="back" title="返回" aria-label="返回" data-cloud-i18n-title="back" data-cloud-i18n-aria-label="back"><img src="assets/back.svg" alt=""></button>
+      <button type="button" class="private-icon-btn" data-private-action="forward" title="前进" aria-label="前进" data-cloud-i18n-title="forward" data-cloud-i18n-aria-label="forward"><img src="assets/forward.svg" alt=""></button>
+      <button type="button" class="private-icon-btn" data-private-action="up" title="上一级" aria-label="上一级" data-cloud-i18n-title="up" data-cloud-i18n-aria-label="up"<% If relativePath = "" Then Response.Write " disabled" %>><img src="assets/up.svg" alt=""></button>
+      <div class="private-breadcrumbs"><a href="<%=Html(PrivateFolderUrl(""))%>" data-cloud-i18n="myFiles">我的文件</a>
     <%
       Dim crumbs, crumbIndex, crumbPath
       crumbs = Split(relativePath, "/")
@@ -289,19 +313,19 @@ End If
       </div>
     </div>
     <div class="private-toolbar-right" data-search-host>
-      <label class="private-sort"><img src="assets/sort.svg" alt=""><select id="private-sort" aria-label="排序方式"><option value="name"<% If sortBy = "name" Then Response.Write " selected" %>>按名称</option><option value="date"<% If sortBy = "date" Then Response.Write " selected" %>>按更新时间</option><option value="size"<% If sortBy = "size" Then Response.Write " selected" %>>按大小</option></select></label>
-      <button type="button" class="private-view-btn<% If viewMode = "detail" Then Response.Write " active" %>" data-private-view="detail"><img src="assets/list.svg" alt=""><span>列表</span></button>
-      <button type="button" class="private-view-btn<% If viewMode = "small" Then Response.Write " active" %>" data-private-view="small"><img src="assets/compact.svg" alt=""><span>紧凑</span></button>
-      <button type="button" class="private-view-btn<% If viewMode = "large" Then Response.Write " active" %>" data-private-view="large"><img src="assets/grid.svg" alt=""><span>图标</span></button>
+      <label class="private-sort"><img src="assets/sort.svg" alt=""><select id="private-sort" aria-label="排序方式" data-cloud-i18n-aria-label="sortLabel"><option value="name" data-cloud-i18n="sortName"<% If sortBy = "name" Then Response.Write " selected" %>>按名称</option><option value="date" data-cloud-i18n="sortDate"<% If sortBy = "date" Then Response.Write " selected" %>>按更新时间</option><option value="size" data-cloud-i18n="sortSize"<% If sortBy = "size" Then Response.Write " selected" %>>按大小</option></select></label>
+      <button type="button" class="private-view-btn<% If viewMode = "detail" Then Response.Write " active" %>" data-private-view="detail"><img src="assets/list.svg" alt=""><span data-cloud-i18n="listView">列表</span></button>
+      <button type="button" class="private-view-btn<% If viewMode = "small" Then Response.Write " active" %>" data-private-view="small"><img src="assets/compact.svg" alt=""><span data-cloud-i18n="compactView">紧凑</span></button>
+      <button type="button" class="private-view-btn<% If viewMode = "large" Then Response.Write " active" %>" data-private-view="large"><img src="assets/grid.svg" alt=""><span data-cloud-i18n="iconView">图标</span></button>
     </div>
   </nav>
   <main class="private-main">
-    <aside class="private-sidebar" aria-label="私人资料夹"><div class="private-sidebar-title">资料位置</div><a class="private-root-node selected" href="<%=Html(PrivateFolderUrl(""))%>"><img src="assets/home.svg" alt=""><span>我的文件</span></a><ul class="private-folder-tree">
+    <aside class="private-sidebar" aria-label="私人资料夹" data-cloud-i18n-aria-label="privateFolders"><div class="private-sidebar-title" data-cloud-i18n="locations">资料位置</div><a class="private-root-node selected" href="<%=Html(PrivateFolderUrl(""))%>"><img src="assets/home.svg" alt=""><span data-cloud-i18n="myFiles">我的文件</span></a><ul class="private-folder-tree">
     <% For Each childFolder In folder.SubFolders
          If LCase(childFolder.Name) <> "_system" Then
            childPath = childFolder.Name
            If relativePath <> "" Then childPath = relativePath & "/" & childFolder.Name %>
-      <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(childPath))%>"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></a></li>
+      <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(childPath))%>" data-private-folder-name="<%=Html(childFolder.Name)%>"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></a></li>
     <%   End If
        Next %>
     </ul></aside>
@@ -315,7 +339,7 @@ End If
           childPath = childFolder.Name
           If relativePath <> "" Then childPath = relativePath & "/" & childFolder.Name
     %>
-      <button class="item folder" type="button" data-folder="<%=Html(childPath)%>" data-name="<%=Html(childFolder.Name)%>" data-modified="<%=Html(CStr(childFolder.DateLastModified))%>"><img class="icon-image" src="assets/folder.svg" alt=""><span class="name"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></span><% If viewMode = "detail" Then %><span class="file-meta">资料夹</span><span class="file-meta"><%=Html(CStr(childFolder.DateLastModified))%></span><% End If %></button>
+      <button class="item folder" type="button" data-folder="<%=Html(childPath)%>" data-name="<%=Html(childFolder.Name)%>" data-private-folder-name="<%=Html(childFolder.Name)%>" data-modified="<%=Html(CStr(childFolder.DateLastModified))%>"><img class="icon-image" src="assets/folder.svg" alt=""><span class="name"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></span><% If viewMode = "detail" Then %><span class="file-meta" data-cloud-i18n="folder">资料夹</span><span class="file-meta"><%=Html(CStr(childFolder.DateLastModified))%></span><% End If %></button>
     <%
         End If
       Next
@@ -357,35 +381,35 @@ End If
       Next
       If visibleCount = 0 Then
     %>
-      <div class="empty"><img src="assets/folder.svg" alt=""><h2>此文件夹为空</h2><p>可以使用右键菜单在云资料中建立文件夹。</p></div>
+      <div class="empty"><img src="assets/folder.svg" alt=""><h2 data-cloud-i18n="emptyPrivateTitle">此文件夹为空</h2><p data-cloud-i18n="emptyPrivateDescription">可以使用右键菜单在云资料中建立文件夹。</p></div>
     <% End If %>
   </section></main>
   <div id="status" aria-live="polite"></div>
   <% If pickerMode Then %>
   <footer class="picker-bar">
-    <div class="picker-selection"><strong><%=Html(pickerTitle)%></strong><span id="private-picker-selection"><% If pickerAction = "save" Then Response.Write "请选择保存位置并输入文件名" Else Response.Write "尚未选择资料" %></span></div>
+    <div class="picker-selection"><strong><%=Html(pickerTitle)%></strong><span id="private-picker-selection" data-cloud-i18n="<% If pickerAction = "save" Then Response.Write "saveLocationPrompt" Else Response.Write "nothingSelected" %>"><% If pickerAction = "save" Then Response.Write "请选择保存位置并输入文件名" Else Response.Write "尚未选择资料" %></span></div>
     <div class="picker-actions">
-      <% If pickerAction = "save" Then %><input id="private-picker-name" class="picker-name" value="<%=Html(pickerSuggestedName)%>" maxlength="120" aria-label="文件名"><% End If %>
-      <button type="button" id="private-picker-cancel">取消</button>
-      <button type="button" id="private-picker-confirm" class="primary"<% If pickerAction <> "save" Then Response.Write " disabled" %>><% If pickerAction = "save" Then Response.Write "保存" Else Response.Write "确认选择" %></button>
+      <% If pickerAction = "save" Then %><input id="private-picker-name" class="picker-name" value="<%=Html(pickerSuggestedName)%>" maxlength="120" aria-label="文件名" data-cloud-i18n-aria-label="fileName"><% End If %>
+      <button type="button" id="private-picker-cancel" data-cloud-i18n="cancel">取消</button>
+      <button type="button" id="private-picker-confirm" class="primary" data-cloud-i18n="<% If pickerAction = "save" Then Response.Write "save" Else Response.Write "confirmSelection" %>"<% If pickerAction <> "save" Then Response.Write " disabled" %>><% If pickerAction = "save" Then Response.Write "保存" Else Response.Write "确认选择" %></button>
     </div>
   </footer>
   <% End If %>
-  <div id="private-context-menu" class="context-menu" role="menu" aria-label="私人文件操作">
-    <button type="button" data-action="open" role="menuitem">打开</button>
-    <button type="button" data-action="rename" role="menuitem">重命名</button>
-    <button type="button" data-action="delete" class="danger" role="menuitem">删除文件夹</button>
+  <div id="private-context-menu" class="context-menu" role="menu" aria-label="私人文件操作" data-cloud-i18n-aria-label="privateActions">
+    <button type="button" data-action="open" role="menuitem" data-cloud-i18n="open">打开</button>
+    <button type="button" data-action="rename" role="menuitem" data-cloud-i18n="rename">重命名</button>
+    <button type="button" data-action="delete" class="danger" role="menuitem" data-cloud-i18n="deleteFolder">删除文件夹</button>
     <hr data-folder-only>
-    <button type="button" data-action="new-folder" role="menuitem">新建文件夹</button>
-    <button type="button" data-action="refresh" role="menuitem">刷新</button>
+    <button type="button" data-action="new-folder" role="menuitem" data-cloud-i18n="newFolder">新建文件夹</button>
+    <button type="button" data-action="refresh" role="menuitem" data-cloud-i18n="refresh">刷新</button>
   </div>
   <dialog id="folder-dialog">
     <form id="folder-form" class="dialog-body" method="dialog">
-      <h2 id="folder-dialog-title">新建文件夹</h2>
-      <input id="folder-name" name="folder-name" maxlength="80" autocomplete="off" required aria-label="文件夹名称">
+      <h2 id="folder-dialog-title" data-cloud-i18n="newFolder">新建文件夹</h2>
+      <input id="folder-name" name="folder-name" maxlength="80" autocomplete="off" required aria-label="文件夹名称" data-cloud-i18n-aria-label="folderName">
       <div class="dialog-actions">
-        <button value="cancel" type="button" data-dialog-cancel>取消</button>
-        <button class="primary" value="confirm" type="submit">确定</button>
+        <button value="cancel" type="button" data-dialog-cancel data-cloud-i18n="cancel">取消</button>
+        <button class="primary" value="confirm" type="submit" data-cloud-i18n="confirm">确定</button>
       </div>
     </form>
   </dialog>
@@ -400,6 +424,8 @@ End If
       const pickerAction = document.body.dataset.pickerAction || "open";
       const pickerAccept = new Set((document.body.dataset.pickerAccept || "")
         .split(",").map(value => value.trim().toLowerCase()).filter(Boolean));
+      const cloudI18n = window.WebWindowsCloudI18n;
+      const t = (key, values) => cloudI18n.text(key, values);
       const status = document.getElementById("status");
       const requestHeaders = { "X-WebWindows-Request": "private-resource" };
       const api = "private-resource.asp";
@@ -412,9 +438,19 @@ End If
       let dialogMode = "create";
       const pickerSelections = new Set();
 
+      function applyPrivateFolderNames() {
+        document.querySelectorAll("[data-private-folder-name]").forEach((element) => {
+          const name = element.dataset.privateFolderName;
+          const target = element.matches(".item") ? element.querySelector(".name") : element;
+          const key = name.toLowerCase() === "documents" ? "privateDocuments" : (name.toLowerCase() === "spreadsheets" ? "privateSpreadsheets" : "");
+          if (key && target) target.textContent = t(key);
+        });
+      }
+
       function navigateOptions(changes) {
         const url = new URL(location.href);
         Object.entries(changes).forEach(([key, value]) => value ? url.searchParams.set(key, value) : url.searchParams.delete(key));
+        url.searchParams.set("lang", cloudI18n.language());
         location.href = url.toString();
       }
 
@@ -440,6 +476,7 @@ End If
         const url = new URL("private-files.asp", location.href);
         if (path) url.searchParams.set("path", path);
         else url.searchParams.delete("path");
+        url.searchParams.set("lang", cloudI18n.language());
         if (pickerMode) {
           url.searchParams.set("mode", "picker");
           url.searchParams.set("action", pickerAction);
@@ -491,11 +528,11 @@ End If
         }
         const selections = Array.from(pickerSelections);
         document.getElementById("private-picker-selection").textContent = pickerAction === "save"
-          ? `保存到：我的文件${currentPath ? ` / ${currentPath}` : ""}`
+          ? `${t("saveTo")}${currentPath ? ` / ${currentPath}` : ""}`
           : (selections.length
-            ? (pickerMultiple ? `已选择 ${selections.length} 项` :
+            ? (pickerMultiple ? t("selectedCount", { count: selections.length }) :
               `${selections[0].dataset.name} · ${Math.ceil(Number(selections[0].dataset.size || 0) / 1024)} KB`)
-            : "尚未选择资料");
+            : t("nothingSelected"));
         document.getElementById("private-picker-confirm").disabled =
           pickerAction === "open" && selections.length === 0;
       }
@@ -506,7 +543,7 @@ End If
           const name = String(input.value || "").trim();
           if (!name || /[\\/:*?"<>|\u0000-\u001f]/.test(name) || name === "." || name === "..") {
             status.className = "error";
-            status.textContent = "请输入有效的文件名。";
+            status.textContent = t("invalidFileName");
             input.focus();
             return;
           }
@@ -514,13 +551,13 @@ End If
           const extension = dot >= 0 ? name.slice(dot).toLowerCase() : "";
           if (!pickerAccept.has(extension)) {
             status.className = "error";
-            status.textContent = `文件类型必须为：${Array.from(pickerAccept).join("、")}`;
+            status.textContent = t("allowedFileTypes", { types: Array.from(pickerAccept).join("、") });
             input.focus();
             return;
           }
           const existing = Array.from(document.querySelectorAll("[data-file]"))
             .find(item => item.dataset.name.toLowerCase() === name.toLowerCase());
-          if (existing && !confirm(`“${name}”已经存在，是否替换？`)) return;
+          if (existing && !confirm(t("replaceFile", { name }))) return;
           const path = currentPath ? `${currentPath}/${name}` : name;
           const writeUrl = new URL(api, location.href);
           sendPicker("webwindows:cloud-resource-selected", [{
@@ -559,7 +596,7 @@ End If
 
       async function json(response) {
         const payload = await response.json().catch(() => null);
-        if (!response.ok || !payload?.ok) throw new Error(payload?.error?.message || `请求失败（${response.status}）`);
+        if (!response.ok || !payload?.ok) throw new Error(t("requestFailed", { status: response.status }));
         return payload;
       }
 
@@ -593,7 +630,7 @@ End If
 
       function openFolderDialog(mode) {
         dialogMode = mode;
-        dialogTitle.textContent = mode === "rename" ? "重命名文件夹" : "新建文件夹";
+        dialogTitle.textContent = mode === "rename" ? t("renameFolder") : t("newFolder");
         folderName.value = mode === "rename" && selectedFolder ? selectedFolder.dataset.name : "";
         dialog.showModal();
         setTimeout(() => {
@@ -673,7 +710,7 @@ End If
         if (!targetFolder) return;
         selectedFolder = targetFolder;
         if (action === "open") {
-          location.href = `private-files.asp?path=${encodeURIComponent(targetFolder.dataset.folder)}`;
+          location.href = privateUrl(targetFolder.dataset.folder);
           return;
         }
         if (action === "rename") {
@@ -681,7 +718,7 @@ End If
           return;
         }
         if (action === "delete") {
-          if (!confirm(`删除空文件夹“${targetFolder.querySelector(".name").textContent}”？`)) return;
+          if (!confirm(t("deleteFolderConfirm", { name: targetFolder.querySelector(".name").textContent }))) return;
           try {
             await postOperation("delete-folder", { path: targetFolder.dataset.folder });
             location.reload();
@@ -696,7 +733,7 @@ End If
         const name = folderName.value.trim();
         if (!name) return;
         status.className = "";
-        status.textContent = dialogMode === "rename" ? "正在重命名文件夹…" : "正在建立文件夹…";
+        status.textContent = dialogMode === "rename" ? t("renamingFolder") : t("creatingFolder");
         try {
           if (dialogMode === "rename" && selectedFolder) {
             await postOperation("rename-folder", { path: selectedFolder.dataset.folder, name });
@@ -718,7 +755,10 @@ End If
         if (event.key === "Escape") hideMenu();
       });
       window.addEventListener("blur", hideMenu);
+      window.addEventListener("storage", event => { if (event.key === "lang") applyPrivateFolderNames(); });
+      window.addEventListener("message", event => { if (event.data?.type === "change-language") applyPrivateFolderNames(); });
       document.addEventListener("contextmenu", event => event.preventDefault());
+      applyPrivateFolderNames();
     })();
   </script>
   </div>
@@ -762,7 +802,8 @@ Function PickerQuery()
     "&multiple=" & CStr(Abs(CInt(pickerMultiple))) & _
     "&purpose=" & Server.URLEncode(pickerPurpose) & _
     "&requestId=" & Server.URLEncode(pickerRequestId) & _
-    "&title=" & Server.URLEncode(pickerTitle)
+    "&title=" & Server.URLEncode(pickerTitle) & _
+    "&lang=" & Server.URLEncode(language)
   If pickerAction = "save" Then value = value & "&suggestedName=" & Server.URLEncode(pickerSuggestedName)
   PickerQuery = value
 End Function
@@ -774,6 +815,9 @@ Function PrivateFolderUrl(ByVal value)
   If pickerMode Then
     If InStr(url, "?") > 0 Then url = url & "&" Else url = url & "?"
     url = url & PickerQuery()
+  Else
+    If InStr(url, "?") > 0 Then url = url & "&" Else url = url & "?"
+    url = url & "lang=" & Server.URLEncode(language)
   End If
   PrivateFolderUrl = url
 End Function
@@ -785,6 +829,9 @@ Function PublicFolderUrl(ByVal value)
   If pickerMode Then
     If InStr(url, "?") > 0 Then url = url & "&" Else url = url & "?"
     url = url & PickerQuery()
+  Else
+    If InStr(url, "?") > 0 Then url = url & "&" Else url = url & "?"
+    url = url & "lang=" & Server.URLEncode(language)
   End If
   PublicFolderUrl = url
 End Function

@@ -16,7 +16,14 @@
 
     <div class="ww-body" v-show="!win.minimized">
       <!-- iframe 模式（未迁移老模块） -->
-      <iframe v-if="win.url" :src="win.url" frameborder="0" style="width:100%;height:100%"></iframe>
+      <iframe
+        v-if="win.url"
+        :src="win.url"
+        :allow="isCameraWindow ? 'camera; fullscreen; translator' : undefined"
+        :allowfullscreen="isCameraWindow"
+        frameborder="0"
+        style="width:100%;height:100%"
+      ></iframe>
 
       <!-- 组件模式（已迁移 Vue 模块） -->
       <component v-else :is="AppRegistry[win.appKey]" />
@@ -35,6 +42,8 @@ import { AppRegistry } from '../apps'
 const props = defineProps({
   win: { type: Object, required: true }
 })
+
+const isCameraWindow = computed(() => /^camera\.html(?:[?#]|$)/i.test(props.win.url || ''))
 
 const styleObj = computed(() => ({
   position: 'absolute',

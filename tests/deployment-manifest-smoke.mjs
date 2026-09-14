@@ -37,15 +37,54 @@ assert.notEqual(manifest.previousReleaseVersion, manifest.releaseVersion);
 assert.ok(manifest.releaseVersion.localeCompare(manifest.previousReleaseVersion, undefined, { numeric: true }) > 0,
   "the release version must advance beyond the production version");
 assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"));
-for (const onlineReleaseFile of [
+const onlineReleaseFiles = [
   "sysinfo.html",
   "assets/js/sysinfo.js",
   "api/release-version.asp",
   "api/mobile-version.asp",
   "data/apps/system-apps.json",
-]) {
-  assert.ok(uploadFiles.includes(onlineReleaseFile),
-    "Android online-version fallback must deploy together: " + onlineReleaseFile);
+];
+if (manifest.releaseScope === "camera-registry") {
+  assert.deepEqual(uploadFiles, [
+    "data/apps/system-apps.json",
+    "camera.html",
+    "assets/css/camera.css",
+    "assets/icons/camera.svg",
+    "assets/js/camera-app.js",
+    "assets/js/camera-core.js",
+    "deploy/ftp-manifest.json",
+  ], "camera-registry releases must not include unrelated runtime files");
+} else if (manifest.releaseScope === "camera-network-experience") {
+  assert.deepEqual(uploadFiles, [
+    "camera.html",
+    "assets/css/camera.css",
+    "assets/js/camera-app.js",
+    "assets/js/tw.js",
+    "data/apps/system-apps.json",
+    "settings.html",
+    "assets/css/settings.css",
+    "assets/js/network-speed.js",
+    "dist-window/window-manager-widget.css",
+    "dist-window/window-manager-widget.js",
+    "dist-window/window-manager-widget.umd.js",
+    "deploy/ftp-manifest.json",
+  ], "camera and network experience release must upload only its runtime slice");
+} else if (manifest.releaseScope === "camera-recovery") {
+  assert.deepEqual(uploadFiles, [
+    "assets/js/camera-app.js",
+    "assets/js/tw.js",
+    "camera.html",
+    "data/apps/system-apps.json",
+    "dist-window/window-manager-widget.css",
+    "dist-window/window-manager-widget.js",
+    "dist-window/window-manager-widget.umd.js",
+    "deploy/ftp-manifest.json",
+  ], "camera recovery releases must upload only the camera and window runtime slice");
+} else {
+  for (const onlineReleaseFile of onlineReleaseFiles) {
+    assert.ok(uploadFiles.includes(onlineReleaseFile),
+      "Android online-version fallback must deploy together: " + onlineReleaseFile);
+  }
 }
 for (const realtimeDependency of ["assets/js/desktalk.js", "api/dt_fetch_links.asp"]) {
   assert.ok(manifest.requiredFiles.includes(realtimeDependency),
@@ -60,7 +99,10 @@ for (const runtimeDependency of [
   assert.ok(manifest.requiredFiles.includes(runtimeDependency),
     `runtime dependency must be in deployment manifest: ${runtimeDependency}`);
 }
-for (const app of catalog.apps) {
+const appsToVerify = ["camera-registry", "camera-network-experience", "camera-recovery"].includes(manifest.releaseScope)
+  ? catalog.apps.filter((app) => app.id === "webwindows.system.camera")
+  : catalog.apps;
+for (const app of appsToVerify) {
   const entry = String(app.entry || "").split("?")[0];
   if (entry && entry !== "about:blank") await access(resolve(root, entry));
   if (app.icon) await access(resolve(root, String(app.icon).split("?")[0]));

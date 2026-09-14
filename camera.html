@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; connect-src 'self'; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
+  <title>照相机与扫描</title>
+  <link rel="stylesheet" href="assets/css/camera.css?v=20260914-1">
+</head>
+<body>
+  <header class="app-header">
+    <div><h1>照相机与扫描</h1><p>图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。</p></div>
+    <span id="privacyBadge" class="badge">本地处理</span>
+  </header>
+  <nav class="tabs" aria-label="功能">
+    <button class="active" data-tab="scan">文档扫描</button>
+    <button data-tab="qr">二维码</button>
+    <button data-tab="translate">拍照翻译</button>
+    <button data-tab="login">扫码登录</button>
+    <button data-tab="ar">场景翻译</button>
+  </nav>
+  <main>
+    <section class="capture-panel">
+      <div class="viewer">
+        <video id="video" playsinline muted></video>
+        <canvas id="preview"></canvas>
+        <div id="arOverlay" class="ar-overlay" hidden></div>
+        <div id="emptyCamera" class="empty">点击“启用相机”后才会请求权限。也可以从云资料选择图片。</div>
+      </div>
+      <div class="toolbar">
+        <button id="startCamera" class="primary">启用相机</button>
+        <select id="cameraSelect" aria-label="摄像头" disabled><option>授权后显示真实设备名</option></select>
+        <button id="switchCamera" disabled>切换前后镜头</button>
+        <button id="openCloudImage" class="file-button" type="button">从云资料选择图片</button>
+        <button id="capture" disabled>拍摄</button>
+        <button id="stopCamera" disabled>停止</button>
+        <button id="cameraExit" type="button" hidden>退出取景</button>
+      </div>
+      <p id="cameraStatus" class="status" role="status">尚未访问摄像头。</p>
+    </section>
+
+    <section id="scan" class="tab-panel active">
+      <div class="controls">
+        <button id="detectEdges">检测边缘并校正</button><button id="rotate">旋转 90°</button>
+        <label>效果 <select id="filter"><option value="color">彩色</option><option value="gray">灰度</option><option value="bw">黑白</option><option value="enhance">增强</option></select></label>
+        <button id="addPage" class="primary">加入多页文档</button>
+      </div>
+      <div id="pages" class="pages" aria-live="polite"></div>
+      <div class="controls"><button id="downloadImage">图片另存到云资料</button><button id="downloadPdf">PDF 另存到云资料</button></div>
+      <p class="hint">自动边缘为本地启发式估计；复杂背景可能需要重新取景。第一期校正为四角映射，不上传原图。</p>
+    </section>
+
+    <section id="qr" class="tab-panel">
+      <div class="controls"><button id="scanQr" class="primary">识别当前画面</button><button id="toggleQrLive">开始实时识别</button></div>
+      <article id="qrResult" class="result"><strong>尚未识别</strong><p>支持浏览器 BarcodeDetector 时可扫描 QR；任何结果都不会自动跳转。</p></article>
+    </section>
+
+    <section id="translate" class="tab-panel">
+      <div class="controls"><button id="runOcr" class="primary">OCR 当前图片</button><label>源语言 <select id="sourceLanguage"><option value="auto">自动识别</option><option value="zh">中文</option><option value="ja">日本語</option><option value="en">English</option></select></label><label>目标语言 <select id="targetLanguage"><option value="zh">中文</option><option value="ja">日本語</option><option value="en">English</option></select></label><button id="runTranslate">翻译</button></div>
+      <div class="translation-grid"><label>原文<textarea id="ocrText" placeholder="OCR 结果会出现在这里；也可手工校正或输入。"></textarea></label><label>译文<textarea id="translatedText" readonly></textarea></label></div>
+      <p id="translationStatus" class="hint">优先使用设备上的 TextDetector 和 Translator；首次翻译可能需要下载设备语言模型，不会把图片发送到网络。</p>
+    </section>
+
+    <section id="login" class="tab-panel">
+      <div class="login-grid">
+        <article><h2>在这台设备发起登录</h2><button id="createLoginQr" class="primary" disabled>生成一次性二维码</button><canvas id="loginQr" width="240" height="240"></canvas><code id="loginCode"></code><p id="loginStatus" class="hint">扫码登录后端未启用：数据库迁移尚未通过受控流程执行。本次发布不会发送登录请求。</p><button id="consumeLogin" disabled>确认已确认并登录</button><button id="revokeLogin" disabled>撤销</button></article>
+        <article><h2>在已登录设备确认</h2><label>挑战码<input id="challengeInput" autocomplete="off" maxlength="64" disabled></label><button id="approveLogin" disabled>查看并确认发起设备</button><p class="hint">安全后端就绪后，票据将按 2 分钟失效、一次性消费和发起会话绑定规则启用。</p></article>
+      </div>
+    </section>
+
+    <section id="ar" class="tab-panel">
+      <button id="toggleAr" class="primary">开始场景翻译</button>
+      <p class="hint">一期是定时取帧、OCR、翻译和屏幕 2D 叠加，不是 WebXR，也没有空间锚定；移动镜头后文字位置可能漂移。</p>
+    </section>
+  </main>
+  <script defer src="assets/js/cloud-file-dialog.js?v=20260901-storage-hotfix-1"></script>
+  <script defer src="assets/js/tw.js?v=20260914-camera-1"></script>
+  <script defer src="assets/js/camera-core.js?v=20260914-1"></script>
+  <script defer src="assets/js/camera-app.js?v=20260914-1"></script>
+</body>
+</html>

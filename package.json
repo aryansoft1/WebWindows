@@ -1,7 +1,8 @@
 {
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "vue-cli-service build",
+    "build:window": "vite build --config webwindows-vue/vite.window.config.js"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",

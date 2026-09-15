@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.14.2",
-  "catalogVersion": "2026.09.14.2",
-  "generatedAt": "2026-09-14T07:59:36.275Z",
+  "releaseVersion": "2026.09.15.1",
+  "catalogVersion": "2026.09.15.1",
+  "generatedAt": "2026-09-15T08:54:44.297Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -219,9 +219,24 @@
     "dist-developer-studio/assets/tsMode-LWAdGrsf.js",
     "dist-developer-studio/assets/workers-Dure_1W5.js",
     "dist-developer-studio/developer-studio-bundle.css",
-    "dist-developer-studio/developer-studio.js"
+    "dist-developer-studio/developer-studio.js",
+    "assets/data/guide-content.json",
+    "assets/guide/account-security.svg",
+    "assets/guide/browser-limits.svg",
+    "assets/guide/camera-flow.svg",
+    "assets/guide/cloud-files.png",
+    "assets/guide/desktalk-flow.svg",
+    "assets/guide/desktop-overview.png",
+    "assets/guide/developer-flow.svg",
+    "assets/guide/file-lifecycle.svg",
+    "assets/guide/function-center.png",
+    "assets/guide/media-flow.svg",
+    "assets/guide/office-flow.svg",
+    "assets/guide/service-flow.svg",
+    "assets/guide/settings.png",
+    "assets/guide/troubleshooting-flow.svg"
   ],
-  "previousReleaseVersion": "2026.09.13.2",
+  "previousReleaseVersion": "2026.09.14.2",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -268,8 +283,8 @@
       "size": 198690
     },
     "assets/js/sysinfo.js": {
-      "sha256": "9d27cab5c7351020d23e53c38643522532a400f4215cd14bd9f9697eeb2ae544",
-      "size": 12958
+      "sha256": "1c346c93e7603e265aa17dd90e051deaffdece64c2c681c8146815420165fd49",
+      "size": 13015
     },
     "assets/js/auth-session.js": {
       "sha256": "1310531e22ec40ee178dee90f2839fee5c43389ba3981aa94e3eecf156448b07",
@@ -360,16 +375,16 @@
       "size": 11213
     },
     "assets/js/guide.js": {
-      "sha256": "b8abaac57ab48020cd2e12d412dbd2771f9f94d2a51b8fb58caeb42782107261",
-      "size": 5260
+      "sha256": "45b6a13ee7a56172c2c33bebffca058432e46462015edc10a33a018c127b26d9",
+      "size": 7748
     },
     "assets/css/function-center.css": {
       "sha256": "65f0c322b418508c26a4622620fa17afe0aaf51ac1226bcbd6f5c0bff92ac224",
       "size": 7867
     },
     "assets/css/guide.css": {
-      "sha256": "d026b79ec80c1dc2a42fdb10bda03ebbc4fdb126af91ea5e901dad95684a3897",
-      "size": 5128
+      "sha256": "71c2524f6287c80511b9755093f29d2d6f11aa2d4db95e2600f7a5e2c025d6d1",
+      "size": 6542
     },
     "assets/css/main.css": {
       "sha256": "5e4f790f66f7e12a8a9637cef0eb4f9512b0fb24efb2874494c4d3e01dcc0aa2",
@@ -584,16 +599,16 @@
       "size": 3000
     },
     "guide.html": {
-      "sha256": "8ddbb3f08b55128ebd3cbcdf57b53617e013cec37b2916391aa942d2c0c84dbe",
-      "size": 1849
+      "sha256": "fc0d3f1ac83e3c0f8cde5c37f6f77b9f6b0a3f1517730621aadc541c3b1c97fd",
+      "size": 2090
     },
     "dreama.html": {
       "sha256": "19c2b438ef6c77f0481e0d559c68380e8d0d3c0e404f44393b138992b9e420b1",
       "size": 5614
     },
     "sysinfo.html": {
-      "sha256": "58530ac0eb2e073bca1cbddcbfc69a356d4ea9121e66f83824bd446db14bbe2e",
-      "size": 4955
+      "sha256": "125816a27280f553d2e445ade4c6e81a403a717d31c3088453d8b4b33b2a8cb4",
+      "size": 4957
     },
     "login.html": {
       "sha256": "dfcf39d4670cf62a79b0d5f4908eadb7a4321e28772d53b20f51703f26678aa8",
@@ -884,12 +899,12 @@
       "size": 4266
     },
     "api/release-version.asp": {
-      "sha256": "1d4b46490a58fd97b390a4de840f327c5fb29ce524b65596866062c688eafd01",
-      "size": 1051
+      "sha256": "d4598cbbd02588dee2bb22750cd7e2213044ba1952753f412e7a2806a85e4867",
+      "size": 1087
     },
     "api/mobile-version.asp": {
-      "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
-      "size": 1495
+      "sha256": "4e230455ebf606978eacc63ea774a90a01cdf65021030ebffe1e2d77aebd9888",
+      "size": 1540
     },
     "dist-window/window-manager-widget.umd.js": {
       "sha256": "3f24a847e4467971b31f1dd17e79b35ba8dbb5d4af9d94444589bf16addf1667",
@@ -904,8 +919,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "b15e56c3e71f73a1b908ee235bcf520f17507fd98ecb6a6a5e968719ccf39b31",
-      "size": 14676
+      "sha256": "778ea5ac9f1fa84f684cba3a20c21de22384ae4f8c53fe0471e1756a2a9d990c",
+      "size": 15232
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1078,52 +1093,93 @@
     "docs/SYSTEM_DIALOG_API.md": {
       "sha256": "7ec9444f109b749494867fef07b8da5e0a05a734fee6dc611f19a039e2956a99",
       "size": 1117
+    },
+    "assets/data/guide-content.json": {
+      "sha256": "78cc99c8c8f0cb271f265259dbf07fb23797f5306d39201b001bb179d3b301ac",
+      "size": 85648
+    },
+    "assets/guide/account-security.svg": {
+      "sha256": "6d8ffa6d3321fa43e2d471cf1384c0a12b7acf020ec178eed005fc97c476fdc2",
+      "size": 1594
+    },
+    "assets/guide/browser-limits.svg": {
+      "sha256": "c9f10196d95335796b73268722adcde19efb574658581c6fcc3f3acd315bf818",
+      "size": 1502
+    },
+    "assets/guide/camera-flow.svg": {
+      "sha256": "7815e4b693da890829fee396ea6a512efb13a37d03d6af9d8ce7e316072db803",
+      "size": 4049
+    },
+    "assets/guide/cloud-files.png": {
+      "sha256": "abc74889b545ea99daae8c7a108a5880b0a5176fd916df90f8b003baae09ebe4",
+      "size": 37594
+    },
+    "assets/guide/desktalk-flow.svg": {
+      "sha256": "fb368fe9738f1b316717151fbb403bab116b84867ed78aaa283e98ee7f26335c",
+      "size": 1537
+    },
+    "assets/guide/desktop-overview.png": {
+      "sha256": "8eb19d4ac8a385347180958cc81b16fc02c791a83ba5a61a662a5f3e1f8bf475",
+      "size": 674588
+    },
+    "assets/guide/developer-flow.svg": {
+      "sha256": "c40761877f1a7c72e46525545bc6c0188d7bb97899ede6bf1cf40fd246992d77",
+      "size": 1440
+    },
+    "assets/guide/file-lifecycle.svg": {
+      "sha256": "49789b8e4d3bf8e7cd39f1dc0587c222c2ee95ebdd78be23bfea180f3aa401c5",
+      "size": 1868
+    },
+    "assets/guide/function-center.png": {
+      "sha256": "e95d279f2ee0b702ba70366a0f669869d60f5f3c3268dae9c2ae956eafca2a7c",
+      "size": 32185
+    },
+    "assets/guide/media-flow.svg": {
+      "sha256": "4f4c3065e59ea668e1443f8d716668783059eac3450d12e7b0f9a46def4afb6c",
+      "size": 1497
+    },
+    "assets/guide/office-flow.svg": {
+      "sha256": "2736c621088cbf877177a4ac99e1280815699b65bcf1383d7bda0d03fae47d09",
+      "size": 1394
+    },
+    "assets/guide/service-flow.svg": {
+      "sha256": "614047cb1791a458a0fea803841ff111688c291132ef38abe756e681fd8464d2",
+      "size": 1527
+    },
+    "assets/guide/settings.png": {
+      "sha256": "aa50ff778ef0bd5c2473843e1b342fd6fc11322254f74dacd286651f5b20d736",
+      "size": 41465
+    },
+    "assets/guide/troubleshooting-flow.svg": {
+      "sha256": "45cffd3357f2ee599937d4afa13e89202a81ae480f8d1cceabac5939b5a56269",
+      "size": 1297
     }
   },
-  "releaseScope": "camera-dialog-localization",
+  "releaseScope": "usage-guide-v2",
   "uploadFiles": [
-    "api/camera-login.asp",
-    "api/mobile-version.asp",
-    "api/release-version.asp",
-    "assets/css/developer-preview-host.css",
-    "assets/css/developer-studio.css",
-    "assets/js/camera-app.js",
-    "assets/js/cloud-file-dialog.js",
-    "assets/js/developer-preview-host.js",
-    "assets/js/sysinfo.js",
-    "assets/js/tw.js",
-    "assets/js/webwindows-message.js",
-    "camera.html",
-    "cloud/browser/device-locations.js",
-    "cloud/browser/FILE_DIALOG_API.md",
-    "cloud/browser/files.asp",
-    "cloud/browser/i18n.js",
-    "cloud/browser/node-config.asp",
-    "cloud/browser/private-files.asp",
-    "cloud/browser/search-ui.js",
-    "cloud/browser/toolbar.js",
-    "data/apps/system-apps.json",
-    "data/sdk/webwindows-public-api-v1.d.ts",
-    "developer-preview-host.html",
-    "developer-studio.html",
-    "dist-developer-studio/assets/css.worker-CTtMUz-4.js",
-    "dist-developer-studio/assets/cssMode-CnOg0bur.js",
-    "dist-developer-studio/assets/deterministic-builder-D5B_uga0.js",
-    "dist-developer-studio/assets/editor.worker-isBbQWeS.js",
-    "dist-developer-studio/assets/entry-DgBfoI8G.js",
-    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js",
-    "dist-developer-studio/assets/htmlMode-BpT7noKD.js",
-    "dist-developer-studio/assets/json.worker-BY6TubKN.js",
-    "dist-developer-studio/assets/jsonMode-BDdpFM2J.js",
-    "dist-developer-studio/assets/lspLanguageFeatures-BaOBOmE6.js",
-    "dist-developer-studio/assets/monaco-runtime-D4730T7L.js",
-    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js",
-    "dist-developer-studio/assets/tsMode-LWAdGrsf.js",
-    "dist-developer-studio/assets/workers-Dure_1W5.js",
-    "dist-developer-studio/developer-studio-bundle.css",
-    "dist-developer-studio/developer-studio.js",
-    "docs/SYSTEM_DIALOG_API.md",
+    "guide.html",
+    "assets/css/guide.css",
+    "assets/js/guide.js",
+    "assets/data/guide-content.json",
+    "assets/guide/account-security.svg",
+    "assets/guide/browser-limits.svg",
+    "assets/guide/camera-flow.svg",
+    "assets/guide/cloud-files.png",
+    "assets/guide/desktalk-flow.svg",
+    "assets/guide/desktop-overview.png",
+    "assets/guide/developer-flow.svg",
+    "assets/guide/file-lifecycle.svg",
+    "assets/guide/function-center.png",
+    "assets/guide/media-flow.svg",
+    "assets/guide/office-flow.svg",
+    "assets/guide/service-flow.svg",
+    "assets/guide/settings.png",
+    "assets/guide/troubleshooting-flow.svg",
     "sysinfo.html",
+    "assets/js/sysinfo.js",
+    "api/release-version.asp",
+    "api/mobile-version.asp",
+    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]
 }

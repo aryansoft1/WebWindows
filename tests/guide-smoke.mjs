@@ -37,10 +37,22 @@ assert.doesNotMatch(index, />WebWindows能做什么</);
 assert.match(settings, /使用向导/);
 assert.match(main, /function openGuide\(topic\)/);
 assert.equal(content.release.homeTopic, "getting-started");
-assert.equal(content.articles.length, 12);
+assert.ok(content.articles.length >= 18);
 assert.ok(content.articles.every((article) => article.lastVerified));
 assert.ok(content.articles.every((article) =>
   ["verified", "testing", "planned"].includes(article.status)
 ));
+assert.ok(content.articles.every((article) => article.media && article.mediaAlt && article.mediaCaption));
+assert.ok(content.articles.every((article) => /<ol>/.test(article.html)));
+assert.ok(content.articles.every((article) => /常见问题与权限提示/.test(article.html)));
+const covered = new Set(content.articles.flatMap((article) => article.covers));
+assert.deepEqual(
+  manifest.apps.map((app) => app.id).filter((id) => !covered.has(id)),
+  []
+);
+assert.equal(content.release.coverage.registeredApps, manifest.apps.length);
+assert.equal(content.release.coverage.coveredApps, covered.size);
+assert.match(script, /loading="lazy"/);
+assert.match(page, /id="guideMenuButton"/);
 
 console.log("guide smoke test passed");

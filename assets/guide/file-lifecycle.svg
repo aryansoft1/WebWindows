@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">文件管理和打开方式流程</title><desc id="desc">文件从设备上传到私人资料，或按类型交给预览器和编辑器，也可下载备份。</desc>
+  <rect width="960" height="420" rx="28" fill="#f4f8fc"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <rect x="45" y="130" width="180" height="150" rx="20" fill="#fff" stroke="#bfd0df"/><text x="135" y="190" font-size="40">▣</text><text x="135" y="245" fill="#33445d" font-size="22">设备文件</text>
+    <path d="M245 205h95" stroke="#1769aa" stroke-width="7"/><path d="m325 186 24 19-24 19" fill="none" stroke="#1769aa" stroke-width="7"/><text x="292" y="170" fill="#1769aa" font-size="19">上传</text>
+    <rect x="365" y="90" width="230" height="230" rx="28" fill="#e8f4ff" stroke="#6da9d5" stroke-width="2"/><text x="480" y="174" font-size="58">☁</text><text x="480" y="225" fill="#075a9b" font-size="24">私人云资料</text><text x="480" y="267" fill="#657087" font-size="18">新建 · 重命名 · 删除</text>
+    <path d="M615 150h95" stroke="#1769aa" stroke-width="7"/><path d="m695 131 24 19-24 19" fill="none" stroke="#1769aa" stroke-width="7"/><path d="M615 260h95" stroke="#16a36a" stroke-width="7"/><path d="m695 241 24 19-24 19" fill="none" stroke="#16a36a" stroke-width="7"/>
+    <rect x="735" y="75" width="180" height="130" rx="20" fill="#fff" stroke="#bfd0df"/><text x="825" y="133" font-size="30">◫</text><text x="825" y="175" fill="#33445d" font-size="21">预览 / 编辑</text>
+    <rect x="735" y="235" width="180" height="110" rx="20" fill="#fff" stroke="#bfd0df"/><text x="825" y="282" font-size="30">⇩</text><text x="825" y="321" fill="#33445d" font-size="21">下载备份</text>
+  </g></svg>

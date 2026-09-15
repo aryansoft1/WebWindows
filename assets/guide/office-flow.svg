@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Office 文件安全编辑流程</title><desc id="desc">保留原件，打开编辑副本，保存后重新打开核对。</desc>
+  <rect width="960" height="420" rx="28" fill="#f7fafc"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <g fill="#fff" stroke="#c5d3e0"><rect x="45" y="125" width="175" height="170" rx="20"/><rect x="285" y="125" width="175" height="170" rx="20"/><rect x="525" y="125" width="175" height="170" rx="20"/><rect x="765" y="125" width="150" height="170" rx="20"/></g>
+    <g fill="#1769aa" font-size="22"><text x="132" y="190">① 保留原件</text><text x="372" y="190">② 打开编辑</text><text x="612" y="190">③ 另存副本</text><text x="840" y="190">④ 复核</text></g>
+    <g fill="#657087" font-size="18"><text x="132" y="235">公共或私人资料</text><text x="372" y="235">Sheet / Write / Slide</text><text x="612" y="235">保存到私人资料</text><text x="840" y="235">重新打开导出文件</text></g>
+    <g stroke="#80a8c7" stroke-width="7"><path d="M230 210h42"/><path d="M470 210h42"/><path d="M710 210h42"/></g>
+    <text x="480" y="355" fill="#9a5b00" font-size="20">复杂公式、分页、动画和旧格式需要在完整桌面软件中再次核对</text>
+  </g></svg>

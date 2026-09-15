@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>使用向导 · WebWindows</title>
   <link rel="icon" href="assets/icons/guide.svg">
-  <link rel="stylesheet" href="assets/css/guide.css?v=20260729-1">
-  <script defer src="assets/js/guide.js?v=20260729-1"></script>
+  <link rel="stylesheet" href="assets/css/guide.css?v=20260915-1">
+  <script defer src="assets/js/guide.js?v=20260915-1"></script>
 </head>
 <body>
   <header class="guide-header">
@@ -14,12 +14,13 @@
       <img src="assets/icons/guide.svg" alt="">
       <span><strong>使用向导</strong><small>WebWindows</small></span>
     </a>
+    <button id="guideMenuButton" class="guide-menu-button" type="button" aria-controls="guideSidebar" aria-expanded="false">目录</button>
     <label class="guide-search">
       <span aria-hidden="true">⌕</span>
       <input id="guideSearch" type="search" placeholder="搜索使用方法或问题" autocomplete="off">
       <kbd>Ctrl K</kbd>
     </label>
-    <span id="guideVersion" class="guide-version"></span>
+    <span id="guideVersion" class="guide-version" aria-live="polite"></span>
   </header>
 
   <div class="guide-layout">
@@ -35,7 +36,7 @@
     </aside>
   </div>
 
-  <div id="guideSearchResults" class="guide-search-results" hidden></div>
+  <div id="guideSearchResults" class="guide-search-results" role="listbox" aria-label="搜索结果" hidden></div>
   <noscript>使用向导需要启用 JavaScript。</noscript>
 </body>
 </html>

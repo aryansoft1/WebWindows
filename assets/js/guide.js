@@ -6,6 +6,17 @@
   const main = document.getElementById("guideMain");
   const search = document.getElementById("guideSearch");
   const results = document.getElementById("guideSearchResults");
+  const menuButton = document.getElementById("guideMenuButton");
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+  }
+
+  function safeLocalUrl(value) {
+    return /^[a-z0-9][a-z0-9./?&=_#%-]*$/i.test(value || "") && !String(value).includes("..") ? value : "";
+  }
 
   function requestedTopic() {
     return new URL(location.href).searchParams.get("topic");
@@ -48,22 +59,33 @@
   function openArticle(id, options) {
     const article = articleById(id) || state.articles[0];
     if (!article) return;
+    const openUrl = safeLocalUrl(article.openUrl);
+    const mediaUrl = safeLocalUrl(article.media);
     state.current = article.id;
     sidebar.querySelectorAll(".guide-nav-link").forEach((link) => {
       link.classList.toggle("active", link.dataset.topic === article.id);
     });
     main.innerHTML = `
       <article class="guide-article">
-        <div class="guide-breadcrumb">${article.category} / ${article.title}</div>
-        <h1>${article.title}</h1>
-        <p class="guide-summary">${article.summary}</p>
+        <div class="guide-breadcrumb">${escapeHtml(article.category)} / ${escapeHtml(article.title)}</div>
+        <h1>${escapeHtml(article.title)}</h1>
+        <p class="guide-summary">${escapeHtml(article.summary)}</p>
         <div class="guide-meta">
-          <span class="guide-chip">${statusLabel(article.status)}</span>
-          <span class="guide-chip">适用版本 ${article.productVersion}</span>
-          <span class="guide-chip">最后核对 ${article.lastVerified}</span>
+          <span class="guide-chip">${escapeHtml(statusLabel(article.status))}</span>
+          <span class="guide-chip">适用版本 ${escapeHtml(article.productVersion)}</span>
+          <span class="guide-chip">最后核对 ${escapeHtml(article.lastVerified)}</span>
         </div>
+        <figure class="guide-figure">
+          <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(article.mediaAlt)}" loading="lazy" decoding="async">
+          <figcaption>${escapeHtml(article.mediaCaption)}</figcaption>
+        </figure>
+        ${openUrl ? `<button class="guide-open-action" type="button" data-open-url="${escapeHtml(openUrl)}" data-app-id="${escapeHtml(article.openApp || article.covers[0] || "")}">打开该功能</button>` : ""}
         <div class="guide-body">${article.html}</div>
+        <footer class="guide-evidence"><b>核对依据</b><span>${article.testedBy.map(escapeHtml).join(" · ")}</span></footer>
       </article>`;
+    main.querySelector("[data-open-url]")?.addEventListener("click", (event) =>
+      openFeature(event.currentTarget.dataset.openUrl, event.currentTarget.dataset.appId)
+    );
     if (!options?.skipHistory) {
       const url = new URL(location.href);
       url.searchParams.set("topic", article.id);
@@ -71,7 +93,24 @@
     }
     main.focus({ preventScroll: true });
     main.scrollTop = 0;
+    sidebar.classList.remove("is-open");
+    menuButton.setAttribute("aria-expanded", "false");
     closeResults();
+  }
+
+  async function openFeature(url, appId) {
+    const host = window.parent && window.parent !== window ? window.parent : window;
+    try {
+      if (host.WebWindows?.apps?.launch && appId) {
+        await host.WebWindows.apps.launch(appId, { url });
+      } else if (host.openWindow) {
+        host.openWindow(`guide-${Date.now()}`, "WebWindows", url, "assets/icons/guide.svg", true);
+      } else {
+        window.location.href = url;
+      }
+    } catch (_error) {
+      window.location.href = url;
+    }
   }
 
   function closeResults() {
@@ -99,7 +138,8 @@
       const button = document.createElement("button");
       button.type = "button";
       button.className = "guide-result";
-      button.innerHTML = `<b>${article.title}</b><small>${article.category} · ${article.summary}</small>`;
+      button.setAttribute("role", "option");
+      button.innerHTML = `<b>${escapeHtml(article.title)}</b><small>${escapeHtml(article.category)} · ${escapeHtml(article.summary)}</small>`;
       button.addEventListener("click", () => openArticle(article.id));
       results.appendChild(button);
     });
@@ -108,13 +148,13 @@
 
   async function initialize() {
     try {
-      const response = await fetch("assets/data/guide-content.json?v=20260729-1", { cache: "no-cache" });
+      const response = await fetch("assets/data/guide-content.json?v=20260915-1", { cache: "no-cache" });
       if (!response.ok) throw new Error(`内容请求失败（${response.status}）`);
       const payload = await response.json();
       state.release = payload.release;
       state.articles = payload.articles;
       document.getElementById("guideVersion").textContent =
-        `内容版本 ${payload.release.version}`;
+        `更新 ${payload.release.updatedAt} · ${payload.release.coverage.coveredApps}/${payload.release.coverage.registeredApps} 个功能`;
       renderNavigation();
       openArticle(requestedTopic() || payload.release.homeTopic, { skipHistory: true });
     } catch (error) {
@@ -135,6 +175,10 @@
   });
   document.addEventListener("click", (event) => {
     if (!results.contains(event.target) && !search.contains(event.target)) closeResults();
+  });
+  menuButton.addEventListener("click", () => {
+    const open = sidebar.classList.toggle("is-open");
+    menuButton.setAttribute("aria-expanded", String(open));
   });
   window.addEventListener("popstate", () => openArticle(requestedTopic(), { skipHistory: true }));
 

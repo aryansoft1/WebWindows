@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-labelledby="title desc">
+  <title id="title">照相机与扫描流程</title>
+  <desc id="desc">相机或云资料图片进入本机处理，然后分流到文档扫描、二维码识别和文字翻译，最后保存或确认结果。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#071a33"/><stop offset="1" stop-color="#163963"/>
+    </linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="10" stdDeviation="12" flood-opacity=".22"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#74c7ff"/></marker>
+  </defs>
+  <rect width="1200" height="680" rx="28" fill="url(#bg)"/>
+  <text x="60" y="75" fill="#fff" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="36" font-weight="700">照相机与扫描</text>
+  <text x="60" y="112" fill="#b9d8f5" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="20">主动授权 · 本机优先 · 保存前复核</text>
+  <g filter="url(#shadow)" font-family="Segoe UI,Microsoft YaHei,sans-serif">
+    <rect x="65" y="190" width="220" height="120" rx="20" fill="#143f68" stroke="#67bfff" stroke-width="2"/>
+    <text x="175" y="238" text-anchor="middle" fill="#fff" font-size="25" font-weight="600">输入图像</text>
+    <text x="175" y="276" text-anchor="middle" fill="#cae7fb" font-size="18">相机 / 云资料</text>
+    <rect x="380" y="190" width="220" height="120" rx="20" fill="#174d61" stroke="#64dfd0" stroke-width="2"/>
+    <text x="490" y="238" text-anchor="middle" fill="#fff" font-size="25" font-weight="600">本机预处理</text>
+    <text x="490" y="276" text-anchor="middle" fill="#c9f7ef" font-size="18">裁边 · 旋转 · 增强</text>
+    <rect x="715" y="145" width="215" height="100" rx="20" fill="#3a3470" stroke="#a9a0ff" stroke-width="2"/>
+    <text x="822" y="187" text-anchor="middle" fill="#fff" font-size="23" font-weight="600">文档扫描</text>
+    <text x="822" y="219" text-anchor="middle" fill="#ddd9ff" font-size="17">单页 / 多页</text>
+    <rect x="715" y="290" width="215" height="100" rx="20" fill="#5b3b25" stroke="#ffbd72" stroke-width="2"/>
+    <text x="822" y="332" text-anchor="middle" fill="#fff" font-size="23" font-weight="600">二维码</text>
+    <text x="822" y="364" text-anchor="middle" fill="#ffe0bc" font-size="17">展示后确认</text>
+    <rect x="715" y="435" width="215" height="100" rx="20" fill="#31502f" stroke="#9ee495" stroke-width="2"/>
+    <text x="822" y="477" text-anchor="middle" fill="#fff" font-size="23" font-weight="600">OCR 与翻译</text>
+    <text x="822" y="509" text-anchor="middle" fill="#d8f5d4" font-size="17">识别文字 / 译文</text>
+    <rect x="1010" y="245" width="135" height="190" rx="20" fill="#173755" stroke="#8fd1ff" stroke-width="2"/>
+    <text x="1077" y="300" text-anchor="middle" fill="#fff" font-size="23" font-weight="600">复核</text>
+    <text x="1077" y="340" text-anchor="middle" fill="#cbe9ff" font-size="17">保存 PDF</text>
+    <text x="1077" y="373" text-anchor="middle" fill="#cbe9ff" font-size="17">复制文字</text>
+    <text x="1077" y="406" text-anchor="middle" fill="#cbe9ff" font-size="17">确认链接</text>
+  </g>
+  <g stroke="#74c7ff" stroke-width="4" fill="none" marker-end="url(#arrow)">
+    <path d="M285 250H370"/><path d="M600 250C655 250 650 195 705 195"/>
+    <path d="M600 250C655 250 650 340 705 340"/><path d="M600 250C655 250 650 485 705 485"/>
+    <path d="M930 195C975 195 975 285 1000 300"/><path d="M930 340H1000"/><path d="M930 485C975 485 975 395 1000 380"/>
+  </g>
+  <rect x="65" y="585" width="1080" height="52" rx="16" fill="#0b2745" stroke="#315a80"/>
+  <text x="605" y="619" text-anchor="middle" fill="#cfeaff" font-family="Segoe UI,Microsoft YaHei,sans-serif" font-size="19">权限仅在主动操作时申请；外部识别服务须先提示，二维码不会自动跳转。</text>
+</svg>

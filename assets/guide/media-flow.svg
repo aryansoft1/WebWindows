@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">APlay 媒体来源与播放限制</title><desc id="desc">云资料或在线来源进入 APlay，再由浏览器解码和来源策略决定播放结果。</desc>
+  <rect width="960" height="420" rx="28" fill="#f5f7fc"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <rect x="50" y="85" width="200" height="105" rx="18" fill="#fff" stroke="#c7d3e1"/><text x="150" y="145" fill="#33445d" font-size="22">☁ 云资料媒体</text>
+    <rect x="50" y="230" width="200" height="105" rx="18" fill="#fff" stroke="#c7d3e1"/><text x="150" y="290" fill="#33445d" font-size="22">⌁ 在线来源</text>
+    <path d="M270 140h145M270 280h145" stroke="#7da8c7" stroke-width="7"/><rect x="435" y="95" width="250" height="230" rx="32" fill="#e8efff" stroke="#778fe0" stroke-width="2"/><circle cx="560" cy="180" r="45" fill="#536fd2"/><path d="m548 155 36 25-36 25z" fill="#fff"/><text x="560" y="270" fill="#334a99" font-size="30">APlay</text>
+    <path d="M705 210h85" stroke="#7da8c7" stroke-width="7"/><rect x="810" y="135" width="110" height="150" rx="20" fill="#fff" stroke="#c7d3e1"/><text x="865" y="195" font-size="30">♫</text><text x="865" y="240" fill="#33445d" font-size="20">播放</text>
+    <text x="480" y="380" fill="#657087" font-size="19">格式 · 跨域 · 网络 · 浏览器解码能力共同决定结果</text>
+  </g></svg>

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.15.1",
-  "catalogVersion": "2026.09.15.1",
-  "generatedAt": "2026-09-15T08:54:44.297Z",
+  "releaseVersion": "2026.09.16.1",
+  "catalogVersion": "2026.09.16.1",
+  "generatedAt": "2026-09-16T05:25:27.014Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -234,9 +234,14 @@
     "assets/guide/office-flow.svg",
     "assets/guide/service-flow.svg",
     "assets/guide/settings.png",
-    "assets/guide/troubleshooting-flow.svg"
+    "assets/guide/troubleshooting-flow.svg",
+    "road.html",
+    "assets/css/navigation.css",
+    "assets/icons/navigation.svg",
+    "assets/js/navigation-app.js",
+    "assets/js/navigation-providers.js"
   ],
-  "previousReleaseVersion": "2026.09.14.2",
+  "previousReleaseVersion": "2026.09.15.1",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -919,8 +924,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "778ea5ac9f1fa84f684cba3a20c21de22384ae4f8c53fe0471e1756a2a9d990c",
-      "size": 15232
+      "sha256": "144679d961a9057d5fa8e617abdad6a787396e24e1efb6692f9bf7908caf07a9",
+      "size": 16096
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1153,33 +1158,36 @@
     "assets/guide/troubleshooting-flow.svg": {
       "sha256": "45cffd3357f2ee599937d4afa13e89202a81ae480f8d1cceabac5939b5a56269",
       "size": 1297
+    },
+    "road.html": {
+      "sha256": "e164eafc5892c67ce947e1716cb2dd7bf42c638bd37b35c663b55658612d6aed",
+      "size": 4785
+    },
+    "assets/css/navigation.css": {
+      "sha256": "525e127cfdeb09b5e1fd3d092beace61136a7c667a26016e93f279ff07f4e623",
+      "size": 8221
+    },
+    "assets/icons/navigation.svg": {
+      "sha256": "a32da4d7096ca4f91c5668add501c472e431e37bc45bbfe0a344d7754d330244",
+      "size": 377
+    },
+    "assets/js/navigation-app.js": {
+      "sha256": "14b346c2d5cb0acd2ec53ad65c5bd7a9fa32774cd5df53de272da3809cd3a8b7",
+      "size": 12633
+    },
+    "assets/js/navigation-providers.js": {
+      "sha256": "0016913d3cba623abefd4eb0bcf0738f7f0a49a7e83d571170d37b02ac8030df",
+      "size": 11959
     }
   },
-  "releaseScope": "usage-guide-v2",
+  "releaseScope": "navigation-map",
   "uploadFiles": [
-    "guide.html",
-    "assets/css/guide.css",
-    "assets/js/guide.js",
-    "assets/data/guide-content.json",
-    "assets/guide/account-security.svg",
-    "assets/guide/browser-limits.svg",
-    "assets/guide/camera-flow.svg",
-    "assets/guide/cloud-files.png",
-    "assets/guide/desktalk-flow.svg",
-    "assets/guide/desktop-overview.png",
-    "assets/guide/developer-flow.svg",
-    "assets/guide/file-lifecycle.svg",
-    "assets/guide/function-center.png",
-    "assets/guide/media-flow.svg",
-    "assets/guide/office-flow.svg",
-    "assets/guide/service-flow.svg",
-    "assets/guide/settings.png",
-    "assets/guide/troubleshooting-flow.svg",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
     "data/apps/system-apps.json",
+    "road.html",
+    "assets/css/navigation.css",
+    "assets/icons/navigation.svg",
+    "assets/js/navigation-app.js",
+    "assets/js/navigation-providers.js",
     "deploy/ftp-manifest.json"
   ]
 }

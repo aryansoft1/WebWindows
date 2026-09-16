@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.09.15.1",
-    "updatedAt": "2026-09-15T18:20:00+09:00"
+    "catalogVersion": "2026.09.16.1",
+    "updatedAt": "2026-09-16T14:30:00+09:00"
   },
   "apps": [
     {
@@ -287,6 +287,36 @@
         "width": "1060px",
         "height": "740px"
       }
+    },
+    {
+      "id": "webwindows.system.navigation",
+      "legacyIds": ["road"],
+      "type": "system",
+      "name": "导航",
+      "description": "交互地图、地点搜索与道路路线规划；支持社区地图、管理员服务和离线降级。",
+      "category": "system",
+      "version": "1.1.0",
+      "icon": "assets/icons/navigation.svg",
+      "entry": "road.html?v=20260916-1",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 67,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1120px",
+        "height": "760px"
+      },
+      "permissions": ["geolocation"]
     },
     {
       "id": "com.aryansoft.webwindows.aplay",

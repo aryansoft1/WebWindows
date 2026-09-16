@@ -99,8 +99,8 @@ await apps.ready();
 await new Promise((resolve) => setTimeout(resolve, 0));
 vm.runInContext(resourceOpenSource, context, { filename: "resource-open.js" });
 
-assert.equal((await apps.listInstalled()).length, 17);
-assert.equal((await apps.listCatalog()).length, 17);
+assert.equal((await apps.listInstalled()).length, 18);
+assert.equal((await apps.listCatalog()).length, 18);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), true);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", false);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), false);

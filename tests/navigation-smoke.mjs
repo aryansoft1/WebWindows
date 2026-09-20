@@ -52,6 +52,13 @@ const route=await online.route({name:"东京",lat:35.6812,lng:139.7671},{name:"�
 assert.equal(route.estimated,false);
 assert.equal(route.geometry.length,2);
 assert.match(route.steps[1].instruction,/右转/);
+const automaticDriving=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async url=>{
+  assert.match(String(url),/^https:\/\/router\.project-osrm\.org\/route\/v1\/driving\//);
+  return {ok:true,status:200,json:async()=>({routes:[{distance:12340,duration:1800,geometry:{type:"LineString",coordinates:[[139.7671,35.6812],[139.6917,35.6895]]},legs:[{steps:[]}]}]})};
+}});
+const automaticDrivingRoute=await automaticDriving.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"driving","auto");
+assert.equal(automaticDrivingRoute.routeUnavailable,undefined);
+assert.equal(automaticDrivingRoute.geometry.length,2);
 const nearby=await online.nearby("restaurant",{lat:35.6812,lng:139.7671},"community");
 assert.equal(nearby.results[0].name,"东京站");
 

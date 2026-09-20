@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.11",
-  "catalogVersion": "2026.09.20.11",
-  "generatedAt": "2026-09-20T18:49:40.572Z",
+  "releaseVersion": "2026.09.20.12",
+  "catalogVersion": "2026.09.20.12",
+  "generatedAt": "2026-09-20T18:53:33.090Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -252,7 +252,7 @@
     "SystemManager/index.html",
     "SystemManager/assets/css/visitor-analytics.css"
   ],
-  "previousReleaseVersion": "2026.09.20.10",
+  "previousReleaseVersion": "2026.09.20.11",
   "integrity": {
     "index.html": {
       "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
@@ -935,8 +935,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "5ca140f001ea31636f68dc462f67df3563028bc9abe79e2a00c714a04d37ed5e",
-      "size": 13659
+      "sha256": "c51f65aa5da2a241a4ce5a22865978d8a90f8ce5b028b63d393f76ca2d37b700",
+      "size": 13660
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1171,8 +1171,8 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "28144d46874a707ef5fc2daa51044d89b67fefcfd72dbc2026a844934bf30e0b",
-      "size": 7152
+      "sha256": "9dedd9194b116ed1672493c6ce9d3352294d0d605719540f437c8d82d3485c4e",
+      "size": 7154
     },
     "assets/css/navigation.css": {
       "sha256": "46b0306da33e8fbe47c9973e626c6aa41a4f1df596f1d7171292ded7b5111144",
@@ -1183,12 +1183,12 @@
       "size": 835
     },
     "assets/js/navigation-app.js": {
-      "sha256": "f2d045743365eac894495bfef42d7a9b9331205a7c5f3888f2dc7fc8bc79dc9a",
-      "size": 37718
+      "sha256": "ca99a1e6b6cc5471d841fe25ba567674827acaffb69e8ecdcc430aed6dd24f0f",
+      "size": 37784
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "e03b3fd67fa40a68170b991ece9b5d8efeb73313e9ffc5f4027c5a35e2b81dd9",
-      "size": 17295
+      "sha256": "dcedcd7c23be8b9aeb78f85e00a6da899a74c5b383e166f2de3d0b2b49fd1db3",
+      "size": 17418
     },
     "api/navigation-proxy.asp": {
       "sha256": "10a596287b2b38bced1bb07843bfbaaeb084af47d0dae08462382c86e1b5715a",
@@ -1235,9 +1235,11 @@
       "size": 3693
     }
   },
-  "releaseScope": "navigation-route-hotfix",
+  "releaseScope": "navigation-driving-restore",
   "uploadFiles": [
-    "api/navigation-proxy.asp",
+    "road.html",
+    "assets/js/navigation-app.js",
+    "assets/js/navigation-providers.js",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

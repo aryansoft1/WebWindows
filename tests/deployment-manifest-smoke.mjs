@@ -96,6 +96,14 @@ if (manifest.releaseScope === "navigation-map") {
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json",
   ], "navigation route hotfixes must upload only the route proxy and release metadata");
+} else if (manifest.releaseScope === "navigation-driving-restore") {
+  assert.deepEqual(uploadFiles, [
+    "road.html",
+    "assets/js/navigation-app.js",
+    "assets/js/navigation-providers.js",
+    "data/apps/system-apps.json",
+    "deploy/ftp-manifest.json",
+  ], "navigation driving restore must upload only the navigation client and release metadata");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

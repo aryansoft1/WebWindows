@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const files = [
+  "api/navigation-proxy.asp",
   "inc/sysinfo.asp",
   "api/storage-quota.asp",
   "api/dt_discovery.asp",

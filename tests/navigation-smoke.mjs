@@ -72,22 +72,48 @@ const proxied=load({config:{proxyEndpoint:"/maps/navigation"},fetchImpl:async (u
   proxyRequest={url:String(url),body:JSON.parse(options.body)};
   return {ok:true,status:200,json:async()=>({coordinateSystem:"WGS84",geometry:[[139.7671,35.6812],[139.6917,35.6895]],distance:12340,duration:1800,steps:[{type:"depart",name:"东京",instruction:"出发"},{type:"arrive",name:"新宿",instruction:"到达"}],costs:{currency:"JPY",toll:null,icCard:208,cash:210}})};
 }});
-const paidRoute=await proxied.route({name:"东京",lat:35.6812,lng:139.7671,country:"JP"},{name:"新宿",lat:35.6895,lng:139.6917,country:"JP"},"transit","global-proxy");
+const paidRoute=await proxied.route({name:"东京",lat:35.6812,lng:139.7671,country:"JP"},{name:"新宿",lat:35.6895,lng:139.6917,country:"JP"},"driving","global-proxy");
 assert.match(proxyRequest.url,/service=route/);
 assert.equal(proxyRequest.body.includeCosts,true);
 assert.equal(paidRoute.costs.toll,null);
 assert.equal(paidRoute.costs.icCard,208);
 assert.equal(paidRoute.costs.cash,210);
-let googleRequest;
-const google=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async (url,options)=>{
-  googleRequest={url:String(url),body:JSON.parse(options.body)};
-  return {ok:true,status:200,json:async()=>({provider:"google",coordinateSystem:"WGS84",raw:{routes:[{distanceMeters:1320,duration:"620s",polyline:{encodedPolyline:"_p~iF~ps|U_ulLnnqC_mqNvxq`@"},legs:[{steps:[{distanceMeters:120,navigationInstruction:{instructions:"向东步行"}}]}],localizedValues:{transitFare:{units:"210",currencyCode:"JPY"}}}]}})};
+let orsRequest;
+const ors=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async (url,options)=>{
+  orsRequest={url:String(url),body:JSON.parse(options.body)};
+  return {ok:true,status:200,json:async()=>({provider:"ors",coordinateSystem:"WGS84",geometry:[[139.7671,35.6812],[139.6917,35.6895]],distance:1320,duration:620,steps:[{type:"continue",instruction:"向东步行",distance:120}],costs:{available:false}})};
 }});
-const googleRoute=await google.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"walking","auto");
-assert.match(googleRequest.url,/provider=global-proxy/);
-assert.equal(googleRoute.distance,1320);
-assert.ok(googleRoute.geometry.length>=2);
-assert.equal(googleRoute.steps[0].instruction,"向东步行");
+const orsRoute=await ors.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"walking","auto");
+assert.match(orsRequest.url,/provider=global-proxy/);
+assert.equal(orsRequest.body.mode,"walking");
+assert.equal(orsRoute.distance,1320);
+assert.equal(orsRoute.geometry.length,2);
+assert.equal(orsRoute.steps[0].instruction,"向东步行");
+
+const unsupportedTransit=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async()=>({ok:false,status:422,json:async()=>({error:{code:"unsupported_mode",message:"Public transit routing is unavailable."}})})});
+const unsupportedRoute=await unsupportedTransit.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"transit","auto");
+assert.equal(unsupportedRoute.routeUnavailable,true);
+assert.equal(unsupportedRoute.unsupportedMode,true);
+assert.equal(unsupportedRoute.errorCode,"unsupported_mode");
+assert.equal(unsupportedRoute.geometry.length,0);
+
+for(const scenario of [
+  {status:503,code:"provider_not_configured"},
+  {status:502,code:"provider_http_error"},
+  {status:504,code:"provider_timeout"},
+  {status:401,code:"provider_http_error"},
+  {status:403,code:"provider_http_error"},
+  {status:429,code:"provider_rate_limited"},
+  {status:502,code:"provider_invalid_response"},
+  {status:404,code:"route_not_found"}
+]){
+  const failed=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async()=>({ok:false,status:scenario.status,json:async()=>({error:{code:scenario.code,message:"Route unavailable."}})})});
+  const result=await failed.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"walking","auto");
+  assert.equal(result.routeUnavailable,true,scenario.code);
+  assert.equal(result.geometry.length,0,`${scenario.code} must not create a fake route`);
+  assert.equal(result.errorCode,scenario.code);
+  assert.doesNotMatch(result.error.message,/Authorization|WEBWINDOWS_ORS_API_KEY/i);
+}
 let amapRequest;
 const amap=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async (url,options)=>{
   amapRequest={url:String(url),body:JSON.parse(options.body)};
@@ -136,10 +162,34 @@ assert.match(deskTalkSource,/WebWindowsDeskTalk/);
 assert.match(deskTalkSource,/不接受坐标/);
 assert.match(languageSource,/"问道": "Wendao"/);
 assert.match(proxySource,/ReadUtf8File\(Server\.MapPath\("navigation-proxy\.config\.asp"\)\)/);
-assert.doesNotMatch(proxySource,/Function EnvironmentValue/);
+assert.match(proxySource,/Function EnvironmentValue/);
+const routingSecretSource=proxySource.slice(proxySource.indexOf("Function RoutingSecret"),proxySource.indexOf("End Function",proxySource.indexOf("Function RoutingSecret")));
+assert.ok(routingSecretSource.indexOf("EnvironmentValue(name)")<routingSecretSource.indexOf("RoutingConfigText"),"environment values must be checked before private config values");
 assert.match(proxyConfigTemplate,/WEBWINDOWS_AMAP_KEY/);
 assert.match(proxyConfigTemplate,/WEBWINDOWS_BAIDU_MAP_AK/);
-assert.match(proxyConfigTemplate,/WEBWINDOWS_GOOGLE_ROUTES_API_KEY/);
+assert.match(proxyConfigTemplate,/WEBWINDOWS_ORS_API_KEY/);
+assert.doesNotMatch(proxyConfigTemplate,/GOOGLE_ROUTES/);
+assert.match(proxySource,/https:\/\/api\.openrouteservice\.org\/v2\/directions\//);
+assert.match(proxySource,/\/geojson/);
+assert.match(proxySource,/"driving-car"/);
+assert.match(proxySource,/"foot-walking"/);
+assert.match(proxySource,/"cycling-regular"/);
+assert.match(proxySource,/setRequestHeader "Authorization", authorization/);
+assert.match(proxySource,/JsonNumber\(originLng\).*JsonNumber\(originLat\).*JsonNumber\(destinationLng\).*JsonNumber\(destinationLat\)/s);
+assert.match(proxySource,/"unsupported_mode"/);
+assert.match(proxySource,/"provider_not_configured"/);
+assert.match(proxySource,/"provider_http_error"/);
+assert.match(proxySource,/"provider_timeout"/);
+assert.match(proxySource,/"provider_rate_limited"/);
+assert.match(proxySource,/"provider_invalid_response"/);
+assert.match(proxySource,/"route_not_found"/);
+assert.ok(proxySource.indexOf("AmapRouteUrl")<proxySource.indexOf("BaiduRouteUrl"),"mainland routing must try Amap before Baidu");
+const mainlandProxySource=proxySource.slice(proxySource.indexOf("Sub ProxyChina"),proxySource.indexOf("End Sub",proxySource.indexOf("Sub ProxyChina")));
+assert.doesNotMatch(mainlandProxySource,/ProxyOrs|openrouteservice|WEBWINDOWS_ORS/);
+assert.doesNotMatch(proxySource,/Google|googleapis|X-Goog/i);
+assert.doesNotMatch(providerSource,/Google Routes|normalizeGoogle|decodePolyline/);
+assert.doesNotMatch(proxySource,/responseText.*WriteError|WriteError.*responseText/i,"upstream response bodies must not be exposed in errors");
+assert.doesNotMatch(proxySource,/Response\.Write[^\r\n]*(?:apiKey|authorization)/i,"secrets must not be written to route responses");
 assert.match(deploySource,/routing_config=preserved/);
 assert.match(deploySource,/routing_config=created/);
 

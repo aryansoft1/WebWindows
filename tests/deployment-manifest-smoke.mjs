@@ -46,11 +46,11 @@ const onlineReleaseFiles = [
 ];
 if (manifest.releaseScope === "navigation-map") {
   assert.deepEqual(uploadFiles, [
-    "assets/css/navigation.css",
+    "road.html",
     "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js",
-    "data/apps/system-apps.json",
-    "road.html",
+    "api/navigation-proxy.asp",
+    "api/navigation-proxy.config.example.asp",
     "deploy/ftp-manifest.json",
   ], "navigation map releases must upload only the navigation runtime slice");
 } else if (manifest.releaseScope === "camera-registry") {

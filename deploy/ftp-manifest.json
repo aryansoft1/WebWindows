@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.20.5",
   "catalogVersion": "2026.09.20.5",
-  "generatedAt": "2026-09-20T13:45:53.477Z",
+  "generatedAt": "2026-09-20T14:38:24.083Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -1163,7 +1163,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "6538d1b0ea31935959e75a5bbf05143d8c96f0cc192ca7d1fd42e2c112475e25",
+      "sha256": "45d990cb92b7455fd2db7f3373d648ab8671c76b2720fe169a424525aac08359",
       "size": 7152
     },
     "assets/css/navigation.css": {
@@ -1175,31 +1175,33 @@
       "size": 835
     },
     "assets/js/navigation-app.js": {
-      "sha256": "3743aed4bcaee4fbae9b586ee47098f959f2db27e738824a8c2970fd8a2271b9",
-      "size": 36921
+      "sha256": "f2d045743365eac894495bfef42d7a9b9331205a7c5f3888f2dc7fc8bc79dc9a",
+      "size": 37718
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "12aa192e42001ec7386d6db0989681409399d49d8795c161fab72979608b0558",
-      "size": 18624
+      "sha256": "e03b3fd67fa40a68170b991ece9b5d8efeb73313e9ffc5f4027c5a35e2b81dd9",
+      "size": 17295
     },
     "api/navigation-proxy.asp": {
-      "sha256": "aa13b048e20db4e054169ee57ccf4a0b3cea1e57f2b18913c08f407c5d8166bd",
-      "size": 10648
+      "sha256": "0ae37b3d179006b12ec36313726d82b920ec597bc751b1f84b179e66a5dfa580",
+      "size": 18426
     },
     "assets/js/navigation-config.js": {
       "sha256": "ec9622450ca2f6710a79300cd9a2fd539da8c31a505d3c1bdfe6f5c767c61ca3",
       "size": 184
     },
     "api/navigation-proxy.config.example.asp": {
-      "sha256": "6986830023a3125ed3e53d377f3953b48d09f568c931b2760ef946a59242a670",
-      "size": 266
+      "sha256": "a79880f648f3f9d97f70c69d2595f7777a6e47c327ab5b9280729073169ea175",
+      "size": 256
     }
   },
   "releaseScope": "navigation-map",
   "uploadFiles": [
+    "road.html",
+    "assets/js/navigation-app.js",
+    "assets/js/navigation-providers.js",
     "api/navigation-proxy.asp",
     "api/navigation-proxy.config.example.asp",
-    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]
 }

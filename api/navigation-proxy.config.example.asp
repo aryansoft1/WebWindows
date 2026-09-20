@@ -3,5 +3,5 @@
 ' the provider keys. The real config is ignored by Git and emits no output.
 Const WEBWINDOWS_AMAP_KEY = ""
 Const WEBWINDOWS_BAIDU_MAP_AK = ""
-Const WEBWINDOWS_GOOGLE_ROUTES_API_KEY = ""
+Const WEBWINDOWS_ORS_API_KEY = ""
 %>

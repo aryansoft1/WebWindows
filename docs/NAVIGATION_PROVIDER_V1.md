@@ -12,6 +12,8 @@
 
 底图、地理编码、附近地点和路线必须视为独立能力。页面只调用 `WebWindowsNavigation`；在线请求统一发送给管理员配置的同源 `proxyEndpoint`，并包含 `service=geocode|nearby|route` 和 `provider=cn-proxy|global-proxy`。代理负责供应商鉴权、速率限制、缓存、字段裁剪、许可归属和错误归一化。
 
+普通用户界面不暴露供应商切换。运行时按范围和能力自动选择：大陆范围内使用高德；海外驾车使用 OSRM，步行和骑行使用 openrouteservice，公共交通使用 Transitous。Photon/OSRM 公共实例仅作为轻量社区能力，不作为可手动选择的生产供应商。
+
 - 应用内部和海外 provider 使用 WGS-84。
 - 大陆 provider 边界使用 GCJ-02；适配器提供 WGS-84/GCJ-02 转换，并将台湾、香港、澳门排除在大陆自动转换范围外。精确测绘或合规要求应以获批供应商 SDK/服务端结果为准。
 - 不允许在页面配置、源码、查询日志或 URL 中存放秘密服务端 Key。可公开的 Web Token 也必须按供应商要求限制域名、权限和环境。

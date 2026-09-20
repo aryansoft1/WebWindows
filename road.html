@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="assets/css/navigation.css?v=20260920-5">
   <script defer src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
   <script defer src="assets/js/navigation-config.js?v=20260920-5"></script>
-  <script defer src="assets/js/navigation-providers.js?v=20260921-3"></script>
-  <script defer src="assets/js/navigation-app.js?v=20260921-2"></script>
+  <script defer src="assets/js/navigation-providers.js?v=20260921-4"></script>
+  <script defer src="assets/js/navigation-app.js?v=20260921-4"></script>
 </head>
 <body>
   <main class="navigation-shell">
@@ -40,7 +40,7 @@
       </div>
       <div class="route-actions">
         <button id="route-button" class="primary-button" type="button" data-i18n="planRoute">开始规划</button>
-        <label class="provider-select"><span data-i18n="mapService">地图服务</span><select id="provider-mode"><option value="auto" data-i18n="autoSelect" selected>自动选择</option><option value="community" data-i18n="communityMap">全球社区地图</option><option value="cn-proxy" data-i18n="chinaService">中国大陆服务</option><option value="global-proxy" data-i18n="adminService">全球路线服务</option><option value="offline" data-i18n="offlineFallback">离线降级</option></select></label>
+        <input id="provider-mode" type="hidden" value="auto">
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <section id="route-result" class="route-result" hidden aria-label="路线结果" data-i18n-aria="routeResult">

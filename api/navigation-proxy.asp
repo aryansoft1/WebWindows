@@ -291,13 +291,14 @@ Function JsonNumberOrNull(value)
 End Function
 
 Sub WriteOrsRoute(rawJson, travelMode)
-  If InStr(1, Replace(rawJson, " ", ""), Q & "features" & Q & ":[]", vbTextCompare) > 0 Then WriteError "404 Not Found", "route_not_found", "No route was found between these locations."
-  Dim geometryObject : geometryObject = ExtractObjectAfter(rawJson, Q & "geometry" & Q)
+  Dim safeJson : safeJson = CStr(rawJson & "")
+  If InStr(1, Replace(safeJson, " ", ""), Q & "features" & Q & ":[]", vbBinaryCompare) > 0 Then WriteError "404 Not Found", "route_not_found", "No route was found between these locations."
+  Dim geometryObject : geometryObject = ExtractObjectAfter(safeJson, Q & "geometry" & Q)
   Dim coordinates : coordinates = ExtractArrayAfter(geometryObject, Q & "coordinates" & Q)
-  Dim summaryObject : summaryObject = ExtractObjectAfter(rawJson, Q & "summary" & Q)
+  Dim summaryObject : summaryObject = ExtractObjectAfter(safeJson, Q & "summary" & Q)
   Dim distance : distance = ExtractNumber(summaryObject, "distance")
   Dim duration : duration = ExtractNumber(summaryObject, "duration")
-  Dim steps : steps = ExtractRouteSteps(rawJson)
+  Dim steps : steps = ExtractRouteSteps(safeJson)
   If Len(coordinates) = 0 Or Len(distance) = 0 Or Len(duration) = 0 Then WriteError "502 Bad Gateway", "provider_invalid_response", "The routing provider returned an invalid response."
   Response.Status = "200 OK"
   Response.Write "{" & Q & "provider" & Q & ":" & Q & "ors" & Q & "," & Q & "mode" & Q & ":" & Q & travelMode & Q & "," & Q & "coordinateSystem" & Q & ":" & Q & "WGS84" & Q & "," & Q & "geometry" & Q & ":" & coordinates & "," & Q & "distance" & Q & ":" & distance & "," & Q & "duration" & Q & ":" & duration & "," & Q & "steps" & Q & ":" & steps & "," & Q & "costs" & Q & ":{" & Q & "available" & Q & ":false}}"
@@ -307,7 +308,7 @@ End Sub
 Sub ProviderFailure(result)
   If result(2) Then WriteError "504 Gateway Timeout", "provider_timeout", "The routing provider did not respond in time."
   Dim compact : compact = Replace(Replace(Replace(Replace(result(1), " ", ""), vbCr, ""), vbLf, ""), vbTab, "")
-  If InStr(1, compact, Q & "code" & Q & ":2009", vbTextCompare) > 0 Or InStr(1, compact, Q & "code" & Q & ":2016", vbTextCompare) > 0 Then WriteError "404 Not Found", "route_not_found", "No route was found between these locations."
+  If InStr(1, compact, Q & "code" & Q & ":2009", vbBinaryCompare) > 0 Or InStr(1, compact, Q & "code" & Q & ":2016", vbBinaryCompare) > 0 Then WriteError "404 Not Found", "route_not_found", "No route was found between these locations."
   If result(0) = 429 Then
     Response.AddHeader "Retry-After", "5"
     WriteError "429 Too Many Requests", "provider_rate_limited", "The routing service is busy. Please try again later."
@@ -404,7 +405,7 @@ End Function
 
 Function ExtractBalancedAfter(json, marker, openChar, closeChar)
   ExtractBalancedAfter = ""
-  Dim markerPosition : markerPosition = InStr(1, json, marker, vbTextCompare)
+  Dim markerPosition : markerPosition = InStr(1, CStr(json & ""), marker, vbBinaryCompare)
   If markerPosition = 0 Then Exit Function
   Dim startPosition : startPosition = InStr(markerPosition + Len(marker), json, openChar, vbBinaryCompare)
   If startPosition = 0 Then Exit Function
@@ -437,7 +438,7 @@ End Function
 Function ExtractNumber(json, key)
   ExtractNumber = ""
   Dim re : Set re = New RegExp
-  re.Pattern = Q & key & Q & "\s*:\s*(-?[0-9]+(?:\.[0-9]+)?)"
+  re.Pattern = Q & key & Q & "\s*:\s*" & Q & "?(-?[0-9]+(?:\.[0-9]+)?)" & Q & "?"
   re.IgnoreCase = True
   Dim matches : Set matches = re.Execute(json)
   If matches.Count > 0 Then ExtractNumber = matches(0).SubMatches(0)

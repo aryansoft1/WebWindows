@@ -14,11 +14,13 @@ const files = [
   "admin_api/getDatacenters.asp",
   "admin_api/saveDatacenter.asp",
   "admin_api/deleteDatacenter.asp",
+  "admin_api/visitorAnalytics.asp",
   "cloud/browser/files.asp",
   "cloud/browser/openResource.asp",
   "cloud/browser/private-files.asp",
   "cloud/browser/private-resource.asp",
-  "cloud/browser/search.asp"
+  "cloud/browser/search.asp",
+  "api/visitor-analytics.asp"
 ];
 
 for (const relative of files) {

@@ -175,6 +175,7 @@ assert.match(proxySource,/"driving-car"/);
 assert.match(proxySource,/"foot-walking"/);
 assert.match(proxySource,/"cycling-regular"/);
 assert.match(proxySource,/setRequestHeader "Authorization", authorization/);
+assert.match(proxySource,/setRequestHeader "Accept", "application\/geo\+json"/);
 assert.match(proxySource,/JsonNumber\(originLng\).*JsonNumber\(originLat\).*JsonNumber\(destinationLng\).*JsonNumber\(destinationLat\)/s);
 assert.match(proxySource,/"unsupported_mode"/);
 assert.match(proxySource,/"provider_not_configured"/);

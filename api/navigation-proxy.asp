@@ -144,7 +144,11 @@ Function HttpRequest(method, url, payload, authorization, timeoutMs)
   End If
   http.setTimeouts 10000, 10000, 30000, timeoutMs
   http.open method, url, False
-  http.setRequestHeader "Accept", "application/json"
+  If InStr(1, url, "https://api.openrouteservice.org/", vbTextCompare) = 1 Then
+    http.setRequestHeader "Accept", "application/geo+json"
+  Else
+    http.setRequestHeader "Accept", "application/json"
+  End If
   If method = "POST" Then http.setRequestHeader "Content-Type", "application/json"
   If Len(authorization) > 0 Then http.setRequestHeader "Authorization", authorization
   http.send payload

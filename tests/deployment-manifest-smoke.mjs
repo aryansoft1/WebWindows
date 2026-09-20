@@ -90,6 +90,12 @@ if (manifest.releaseScope === "navigation-map") {
     "dist-window/window-manager-widget.umd.js",
     "deploy/ftp-manifest.json",
   ], "camera recovery releases must upload only the camera and window runtime slice");
+} else if (manifest.releaseScope === "navigation-route-hotfix") {
+  assert.deepEqual(uploadFiles, [
+    "api/navigation-proxy.asp",
+    "data/apps/system-apps.json",
+    "deploy/ftp-manifest.json",
+  ], "navigation route hotfixes must upload only the route proxy and release metadata");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

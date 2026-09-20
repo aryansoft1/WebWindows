@@ -7,14 +7,14 @@ const languageCatalog = {
     "网络与连接": "網路與連線", "简体中文": "簡體中文", "繁體中文": "繁體中文", "网站建设": "網站建置",
     "云服务": "雲端服務", "云秘书": "雲端秘書", "软件开发": "軟體開發", "对日外包": "對日委外",
     "新闻中心": "新聞中心", "联系我们": "聯絡我們", "开始": "開始", "刷新": "重新整理",
-    "关闭": "關閉", "最大化": "最大化", "最小化": "最小化", "邮件": "郵件", "认识我": "認識我"
+    "关闭": "關閉", "最大化": "最大化", "最小化": "最小化", "邮件": "郵件", "认识我": "認識我", "问道": "問道"
   },
   en: {
     "设置": "Settings", "语言与区域": "Language & Region", "桌面壁纸": "Desktop Wallpaper", "显示设置": "Display",
     "网络与连接": "Network & Connectivity", "简体中文": "Simplified Chinese", "繁體中文": "Traditional Chinese", "网站建设": "Web Development",
     "云服务": "Cloud Services", "云秘书": "Cloud Assistant", "软件开发": "Software Development", "对日外包": "Japan Outsourcing",
     "新闻中心": "News", "联系我们": "Contact Us", "开始": "Start", "刷新": "Refresh", "关闭": "Close",
-    "最大化": "Maximize", "最小化": "Minimize", "邮件": "Mail", "认识我": "About WebWindows",
+    "最大化": "Maximize", "最小化": "Minimize", "邮件": "Mail", "认识我": "About WebWindows", "问道": "Wendao",
     "显示语言": "Display Language", "地区设置": "Region", "界面缩放": "Interface Scale", "当前分辨率": "Resolution",
     "网络已连接": "Network connected", "网络已断开": "Network disconnected", "接入类型": "Connection type",
     "网络质量": "Network quality", "往返延迟": "Round-trip latency", "节省流量": "Data saver"
@@ -24,7 +24,7 @@ const languageCatalog = {
     "网络与连接": "ネットワークと接続", "简体中文": "簡体中国語", "繁體中文": "繁体中国語", "网站建设": "Web 開発",
     "云服务": "クラウドサービス", "云秘书": "クラウド秘書", "软件开发": "ソフトウェア開発", "对日外包": "日本向けアウトソーシング",
     "新闻中心": "ニュース", "联系我们": "お問い合わせ", "开始": "開始", "刷新": "更新", "关闭": "閉じる",
-    "最大化": "最大化", "最小化": "最小化", "邮件": "メール", "认识我": "WebWindows について",
+    "最大化": "最大化", "最小化": "最小化", "邮件": "メール", "认识我": "WebWindows について", "问道": "問道",
     "显示语言": "表示言語", "地区设置": "地域", "界面缩放": "表示倍率", "当前分辨率": "解像度",
     "网络已连接": "ネットワーク接続済み", "网络已断开": "ネットワーク切断",
     "接入类型": "接続種類", "网络质量": "ネットワーク品質", "往返延迟": "往復遅延", "节省流量": "データセーバー"
@@ -34,7 +34,6 @@ const languageCatalog = {
 // 共通桌面、设置、云资料与编辑器词汇。动态创建的窗口也通过同一目录翻译，
 // 避免各功能分别维护语言状态而出现一半中文、一半目标语言。
 Object.assign(languageCatalog.en, {
-  "正在启动 WebWindows…": "Starting WebWindows…",
   "功能管理": "Features", "使用向导": "User Guide", "中国大陆（北京时间）": "Mainland China (Beijing Time)",
   "日本（日本标准时间）": "Japan (Japan Standard Time)", "台湾（台北时间）": "Taiwan (Taipei Time)",
   "地区会同步更新任务栏时钟、日期和日历节假日区域。": "The region controls the taskbar clock, date, calendar, and holidays.",
@@ -111,7 +110,6 @@ Object.assign(languageCatalog.en, {
 });
 
 Object.assign(languageCatalog.jp, {
-  "正在启动 WebWindows…": "WebWindows を起動しています…",
   "功能管理": "機能管理", "使用向导": "利用ガイド", "中国大陆（北京时间）": "中国本土（北京時間）",
   "日本（日本标准时间）": "日本（日本標準時）", "台湾（台北时间）": "台湾（台北時間）",
   "地区会同步更新任务栏时钟、日期和日历节假日区域。": "地域はタスクバーの時刻、日付、カレンダー、祝日に反映されます。",
@@ -189,7 +187,6 @@ Object.assign(languageCatalog.jp, {
 
 // 设备操作专题：保持菜单和会话遮罩为完整句翻译，避免长句被旧词条局部替换。
 Object.assign(languageCatalog.tw, {
-  "正在启动 WebWindows…": "正在啟動 WebWindows…",
   "WebWindows 会话与设备操作": "WebWindows 工作階段與裝置操作",
   "锁定 WebWindows": "鎖定 WebWindows",
   "休眠 WebWindows 会话": "讓 WebWindows 工作階段休眠",
@@ -255,7 +252,7 @@ Object.assign(languageCatalog.jp, {
 // 设备体验专题：状态文本由脚本动态生成，仍统一走同一语言目录。
 Object.assign(languageCatalog.tw, {
   "电池状态": "電池狀態", "电池已断开": "電池已斷開", "电量未知": "電量未知",
-  "正在充电": "正在充電", "已接电源": "已接電源", "使用电池": "使用電池", "任务视图": "工作檢視", "窗口": "視窗",
+  "正在充电": "正在充電", "使用电池": "使用電池", "任务视图": "工作檢視", "窗口": "視窗",
   "窗口内容暂不可用。": "暫時無法取得視窗內容。",
   "跨域窗口内容受浏览器保护，无法生成内容缩略。": "跨來源視窗內容受瀏覽器保護，無法產生內容預覽。",
   "窗口已打开，暂无可读取的文字内容。": "視窗已開啟，目前沒有可讀取的文字內容。",
@@ -301,7 +298,7 @@ Object.assign(languageCatalog.en, {
   "用户名": "Username", "密码": "Password", "开发者中心": "Developer Center", "设备像素比": "device pixel ratio",
   "正在保存": "Saving", "保存失败": "Save failed", "未保存": "Unsaved",
   "电池状态": "Battery status", "电池已断开": "Battery disconnected", "电量未知": "Battery level unknown",
-  "正在充电": "Charging", "已接电源": "Plugged in", "使用电池": "On battery", "任务视图": "Task view", "窗口": "Window",
+  "正在充电": "Charging", "使用电池": "On battery", "任务视图": "Task view", "窗口": "Window",
   "窗口内容暂不可用。": "Window content is temporarily unavailable.",
   "跨域窗口内容受浏览器保护，无法生成内容缩略。": "Cross-origin window content is protected by the browser, so no content preview is available.",
   "窗口已打开，暂无可读取的文字内容。": "The window is open but has no readable text content.",
@@ -324,7 +321,7 @@ Object.assign(languageCatalog.jp, {
   "用户名": "ユーザー名", "密码": "パスワード", "开发者中心": "開発者センター", "设备像素比": "デバイスピクセル比",
   "正在保存": "保存中", "保存失败": "保存に失敗しました", "未保存": "未保存",
   "电池状态": "バッテリー状態", "电池已断开": "バッテリーが切断されています", "电量未知": "バッテリー残量不明",
-  "正在充电": "充電中", "已接电源": "電源に接続済み", "使用电池": "バッテリー使用中", "任务视图": "タスクビュー", "窗口": "ウィンドウ",
+  "正在充电": "充電中", "使用电池": "バッテリー使用中", "任务视图": "タスクビュー", "窗口": "ウィンドウ",
   "窗口内容暂不可用。": "ウィンドウの内容は現在利用できません。",
   "跨域窗口内容受浏览器保护，无法生成内容缩略。": "別オリジンのウィンドウ内容はブラウザーで保護されているため、内容プレビューを生成できません。",
   "窗口已打开，暂无可读取的文字内容。": "ウィンドウは開いていますが、読み取れるテキストはありません。",
@@ -341,50 +338,6 @@ Object.assign(languageCatalog.jp, {
   "测试中：正在下载最多约 2 MB 测试数据……": "テスト中：最大約 2 MB のテストデータをダウンロードしています…",
   "完成：下载": "完了：ダウンロード", " MB，用时 ": " MB、所要時間 ", "用时": "所要時間", "秒。结果仅代表当前设备到 WebWindows 站点的下载速度。": "秒。この結果は現在のデバイスから WebWindows サイトまでのダウンロード速度のみを示します。",
   "测速已取消，已停止继续下载。": "速度テストをキャンセルし、ダウンロードを停止しました。", "测速失败：": "速度テスト失敗：", "网络请求失败": "ネットワーク要求に失敗しました"
-});
-
-// 链路测速 v2：完整短语优先，避免动态状态被逐词替换后出现混合语言。
-Object.assign(languageCatalog.tw, {
-  "到 WebWindows 服务节点的链路速度": "到 WebWindows 服務節點的連線速度",
-  "仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。": "只在你點擊後測試，不取得或顯示 IP。平均值只統計預熱後的穩定取樣區間；行動網路可能產生流量費用。",
-  "测试档位": "測試級別", "测速流量档位": "測速流量級別", "轻量（约 2–4 MB）": "輕量（約 2–4 MB）",
-  "标准（自适应，最多约 24 MB）": "標準（自適應，最多約 24 MB）", "实时上下行链路速度": "即時上下行連線速度",
-  "横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。": "橫軸為測試時間，縱軸為 Mbps；藍線表示下載，綠線表示上傳。",
-  "链路速度统计": "連線速度統計", "下载": "下載", "上传": "上傳", "当前": "目前", "平均": "平均", "峰值": "峰值", "延迟": "延遲", "抖动": "抖動", "时间": "時間", "秒": "秒", "当前下载": "目前下載", "当前上传": "目前上傳",
-  "正在使用": "正在使用", "轻量": "輕量", "标准": "標準", "档测试到 WebWindows 服务节点的链路速度。": "級別測試到 WebWindows 服務節點的連線速度。", "下载稳定采样": "下載穩定取樣", "上传稳定采样": "上傳穩定取樣", "稳定区间平均": "穩定區間平均",
-  "测量延迟与抖动": "測量延遲與抖動", "下载预热（不计入平均值）": "下載預熱（不計入平均值）", "上传预热（不计入平均值）": "上傳預熱（不計入平均值）",
-  "测速完成。平均值仅统计预热后的稳定采样区间。重测可观察不同时间的波动。": "測速完成。平均值只統計預熱後的穩定取樣區間；重新測試可觀察不同時間的波動。",
-  "测速已取消，已停止所有请求。": "測速已取消，所有請求均已停止。", "测速超时，已停止所有请求。": "測速逾時，所有請求均已停止。",
-  "结果仅代表当前设备到 WebWindows 服务节点的链路。": "結果只代表目前裝置到 WebWindows 服務節點的連線。",
-  "重新测速": "重新測速", "已停止": "已停止", "完成": "完成", "失败": "失敗"
-});
-Object.assign(languageCatalog.en, {
-  "到 WebWindows 服务节点的链路速度": "Link speed to the WebWindows service node",
-  "仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。": "Runs only when you click. It does not obtain or display your IP. Averages include only the stable interval after warm-up; mobile data charges may apply.",
-  "测试档位": "Test profile", "测速流量档位": "Speed-test traffic profile", "轻量（约 2–4 MB）": "Light (about 2–4 MB)",
-  "标准（自适应，最多约 24 MB）": "Standard (adaptive, up to about 24 MB)", "实时上下行链路速度": "Live download and upload link speed",
-  "横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。": "The horizontal axis is time and the vertical axis is Mbps; blue is download and green is upload.",
-  "链路速度统计": "Link-speed statistics", "下载": "Download", "上传": "Upload", "当前": "Current", "平均": "Average", "峰值": "Peak", "延迟": "Latency", "抖动": "Jitter", "时间": "Time", "秒": "s", "当前下载": "Current download", "当前上传": "Current upload",
-  "正在使用": "Running the ", "轻量": "light", "标准": "standard", "档测试到 WebWindows 服务节点的链路速度。": " profile to test the link to the WebWindows service node.", "下载稳定采样": "Stable download sample", "上传稳定采样": "Stable upload sample", "稳定区间平均": "Stable-interval average",
-  "测量延迟与抖动": "Measuring latency and jitter", "下载预热（不计入平均值）": "Download warm-up (excluded from average)", "上传预热（不计入平均值）": "Upload warm-up (excluded from average)",
-  "测速完成。平均值仅统计预热后的稳定采样区间。重测可观察不同时间的波动。": "Test complete. Averages include only the stable interval after warm-up; retest to observe variation over time.",
-  "测速已取消，已停止所有请求。": "Speed test canceled; all requests have stopped.", "测速超时，已停止所有请求。": "Speed test timed out; all requests have stopped.",
-  "结果仅代表当前设备到 WebWindows 服务节点的链路。": "The result represents only this device's link to the WebWindows service node.",
-  "重新测速": "Retest", "已停止": "Stopped", "完成": "Complete", "失败": "Failed"
-});
-Object.assign(languageCatalog.jp, {
-  "到 WebWindows 服务节点的链路速度": "WebWindows サービスノードまでのリンク速度",
-  "仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。": "クリックした場合のみ測定し、IP は取得・表示しません。平均値はウォームアップ後の安定区間のみを対象とします。モバイル通信料が発生する場合があります。",
-  "测试档位": "テストモード", "测速流量档位": "速度テストの通信量モード", "轻量（约 2–4 MB）": "軽量（約 2～4 MB）",
-  "标准（自适应，最多约 24 MB）": "標準（自動調整、最大約 24 MB）", "实时上下行链路速度": "リアルタイムのダウンロード・アップロード速度",
-  "横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。": "横軸はテスト時間、縦軸は Mbps です。青線はダウンロード、緑線はアップロードを示します。",
-  "链路速度统计": "リンク速度の統計", "下载": "ダウンロード", "上传": "アップロード", "当前": "現在", "平均": "平均", "峰值": "ピーク", "延迟": "遅延", "抖动": "ジッター", "时间": "時間", "秒": "秒", "当前下载": "現在のダウンロード", "当前上传": "現在のアップロード",
-  "正在使用": "", "轻量": "軽量", "标准": "標準", "档测试到 WebWindows 服务节点的链路速度。": "モードで WebWindows サービスノードまでのリンク速度を測定しています。", "下载稳定采样": "ダウンロード安定サンプル", "上传稳定采样": "アップロード安定サンプル", "稳定区间平均": "安定区間の平均",
-  "测量延迟与抖动": "遅延とジッターを測定中", "下载预热（不计入平均值）": "ダウンロードのウォームアップ（平均値から除外）", "上传预热（不计入平均值）": "アップロードのウォームアップ（平均値から除外）",
-  "测速完成。平均值仅统计预热后的稳定采样区间。重测可观察不同时间的波动。": "速度テストが完了しました。平均値はウォームアップ後の安定区間のみを対象とします。再テストで時間帯による変動を確認できます。",
-  "测速已取消，已停止所有请求。": "速度テストをキャンセルし、すべてのリクエストを停止しました。", "测速超时，已停止所有请求。": "速度テストがタイムアウトし、すべてのリクエストを停止しました。",
-  "结果仅代表当前设备到 WebWindows 服务节点的链路。": "結果はこのデバイスから WebWindows サービスノードまでのリンクのみを示します。",
-  "重新测速": "再テスト", "已停止": "停止しました", "完成": "完了", "失败": "失敗"
 });
 
 Object.assign(languageCatalog.tw, {
@@ -409,386 +362,12 @@ Object.assign(languageCatalog.jp, {
   "当前浏览器或宿主不提供电源结构，相关项目明确显示为“未知”。": "このブラウザーまたはホストでは電源構成を取得できないため、関連項目は「不明」と表示します。"
 });
 
-Object.assign(languageCatalog.tw, {
-  "任务管理器": "工作管理員", "关闭任务管理器": "關閉工作管理員", "个正在运行的窗口": "個執行中的視窗",
-  "当前没有打开的窗口": "目前沒有開啟的視窗", "已最小化": "已最小化", "正在使用": "使用中",
-  "运行中": "執行中", "切换": "切換", "结束任务": "結束工作", "结束此窗口任务？未保存内容可能丢失。": "結束此視窗工作？未儲存的內容可能會遺失。"
-});
-Object.assign(languageCatalog.en, {
-  "任务管理器": "Task Manager", "关闭任务管理器": "Close Task Manager", "个正在运行的窗口": "running windows",
-  "当前没有打开的窗口": "No open windows", "已最小化": "Minimized", "正在使用": "In use",
-  "运行中": "Running", "切换": "Switch", "结束任务": "End task", "结束此窗口任务？未保存内容可能丢失。": "End this window task? Unsaved content may be lost."
-});
-Object.assign(languageCatalog.jp, {
-  "任务管理器": "タスク マネージャー", "关闭任务管理器": "タスク マネージャーを閉じる", "个正在运行的窗口": "個の実行中ウィンドウ",
-  "当前没有打开的窗口": "開いているウィンドウはありません", "已最小化": "最小化済み", "正在使用": "使用中",
-  "运行中": "実行中", "切换": "切り替え", "结束任务": "タスクを終了", "结束此窗口任务？未保存内容可能丢失。": "このウィンドウのタスクを終了しますか？未保存の内容が失われる可能性があります。"
-});
-
-// 系统信息：静态标签与异步状态共用同一目录，避免窗口主体停留在中文，
-// 也避免显示浏览器语言而不是 WebWindows 当前显示语言。
-Object.assign(languageCatalog.tw, {
-  "系统信息分类": "系統資訊分類", "设备与能力": "裝置與能力", "服务节点": "服務節點",
-  "版本与构建": "版本與組建", "当前版本": "目前版本", "读取中…": "讀取中…",
-  "构建时间": "組建時間", "上一版本": "上一版本", "版本数据来自部署清单，不另行维护副本。": "版本資料來自部署清單，不另行維護副本。",
-  "当前运行环境": "目前執行環境", "运行模式": "執行模式", "检测中…": "偵測中…", "语言": "語言",
-  "浏览器 / WebView": "瀏覽器 / WebView", "设备概要": "裝置概要", "逻辑处理器": "邏輯處理器",
-  "浏览器报告内存": "瀏覽器回報記憶體", "显示": "顯示", "实时状态": "即時狀態", "网络": "網路",
-  "电池 / 供电": "電池 / 供電", "存储 Provider": "儲存 Provider", "Device API capabilities": "Device API 能力",
-  "浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。": "瀏覽器或主機未提供的能力會明確顯示「不可用」，不會推測硬體資訊。",
-  "WebWindows 服务节点": "WebWindows 服務節點", "CPU 型号": "CPU 型號", "CPU 使用率": "CPU 使用率",
-  "内存使用": "記憶體使用量", "系统文件占用": "系統檔案占用", "已用：": "已用：", "剩余：": "剩餘：",
-  "总配额：": "總配額：", "未登录或不可用": "未登入或不可用", "数据中心未知": "資料中心未知",
-  "当前用户云资料空间使用率": "目前使用者雲端資料空間使用率",
-  "正在读取当前用户的数据中心空间分配…": "正在讀取目前使用者的資料中心空間配置…",
-  "这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。": "此處為服務節點資訊，不代表目前使用者的裝置。使用者空間依帳號所屬資料中心配置。",
-  "部署清单当前不可读取；未显示推测版本。": "目前無法讀取部署清單；不顯示推測版本。",
-  "移动设备": "行動裝置", "桌面设备": "桌面裝置", "在线": "線上", "外接供电": "外接電源",
-  "电池供电": "電池供電", "个已授权位置": "個已授權位置", "Device API 不可用": "Device API 不可用",
-  "未登录，无法读取用户空间": "未登入，無法讀取使用者空間", "数据中心未分配": "尚未配置資料中心",
-  "用户目录统计失败；未显示推测值。": "使用者目錄統計失敗；不顯示推測值。",
-  "账号未分配有效数据中心配额。": "帳號尚未配置有效的資料中心配額。",
-  "已超过分配空间，请清理文件或联系管理员调整配额。": "已超過配置空間，請清理檔案或聯絡管理員調整配額。",
-  "已使用": "已使用", "（兼容默认 1 GB）": "（相容預設 1 GB）", "配额或空间统计暂时不可用": "配額或空間統計暫時不可用"
-});
-Object.assign(languageCatalog.en, {
-  "系统信息分类": "System information categories", "设备与能力": "Device & Capabilities", "服务节点": "Service Node",
-  "版本与构建": "Version & Build", "当前版本": "Current version", "读取中…": "Loading…",
-  "构建时间": "Build time", "上一版本": "Previous version", "版本数据来自部署清单，不另行维护副本。": "Version data comes from the deployment manifest; no separate copy is maintained.",
-  "当前运行环境": "Current Environment", "运行模式": "Runtime mode", "检测中…": "Detecting…", "语言": "Language",
-  "浏览器 / WebView": "Browser / WebView", "设备概要": "Device Summary", "逻辑处理器": "Logical processors",
-  "浏览器报告内存": "Browser-reported memory", "显示": "Display", "实时状态": "Live Status", "网络": "Network",
-  "电池 / 供电": "Battery / Power", "存储 Provider": "Storage Provider",
-  "浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。": "Capabilities not provided by the browser or host are shown as unavailable; hardware information is never guessed.",
-  "WebWindows 服务节点": "WebWindows Service Node", "CPU 型号": "CPU model", "CPU 使用率": "CPU usage",
-  "内存使用": "Memory usage", "系统文件占用": "System files", "已用：": "Used:", "剩余：": "Remaining:",
-  "总配额：": "Total quota:", "未登录或不可用": "Not signed in or unavailable", "数据中心未知": "Data center unknown",
-  "当前用户云资料空间使用率": "Current user's Cloud Files storage usage",
-  "正在读取当前用户的数据中心空间分配…": "Reading the current user's data-center storage allocation…",
-  "这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。": "This is service-node information, not the current user's device. User storage is allocated by the account's data center.",
-  "部署清单当前不可读取；未显示推测版本。": "The deployment manifest is unavailable; no guessed version is shown.",
-  "移动设备": "Mobile device", "桌面设备": "Desktop device", "在线": "Online", "外接供电": "External power",
-  "电池供电": "Battery power", "个已授权位置": " authorized locations", "Device API 不可用": "Device API unavailable",
-  "未登录，无法读取用户空间": "Sign in to read user storage", "数据中心未分配": "No data center assigned",
-  "用户目录统计失败；未显示推测值。": "User directory statistics failed; no guessed value is shown.",
-  "账号未分配有效数据中心配额。": "The account has no valid data-center quota.",
-  "已超过分配空间，请清理文件或联系管理员调整配额。": "The allocation is exceeded. Delete files or ask an administrator to adjust the quota.",
-  "已使用": " used", "（兼容默认 1 GB）": " (legacy default 1 GB)", "配额或空间统计暂时不可用": "Quota or storage statistics are temporarily unavailable"
-});
-Object.assign(languageCatalog.jp, {
-  "系统信息分类": "システム情報カテゴリ", "设备与能力": "デバイスと機能", "服务节点": "サービスノード",
-  "版本与构建": "バージョンとビルド", "当前版本": "現在のバージョン", "读取中…": "読み込み中…",
-  "构建时间": "ビルド日時", "上一版本": "前のバージョン", "版本数据来自部署清单，不另行维护副本。": "バージョン情報は配置マニフェストから取得し、別の複製は保持しません。",
-  "当前运行环境": "現在の実行環境", "运行模式": "実行モード", "检测中…": "検出中…", "语言": "言語",
-  "浏览器 / WebView": "ブラウザー / WebView", "设备概要": "デバイス概要", "逻辑处理器": "論理プロセッサ",
-  "浏览器报告内存": "ブラウザー報告メモリ", "显示": "ディスプレイ", "实时状态": "リアルタイム状態", "网络": "ネットワーク",
-  "电池 / 供电": "バッテリー / 電源", "存储 Provider": "ストレージ Provider", "Device API capabilities": "Device API 機能",
-  "浏览器或宿主未提供的能力会明确显示“不可用”，不会推测硬件信息。": "ブラウザーまたはホストが提供しない機能は「利用不可」と表示し、ハードウェア情報を推測しません。",
-  "WebWindows 服务节点": "WebWindows サービスノード", "CPU 型号": "CPU モデル", "CPU 使用率": "CPU 使用率",
-  "内存使用": "メモリ使用量", "系统文件占用": "システムファイル使用量", "已用：": "使用済み：", "剩余：": "残り：",
-  "总配额：": "合計割り当て：", "未登录或不可用": "未ログインまたは利用不可", "数据中心未知": "データセンター不明",
-  "当前用户云资料空间使用率": "現在のユーザーのクラウド資料使用率",
-  "正在读取当前用户的数据中心空间分配…": "現在のユーザーのデータセンター容量割り当てを読み込んでいます…",
-  "这里是服务节点信息，不代表当前用户设备。用户空间按账号所属数据中心分配。": "これはサービスノードの情報で、現在のユーザーデバイス情報ではありません。ユーザー容量はアカウント所属のデータセンターから割り当てられます。",
-  "部署清单当前不可读取；未显示推测版本。": "配置マニフェストを読み取れないため、推測したバージョンは表示しません。",
-  "移动设备": "モバイルデバイス", "桌面设备": "デスクトップデバイス", "在线": "オンライン", "外接供电": "外部電源",
-  "电池供电": "バッテリー電源", "个已授权位置": " 個の許可済み場所", "Device API 不可用": "Device API は利用できません",
-  "未登录，无法读取用户空间": "未ログインのためユーザー容量を取得できません", "数据中心未分配": "データセンター未割り当て",
-  "用户目录统计失败；未显示推测值。": "ユーザーディレクトリの集計に失敗したため、推測値は表示しません。",
-  "账号未分配有效数据中心配额。": "アカウントに有効なデータセンター容量が割り当てられていません。",
-  "已超过分配空间，请清理文件或联系管理员调整配额。": "割り当て容量を超えています。ファイルを整理するか、管理者に容量変更を依頼してください。",
-  "已使用": " 使用済み", "（兼容默认 1 GB）": "（互換用の既定値 1 GB）", "配额或空间统计暂时不可用": "容量または使用量の集計は一時的に利用できません"
-});
-
-Object.assign(languageCatalog.tw, {
-  "认识我 · WebWindows": "認識我 · WebWindows", "我是谁": "我是誰", "我能做什么": "我能做什麼",
-  "云桌面": "雲端桌面", "理念": "理念", "我们公司": "我們公司", "继续了解": "繼續瞭解",
-  "多窗口系统": "多視窗系統", "云端同步": "雲端同步", "打开使用向导": "開啟使用指南",
-  "你好，我是 WebWindows": "你好，我是 WebWindows", "立志成为中国第一个真正的桌面操作系统": "立志成為中國第一個真正的桌面作業系統",
-  "成都亚原软件有限公司 出品": "成都亞原軟體有限公司 出品", "这是 WebWindows 的核心能力": "這是 WebWindows 的核心能力",
-  "你可以与系统交互、获取信息，甚至作为助手使用": "你可以與系統互動、取得資訊，甚至作為助手使用",
-  "你的桌面不会消失": "你的桌面不會消失", "所有状态都会被保存": "所有狀態都會被儲存",
-  "你可以在任何设备继续使用": "你可以在任何裝置繼續使用",
-  "像电脑一样打开和管理多个窗口": "像電腦一樣開啟和管理多個視窗",
-  "自动保存状态，换设备继续使用": "自動儲存狀態，換裝置繼續使用",
-  "内置交互与信息辅助能力": "內建互動與資訊輔助能力",
-  "WebWindows 的出发点，并不是做一个普通的网页应用": "WebWindows 的出發點，並不是做一個普通的網頁應用程式",
-  "在不同设备、不同系统之间，软件始终是割裂的": "在不同裝置、不同系統之間，軟體始終是割裂的",
-  "但 Web，是少数可以跨越一切设备的共同标准": "但 Web，是少數可以跨越所有裝置的共同標準",
-  "无论硬件如何变化": "無論硬體如何變化", "无论系统如何演进": "無論系統如何演進", "浏览器始终存在": "瀏覽器始終存在",
-  "WebWindows 正是基于这一点诞生的": "WebWindows 正是基於這一點誕生的",
-  "它尝试把“桌面”带到 Web 上": "它嘗試把「桌面」帶到 Web 上", "让任何设备，都可以拥有统一的使用环境": "讓任何裝置都可以擁有統一的使用環境",
-  "同时，我们也希望在既有标准之外": "同時，我們也希望在既有標準之外", "探索一种属于自己的系统形态": "探索一種屬於自己的系統形態",
-  "这不是一个工具，而是一种新的操作方式": "這不是一個工具，而是一種新的操作方式",
-  "WebWindows 由成都亚原软件有限公司持续开发。": "WebWindows 由成都亞原軟體有限公司持續開發。",
-  "我们关注 Web 应用、云端工作空间与跨设备使用体验。": "我們關注 Web 應用程式、雲端工作空間與跨裝置使用體驗。",
-  "不被推荐": "不被推薦", "正在读取账号的发现设置…": "正在讀取帳號的探索設定…",
-  "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "登入 WebWindows 後可設定是否顯示於 DeskTalk 推薦中。",
-  "发现设置暂时不可用，请稍后重试。": "探索設定暫時無法使用，請稍後再試。",
-  "已开启：你的账号不会出现在桌讯推荐和在线发现结果中。": "已開啟：你的帳號不會顯示於 DeskTalk 推薦或線上探索結果中。",
-  "已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。": "已關閉：其他 WebWindows 使用者可在 DeskTalk 推薦中找到你。"
-});
-Object.assign(languageCatalog.en, {
-  "不被推荐": "Do not recommend me", "正在读取账号的发现设置…": "Loading account discovery settings…",
-  "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "Sign in to control whether you appear in DeskTalk recommendations.",
-  "发现设置暂时不可用，请稍后重试。": "Discovery settings are temporarily unavailable. Try again later.",
-  "已开启：你的账号不会出现在桌讯推荐和在线发现结果中。": "On: your account is hidden from DeskTalk recommendations and online discovery.",
-  "已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。": "Off: other WebWindows users can discover you in DeskTalk recommendations."
-});
-Object.assign(languageCatalog.jp, {
-  "不被推荐": "おすすめに表示しない", "正在读取账号的发现设置…": "アカウントの公開設定を読み込み中…",
-  "登录 WebWindows 后可设置是否出现在桌讯推荐中。": "WebWindows にログインすると、DeskTalk のおすすめ表示を設定できます。",
-  "发现设置暂时不可用，请稍后重试。": "公開設定は一時的に利用できません。しばらくしてから再試行してください。",
-  "已开启：你的账号不会出现在桌讯推荐和在线发现结果中。": "オン：アカウントは DeskTalk のおすすめとオンライン検索に表示されません。",
-  "已关闭：其他 WebWindows 用户可以在桌讯推荐中发现你。": "オフ：他の WebWindows ユーザーが DeskTalk のおすすめからあなたを見つけられます。"
-});
-
-Object.assign(languageCatalog.en, {
-  "照相机与扫描": "Camera & Scanner",
-  "图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。": "Images stay on this device by default. You will be asked before saving to Cloud Files or using a remote provider.",
-  "本地处理": "On-device",
-  "功能": "Features",
-  "文档扫描": "Document scan",
-  "二维码": "QR code",
-  "拍照翻译": "Photo translation",
-  "扫码登录": "Scan to sign in",
-  "场景翻译": "Scene translation",
-  "点击“启用相机”后才会请求权限。也可以从云资料选择图片。": "Camera permission is requested only after you select Enable camera. You can also choose an image from Cloud Files.",
-  "启用相机": "Enable camera",
-  "摄像头": "Camera",
-  "授权后显示真实设备名": "Device names appear after permission is granted",
-  "切换前后镜头": "Switch camera",
-  "从云资料选择图片": "Choose image from Cloud Files",
-  "拍摄": "Capture",
-  "停止": "Stop",
-  "退出取景": "Exit viewfinder",
-  "尚未访问摄像头。": "Camera has not been accessed.",
-  "正在请求摄像头权限……": "Requesting camera permission…",
-  "无法启用摄像头": "Unable to enable the camera",
-  "相机已启用，共发现": "Camera enabled. Found",
-  "个视频设备。设备名仅在授权后读取。": "video devices. Device names are read only after permission is granted.",
-  "检测边缘并校正": "Detect and correct edges",
-  "旋转 90°": "Rotate 90°",
-  "效果": "Effect",
-  "彩色": "Color",
-  "灰度": "Grayscale",
-  "黑白": "Black & white",
-  "增强": "Enhance",
-  "加入多页文档": "Add to multipage document",
-  "导出当前图片": "Export current image",
-  "导出 PDF": "Export PDF",
-  "图片另存到云资料": "Save image to Cloud Files",
-  "PDF 另存到云资料": "Save PDF to Cloud Files",
-  "保存 PDF 到私人云资料": "Save PDF to private Cloud Files",
-  "识别当前画面": "Scan current image",
-  "开始实时识别": "Start live scanning",
-  "尚未识别": "Nothing scanned yet",
-  "OCR 当前图片": "OCR current image",
-  "源语言": "Source language",
-  "自动识别": "Auto-detect",
-  "目标语言": "Target language",
-  "原文": "Source text",
-  "译文": "Translation",
-  "翻译": "Translate",
-  "开始场景翻译": "Start scene translation",
-  "正在准备设备翻译；首次使用可能需要下载语言模型。": "Preparing on-device translation. First use may download a language model.",
-  "正在下载设备翻译模型；首次使用可能需要几分钟，请保持此窗口打开。": "Downloading the on-device translation model. First use may take a few minutes; keep this window open.",
-  "正在下载设备翻译模型": "Downloading the on-device translation model",
-  "翻译完成": "Translation complete",
-  "相机已停止。": "Camera stopped.",
-  "已拍摄；画面仍只在本地内存中。": "Captured. The image remains only in local memory.",
-  "云资料公共选择窗口未就绪。": "The shared Cloud Files picker is not ready.",
-  "请选择图片文件。": "Choose an image file.",
-  "已从云资料载入图片；尚未上传。": "Image loaded from Cloud Files; it has not been uploaded.",
-  "摄像头权限被拒绝。仍可从云资料选择图片。": "Camera permission was denied. You can still choose an image from Cloud Files.",
-  "没有检测到摄像头。仍可从云资料选择图片。": "No camera was detected. You can still choose an image from Cloud Files.",
-  "网络体验": "Network experience",
-  "等待测速": "Waiting for test",
-  "慢": "Slow",
-  "一般": "Fair",
-  "良好": "Good",
-  "快": "Fast",
-  "极快": "Very fast",
-  "完成后将明确显示慢、一般、良好、快或极快。": "The result will be rated Slow, Fair, Good, Fast, or Very fast.",
-  "网页和视频可能需要等待。": "Web pages and video may need extra time.",
-  "网页与标清视频基本可用。": "Web browsing and SD video should be usable.",
-  "高清视频和常规云资料传输较顺畅。": "HD video and everyday Cloud Files transfers should run smoothly.",
-  "4K 视频与大文件传输较顺畅。": "4K video and large-file transfers should run smoothly.",
-  "当前链路适合高码率和大型传输任务。": "This connection is suitable for high-bitrate and large transfer workloads.",
-  "保存扫描图片": "Save scanned image", "保存扫描 PDF": "Save scanned PDF", "图片已保存到云资料。": "The image was saved to Cloud Files.",
-  "WebWindows 系统确认对话框未就绪。": "The WebWindows system confirmation dialog is not ready.",
-  "即将打开以下网站：\n{host}\n\n完整地址：\n{url}\n\n确定继续？": "You are about to open this website:\n{host}\n\nFull address:\n{url}\n\nContinue?",
-  "确认让以下设备登录？\n{device}\n\n创建时间：{createdAt}\n此操作不会向二维码写入你的 cookie。": "Allow this device to sign in?\n{device}\n\nCreated: {createdAt}\nYour cookie will not be written to the QR code.",
-  "已确认。请回到发起设备完成登录。": "Confirmed. Return to the requesting device to finish signing in."
-});
-
-Object.assign(languageCatalog.jp, {
-  "照相机与扫描": "カメラとスキャナー",
-  "图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。": "画像は既定でこの端末内だけで処理します。クラウド資料への格納や外部サービスの利用前に確認します。",
-  "本地处理": "端末内処理",
-  "功能": "機能",
-  "文档扫描": "書類スキャン",
-  "二维码": "QRコード",
-  "拍照翻译": "写真翻訳",
-  "扫码登录": "QRログイン",
-  "场景翻译": "シーン翻訳",
-  "点击“启用相机”后才会请求权限。也可以从云资料选择图片。": "「カメラを有効化」を押した後にのみ権限を要求します。クラウド資料から画像を選ぶこともできます。",
-  "启用相机": "カメラを有効化",
-  "摄像头": "カメラ",
-  "授权后显示真实设备名": "許可後に端末名を表示",
-  "切换前后镜头": "前後カメラを切替",
-  "从云资料选择图片": "クラウド資料から画像を選択",
-  "拍摄": "撮影",
-  "停止": "停止",
-  "退出取景": "ファインダーを終了",
-  "尚未访问摄像头。": "カメラにはまだアクセスしていません。",
-  "正在请求摄像头权限……": "カメラの許可を要求しています…",
-  "无法启用摄像头": "カメラを有効にできません",
-  "相机已启用，共发现": "カメラを有効にしました。検出数：",
-  "个视频设备。设备名仅在授权后读取。": "台。端末名は許可後にのみ取得します。",
-  "检测边缘并校正": "輪郭を検出して補正",
-  "旋转 90°": "90°回転",
-  "效果": "効果",
-  "彩色": "カラー",
-  "灰度": "グレースケール",
-  "黑白": "白黒",
-  "增强": "強調",
-  "加入多页文档": "複数ページ文書に追加",
-  "导出当前图片": "現在の画像を書き出す",
-  "导出 PDF": "PDFを書き出す",
-  "图片另存到云资料": "画像をクラウド資料に格納",
-  "PDF 另存到云资料": "PDFをクラウド資料に格納",
-  "保存 PDF 到私人云资料": "PDFを非公開クラウド資料に保存",
-  "识别当前画面": "現在の画像を認識",
-  "开始实时识别": "リアルタイム認識を開始",
-  "尚未识别": "まだ認識していません",
-  "OCR 当前图片": "現在の画像をOCR",
-  "源语言": "翻訳元言語",
-  "自动识别": "自動検出",
-  "目标语言": "翻訳先言語",
-  "原文": "原文",
-  "译文": "翻訳",
-  "翻译": "翻訳する",
-  "开始场景翻译": "シーン翻訳を開始",
-  "正在准备设备翻译；首次使用可能需要下载语言模型。": "端末内翻訳を準備しています。初回は言語モデルのダウンロードが必要な場合があります。",
-  "正在下载设备翻译模型；首次使用可能需要几分钟，请保持此窗口打开。": "端末内翻訳モデルをダウンロードしています。初回は数分かかる場合があるため、この画面を開いたままにしてください。",
-  "正在下载设备翻译模型": "端末内翻訳モデルをダウンロード中",
-  "翻译完成": "翻訳完了",
-  "相机已停止。": "カメラを停止しました。",
-  "已拍摄；画面仍只在本地内存中。": "撮影しました。画像はローカルメモリ内だけにあります。",
-  "云资料公共选择窗口未就绪。": "共通クラウド資料選択画面の準備ができていません。",
-  "请选择图片文件。": "画像ファイルを選択してください。",
-  "已从云资料载入图片；尚未上传。": "クラウド資料から画像を読み込みました。アップロードはしていません。",
-  "摄像头权限被拒绝。仍可从云资料选择图片。": "カメラの使用が拒否されました。クラウド資料から画像を選択できます。",
-  "没有检测到摄像头。仍可从云资料选择图片。": "カメラが見つかりません。クラウド資料から画像を選択できます。",
-  "自动边缘为本地启发式估计；复杂背景可能需要重新取景。第一期校正为四角映射，不上传原图。": "輪郭の自動検出は端末内の推定処理です。複雑な背景では撮り直しが必要な場合があります。初期版の補正は四隅のマッピングで、元画像を外部へ送信しません。",
-  "优先使用设备上的 TextDetector 和 Translator；首次翻译可能需要下载设备语言模型，不会把图片发送到网络。": "端末の TextDetector と Translator を優先します。初回の翻訳では言語モデルのダウンロードが必要な場合がありますが、画像を外部へ送信しません。",
-  "网络体验": "ネットワーク体験",
-  "等待测速": "測定待ち",
-  "慢": "遅い",
-  "一般": "普通",
-  "良好": "良好",
-  "快": "速い",
-  "极快": "非常に速い",
-  "完成后将明确显示慢、一般、良好、快或极快。": "完了後に「遅い・普通・良好・速い・非常に速い」で表示します。",
-  "网页和视频可能需要等待。": "Webページや動画の読み込みに時間がかかる場合があります。",
-  "网页与标清视频基本可用。": "Web閲覧と標準画質動画はおおむね利用できます。",
-  "高清视频和常规云资料传输较顺畅。": "HD動画と通常のクラウド資料転送を快適に利用できます。",
-  "4K 视频与大文件传输较顺畅。": "4K動画と大容量ファイル転送を快適に利用できます。",
-  "当前链路适合高码率和大型传输任务。": "高ビットレートや大容量転送に適した接続です。",
-  "保存扫描图片": "スキャン画像を保存", "保存扫描 PDF": "スキャンPDFを保存", "图片已保存到云资料。": "画像をクラウド資料に保存しました。",
-  "WebWindows 系统确认对话框未就绪。": "WebWindows の確認ダイアログを利用できません。",
-  "即将打开以下网站：\n{host}\n\n完整地址：\n{url}\n\n确定继续？": "次のサイトを開きます：\n{host}\n\n完全なアドレス：\n{url}\n\n続行しますか？",
-  "确认让以下设备登录？\n{device}\n\n创建时间：{createdAt}\n此操作不会向二维码写入你的 cookie。": "次のデバイスのログインを許可しますか？\n{device}\n\n作成日時：{createdAt}\nCookie がQRコードに書き込まれることはありません。",
-  "已确认。请回到发起设备完成登录。": "確認しました。要求元のデバイスに戻ってログインを完了してください。"
-});
-
-Object.assign(languageCatalog.tw, {
-  "照相机与扫描": "照相機與掃描",
-  "图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。": "圖像預設只在此裝置處理；儲存到雲資料或使用遠端提供者前會明確提示。",
-  "本地处理": "本機處理",
-  "功能": "功能",
-  "文档扫描": "文件掃描",
-  "二维码": "二維碼",
-  "拍照翻译": "拍照翻譯",
-  "扫码登录": "掃碼登入",
-  "场景翻译": "場景翻譯",
-  "点击“启用相机”后才会请求权限。也可以从云资料选择图片。": "點擊「啟用相機」後才會要求權限。也可以從雲資料選擇圖片。",
-  "启用相机": "啟用相機",
-  "摄像头": "攝影機",
-  "授权后显示真实设备名": "授權後顯示真實裝置名稱",
-  "切换前后镜头": "切換前後鏡頭",
-  "从云资料选择图片": "從雲資料選擇圖片",
-  "拍摄": "拍攝",
-  "停止": "停止",
-  "退出取景": "退出取景",
-  "尚未访问摄像头。": "尚未存取攝影機。",
-  "正在请求摄像头权限……": "正在要求攝影機權限…",
-  "无法启用摄像头": "無法啟用攝影機",
-  "相机已启用，共发现": "相機已啟用，共找到",
-  "个视频设备。设备名仅在授权后读取。": "個視訊裝置。裝置名稱只會在授權後讀取。",
-  "检测边缘并校正": "偵測邊緣並校正",
-  "旋转 90°": "旋轉 90°",
-  "效果": "效果",
-  "彩色": "彩色",
-  "灰度": "灰階",
-  "黑白": "黑白",
-  "增强": "增強",
-  "加入多页文档": "加入多頁文件",
-  "导出当前图片": "匯出目前圖片",
-  "导出 PDF": "匯出 PDF",
-  "图片另存到云资料": "將圖片另存到雲資料",
-  "PDF 另存到云资料": "將 PDF 另存到雲資料",
-  "保存 PDF 到私人云资料": "儲存 PDF 到私人雲資料",
-  "识别当前画面": "辨識目前畫面",
-  "开始实时识别": "開始即時辨識",
-  "尚未识别": "尚未辨識",
-  "OCR 当前图片": "OCR 目前圖片",
-  "源语言": "來源語言",
-  "自动识别": "自動識別",
-  "目标语言": "目標語言",
-  "原文": "原文",
-  "译文": "譯文",
-  "翻译": "翻譯",
-  "开始场景翻译": "開始場景翻譯",
-  "正在准备设备翻译；首次使用可能需要下载语言模型。": "正在準備裝置翻譯；首次使用可能需要下載語言模型。",
-  "正在下载设备翻译模型；首次使用可能需要几分钟，请保持此窗口打开。": "正在下載裝置翻譯模型；首次使用可能需要幾分鐘，請保持此視窗開啟。",
-  "正在下载设备翻译模型": "正在下載裝置翻譯模型",
-  "翻译完成": "翻譯完成",
-  "相机已停止。": "相機已停止。",
-  "已拍摄；画面仍只在本地内存中。": "已拍攝；畫面仍只在本機記憶體中。",
-  "云资料公共选择窗口未就绪。": "雲資料共用選擇視窗尚未就緒。",
-  "请选择图片文件。": "請選擇圖片檔案。",
-  "已从云资料载入图片；尚未上传。": "已從雲資料載入圖片；尚未上傳。",
-  "摄像头权限被拒绝。仍可从云资料选择图片。": "攝影機權限被拒絕。仍可從雲資料選擇圖片。",
-  "没有检测到摄像头。仍可从云资料选择图片。": "未偵測到攝影機。仍可從雲資料選擇圖片。",
-  "网络体验": "網路體驗",
-  "等待测速": "等待測速",
-  "慢": "慢",
-  "一般": "一般",
-  "良好": "良好",
-  "快": "快",
-  "极快": "極快",
-  "完成后将明确显示慢、一般、良好、快或极快。": "完成後將明確顯示慢、一般、良好、快或極快。",
-  "网页和视频可能需要等待。": "網頁和影片可能需要等待。",
-  "网页与标清视频基本可用。": "網頁與標準畫質影片基本可用。",
-  "高清视频和常规云资料传输较顺畅。": "高畫質影片和一般雲資料傳輸較順暢。",
-  "4K 视频与大文件传输较顺畅。": "4K 影片與大型檔案傳輸較順暢。",
-  "当前链路适合高码率和大型传输任务。": "目前連線適合高位元率和大型傳輸工作。",
-  "保存扫描图片": "儲存掃描圖片", "保存扫描 PDF": "儲存掃描 PDF", "图片已保存到云资料。": "圖片已儲存到雲資料。",
-  "WebWindows 系统确认对话框未就绪。": "WebWindows 系統確認對話框尚未就緒。",
-  "即将打开以下网站：\n{host}\n\n完整地址：\n{url}\n\n确定继续？": "即將開啟以下網站：\n{host}\n\n完整位址：\n{url}\n\n確定繼續？",
-  "确认让以下设备登录？\n{device}\n\n创建时间：{createdAt}\n此操作不会向二维码写入你的 cookie。": "確認允許以下裝置登入？\n{device}\n\n建立時間：{createdAt}\n此操作不會把你的 cookie 寫入二維碼。",
-  "已确认。请回到发起设备完成登录。": "已確認。請返回發起裝置完成登入。"
-});
-
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;
-  const safeText = text == null ? "" : String(text);
   const translated = Object.keys(dictionary)
     .sort((a, b) => b.length - a.length)
-    .reduce((result, source) => result.split(source).join(dictionary[source]), safeText);
+    .reduce((result, source) => result.split(source).join(dictionary[source]), text);
   // 未覆盖的长句不做半句替换，避免出现“已Send”“MailSave”一类混合语言。
   return language === "en" && /[\u3400-\u9fff]/.test(translated) ? text : translated;
 }
@@ -860,10 +439,6 @@ function observeDocument(targetDocument, language) {
   if (observedDocuments.has(targetDocument)) return;
 
   const observer = new MutationObserver((mutations) => {
-    // A disconnected observer may still have already-queued records.  Ignore
-    // those records after the user switches language, otherwise the old
-    // observer can remember a translated/empty value as the new source text.
-    if ((localStorage.getItem("lang") || "zh") !== language) return;
     mutations.forEach((mutation) => {
       if (mutation.type === "characterData") {
         const node = mutation.target;
@@ -920,7 +495,7 @@ function syncIframeLanguage(iframe, language) {
       // 已接入共通语言层的子应用自己维护原文缓存。父子同时改同一 DOM 会把
       // 上一种译文误记为原文，造成 English -> 日本語 时 iframe 仍停在英文。
       if (typeof iframe.contentWindow?.setLanguage === "function") {
-        iframe.contentWindow.setLanguage(language, { source: "sync" });
+        iframe.contentWindow.setLanguage(language);
         return;
       }
       const frameDocument = iframe.contentDocument;
@@ -930,7 +505,7 @@ function syncIframeLanguage(iframe, language) {
       observeDocument(frameDocument, language);
     } catch (_) {
       // Cross-origin applications own their language handling.
-      iframe.contentWindow?.postMessage({ type: "change-language", lang: language, source: "sync" }, "*");
+      iframe.contentWindow?.postMessage({ type: "change-language", lang: language }, "*");
     }
   };
   if (!wiredIframes.has(iframe)) {
@@ -940,15 +515,13 @@ function syncIframeLanguage(iframe, language) {
   try {
     if (iframe.contentDocument?.readyState === "complete") translateFrame();
   } catch (_) {
-    iframe.contentWindow?.postMessage({ type: "change-language", lang: language, source: "sync" }, "*");
+    iframe.contentWindow?.postMessage({ type: "change-language", lang: language }, "*");
   }
 }
 
-function setLanguage(language, options) {
+function setLanguage(language) {
   if (!languageCatalog[language] && language !== "zh") return;
   localStorage.setItem("lang", language);
-  if (options?.source !== "sync") localStorage.setItem("webwindows.language.source", "manual");
-  localStorage.setItem("webwindows.language.migration", "2026.08.19.1");
   applyLanguageToDocument(document, language);
   window.dispatchEvent(new CustomEvent("webwindows:language-changed", { detail: { language } }));
 }
@@ -969,14 +542,12 @@ function setupLanguageControl() {
       : (/^zh-(tw|hk|mo)/.test(locale) || locale.includes("hant")) ? "tw"
       : locale.startsWith("zh") ? "zh" : "en";
     localStorage.setItem("lang", initialLanguage);
-    localStorage.setItem("webwindows.language.source", "system");
-    localStorage.setItem("webwindows.language.migration", "2026.08.19.1");
   }
   const language = localStorage.getItem("lang");
   applyLanguageToDocument(document, language);
   window.setLanguage = setLanguage;
   window.addEventListener("message", (event) => {
-    if (event.data?.type === "change-language") setLanguage(event.data.lang, { source: event.data.source });
+    if (event.data?.type === "change-language") setLanguage(event.data.lang);
   });
 }
 
@@ -987,7 +558,6 @@ window.WebWindowsI18n = Object.freeze({
   translate: (text, language = localStorage.getItem("lang") || "zh") => language === "zh" ? String(text) : translateText(String(text), language),
   setLanguage,
   apply: applyLanguageToDocument,
-  applyTo: (element, language = localStorage.getItem("lang") || "zh") => applyLanguage(language, element),
   catalog: languageCatalog
 });
 

@@ -99,8 +99,8 @@ await apps.ready();
 await new Promise((resolve) => setTimeout(resolve, 0));
 vm.runInContext(resourceOpenSource, context, { filename: "resource-open.js" });
 
-assert.equal((await apps.listInstalled()).length, 18);
-assert.equal((await apps.listCatalog()).length, 18);
+assert.equal((await apps.listInstalled()).length, 16);
+assert.equal((await apps.listCatalog()).length, 16);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), true);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", false);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), false);
@@ -110,7 +110,7 @@ await apps.launch("webwindows.system.settings");
 assert.deepEqual(openedWindows.at(-1), [
   "settings",
   "设置",
-  "settings.html?v=20260913-2",
+  "settings.html?v=20260729-3",
   "assets/icons/settings.png",
   true,
   "",
@@ -130,18 +130,6 @@ assert.deepEqual(openedWindows.at(-1), [
   "700px"
 ]);
 
-await apps.launch("webwindows.system.developer-studio");
-assert.deepEqual(openedWindows.at(-1), [
-  "developer-studio",
-  "Developer Studio",
-  "developer-studio.html?v=20260914-dialog-api-1",
-  "assets/icons/code.svg",
-  true,
-  "",
-  "1280px",
-  "800px"
-]);
-
 await apps.launch("webwindows.system.guide", { url: "guide.html?topic=cloud-files" });
 assert.deepEqual(openedWindows.at(-1), [
   "guide",
@@ -152,6 +140,18 @@ assert.deepEqual(openedWindows.at(-1), [
   "",
   "1060px",
   "740px"
+]);
+
+await apps.launch("webwindows.system.navigation");
+assert.deepEqual(openedWindows.at(-1), [
+  "road",
+  "问道",
+  "road.html?v=20260920-2",
+  "assets/icons/navigation.svg",
+  true,
+  "",
+  "1120px",
+  "760px"
 ]);
 
 const sheetResource = { name: "budget.xlsx" };
@@ -178,11 +178,11 @@ for (const [name, appId] of expectedAssociations) {
 
 await apps.launch("com.aryansoft.webwindows.write");
 assert.equal(openedWindows.at(-1)[0], "WriteEditor");
-assert.equal(openedWindows.at(-1)[2], "worker_WriteEditor.html?v=20260810-office-binary-1");
+assert.equal(openedWindows.at(-1)[2], "worker_WriteEditor.html?v=20260729-mobile-2");
 
 await apps.launch("com.aryansoft.webwindows.slide");
 assert.equal(openedWindows.at(-1)[0], "SlideEditor");
-assert.equal(openedWindows.at(-1)[2], "worker_SlideEditor.html?v=20260810-office-binary-1");
+assert.equal(openedWindows.at(-1)[2], "worker_SlideEditor.html?v=20260729-mobile-2");
 
 await apps.launch("com.aryansoft.webwindows.dreama");
 assert.equal(openedWindows.at(-1)[0], "edge");

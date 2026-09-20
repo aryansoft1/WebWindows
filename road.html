@@ -4,49 +4,63 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org https://photon.komoot.io https://router.project-osrm.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <title>导航</title>
+  <title>问道</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="assets/css/navigation.css?v=20260916-1">
+  <link rel="stylesheet" href="assets/css/navigation.css?v=20260920-2">
   <script defer src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
-  <script defer src="assets/js/navigation-providers.js?v=20260916-1"></script>
-  <script defer src="assets/js/navigation-app.js?v=20260916-1"></script>
+  <script defer src="assets/js/navigation-providers.js?v=20260920-2"></script>
+  <script defer src="assets/js/navigation-app.js?v=20260920-2"></script>
 </head>
 <body>
   <main class="navigation-shell">
-    <section class="route-panel" aria-label="路线规划">
+    <section class="route-panel" aria-label="路线规划" data-i18n-aria="routePlanner">
       <header class="brand-row">
-        <div><span class="eyebrow">WEBWINDOWS MAPS</span><h1>路线导航</h1><p id="provider-summary">正在载入交互地图…</p></div>
-        <button id="locate-button" class="icon-button" type="button" aria-label="定位到当前位置" title="定位到当前位置">⌖</button>
+        <div class="brand-copy"><img src="assets/icons/navigation.svg" alt="" aria-hidden="true"><div><span class="eyebrow">WENDAO · WEBWINDOWS</span><h1 data-i18n="appName">问道</h1><p id="provider-summary">正在载入交互地图…</p></div></div>
+        <button id="locate-button" class="icon-button" type="button" aria-label="定位到当前位置" title="定位到当前位置" data-i18n-aria="locate">⌖</button>
       </header>
-      <div class="mode-tabs" role="radiogroup" aria-label="出行方式">
-        <button type="button" data-mode="driving" class="active" aria-pressed="true"><span>🚗</span>驾车</button>
-        <button type="button" data-mode="walking" aria-pressed="false"><span>🚶</span>步行</button>
-        <button type="button" data-mode="cycling" aria-pressed="false"><span>🚲</span>骑行</button>
+      <div class="mode-tabs" role="radiogroup" aria-label="出行方式" data-i18n-aria="travelMode">
+        <button type="button" data-mode="driving" class="active" aria-pressed="true"><span>🚗</span><b data-i18n="driving">驾车</b></button>
+        <button type="button" data-mode="transit" aria-pressed="false"><span>🚇</span><b data-i18n="transit">公交</b></button>
+        <button type="button" data-mode="walking" aria-pressed="false"><span>🚶</span><b data-i18n="walking">步行</b></button>
+        <button type="button" data-mode="cycling" aria-pressed="false"><span>🚲</span><b data-i18n="cycling">骑行</b></button>
       </div>
       <div class="field-stack">
         <div class="route-rail" aria-hidden="true"><i></i><b></b></div>
-        <label class="place-field"><span class="sr-only">起点</span><input id="start-input" autocomplete="off" maxlength="120" placeholder="输入起点或在地图选点"></label>
-        <button id="swap-button" class="swap-button" type="button" aria-label="交换起点和终点">⇅</button>
-        <label class="place-field"><span class="sr-only">终点</span><input id="end-input" autocomplete="off" maxlength="120" placeholder="输入终点或在地图选点"></label>
+        <label class="place-field"><span class="sr-only" data-i18n="start">起点</span><input id="start-input" autocomplete="off" maxlength="120" placeholder="输入起点或在地图选点" data-i18n-placeholder="startPlaceholder"></label>
+        <button id="swap-button" class="swap-button" type="button" aria-label="交换起点和终点" data-i18n-aria="swap">⇅</button>
+        <label class="place-field"><span class="sr-only" data-i18n="destination">终点</span><input id="end-input" autocomplete="off" maxlength="120" placeholder="输入终点或在地图选点" data-i18n-placeholder="endPlaceholder"></label>
       </div>
       <div id="search-results" class="search-results" hidden aria-live="polite"></div>
+      <div class="nearby-tools" aria-label="附近地点" data-i18n-aria="nearbyPlaces">
+        <span data-i18n="nearby">附近</span>
+        <button type="button" data-nearby="restaurant"><span>🍜</span><b data-i18n="restaurants">餐厅</b></button>
+        <button type="button" data-nearby="attraction"><span>★</span><b data-i18n="attractions">景点</b></button>
+        <button type="button" data-nearby="parking"><span>🅿</span><b data-i18n="parking">停车场</b></button>
+      </div>
       <div class="route-actions">
-        <button id="route-button" class="primary-button" type="button">开始规划</button>
-        <label class="provider-select"><span>地图服务</span><select id="provider-mode"><option value="community">全球社区地图</option><option value="auto">自动选择</option><option value="cn-proxy">中国大陆服务</option><option value="global-proxy">管理员服务</option><option value="offline">离线降级</option></select></label>
+        <button id="route-button" class="primary-button" type="button" data-i18n="planRoute">开始规划</button>
+        <label class="provider-select"><span data-i18n="mapService">地图服务</span><select id="provider-mode"><option value="community" data-i18n="communityMap">全球社区地图</option><option value="auto" data-i18n="autoSelect">自动选择</option><option value="cn-proxy" data-i18n="chinaService">中国大陆服务</option><option value="global-proxy" data-i18n="adminService">管理员服务</option><option value="offline" data-i18n="offlineFallback">离线降级</option></select></label>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
-      <section id="route-result" class="route-result" hidden aria-label="路线结果">
+      <section id="route-result" class="route-result" hidden aria-label="路线结果" data-i18n-aria="routeResult">
         <div class="route-summary"><div><strong id="route-duration"></strong><span id="route-distance"></span></div><span id="route-source" class="source-pill"></span></div>
+        <div id="route-costs" class="route-costs" hidden>
+          <div><span data-i18n="tollFee">高速/通行费</span><strong id="cost-toll">—</strong></div>
+          <div><span data-i18n="icFare">IC 卡费用</span><strong id="cost-ic">—</strong></div>
+          <div><span data-i18n="cashFare">现金费用</span><strong id="cost-cash">—</strong></div>
+        </div>
         <p id="route-note"></p><ol id="route-steps"></ol>
+        <div class="guidance-actions"><button id="navigation-button" type="button" data-i18n="startNavigation">开始导航</button><button id="ask-desktalk" type="button" data-i18n="askDeskTalk">问桌讯</button></div>
       </section>
-      <details class="privacy-note"><summary>数据来源、隐私与使用限制</summary><p>交互底图来自 OpenFreeMap。社区模式搜索会把输入词发送给 Photon，驾车规划会把起终点坐标发送给 OSRM 公共演示服务；定位只在点击定位按钮后请求。正式商业部署建议改用管理员配置的签约或自托管服务。</p></details>
+      <details class="privacy-note"><summary data-i18n="privacyTitle">数据来源、隐私与使用限制</summary><p data-i18n="privacyText">交互底图来自 OpenFreeMap。社区模式会将搜索词发送给 Photon、将驾车起终点发送给 OSRM。首次进入会请求定位，以当前位置初始化地图；持续定位只在开始导航后启用，停止导航或关闭页面即终止。</p></details>
     </section>
-    <section class="map-panel" aria-label="交互地图">
-      <div id="map" tabindex="0" aria-label="可平移、缩放并选择起终点的交互地图"></div>
-      <div id="map-loading" class="map-loading"><span></span><strong>正在加载道路与地名…</strong></div>
-      <div class="pick-tools" aria-label="地图选点"><button type="button" data-pick="start">设为起点</button><button type="button" data-pick="end">设为终点</button></div>
-      <button id="fit-route" class="fit-route" type="button" hidden>显示全程</button>
-      <div id="map-error" class="map-error" hidden><strong>地图暂时无法载入</strong><span>请检查网络连接，仍可用本地点库搜索或切换离线模式。</span><button id="retry-map" type="button">重新加载</button></div>
+    <section class="map-panel" aria-label="交互地图" data-i18n-aria="interactiveMap">
+      <div id="map" tabindex="0" aria-label="可平移、缩放并选择起终点的交互地图" data-i18n-aria="mapAria"></div>
+      <div id="map-loading" class="map-loading"><span></span><strong data-i18n="mapLoading">正在加载道路与地名…</strong></div>
+      <div class="pick-tools" aria-label="地图选点" data-i18n-aria="mapPick"><button type="button" data-pick="start" data-i18n="setStart">设为起点</button><button type="button" data-pick="end" data-i18n="setEnd">设为终点</button></div>
+      <button id="fit-route" class="fit-route" type="button" hidden data-i18n="showFullRoute">显示全程</button>
+      <div id="navigation-hud" class="navigation-hud" hidden><strong id="navigation-distance"></strong><span id="navigation-state"></span></div>
+      <div id="map-error" class="map-error" hidden><strong data-i18n="mapErrorTitle">地图暂时无法载入</strong><span data-i18n="mapErrorText">请检查网络连接，仍可用本地点库搜索或切换离线模式。</span><button id="retry-map" type="button" data-i18n="retryMap">重新加载</button></div>
       <div id="map-attribution" class="custom-attribution">© OpenFreeMap · © OpenStreetMap contributors</div>
     </section>
   </main>

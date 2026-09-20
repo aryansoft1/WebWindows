@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.09.16.1",
-    "updatedAt": "2026-09-16T14:30:00+09:00"
+    "catalogVersion": "2026.09.20.1",
+    "updatedAt": "2026-09-20T00:00:00+09:00"
   },
   "apps": [
     {
@@ -14,7 +14,7 @@
       "type": "system",
       "name": "云资料",
       "icon": "assets/icons/explorer.png",
-      "entry": "cloud/browser/files.asp?v=20260815-toolbar-layout-1",
+      "entry": "cloud/browser/files.asp",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -40,7 +40,7 @@
       "type": "system",
       "name": "设置",
       "icon": "assets/icons/settings.png",
-      "entry": "settings.html?v=20260913-2",
+      "entry": "settings.html?v=20260729-3",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -66,7 +66,7 @@
       "type": "system",
       "name": "系统信息",
       "icon": "assets/icons/sysinfo.png",
-      "entry": "sysinfo.html?v=20260823-online-release-1",
+      "entry": "sysinfo.html",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -113,66 +113,6 @@
         "singleton": true,
         "width": "980px",
         "height": "700px"
-      }
-    },
-    {
-      "id": "webwindows.system.developer-studio",
-      "legacyIds": ["developer-studio"],
-      "type": "system",
-      "name": "Developer Studio",
-      "description": "创建和编辑 WebWindows 功能项目。",
-      "category": "system",
-      "version": "1.0.0",
-      "icon": "assets/icons/code.svg",
-      "entry": "developer-studio.html?v=20260914-dialog-api-1",
-      "install": {
-        "defaultState": "installed",
-        "source": "system",
-        "uninstallable": false
-      },
-      "placement": {
-        "desktop": true,
-        "startMenu": true,
-        "startMenuGroup": "system",
-        "startMenuOrder": 27,
-        "allFunctions": true,
-        "taskbar": false
-      },
-      "window": {
-        "mode": "iframe",
-        "singleton": true,
-        "width": "1280px",
-        "height": "800px"
-      }
-    },
-    {
-      "id": "webwindows.system.camera",
-      "legacyIds": ["camera"],
-      "type": "system",
-      "name": "照相机与扫描",
-      "description": "本地优先的文档扫描、二维码和拍照翻译；扫码登录后端尚未启用。",
-      "category": "system",
-      "version": "1.0.0",
-      "icon": "assets/icons/camera.svg",
-      "entry": "camera.html?v=20260914-dialog-1",
-      "install": {
-        "defaultState": "installed",
-        "source": "system",
-        "uninstallable": false
-      },
-      "placement": {
-        "desktop": true,
-        "startMenu": true,
-        "startMenuGroup": "system",
-        "startMenuOrder": 28,
-        "allFunctions": true,
-        "taskbar": false
-      },
-      "window": {
-        "mode": "iframe",
-        "singleton": true,
-        "width": "1120px",
-        "height": "780px"
       }
     },
     {
@@ -292,12 +232,12 @@
       "id": "webwindows.system.navigation",
       "legacyIds": ["road"],
       "type": "system",
-      "name": "导航",
-      "description": "交互地图、地点搜索与道路路线规划；支持社区地图、管理员服务和离线降级。",
+      "name": "问道",
+      "description": "支持当前位置、附近地点、连续导航、路线费用与桌讯出行建议的跨设备地图。",
       "category": "system",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "icon": "assets/icons/navigation.svg",
-      "entry": "road.html?v=20260916-1",
+      "entry": "road.html?v=20260920-2",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -324,7 +264,7 @@
       "type": "application",
       "name": "傲映(APlay)",
       "icon": "assets/icons/aplay.png",
-      "entry": "aplay.html?v=20260812-cloud-media-1",
+      "entry": "aplay.html?v=20260729-mobile-1",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",
@@ -343,22 +283,7 @@
         "singleton": true,
         "width": "1020px",
         "height": "725px"
-      },
-      "fileHandlers": [
-        {
-          "action": "open",
-          "adapter": "cloud-media",
-          "extensions": [
-            ".mp3", ".wav", ".ogg", ".oga", ".m4a", ".aac", ".flac", ".opus",
-            ".mp4", ".webm", ".mov", ".m4v", ".ogv", ".mkv"
-          ],
-          "mimeTypes": [
-            "audio/mpeg", "audio/wav", "audio/ogg", "audio/mp4", "audio/aac", "audio/flac", "audio/opus",
-            "video/mp4", "video/webm", "video/quicktime", "video/ogg", "video/x-matroska"
-          ],
-          "priority": 100
-        }
-      ]
+      }
     },
     {
       "id": "com.aryansoft.webwindows.dreama",
@@ -393,7 +318,7 @@
       "type": "system",
       "name": "新闻中心",
       "icon": "assets/icons/news.png",
-      "entry": "news.html?v=20260826-news-nav-1",
+      "entry": "news.html",
       "install": {
         "defaultState": "installed",
         "uninstallable": false
@@ -419,7 +344,7 @@
       "type": "application",
       "name": "Sheet Editor",
       "icon": "assets/icons/sheeteditor.png",
-      "entry": "worker_SheetCreater.html?v=20260810-office-binary-1",
+      "entry": "worker_SheetCreater.html?v=20260729-mobile-4",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",
@@ -459,7 +384,7 @@
       "type": "application",
       "name": "Write Editor",
       "icon": "assets/icons/writeeditor.svg",
-      "entry": "worker_WriteEditor.html?v=20260810-office-binary-1",
+      "entry": "worker_WriteEditor.html?v=20260729-mobile-2",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",
@@ -498,7 +423,7 @@
       "type": "application",
       "name": "Slide Editor",
       "icon": "assets/icons/slideeditor.svg",
-      "entry": "worker_SlideEditor.html?v=20260810-office-binary-1",
+      "entry": "worker_SlideEditor.html?v=20260729-mobile-2",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",

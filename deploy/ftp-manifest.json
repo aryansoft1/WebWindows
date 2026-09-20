@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.16.1",
-  "catalogVersion": "2026.09.16.1",
-  "generatedAt": "2026-09-16T05:25:27.014Z",
+  "releaseVersion": "2026.09.20.1",
+  "catalogVersion": "2026.09.20.1",
+  "generatedAt": "2026-09-20T03:53:10.583Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -241,7 +241,7 @@
     "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js"
   ],
-  "previousReleaseVersion": "2026.09.15.1",
+  "previousReleaseVersion": "2026.09.16.1",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -256,8 +256,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "697eb4f769d080af26ef68907b800e4eec2d38bc210f8d0a54c93075cb4694a3",
-      "size": 92167
+      "sha256": "4edbf171396fccd18170b76717aa71f4e3fea90dbdad4a16c5a24ff5c3eb6abe",
+      "size": 50023
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -276,8 +276,8 @@
       "size": 10216
     },
     "assets/js/desktalk.js": {
-      "sha256": "461115f9034424068d9941578748d8fdc28e4838e978144b7d7b223518b95c8c",
-      "size": 116114
+      "sha256": "169f2aefe034c8232d9e5242b43a4da3445add9c2826812fd71ee8b8080debe1",
+      "size": 100445
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "16cd610f120d2b60270ee267df8facca00ccc7668ab31ea9639fc6e1b866e5bd",
@@ -924,8 +924,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "144679d961a9057d5fa8e617abdad6a787396e24e1efb6692f9bf7908caf07a9",
-      "size": 16096
+      "sha256": "407fbc888389051c4aa5340583f23266fc0e4122ed8bc9abc1fe900ff1204459",
+      "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1160,34 +1160,36 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "e164eafc5892c67ce947e1716cb2dd7bf42c638bd37b35c663b55658612d6aed",
-      "size": 4785
+      "sha256": "5f5e21fd6e9649de295979e8e79731a69afe623d4496e6b0953181cca7e07a47",
+      "size": 7064
     },
     "assets/css/navigation.css": {
-      "sha256": "525e127cfdeb09b5e1fd3d092beace61136a7c667a26016e93f279ff07f4e623",
-      "size": 8221
+      "sha256": "46b0306da33e8fbe47c9973e626c6aa41a4f1df596f1d7171292ded7b5111144",
+      "size": 12970
     },
     "assets/icons/navigation.svg": {
-      "sha256": "a32da4d7096ca4f91c5668add501c472e431e37bc45bbfe0a344d7754d330244",
-      "size": 377
+      "sha256": "ed2ba06cbb1d45a8e5bb08a18d241a6a48ce3e038f7b8260acb6e91d4dac9ed2",
+      "size": 820
     },
     "assets/js/navigation-app.js": {
-      "sha256": "14b346c2d5cb0acd2ec53ad65c5bd7a9fa32774cd5df53de272da3809cd3a8b7",
-      "size": 12633
+      "sha256": "4b634dd9cfe701a2cf0d7ad3e6eb0987e712a5948d7539903b6fe97769325572",
+      "size": 34149
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "0016913d3cba623abefd4eb0bcf0738f7f0a49a7e83d571170d37b02ac8030df",
-      "size": 11959
+      "sha256": "6bf7a019928b57192d850d7107871414405972f8b1a4cb9ba9f20bad1196b5cf",
+      "size": 14691
     }
   },
   "releaseScope": "navigation-map",
   "uploadFiles": [
-    "data/apps/system-apps.json",
-    "road.html",
     "assets/css/navigation.css",
     "assets/icons/navigation.svg",
+    "assets/js/desktalk.js",
     "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js",
+    "assets/js/tw.js",
+    "data/apps/system-apps.json",
+    "road.html",
     "deploy/ftp-manifest.json"
   ]
 }

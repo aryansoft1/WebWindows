@@ -930,7 +930,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "eb864885c4a535f13c9db43f0e0acda308d0e40297b292d4fee8a3078a8b06eb",
+      "sha256": "77f7475fa7c6dff8e8a46e027741332dde272b4864271d31623bb78ddccf9e03",
       "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1220,5 +1220,8 @@
     "api/visitor-analytics.asp",
     "assets/js/visitor-analytics.js",
     "deploy/ftp-manifest.json"
+  ],
+  "reconciledFiles": [
+    "data/apps/system-apps.json"
   ]
 }

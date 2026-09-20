@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.2",
-  "catalogVersion": "2026.09.20.2",
-  "generatedAt": "2026-09-20T04:49:10.933Z",
+  "releaseVersion": "2026.09.20.3",
+  "catalogVersion": "2026.09.20.3",
+  "generatedAt": "2026-09-20T08:37:33.270Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -241,7 +241,7 @@
     "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js"
   ],
-  "previousReleaseVersion": "2026.09.20.1",
+  "previousReleaseVersion": "2026.09.20.2",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -924,7 +924,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "8bc9c03f5522af63b6791bb7d9b811f5b4f1ce8b9e477a02a6d09e0fb6bd747c",
+      "sha256": "eb864885c4a535f13c9db43f0e0acda308d0e40297b292d4fee8a3078a8b06eb",
       "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1160,24 +1160,24 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "8e806a5e3d067df8ca05818b956c27ed479c5afed0fb0c7924f368c58597778d",
-      "size": 7209
+      "sha256": "c767eab5d5d1ed49a769f9fe2dc7cf01af7b6109ef1741fa899898a9bf91043d",
+      "size": 7225
     },
     "assets/css/navigation.css": {
-      "sha256": "7368da597ca29e8bb90b262131cb9bce86dfc7324a2378a2537cee5061819e00",
-      "size": 13216
+      "sha256": "1f93211fb82baf35f22cc930bbd667866323a77bdea65ffde66d5d56a69c6c7e",
+      "size": 13214
     },
     "assets/icons/navigation.svg": {
       "sha256": "3a42c23c1f7ad4af0cebc75ab8692706c7be473542abb153de95cf5f1b076a7d",
       "size": 835
     },
     "assets/js/navigation-app.js": {
-      "sha256": "a475a76cb4212b81c78909789429d56485a1528aff1e087d4c304d8e34bae144",
-      "size": 35757
+      "sha256": "dd4a1991a794dfd6f3d2595977f54591fde55ef854816ce042abf1a79e7c746b",
+      "size": 38461
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "033ce7aec50302b2b3f815912714a0b1d446d41887a9b5e9ab2faed4a272b63f",
-      "size": 14770
+      "sha256": "6fca907789f854792dd9cef97f0f7ffdea5c7af745cd26cca87618d4bc2c25c4",
+      "size": 14799
     }
   },
   "releaseScope": "navigation-map",

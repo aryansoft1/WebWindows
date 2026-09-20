@@ -60,6 +60,7 @@ assert.equal(transit.requiresProvider,true);
 assert.equal(transit.costs.available,false);
 assert.equal(transit.routeUnavailable,true);
 assert.equal(transit.geometry.length,0);
+assert.equal(transit.provider.id,"community");
 
 let proxyRequest;
 const proxied=load({config:{proxyEndpoint:"/maps/navigation"},fetchImpl:async (url,options)=>{
@@ -93,6 +94,8 @@ assert.match(appSource,/clearWatch/);
 assert.match(appSource,/window\.setLanguage=applyLanguage/);
 assert.match(appSource,/WebWindowsDeskTalk/);
 assert.match(appSource,/https:\/\/www\.google\.com\/maps\/dir\//);
+assert.match(appSource,/function handleRouteSearch/);
+assert.match(appSource,/window\.open\(external\.href/);
 assert.match(appSource,/data-nearby/);
 assert.match(appSource,/visibilitychange/);
 assert.match(appSource,/ResizeObserver/);

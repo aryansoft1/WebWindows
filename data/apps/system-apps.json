@@ -4,7 +4,7 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.09.20.2",
+    "catalogVersion": "2026.09.20.3",
     "updatedAt": "2026-09-20T00:00:00+09:00"
   },
   "apps": [
@@ -237,7 +237,7 @@
       "category": "system",
       "version": "1.2.0",
       "icon": "assets/icons/navigation.svg",
-      "entry": "road.html?v=20260920-3",
+      "entry": "road.html?v=20260920-4",
       "install": {
         "defaultState": "installed",
         "uninstallable": false

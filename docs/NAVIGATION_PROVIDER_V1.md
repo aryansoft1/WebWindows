@@ -61,7 +61,7 @@
 
 ## 后续阶段
 
-1. 在 IIS 进程环境配置 `WEBWINDOWS_AMAP_KEY`、`WEBWINDOWS_BAIDU_MAP_AK` 和 `WEBWINDOWS_GOOGLE_ROUTES_API_KEY`，并完成采购、许可、配额、缓存和监控配置。
+1. 将 `api/navigation-proxy.config.example.asp` 复制为服务器上的 `api/navigation-proxy.config.asp`，填写 `WEBWINDOWS_AMAP_KEY`、`WEBWINDOWS_BAIDU_MAP_AK` 和 `WEBWINDOWS_GOOGLE_ROUTES_API_KEY`。真实配置文件不进入 Git；发布脚本仅在文件不存在时创建空模板，后续发布会保留已有密钥。
 2. 选择覆盖目标城市、能返回公交线路及 IC/现金票价的供应商，完成 `transit` 与 `costs` 契约。
 3. 在独立隐私审查后评估语音引导、实时交通，以及由用户单独选择开启的桌讯主动建议。
 4. 仅在供应商许可明确允许打包/预取时评估离线地图。

@@ -7,6 +7,9 @@ const html=await fs.readFile(new URL("../road.html",import.meta.url),"utf8");
 const appSource=await fs.readFile(new URL("../assets/js/navigation-app.js",import.meta.url),"utf8");
 const deskTalkSource=await fs.readFile(new URL("../assets/js/desktalk.js",import.meta.url),"utf8");
 const languageSource=await fs.readFile(new URL("../assets/js/tw.js",import.meta.url),"utf8");
+const proxySource=await fs.readFile(new URL("../api/navigation-proxy.asp",import.meta.url),"utf8");
+const proxyConfigTemplate=await fs.readFile(new URL("../api/navigation-proxy.config.example.asp",import.meta.url),"utf8");
+const deploySource=await fs.readFile(new URL("../tools/deploy-wendao-scoped.ps1",import.meta.url),"utf8");
 const catalog=JSON.parse(await fs.readFile(new URL("../data/apps/system-apps.json",import.meta.url),"utf8"));
 
 function load({config={},fetchImpl=async()=>{throw new Error("offline")}}={}){
@@ -132,5 +135,12 @@ assert.match(html,/<title>问道<\/title>/);
 assert.match(deskTalkSource,/WebWindowsDeskTalk/);
 assert.match(deskTalkSource,/不接受坐标/);
 assert.match(languageSource,/"问道": "Wendao"/);
+assert.match(proxySource,/ReadUtf8File\(Server\.MapPath\("navigation-proxy\.config\.asp"\)\)/);
+assert.doesNotMatch(proxySource,/Function EnvironmentValue/);
+assert.match(proxyConfigTemplate,/WEBWINDOWS_AMAP_KEY/);
+assert.match(proxyConfigTemplate,/WEBWINDOWS_BAIDU_MAP_AK/);
+assert.match(proxyConfigTemplate,/WEBWINDOWS_GOOGLE_ROUTES_API_KEY/);
+assert.match(deploySource,/routing_config=preserved/);
+assert.match(deploySource,/routing_config=created/);
 
 console.log("navigation map, provider, and integration smoke tests passed");

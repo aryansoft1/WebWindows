@@ -7,6 +7,7 @@ Response.CacheControl = "no-store"
 
 Const MAX_REQUEST_BYTES = 16384
 Dim Q : Q = Chr(34)
+Dim RoutingConfigText : RoutingConfigText = ReadUtf8File(Server.MapPath("navigation-proxy.config.asp"))
 
 If Request.ServerVariables("REQUEST_METHOD") <> "POST" Then
   Response.Status = "405 Method Not Allowed"
@@ -49,8 +50,8 @@ Else
 End If
 
 Sub ProxyChina(travelMode, originLat, originLng, destinationLat, destinationLng)
-  Dim amapKey : amapKey = EnvironmentValue("WEBWINDOWS_AMAP_KEY")
-  Dim baiduKey : baiduKey = EnvironmentValue("WEBWINDOWS_BAIDU_MAP_AK")
+  Dim amapKey : amapKey = RoutingSecret("WEBWINDOWS_AMAP_KEY")
+  Dim baiduKey : baiduKey = RoutingSecret("WEBWINDOWS_BAIDU_MAP_AK")
   If Len(amapKey) > 0 Then
     ProxyAmap travelMode, originLat, originLng, destinationLat, destinationLng, amapKey
   ElseIf Len(baiduKey) > 0 Then
@@ -96,7 +97,7 @@ Sub ProxyBaidu(travelMode, originLat, originLng, destinationLat, destinationLng,
 End Sub
 
 Sub ProxyGoogle(travelMode, originLat, originLng, destinationLat, destinationLng)
-  Dim apiKey : apiKey = EnvironmentValue("WEBWINDOWS_GOOGLE_ROUTES_API_KEY")
+  Dim apiKey : apiKey = RoutingSecret("WEBWINDOWS_GOOGLE_ROUTES_API_KEY")
   If Len(apiKey) = 0 Then NotConfigured "Global routing"
   Dim googleMode
   Select Case travelMode
@@ -154,12 +155,27 @@ Function AmapCityCode(location, apiKey)
   On Error GoTo 0
 End Function
 
-Function EnvironmentValue(name)
-  EnvironmentValue = ""
+Function RoutingSecret(name)
+  RoutingSecret = ""
+  If Len(RoutingConfigText) = 0 Then Exit Function
+  Dim re : Set re = New RegExp
+  re.Pattern = "(?:Const\s+)?" & name & "\s*=\s*" & Q & "([^" & Q & "]*)" & Q
+  re.IgnoreCase = True
+  Dim matches : Set matches = re.Execute(RoutingConfigText)
+  If matches.Count > 0 Then RoutingSecret = Trim(matches(0).SubMatches(0))
+End Function
+
+Function ReadUtf8File(filePath)
+  ReadUtf8File = ""
   On Error Resume Next
-  Dim shell : Set shell = Server.CreateObject("WScript.Shell")
-  EnvironmentValue = Trim(shell.Environment("PROCESS")(name) & "")
-  If Len(EnvironmentValue) = 0 Then EnvironmentValue = Trim(shell.Environment("SYSTEM")(name) & "")
+  Dim stream : Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.LoadFromFile filePath
+  If Err.Number = 0 Then ReadUtf8File = stream.ReadText
+  If Not stream Is Nothing Then stream.Close
+  Set stream = Nothing
   Err.Clear
   On Error GoTo 0
 End Function

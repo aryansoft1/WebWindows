@@ -14,6 +14,8 @@ if ($files[-1] -ne "deploy/ftp-manifest.json") { throw "Deployment manifest must
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-wendao-scoped")
 $verifyRoot = Join-Path $backupRoot ".verify"
+$routingConfigRelative = "api/navigation-proxy.config.asp"
+$routingConfigTemplate = Join-Path $repo "api\navigation-proxy.config.example.asp"
 
 function Get-FtpUri([string]$relative) {
   return "ftp://" + $ftpHost + "/wwwroot/" + $relative
@@ -53,6 +55,19 @@ function Send-FtpFile([string]$relative, [string]$source) {
   try { } finally { $response.Dispose() }
 }
 
+function Test-And-BackupFtpFile([string]$relative, [string]$destination) {
+  try {
+    Receive-FtpFile $relative $destination
+    return $true
+  } catch [Net.WebException] {
+    $ftpResponse = $_.Exception.Response
+    if ($ftpResponse -and $ftpResponse.StatusCode -eq [Net.FtpStatusCode]::ActionNotTakenFileUnavailable) {
+      return $false
+    }
+    throw
+  }
+}
+
 $manifestBackup = Join-Path $backupRoot "deploy\ftp-manifest.json"
 Receive-FtpFile "deploy/ftp-manifest.json" $manifestBackup
 $productionManifest = Get-Content -LiteralPath $manifestBackup -Raw | ConvertFrom-Json
@@ -67,6 +82,19 @@ foreach ($relative in $files) {
   Receive-FtpFile $relative $backup
   $actual = (Get-FileHash -LiteralPath $backup -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($actual -ne [string]$entry.Value.sha256) { throw "Production file changed outside its manifest: $relative" }
+}
+
+$routingConfigBackup = Join-Path $backupRoot ($routingConfigRelative -replace '/', '\')
+if (Test-And-BackupFtpFile $routingConfigRelative $routingConfigBackup) {
+  Write-Output "routing_config=preserved"
+} else {
+  Send-FtpFile $routingConfigRelative $routingConfigTemplate
+  $routingConfigVerify = Join-Path $verifyRoot ($routingConfigRelative -replace '/', '\')
+  Receive-FtpFile $routingConfigRelative $routingConfigVerify
+  $templateHash = (Get-FileHash -LiteralPath $routingConfigTemplate -Algorithm SHA256).Hash.ToLowerInvariant()
+  $remoteConfigHash = (Get-FileHash -LiteralPath $routingConfigVerify -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($templateHash -ne $remoteConfigHash) { throw "Routing config template upload verification failed." }
+  Write-Output "routing_config=created"
 }
 
 foreach ($relative in $files) {

@@ -7,4 +7,6 @@ dist-weather/
 !.env.example
 cloud/desktalk/chatproxy.config.asp
 !cloud/desktalk/chatproxy.config.example.asp
+api/navigation-proxy.config.asp
+!api/navigation-proxy.config.example.asp
 deploy/backups/

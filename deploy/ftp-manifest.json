@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.4",
-  "catalogVersion": "2026.09.20.4",
-  "generatedAt": "2026-09-20T12:20:47.005Z",
+  "releaseVersion": "2026.09.20.5",
+  "catalogVersion": "2026.09.20.5",
+  "generatedAt": "2026-09-20T13:45:53.477Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -241,9 +241,10 @@
     "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js",
     "api/navigation-proxy.asp",
-    "assets/js/navigation-config.js"
+    "assets/js/navigation-config.js",
+    "api/navigation-proxy.config.example.asp"
   ],
-  "previousReleaseVersion": "2026.09.20.3",
+  "previousReleaseVersion": "2026.09.20.4",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -926,7 +927,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "77f7475fa7c6dff8e8a46e027741332dde272b4864271d31623bb78ddccf9e03",
+      "sha256": "ad617a39deeaf5be9fd5f57cae0d4fa3c93ac9b2b8e6b8597dda5e17229385db",
       "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1182,23 +1183,23 @@
       "size": 18624
     },
     "api/navigation-proxy.asp": {
-      "sha256": "01efcaf16073beff5d7e8e8ac902da6d404b1edaf9fc25688ebed365277bf483",
-      "size": 10127
+      "sha256": "aa13b048e20db4e054169ee57ccf4a0b3cea1e57f2b18913c08f407c5d8166bd",
+      "size": 10648
     },
     "assets/js/navigation-config.js": {
       "sha256": "ec9622450ca2f6710a79300cd9a2fd539da8c31a505d3c1bdfe6f5c767c61ca3",
       "size": 184
+    },
+    "api/navigation-proxy.config.example.asp": {
+      "sha256": "6986830023a3125ed3e53d377f3953b48d09f568c931b2760ef946a59242a670",
+      "size": 266
     }
   },
   "releaseScope": "navigation-map",
   "uploadFiles": [
     "api/navigation-proxy.asp",
-    "assets/js/navigation-config.js",
-    "assets/js/navigation-providers.js",
-    "assets/js/navigation-app.js",
-    "assets/css/navigation.css",
+    "api/navigation-proxy.config.example.asp",
     "data/apps/system-apps.json",
-    "road.html",
     "deploy/ftp-manifest.json"
   ]
 }

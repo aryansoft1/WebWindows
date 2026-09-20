@@ -131,6 +131,12 @@ Sub ProxyOrs(travelMode, originLat, originLng, destinationLat, destinationLng)
 End Sub
 
 Function HttpRequest(method, url, payload, authorization, timeoutMs)
+  Dim result : result = ServerXmlHttpRequest(method, url, payload, authorization, timeoutMs)
+  If result(2) Then result = WinHttpRequest(method, url, payload, authorization, timeoutMs)
+  HttpRequest = result
+End Function
+
+Function ServerXmlHttpRequest(method, url, payload, authorization, timeoutMs)
   On Error Resume Next
   Dim http : Set http = Server.CreateObject("MSXML2.ServerXMLHTTP.6.0")
   If Err.Number <> 0 Then
@@ -139,27 +145,52 @@ Function HttpRequest(method, url, payload, authorization, timeoutMs)
   End If
   If Err.Number <> 0 Then
     Err.Clear
-    HttpRequest = Array(0, "", True)
+    ServerXmlHttpRequest = Array(0, "", True)
     Exit Function
   End If
   http.setTimeouts 10000, 10000, 30000, timeoutMs
   http.open method, url, False
-  If InStr(1, url, "https://api.openrouteservice.org/", vbTextCompare) = 1 Then
-    http.setRequestHeader "Accept", "application/geo+json"
-  Else
-    http.setRequestHeader "Accept", "application/json"
-  End If
-  If method = "POST" Then http.setRequestHeader "Content-Type", "application/json"
-  If Len(authorization) > 0 Then http.setRequestHeader "Authorization", authorization
+  SetRequestHeaders http, method, url, authorization
   http.send payload
   If Err.Number <> 0 Then
     Err.Clear
-    HttpRequest = Array(0, "", True)
+    ServerXmlHttpRequest = Array(0, "", True)
   Else
-    HttpRequest = Array(CLng(http.status), CStr(http.responseText), False)
+    ServerXmlHttpRequest = Array(CLng(http.status), CStr(http.responseText), False)
   End If
   On Error GoTo 0
 End Function
+
+Function WinHttpRequest(method, url, payload, authorization, timeoutMs)
+  On Error Resume Next
+  Dim http : Set http = Server.CreateObject("WinHttp.WinHttpRequest.5.1")
+  If Err.Number <> 0 Then
+    Err.Clear
+    WinHttpRequest = Array(0, "", True)
+    Exit Function
+  End If
+  http.SetTimeouts 10000, 10000, 30000, timeoutMs
+  http.Open method, url, False
+  SetRequestHeaders http, method, url, authorization
+  http.Send payload
+  If Err.Number <> 0 Then
+    Err.Clear
+    WinHttpRequest = Array(0, "", True)
+  Else
+    WinHttpRequest = Array(CLng(http.Status), CStr(http.ResponseText), False)
+  End If
+  On Error GoTo 0
+End Function
+
+Sub SetRequestHeaders(http, method, url, authorization)
+  If InStr(1, url, "https://api.openrouteservice.org/", vbTextCompare) = 1 Then
+    http.SetRequestHeader "Accept", "application/geo+json"
+  Else
+    http.SetRequestHeader "Accept", "application/json"
+  End If
+  If method = "POST" Then http.SetRequestHeader "Content-Type", "application/json"
+  If Len(authorization) > 0 Then http.SetRequestHeader "Authorization", authorization
+End Sub
 
 Sub WriteJson(json)
   Response.Status = "200 OK"

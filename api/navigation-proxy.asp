@@ -125,7 +125,7 @@ Sub ProxyOrs(travelMode, originLat, originLng, destinationLat, destinationLng)
     Case Else : WriteError "422 Unprocessable Entity", "unsupported_mode", "This travel mode is not supported."
   End Select
   Dim payload : payload = "{" & Q & "coordinates" & Q & ":[[" & JsonNumber(originLng) & "," & JsonNumber(originLat) & "],[" & JsonNumber(destinationLng) & "," & JsonNumber(destinationLat) & "]]}"
-  Dim result : result = HttpRequest("POST", "https://api.openrouteservice.org/v2/directions/" & profile & "/geojson", payload, apiKey, 45000)
+  Dim result : result = HttpRequest("POST", "https://api.heigit.org/openrouteservice/v2/directions/" & profile & "/geojson", payload, apiKey, 45000)
   If result(0) < 200 Or result(0) >= 300 Then ProviderFailure result
   WriteOrsRoute result(1), travelMode
 End Sub
@@ -208,7 +208,7 @@ Function WinHttpRequest(method, url, payload, authorization, timeoutMs)
 End Function
 
 Sub SetRequestHeaders(http, method, url, authorization)
-  If InStr(1, url, "https://api.openrouteservice.org/", vbTextCompare) = 1 Then
+  If InStr(1, url, "https://api.heigit.org/openrouteservice/", vbTextCompare) = 1 Then
     http.SetRequestHeader "Accept", "application/geo+json"
   Else
     http.SetRequestHeader "Accept", "application/json"

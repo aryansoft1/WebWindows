@@ -21,7 +21,8 @@
 | 场景 | 推荐候选 | 坐标与覆盖 | Key / 成本 | 结论 |
 | --- | --- | --- | --- | --- |
 | 中国大陆 | 高德或百度等已签约大陆服务 | 通常以 GCJ-02/供应商坐标体系返回，大陆地理编码与路线覆盖较好 | 需要账户、应用 Key、域名/安全配置；商业用量可能计费 | 通过 `cn-proxy` 接入，采购和条款确认前不得默认启用 |
-| 海外 | openrouteservice / HeiGIT | WGS-84；当前接入驾车、步行和骑行 Directions | API Key 只留同源 ASP 代理；公共服务有配额限制 | 通过 `global-proxy` 接入；公共交通保持独立 capability，当前不启用 |
+| 海外道路 | openrouteservice / HeiGIT | WGS-84；当前接入驾车、步行和骑行 Directions | API Key 只留同源 ASP 代理；请求使用 `api.heigit.org/openrouteservice` | 通过 `global-proxy` 接入 |
+| 海外公共交通 | Transitous / MOTIS | WGS-84；接入真实公交、铁路和步行接驳线路 | 无密钥；遵守公共实例的轻量使用与署名要求 | 浏览器调用公开 API，并显示数据来源链接；费用仅在上游实际返回时显示 |
 | 无密钥社区预览 | OpenFreeMap + Photon + OSRM | WGS-84；全球矢量道路与地名，驾车道路规划 | 无 Key；公共服务无 SLA，并要求合理使用与署名 | 当前默认可用模式；上线前应切换签约或自托管服务 |
 | OSM 标准瓦片 | `tile.openstreetmap.org` | 全球，但仅是社区公共瓦片服务 | 无 SLA，要求署名、缓存、身份标识并禁止批量/离线抓取 | 否决作为 WebWindows 生产默认底图；只能选择许可明确的商业托管或自托管 |
 

@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org https://photon.komoot.io https://router.project-osrm.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org https://photon.komoot.io https://router.project-osrm.org https://api.transitous.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>问道</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css">
   <link rel="stylesheet" href="assets/css/navigation.css?v=20260920-5">
   <script defer src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
   <script defer src="assets/js/navigation-config.js?v=20260920-5"></script>
-  <script defer src="assets/js/navigation-providers.js?v=20260920-12"></script>
-  <script defer src="assets/js/navigation-app.js?v=20260920-12"></script>
+  <script defer src="assets/js/navigation-providers.js?v=20260921-1"></script>
+  <script defer src="assets/js/navigation-app.js?v=20260921-1"></script>
 </head>
 <body>
   <main class="navigation-shell">
@@ -53,7 +53,7 @@
         <p id="route-note"></p><ol id="route-steps"></ol>
         <div class="guidance-actions"><button id="navigation-button" type="button" data-i18n="startNavigation">开始导航</button><button id="ask-desktalk" type="button" data-i18n="askDeskTalk">问桌讯</button></div>
       </section>
-      <details class="privacy-note"><summary data-i18n="privacyTitle">数据来源、隐私与使用限制</summary><p data-i18n="privacyText">交互底图来自 OpenFreeMap。社区模式会将搜索词发送给 Photon、将驾车起终点发送给 OSRM。首次进入会请求定位，以当前位置初始化地图；持续定位只在开始导航后启用，停止导航或关闭页面即终止。</p></details>
+      <details class="privacy-note"><summary data-i18n="privacyTitle">数据来源、隐私与使用限制</summary><p data-i18n="privacyText">交互底图来自 OpenFreeMap。社区模式会将搜索词发送给 Photon、将驾车起终点发送给 OSRM；海外公共交通起终点会发送给 Transitous。</p><a href="https://transitous.org/sources/" target="_blank" rel="noopener noreferrer">Transitous 数据来源</a></details>
     </section>
     <section class="map-panel" aria-label="交互地图" data-i18n-aria="interactiveMap">
       <div id="map" tabindex="0" aria-label="可平移、缩放并选择起终点的交互地图" data-i18n-aria="mapAria"></div>

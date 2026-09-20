@@ -97,12 +97,29 @@ assert.equal(orsRoute.distance,1320);
 assert.equal(orsRoute.geometry.length,2);
 assert.equal(orsRoute.steps[0].instruction,"向东步行");
 
-const unsupportedTransit=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async()=>({ok:false,status:422,json:async()=>({error:{code:"unsupported_mode",message:"Public transit routing is unavailable."}})})});
-const unsupportedRoute=await unsupportedTransit.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"transit","auto");
-assert.equal(unsupportedRoute.routeUnavailable,true);
-assert.equal(unsupportedRoute.unsupportedMode,true);
-assert.equal(unsupportedRoute.errorCode,"unsupported_mode");
-assert.equal(unsupportedRoute.geometry.length,0);
+let transitousRequest;
+const transitous=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async url=>{
+  transitousRequest=new URL(String(url));
+  return {ok:true,status:200,json:async()=>({itineraries:[{duration:1680,transfers:1,legs:[
+    {mode:"WALK",from:{name:"東京"},to:{name:"東京駅"},distance:180,legGeometry:{points:"{yx`cAisuqiGoFwA",precision:6}},
+    {mode:"REGIONAL_RAIL",from:{name:"東京駅"},to:{name:"新宿駅"},distance:12600,routeShortName:"JR",agencyName:"JR東日本",headsign:"新宿",legGeometry:{points:"_jyaE_~fsXo}@n}M",precision:5}}
+  ]}]})};
+}});
+const transitousRoute=await transitous.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"transit","auto");
+assert.equal(transitousRequest.origin,"https://api.transitous.org");
+assert.equal(transitousRequest.searchParams.get("transitModes"),"TRANSIT");
+assert.equal(transitousRequest.searchParams.get("fromPlace"),"35.6812,139.7671");
+assert.equal(transitousRoute.routeUnavailable,undefined);
+assert.equal(transitousRoute.provider.id,"transitous");
+assert.ok(transitousRoute.geometry.length>=2);
+assert.equal(transitousRoute.duration,1680);
+assert.match(transitousRoute.steps[1].instruction,/JR東日本/);
+
+const unavailableTransit=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async()=>({ok:true,status:200,json:async()=>({itineraries:[]})})});
+const unavailableTransitRoute=await unavailableTransit.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"transit","auto");
+assert.equal(unavailableTransitRoute.routeUnavailable,true);
+assert.equal(unavailableTransitRoute.errorCode,"route_not_found");
+assert.equal(unavailableTransitRoute.geometry.length,0);
 
 for(const scenario of [
   {status:503,code:"provider_not_configured"},
@@ -139,11 +156,13 @@ assert.equal(offlineSearch.results[0].name,"东京");
 const navApp=catalog.apps.find(app=>app.id==="webwindows.system.navigation");
 assert.ok(navApp&&navApp.placement.desktop&&navApp.placement.startMenu);
 assert.equal(navApp.name,"问道");
-assert.equal(navApp.version,"1.3.1");
+assert.equal(navApp.version,"1.4.0");
 assert.match(html,/maplibre-gl@5\.6\.1/);
 assert.match(html,/tiles\.openfreemap\.org/);
 assert.match(html,/photon\.komoot\.io/);
 assert.match(html,/router\.project-osrm\.org/);
+assert.match(html,/api\.transitous\.org/);
+assert.match(html,/https:\/\/transitous\.org\/sources\//);
 assert.doesNotMatch(html,/tile\.openstreetmap\.org|api[_-]?key|access_token/i);
 assert.doesNotMatch(appSource,/\.innerHTML\s*=/);
 assert.match(appSource,/new maplibregl\.Map/);
@@ -176,7 +195,8 @@ assert.match(proxyConfigTemplate,/WEBWINDOWS_AMAP_KEY/);
 assert.match(proxyConfigTemplate,/WEBWINDOWS_BAIDU_MAP_AK/);
 assert.match(proxyConfigTemplate,/WEBWINDOWS_ORS_API_KEY/);
 assert.doesNotMatch(proxyConfigTemplate,/GOOGLE_ROUTES/);
-assert.match(proxySource,/https:\/\/api\.openrouteservice\.org\/v2\/directions\//);
+assert.match(proxySource,/https:\/\/api\.heigit\.org\/openrouteservice\/v2\/directions\//);
+assert.doesNotMatch(proxySource,/https:\/\/api\.openrouteservice\.org\//);
 assert.match(proxySource,/\/geojson/);
 assert.match(proxySource,/"driving-car"/);
 assert.match(proxySource,/"foot-walking"/);
@@ -199,7 +219,8 @@ assert.ok(proxySource.indexOf("AmapRouteUrl")<proxySource.indexOf("BaiduRouteUrl
 const mainlandProxySource=proxySource.slice(proxySource.indexOf("Sub ProxyChina"),proxySource.indexOf("End Sub",proxySource.indexOf("Sub ProxyChina")));
 assert.doesNotMatch(mainlandProxySource,/ProxyOrs|openrouteservice|WEBWINDOWS_ORS/);
 assert.doesNotMatch(proxySource,/Google|googleapis|X-Goog/i);
-assert.doesNotMatch(providerSource,/Google Routes|normalizeGoogle|decodePolyline/);
+assert.doesNotMatch(providerSource,/Google Routes|normalizeGoogle/);
+assert.match(providerSource,/api\.transitous\.org\/api\/v6\/plan/);
 assert.doesNotMatch(proxySource,/responseText.*WriteError|WriteError.*responseText/i,"upstream response bodies must not be exposed in errors");
 assert.doesNotMatch(proxySource,/Response\.Write[^\r\n]*(?:apiKey|authorization)/i,"secrets must not be written to route responses");
 assert.match(deploySource,/routing_config=preserved/);

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.5",
+  "releaseVersion": "2026.09.20.6",
   "catalogVersion": "2026.09.20.5",
-  "generatedAt": "2026-09-20T13:45:53.477Z",
+  "generatedAt": "2026-09-20T13:49:37.394Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -242,13 +242,19 @@
     "assets/js/navigation-providers.js",
     "api/navigation-proxy.asp",
     "assets/js/navigation-config.js",
-    "api/navigation-proxy.config.example.asp"
+    "api/navigation-proxy.config.example.asp",
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "assets/css/tailwind.min.css",
+    "admin_api/visitorAnalytics.asp",
+    "api/visitor-analytics.asp",
+    "assets/js/visitor-analytics.js"
   ],
-  "previousReleaseVersion": "2026.09.20.4",
+  "previousReleaseVersion": "2026.09.20.5",
   "integrity": {
     "index.html": {
-      "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
-      "size": 33735
+      "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
+      "size": 33818
     },
     "api/function-catalog.asp": {
       "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
@@ -1193,13 +1199,41 @@
     "api/navigation-proxy.config.example.asp": {
       "sha256": "6986830023a3125ed3e53d377f3953b48d09f568c931b2760ef946a59242a670",
       "size": 266
+    },
+    "SystemManager/visitor-analytics.html": {
+      "sha256": "018e4065789ea9f0fa0bf860836bee8528c3c87147550a5838245c5f8d407159",
+      "size": 4261
+    },
+    "SystemManager/assets/js/visitor-analytics.js": {
+      "sha256": "ce47ec655293a86f6a4b7b01b84c18e5e917699546b4418c8a1c54e597450902",
+      "size": 6835
+    },
+    "assets/css/tailwind.min.css": {
+      "sha256": "0729906a529caf8b5dbe648cbc3952833afe118a25a841c8ae27e1cd1a8ac14c",
+      "size": 201
+    },
+    "admin_api/visitorAnalytics.asp": {
+      "sha256": "9fd0de089eafed06a3285733103f2873848b9b526f3ed7841241dbef426ed11c",
+      "size": 8462
+    },
+    "api/visitor-analytics.asp": {
+      "sha256": "895db988c97253bd7f16586f4a7a436adbcc1e45a4d565a17e1f9830d9e3e2e2",
+      "size": 11786
+    },
+    "assets/js/visitor-analytics.js": {
+      "sha256": "38d433c4e2592c0a2ab8e2730bc343c851cf11c7c902830407433475e359caa1",
+      "size": 5767
     }
   },
-  "releaseScope": "navigation-map",
+  "releaseScope": "visitor-analytics",
   "uploadFiles": [
-    "api/navigation-proxy.asp",
-    "api/navigation-proxy.config.example.asp",
-    "data/apps/system-apps.json",
+    "index.html",
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "assets/css/tailwind.min.css",
+    "admin_api/visitorAnalytics.asp",
+    "api/visitor-analytics.asp",
+    "assets/js/visitor-analytics.js",
     "deploy/ftp-manifest.json"
   ]
 }

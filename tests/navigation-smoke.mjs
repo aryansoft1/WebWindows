@@ -51,7 +51,9 @@ assert.equal(search.results[0].name,"东京站");
 const route=await online.route({name:"东京",lat:35.6812,lng:139.7671},{name:"新宿",lat:35.6895,lng:139.6917},"driving","community");
 assert.equal(route.estimated,false);
 assert.equal(route.geometry.length,2);
-assert.match(route.steps[1].instruction,/右转/);
+assert.equal(route.steps[1].type,"turn");
+assert.equal(route.steps[1].modifier,"right");
+assert.equal(route.steps[1].instruction,undefined);
 const automaticDriving=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async url=>{
   assert.match(String(url),/^https:\/\/router\.project-osrm\.org\/route\/v1\/driving\//);
   return {ok:true,status:200,json:async()=>({routes:[{distance:12340,duration:1800,geometry:{type:"LineString",coordinates:[[139.7671,35.6812],[139.6917,35.6895]]},legs:[{steps:[]}]}]})};

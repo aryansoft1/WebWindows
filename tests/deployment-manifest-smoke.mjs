@@ -63,6 +63,13 @@ if (manifest.releaseScope === "navigation-map") {
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json",
   ], "navigation transit releases must upload only the changed navigation runtime slice");
+} else if (manifest.releaseScope === "navigation-localization") {
+  assert.deepEqual(uploadFiles, [
+    "road.html",
+    "assets/js/navigation-providers.js",
+    "data/apps/system-apps.json",
+    "deploy/ftp-manifest.json",
+  ], "navigation localization releases must upload only the changed client files");
 } else if (manifest.releaseScope === "camera-registry") {
   assert.deepEqual(uploadFiles, [
     "data/apps/system-apps.json",

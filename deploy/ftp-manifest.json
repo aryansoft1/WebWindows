@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.21.2",
-  "catalogVersion": "2026.09.21.2",
-  "generatedAt": "2026-09-20T19:08:33.485Z",
+  "releaseVersion": "2026.09.21.3",
+  "catalogVersion": "2026.09.21.3",
+  "generatedAt": "2026-09-20T19:12:27.015Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -252,7 +252,7 @@
     "SystemManager/index.html",
     "SystemManager/assets/css/visitor-analytics.css"
   ],
-  "previousReleaseVersion": "2026.09.21.1",
+  "previousReleaseVersion": "2026.09.21.2",
   "integrity": {
     "index.html": {
       "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
@@ -935,7 +935,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "adf1126e2aeda6e152d8e4f1671125ef19933ecbe2bc6e30b47b8cf2f9767ca5",
+      "sha256": "2671d46a106cf717e4c759df6229a36c5c3725fb6a90c877c75abcfb35f355ef",
       "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1171,7 +1171,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "96258b7034aa4f04a32719a408bc630954cc9976685a9a8bf98bab361190f16f",
+      "sha256": "761caa4ee60cda068a7ec75b5d490d0cd3b4730e610149857fa078cf60f5c522",
       "size": 7199
     },
     "assets/css/navigation.css": {
@@ -1187,8 +1187,8 @@
       "size": 39497
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "b0109ada61052019c83b9251852e042950faf66ff0ebebeff878d53924e64f8d",
-      "size": 20537
+      "sha256": "edce23db5f7c622a370a69c35e036781bf93df46890e17a1d288cac6028a691f",
+      "size": 20489
     },
     "api/navigation-proxy.asp": {
       "sha256": "93731f1d64eb0db50f81192e2f4762f9c598d2f78e84c0e26fff40594822bad9",
@@ -1235,12 +1235,10 @@
       "size": 3693
     }
   },
-  "releaseScope": "navigation-transit",
+  "releaseScope": "navigation-localization",
   "uploadFiles": [
     "road.html",
-    "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js",
-    "api/navigation-proxy.asp",
     "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]

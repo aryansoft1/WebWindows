@@ -133,7 +133,32 @@ End Sub
 Function HttpRequest(method, url, payload, authorization, timeoutMs)
   Dim result : result = ServerXmlHttpRequest(method, url, payload, authorization, timeoutMs)
   If result(2) Then result = WinHttpRequest(method, url, payload, authorization, timeoutMs)
+  If result(2) Then result = XmlHttpRequest(method, url, payload, authorization)
   HttpRequest = result
+End Function
+
+Function XmlHttpRequest(method, url, payload, authorization)
+  On Error Resume Next
+  Dim http : Set http = Server.CreateObject("MSXML2.XMLHTTP.6.0")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set http = Server.CreateObject("Microsoft.XMLHTTP")
+  End If
+  If Err.Number <> 0 Then
+    Err.Clear
+    XmlHttpRequest = Array(0, "", True)
+    Exit Function
+  End If
+  http.Open method, url, False
+  SetRequestHeaders http, method, url, authorization
+  http.Send payload
+  If Err.Number <> 0 Then
+    Err.Clear
+    XmlHttpRequest = Array(0, "", True)
+  Else
+    XmlHttpRequest = Array(CLng(http.Status), CStr(http.ResponseText), False)
+  End If
+  On Error GoTo 0
 End Function
 
 Function ServerXmlHttpRequest(method, url, payload, authorization, timeoutMs)

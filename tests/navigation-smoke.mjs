@@ -178,6 +178,8 @@ assert.match(proxySource,/setRequestHeader "Authorization", authorization/i);
 assert.match(proxySource,/setRequestHeader "Accept", "application\/geo\+json"/i);
 assert.match(proxySource,/WinHttp\.WinHttpRequest\.5\.1/);
 assert.match(proxySource,/If result\(2\) Then result = WinHttpRequest/);
+assert.match(proxySource,/MSXML2\.XMLHTTP\.6\.0/);
+assert.match(proxySource,/If result\(2\) Then result = XmlHttpRequest/);
 assert.match(proxySource,/JsonNumber\(originLng\).*JsonNumber\(originLat\).*JsonNumber\(destinationLng\).*JsonNumber\(destinationLat\)/s);
 assert.match(proxySource,/"unsupported_mode"/);
 assert.match(proxySource,/"provider_not_configured"/);

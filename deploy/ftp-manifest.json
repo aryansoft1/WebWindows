@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.10",
-  "catalogVersion": "2026.09.20.10",
-  "generatedAt": "2026-09-20T18:47:32.496Z",
+  "releaseVersion": "2026.09.20.11",
+  "catalogVersion": "2026.09.20.11",
+  "generatedAt": "2026-09-20T18:49:40.572Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -252,7 +252,7 @@
     "SystemManager/index.html",
     "SystemManager/assets/css/visitor-analytics.css"
   ],
-  "previousReleaseVersion": "2026.09.20.9",
+  "previousReleaseVersion": "2026.09.20.10",
   "integrity": {
     "index.html": {
       "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
@@ -935,7 +935,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "353c73d10739a2206713a992d278db4cce209b593fc0af98601008533d31f2ad",
+      "sha256": "5ca140f001ea31636f68dc462f67df3563028bc9abe79e2a00c714a04d37ed5e",
       "size": 13659
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1191,8 +1191,8 @@
       "size": 17295
     },
     "api/navigation-proxy.asp": {
-      "sha256": "939bf19c125626cba00998eef2d083b9f95c15cb059627c4ba4e90d86aaf2851",
-      "size": 19664
+      "sha256": "10a596287b2b38bced1bb07843bfbaaeb084af47d0dae08462382c86e1b5715a",
+      "size": 20417
     },
     "assets/js/navigation-config.js": {
       "sha256": "ec9622450ca2f6710a79300cd9a2fd539da8c31a505d3c1bdfe6f5c767c61ca3",

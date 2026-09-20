@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.3",
-  "catalogVersion": "2026.09.20.3",
-  "generatedAt": "2026-09-20T08:37:33.270Z",
+  "releaseVersion": "2026.09.20.4",
+  "catalogVersion": "2026.09.20.4",
+  "generatedAt": "2026-09-20T12:20:47.005Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -239,9 +239,11 @@
     "assets/css/navigation.css",
     "assets/icons/navigation.svg",
     "assets/js/navigation-app.js",
-    "assets/js/navigation-providers.js"
+    "assets/js/navigation-providers.js",
+    "api/navigation-proxy.asp",
+    "assets/js/navigation-config.js"
   ],
-  "previousReleaseVersion": "2026.09.20.2",
+  "previousReleaseVersion": "2026.09.20.3",
   "integrity": {
     "index.html": {
       "sha256": "9e835b1326e0d93904815efe4eca4465809041f82b9df812a3c777700dc724c1",
@@ -924,7 +926,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "eb864885c4a535f13c9db43f0e0acda308d0e40297b292d4fee8a3078a8b06eb",
+      "sha256": "77f7475fa7c6dff8e8a46e027741332dde272b4864271d31623bb78ddccf9e03",
       "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1160,31 +1162,41 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "c767eab5d5d1ed49a769f9fe2dc7cf01af7b6109ef1741fa899898a9bf91043d",
-      "size": 7225
+      "sha256": "6538d1b0ea31935959e75a5bbf05143d8c96f0cc192ca7d1fd42e2c112475e25",
+      "size": 7152
     },
     "assets/css/navigation.css": {
-      "sha256": "1f93211fb82baf35f22cc930bbd667866323a77bdea65ffde66d5d56a69c6c7e",
-      "size": 13214
+      "sha256": "46b0306da33e8fbe47c9973e626c6aa41a4f1df596f1d7171292ded7b5111144",
+      "size": 12970
     },
     "assets/icons/navigation.svg": {
       "sha256": "3a42c23c1f7ad4af0cebc75ab8692706c7be473542abb153de95cf5f1b076a7d",
       "size": 835
     },
     "assets/js/navigation-app.js": {
-      "sha256": "dd4a1991a794dfd6f3d2595977f54591fde55ef854816ce042abf1a79e7c746b",
-      "size": 38461
+      "sha256": "3743aed4bcaee4fbae9b586ee47098f959f2db27e738824a8c2970fd8a2271b9",
+      "size": 36921
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "6fca907789f854792dd9cef97f0f7ffdea5c7af745cd26cca87618d4bc2c25c4",
-      "size": 14799
+      "sha256": "12aa192e42001ec7386d6db0989681409399d49d8795c161fab72979608b0558",
+      "size": 18624
+    },
+    "api/navigation-proxy.asp": {
+      "sha256": "01efcaf16073beff5d7e8e8ac902da6d404b1edaf9fc25688ebed365277bf483",
+      "size": 10127
+    },
+    "assets/js/navigation-config.js": {
+      "sha256": "ec9622450ca2f6710a79300cd9a2fd539da8c31a505d3c1bdfe6f5c767c61ca3",
+      "size": 184
     }
   },
   "releaseScope": "navigation-map",
   "uploadFiles": [
-    "assets/css/navigation.css",
-    "assets/js/navigation-app.js",
+    "api/navigation-proxy.asp",
+    "assets/js/navigation-config.js",
     "assets/js/navigation-providers.js",
+    "assets/js/navigation-app.js",
+    "assets/css/navigation.css",
     "data/apps/system-apps.json",
     "road.html",
     "deploy/ftp-manifest.json"

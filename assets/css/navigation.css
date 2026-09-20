@@ -402,17 +402,6 @@ select {
   font-weight: 700;
   cursor: pointer;
 }
-.route-result > .external-route {
-  min-height: 43px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--green);
-  border-radius: 11px;
-  color: var(--green);
-  font-weight: 700;
-  text-decoration: none;
-  margin-bottom: 13px;
-}
 .guidance-actions button + button {
   background: transparent;
   color: var(--green);

@@ -6,10 +6,11 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org https://photon.komoot.io https://router.project-osrm.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>问道</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="assets/css/navigation.css?v=20260920-4">
+  <link rel="stylesheet" href="assets/css/navigation.css?v=20260920-5">
   <script defer src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
-  <script defer src="assets/js/navigation-providers.js?v=20260920-4"></script>
-  <script defer src="assets/js/navigation-app.js?v=20260920-4"></script>
+  <script defer src="assets/js/navigation-config.js?v=20260920-5"></script>
+  <script defer src="assets/js/navigation-providers.js?v=20260920-5"></script>
+  <script defer src="assets/js/navigation-app.js?v=20260920-5"></script>
 </head>
 <body>
   <main class="navigation-shell">
@@ -39,11 +40,10 @@
       </div>
       <div class="route-actions">
         <button id="route-button" class="primary-button" type="button" data-i18n="planRoute">开始规划</button>
-        <label class="provider-select"><span data-i18n="mapService">地图服务</span><select id="provider-mode"><option value="community" data-i18n="communityMap">全球社区地图</option><option value="auto" data-i18n="autoSelect">自动选择</option><option value="cn-proxy" data-i18n="chinaService">中国大陆服务</option><option value="global-proxy" data-i18n="adminService">管理员服务</option><option value="offline" data-i18n="offlineFallback">离线降级</option></select></label>
+        <label class="provider-select"><span data-i18n="mapService">地图服务</span><select id="provider-mode"><option value="auto" data-i18n="autoSelect" selected>自动选择</option><option value="community" data-i18n="communityMap">全球社区地图</option><option value="cn-proxy" data-i18n="chinaService">中国大陆服务</option><option value="global-proxy" data-i18n="adminService">全球路线服务</option><option value="offline" data-i18n="offlineFallback">离线降级</option></select></label>
       </div>
       <div id="status" class="status" role="status" aria-live="polite"></div>
       <section id="route-result" class="route-result" hidden aria-label="路线结果" data-i18n-aria="routeResult">
-        <a id="external-route" class="external-route" href="#" target="_blank" rel="noopener noreferrer" data-i18n="openRealRoute" hidden>查看真实路线</a>
         <div class="route-summary"><div><strong id="route-duration"></strong><span id="route-distance"></span></div><span id="route-source" class="source-pill"></span></div>
         <div id="route-costs" class="route-costs" hidden>
           <div><span data-i18n="tollFee">高速/通行费</span><strong id="cost-toll">—</strong></div>

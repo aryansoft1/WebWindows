@@ -20,6 +20,9 @@ function addReference(value, owner = "index.html") {
 }
 
 for (const owner of manifest.requiredFiles.filter((file) => /\.(?:asp|html?)$/i.test(file))) {
+  // The admin shell links to pre-existing modules that are deployed independently.
+  // Its visitor-analytics target is still tracked explicitly by this scoped release.
+  if (manifest.releaseScope === "visitor-analytics" && owner === "SystemManager/index.html") continue;
   const source = await readFile(resolve(root, owner), "utf8");
   for (const match of source.matchAll(/(?:src|href)=[\"']([^\"']+)[\"']/gi)) addReference(match[1], owner);
   if (owner === "index.html") {

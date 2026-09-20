@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.20.6",
+  "releaseVersion": "2026.09.20.7",
   "catalogVersion": "2026.09.20.5",
-  "generatedAt": "2026-09-20T13:49:37.394Z",
+  "generatedAt": "2026-09-20T14:26:40.5Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -248,9 +248,11 @@
     "assets/css/tailwind.min.css",
     "admin_api/visitorAnalytics.asp",
     "api/visitor-analytics.asp",
-    "assets/js/visitor-analytics.js"
+    "assets/js/visitor-analytics.js",
+    "SystemManager/index.html",
+    "SystemManager/assets/css/visitor-analytics.css"
   ],
-  "previousReleaseVersion": "2026.09.20.5",
+  "previousReleaseVersion": "2026.09.20.6",
   "integrity": {
     "index.html": {
       "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
@@ -1201,8 +1203,8 @@
       "size": 266
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "018e4065789ea9f0fa0bf860836bee8528c3c87147550a5838245c5f8d407159",
-      "size": 4261
+      "sha256": "f599505cd7c6e5b8344adfe57fed5c7ad5da8ca1573d1636d3f0cbdd523da481",
+      "size": 4275
     },
     "SystemManager/assets/js/visitor-analytics.js": {
       "sha256": "ce47ec655293a86f6a4b7b01b84c18e5e917699546b4418c8a1c54e597450902",
@@ -1223,17 +1225,21 @@
     "assets/js/visitor-analytics.js": {
       "sha256": "38d433c4e2592c0a2ab8e2730bc343c851cf11c7c902830407433475e359caa1",
       "size": 5767
+    },
+    "SystemManager/index.html": {
+      "sha256": "f472ac1bdce0c3d0ffdd2affec6655d51660989458878503637b0422583f689d",
+      "size": 2175
+    },
+    "SystemManager/assets/css/visitor-analytics.css": {
+      "sha256": "b382a3c3547a7158c815630ca2cb3d34568deca6050c72ff8dca67db7930faae",
+      "size": 3693
     }
   },
   "releaseScope": "visitor-analytics",
   "uploadFiles": [
-    "index.html",
+    "SystemManager/index.html",
     "SystemManager/visitor-analytics.html",
-    "SystemManager/assets/js/visitor-analytics.js",
-    "assets/css/tailwind.min.css",
-    "admin_api/visitorAnalytics.asp",
-    "api/visitor-analytics.asp",
-    "assets/js/visitor-analytics.js",
+    "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json"
   ]
 }

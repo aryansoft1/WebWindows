@@ -2,13 +2,15 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [migration, collectorApi, collector, adminApi, adminPage, adminScript, home, environmentConfigText] = await Promise.all([
+const [migration, collectorApi, collector, adminApi, adminPage, adminStyle, adminScript, adminShell, home, environmentConfigText] = await Promise.all([
   read("database/migrations/002_webwindows_visitor_analytics.sql"),
   read("api/visitor-analytics.asp"),
   read("assets/js/visitor-analytics.js"),
   read("admin_api/visitorAnalytics.asp"),
   read("SystemManager/visitor-analytics.html"),
+  read("SystemManager/assets/css/visitor-analytics.css"),
   read("SystemManager/assets/js/visitor-analytics.js"),
+  read("SystemManager/index.html"),
   read("index.html"),
   Promise.resolve('{"forwardedHeadersTrustedByApplication":false,"settings":[]}')
 ]);
@@ -46,8 +48,13 @@ assert.match(adminApi, /""sessionFeatures""/);
 assert.match(adminPage, /访客统计/);
 assert.match(adminPage, /请求 IP/);
 assert.match(adminPage, /功能停留/);
+assert.match(adminPage, /assets\/css\/visitor-analytics\.css/);
+assert.doesNotMatch(adminPage, /tailwind\.min\.css/);
+assert.match(adminStyle, /\.lg\\:grid-cols-6/);
+assert.match(adminStyle, /\.bg-green-50/);
 assert.match(adminScript, /X-WebWindows-Admin-Request/);
 assert.doesNotMatch(adminScript, /innerHTML\s*=/);
+assert.match(adminShell, /href="visitor-analytics\.html"[^>]*target="mainFrame"/);
 assert.match(home, /assets\/js\/visitor-analytics\.js/);
 assert.equal(environmentConfig.forwardedHeadersTrustedByApplication, false);
 assert.match(collectorApi, /WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO/);

@@ -91,15 +91,11 @@ if (manifest.releaseScope === "navigation-map") {
   ], "camera recovery releases must upload only the camera and window runtime slice");
 } else if (manifest.releaseScope === "visitor-analytics") {
   assert.deepEqual(uploadFiles, [
-    "index.html",
+    "SystemManager/index.html",
     "SystemManager/visitor-analytics.html",
-    "SystemManager/assets/js/visitor-analytics.js",
-    "assets/css/tailwind.min.css",
-    "admin_api/visitorAnalytics.asp",
-    "api/visitor-analytics.asp",
-    "assets/js/visitor-analytics.js",
+    "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
-  ], "visitor analytics releases must upload only the collector and reporting slice");
+  ], "visitor analytics fix releases must upload only the admin shell and reporting presentation slice");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

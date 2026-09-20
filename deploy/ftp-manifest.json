@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.20.1",
   "catalogVersion": "2026.09.20.1",
-  "generatedAt": "2026-09-20T03:53:10.583Z",
+  "generatedAt": "2026-09-20T04:07:53.168Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -256,8 +256,8 @@
       "size": 20725
     },
     "assets/js/tw.js": {
-      "sha256": "4edbf171396fccd18170b76717aa71f4e3fea90dbdad4a16c5a24ff5c3eb6abe",
-      "size": 50023
+      "sha256": "066736cb2ff9a5ff4c84d187bb01d0b488debd8352fc45a48bbec856615bd0ad",
+      "size": 50026
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -276,8 +276,8 @@
       "size": 10216
     },
     "assets/js/desktalk.js": {
-      "sha256": "169f2aefe034c8232d9e5242b43a4da3445add9c2826812fd71ee8b8080debe1",
-      "size": 100445
+      "sha256": "dbd84eae4f0a1bdd1e141fe6ade298bf76ef3b5d13ee2f635a87dd792d10f6fd",
+      "size": 100491
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "16cd610f120d2b60270ee267df8facca00ccc7668ab31ea9639fc6e1b866e5bd",
@@ -924,8 +924,8 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "407fbc888389051c4aa5340583f23266fc0e4122ed8bc9abc1fe900ff1204459",
-      "size": 13658
+      "sha256": "62bc2c9a8e1fda05cdd004d355ecd48890e766c4c3c309acb4aed05201e8887d",
+      "size": 13696
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1160,24 +1160,24 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "5f5e21fd6e9649de295979e8e79731a69afe623d4496e6b0953181cca7e07a47",
-      "size": 7064
+      "sha256": "7e5518daafc3c52e26d41f7a521c0164c6a4657a5c4d4c4af3f241c1a7eb7349",
+      "size": 7132
     },
     "assets/css/navigation.css": {
-      "sha256": "46b0306da33e8fbe47c9973e626c6aa41a4f1df596f1d7171292ded7b5111144",
-      "size": 12970
+      "sha256": "fc65c13fa1f43321d27417a78d4ab04095189b02d198b61cb5db75bfcbb1b159",
+      "size": 13674
     },
     "assets/icons/navigation.svg": {
-      "sha256": "ed2ba06cbb1d45a8e5bb08a18d241a6a48ce3e038f7b8260acb6e91d4dac9ed2",
-      "size": 820
+      "sha256": "3a42c23c1f7ad4af0cebc75ab8692706c7be473542abb153de95cf5f1b076a7d",
+      "size": 835
     },
     "assets/js/navigation-app.js": {
-      "sha256": "4b634dd9cfe701a2cf0d7ad3e6eb0987e712a5948d7539903b6fe97769325572",
-      "size": 34149
+      "sha256": "312db4b633babc6ecb1f146ef21160032a5dd3f33d3c1753f6480f56d190bbf7",
+      "size": 34225
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "6bf7a019928b57192d850d7107871414405972f8b1a4cb9ba9f20bad1196b5cf",
-      "size": 14691
+      "sha256": "75ca99e0c7cf7d58279cc49c0792f209d6ea8fa9937f22f035b404bbfd4c60b2",
+      "size": 14742
     }
   },
   "releaseScope": "navigation-map",

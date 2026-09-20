@@ -112,8 +112,10 @@ assert.equal(transitousRequest.searchParams.get("fromPlace"),"35.6812,139.7671")
 assert.equal(transitousRoute.routeUnavailable,undefined);
 assert.equal(transitousRoute.provider.id,"transitous");
 assert.ok(transitousRoute.geometry.length>=2);
+assert.ok(transitousRoute.distance>12000);
 assert.equal(transitousRoute.duration,1680);
-assert.match(transitousRoute.steps[1].instruction,/JR東日本/);
+assert.equal(transitousRoute.steps[1].agency,"JR東日本");
+assert.equal(transitousRoute.steps[1].mode,"REGIONAL_RAIL");
 
 const unavailableTransit=load({config:{proxyEndpoint:"/api/navigation-proxy.asp"},fetchImpl:async()=>({ok:true,status:200,json:async()=>({itineraries:[]})})});
 const unavailableTransitRoute=await unavailableTransit.route({lat:35.6812,lng:139.7671,country:"JP"},{lat:35.6895,lng:139.6917,country:"JP"},"transit","auto");
@@ -171,6 +173,8 @@ assert.match(appSource,/watchPosition/);
 assert.match(appSource,/clearWatch/);
 assert.match(appSource,/window\.setLanguage=applyLanguage/);
 assert.match(appSource,/WebWindowsDeskTalk/);
+assert.match(appSource,/transitRoute:"実際の公共交通ルート/);
+assert.match(appSource,/transitWalk:"徒歩"/);
 assert.doesNotMatch(appSource,/https:\/\/www\.google\.com\/maps\/dir\/|window\.open\(/);
 assert.match(appSource,/data-nearby/);
 assert.match(appSource,/visibilitychange/);

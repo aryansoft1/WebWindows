@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.21.1",
-  "catalogVersion": "2026.09.21.1",
-  "generatedAt": "2026-09-20T19:03:57.715Z",
+  "releaseVersion": "2026.09.21.2",
+  "catalogVersion": "2026.09.21.2",
+  "generatedAt": "2026-09-20T19:08:33.485Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/adminGuard.asp",
@@ -252,7 +252,7 @@
     "SystemManager/index.html",
     "SystemManager/assets/css/visitor-analytics.css"
   ],
-  "previousReleaseVersion": "2026.09.20.12",
+  "previousReleaseVersion": "2026.09.21.1",
   "integrity": {
     "index.html": {
       "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
@@ -935,7 +935,7 @@
       "size": 162
     },
     "data/apps/system-apps.json": {
-      "sha256": "800e9ea23456ef03ced389e0c672697cdb2a31f8e4a0c2756b7747dafd01bb33",
+      "sha256": "adf1126e2aeda6e152d8e4f1671125ef19933ecbe2bc6e30b47b8cf2f9767ca5",
       "size": 13658
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1171,7 +1171,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "ab6a215c8a98e01492df2b613baf55393632898864e14312ea48e857d42cb3c2",
+      "sha256": "96258b7034aa4f04a32719a408bc630954cc9976685a9a8bf98bab361190f16f",
       "size": 7199
     },
     "assets/css/navigation.css": {
@@ -1183,12 +1183,12 @@
       "size": 835
     },
     "assets/js/navigation-app.js": {
-      "sha256": "9f3fb64d2fed4cc4c11238e19a29e549877992ff550431c4bb8deb3e0ecd2d63",
-      "size": 37856
+      "sha256": "493f230787acb61c3bfda8869817d839ffeb84efb32d6f0f7cd9d5032c168e71",
+      "size": 39497
     },
     "assets/js/navigation-providers.js": {
-      "sha256": "507e9064765a523bdac87c1b0e2e795e03a37a1eab9e1e7891125e58262f1c7d",
-      "size": 20827
+      "sha256": "b0109ada61052019c83b9251852e042950faf66ff0ebebeff878d53924e64f8d",
+      "size": 20537
     },
     "api/navigation-proxy.asp": {
       "sha256": "93731f1d64eb0db50f81192e2f4762f9c598d2f78e84c0e26fff40594822bad9",

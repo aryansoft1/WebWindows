@@ -47,11 +47,8 @@ const onlineReleaseFiles = [
 if (manifest.releaseScope === "navigation-map") {
   assert.deepEqual(uploadFiles, [
     "assets/css/navigation.css",
-    "assets/icons/navigation.svg",
-    "assets/js/desktalk.js",
     "assets/js/navigation-app.js",
     "assets/js/navigation-providers.js",
-    "assets/js/tw.js",
     "data/apps/system-apps.json",
     "road.html",
     "deploy/ftp-manifest.json",

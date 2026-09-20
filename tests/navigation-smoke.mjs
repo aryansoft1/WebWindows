@@ -132,7 +132,7 @@ assert.equal(offlineSearch.results[0].name,"东京");
 const navApp=catalog.apps.find(app=>app.id==="webwindows.system.navigation");
 assert.ok(navApp&&navApp.placement.desktop&&navApp.placement.startMenu);
 assert.equal(navApp.name,"问道");
-assert.equal(navApp.version,"1.3.0");
+assert.equal(navApp.version,"1.3.1");
 assert.match(html,/maplibre-gl@5\.6\.1/);
 assert.match(html,/tiles\.openfreemap\.org/);
 assert.match(html,/photon\.komoot\.io/);
@@ -192,5 +192,7 @@ assert.doesNotMatch(proxySource,/responseText.*WriteError|WriteError.*responseTe
 assert.doesNotMatch(proxySource,/Response\.Write[^\r\n]*(?:apiKey|authorization)/i,"secrets must not be written to route responses");
 assert.match(deploySource,/routing_config=preserved/);
 assert.match(deploySource,/routing_config=created/);
+assert.match(deploySource,/routing_config=updated/);
+assert.doesNotMatch(deploySource,/Write-Output[^\r\n]*(?:orsKey|WEBWINDOWS_ORS_API_KEY)/i);
 
 console.log("navigation map, provider, and integration smoke tests passed");

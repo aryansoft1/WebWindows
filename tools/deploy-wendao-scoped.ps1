@@ -1,4 +1,6 @@
-param()
+param(
+  [string]$OrsKeyFile
+)
 
 $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
@@ -85,7 +87,8 @@ foreach ($relative in $files) {
 }
 
 $routingConfigBackup = Join-Path $backupRoot ($routingConfigRelative -replace '/', '\')
-if (Test-And-BackupFtpFile $routingConfigRelative $routingConfigBackup) {
+$routingConfigExists = Test-And-BackupFtpFile $routingConfigRelative $routingConfigBackup
+if ($routingConfigExists) {
   Write-Output "routing_config=preserved"
 } else {
   Send-FtpFile $routingConfigRelative $routingConfigTemplate
@@ -95,6 +98,33 @@ if (Test-And-BackupFtpFile $routingConfigRelative $routingConfigBackup) {
   $remoteConfigHash = (Get-FileHash -LiteralPath $routingConfigVerify -Algorithm SHA256).Hash.ToLowerInvariant()
   if ($templateHash -ne $remoteConfigHash) { throw "Routing config template upload verification failed." }
   Write-Output "routing_config=created"
+}
+
+if ($OrsKeyFile) {
+  if (-not (Test-Path -LiteralPath $OrsKeyFile -PathType Leaf)) { throw "ORS key file is missing." }
+  $orsKey = (Get-Content -LiteralPath $OrsKeyFile -Raw).Trim()
+  if (-not $orsKey -or $orsKey.Contains('"') -or $orsKey.Contains("`r") -or $orsKey.Contains("`n")) { throw "ORS key is invalid." }
+  $configSource = if ($routingConfigExists) { $routingConfigBackup } else { $routingConfigTemplate }
+  $configText = Get-Content -LiteralPath $configSource -Raw
+  $orsDeclaration = 'Const WEBWINDOWS_ORS_API_KEY = "' + $orsKey + '"'
+  if ($configText -match '(?im)^\s*(?:Const\s+)?WEBWINDOWS_ORS_API_KEY\s*=\s*"[^"]*"\s*$') {
+    $configText = [regex]::Replace($configText, '(?im)^\s*(?:Const\s+)?WEBWINDOWS_ORS_API_KEY\s*=\s*"[^"]*"\s*$', $orsDeclaration)
+  } elseif ($configText -match '(?m)^%>\s*$') {
+    $configText = [regex]::Replace($configText, '(?m)^%>\s*$', $orsDeclaration + "`r`n%>", 1)
+  } else {
+    $configText = $configText.TrimEnd() + "`r`n" + $orsDeclaration + "`r`n"
+  }
+  $routingConfigUpload = Join-Path $backupRoot ".upload\api\navigation-proxy.config.asp"
+  New-Item -ItemType Directory -Path (Split-Path -Parent $routingConfigUpload) -Force | Out-Null
+  [IO.File]::WriteAllText($routingConfigUpload, $configText, [Text.UTF8Encoding]::new($false))
+  Send-FtpFile $routingConfigRelative $routingConfigUpload
+  $routingConfigVerify = Join-Path $verifyRoot ($routingConfigRelative -replace '/', '\')
+  Receive-FtpFile $routingConfigRelative $routingConfigVerify
+  $uploadHash = (Get-FileHash -LiteralPath $routingConfigUpload -Algorithm SHA256).Hash.ToLowerInvariant()
+  $verifyHash = (Get-FileHash -LiteralPath $routingConfigVerify -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($uploadHash -ne $verifyHash) { throw "Routing config update verification failed." }
+  Write-Output "routing_config=updated"
+  $orsKey = $null
 }
 
 foreach ($relative in $files) {

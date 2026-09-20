@@ -51,6 +51,7 @@ if (manifest.releaseScope === "navigation-map") {
     "assets/js/navigation-providers.js",
     "api/navigation-proxy.asp",
     "api/navigation-proxy.config.example.asp",
+    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json",
   ], "navigation map releases must upload only the navigation runtime slice");
 } else if (manifest.releaseScope === "camera-registry") {

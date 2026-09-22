@@ -2,6 +2,8 @@
 SELECT requirement
 FROM (
   SELECT 'table:webwindows_schema_migrations' AS requirement, 'webwindows_schema_migrations' AS object_name, 'table' AS object_type
+  UNION ALL SELECT 'table:webwindows_visitor_sessions', 'webwindows_visitor_sessions', 'table'
+  UNION ALL SELECT 'table:webwindows_visitor_feature_stats', 'webwindows_visitor_feature_stats', 'table'
   UNION ALL SELECT 'table:webwindows_submission_validations', 'webwindows_submission_validations', 'table'
   UNION ALL SELECT 'table:webwindows_review_decisions', 'webwindows_review_decisions', 'table'
   UNION ALL SELECT 'table:webwindows_published_releases', 'webwindows_published_releases', 'table'

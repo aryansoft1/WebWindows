@@ -76,6 +76,50 @@ Function ValidCatalog(ByVal value)
     InStr(1, compact, """apps"":[", vbTextCompare) > 0)
 End Function
 
+Function CatalogVersion(ByVal catalogText)
+  Dim expression, matches
+  CatalogVersion = ""
+  Set expression = New RegExp
+  expression.Pattern = """catalogVersion""\s*:\s*""([^""]+)"""
+  expression.IgnoreCase = True
+  expression.Global = False
+  Set matches = expression.Execute(CStr(catalogText))
+  If matches.Count > 0 Then CatalogVersion = CStr(matches(0).SubMatches(0))
+  Set matches = Nothing
+  Set expression = Nothing
+End Function
+
+Function NumericVersionParts(ByVal value)
+  Dim expression, normalized
+  Set expression = New RegExp
+  expression.Pattern = "[^0-9]+"
+  expression.Global = True
+  normalized = expression.Replace(CStr(value), ".")
+  Do While Left(normalized, 1) = ".": normalized = Mid(normalized, 2): Loop
+  Do While Right(normalized, 1) = ".": normalized = Left(normalized, Len(normalized) - 1): Loop
+  NumericVersionParts = normalized
+  Set expression = Nothing
+End Function
+
+Function VersionIsNewer(ByVal candidate, ByVal current)
+  Dim leftValue, rightValue, leftParts, rightParts, index, leftPart, rightPart, maximum
+  leftValue = NumericVersionParts(candidate)
+  rightValue = NumericVersionParts(current)
+  If leftValue = "" Then VersionIsNewer = False: Exit Function
+  If rightValue = "" Then VersionIsNewer = True: Exit Function
+  leftParts = Split(leftValue, ".")
+  rightParts = Split(rightValue, ".")
+  maximum = UBound(leftParts)
+  If UBound(rightParts) > maximum Then maximum = UBound(rightParts)
+  For index = 0 To maximum
+    leftPart = 0: rightPart = 0
+    If index <= UBound(leftParts) Then leftPart = CDbl(leftParts(index))
+    If index <= UBound(rightParts) Then rightPart = CDbl(rightParts(index))
+    If leftPart > rightPart Then VersionIsNewer = True: Exit Function
+    If leftPart < rightPart Then VersionIsNewer = False: Exit Function
+  Next
+  VersionIsNewer = False
+End Function
 
 Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
   Dim rs, valid, bindingCount, referenceRegex, referenceMatches
@@ -118,18 +162,20 @@ Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
   ReleaseBindingsValid = valid
 End Function
 
-Function ActiveCatalog(ByRef revisionId)
+Function ActiveCatalog(ByRef revisionId, ByRef activeVersion)
   Dim rs
   ActiveCatalog = ""
   revisionId = 0
+  activeVersion = ""
   On Error Resume Next
-  Set rs = conn.Execute("SELECT id,catalog_json,storage_encoding FROM webwindows_function_catalog_versions " & _
+  Set rs = conn.Execute("SELECT id,catalog_version,catalog_json,storage_encoding FROM webwindows_function_catalog_versions " & _
     "WHERE is_active=1 ORDER BY id DESC LIMIT 1")
   If Err.Number = 0 Then
     If Not rs.EOF Then
       If LCase(CStr(rs("storage_encoding"))) = "base64" Then
         ActiveCatalog = Base64DecodeUtf8(CStr(rs("catalog_json")))
         revisionId = CLng(rs("id"))
+        activeVersion = CStr(rs("catalog_version"))
       End If
     End If
     rs.Close
@@ -139,7 +185,7 @@ Function ActiveCatalog(ByRef revisionId)
   On Error GoTo 0
 End Function
 
-Sub SeedCatalog(ByVal catalogText)
+Sub SeedCatalog(ByVal catalogText, ByVal catalogVersion, ByVal publishNote)
   Dim encodedCatalog, seedCmd
   encodedCatalog = Base64EncodeUtf8(catalogText)
   On Error Resume Next
@@ -150,10 +196,10 @@ Sub SeedCatalog(ByVal catalogText)
       "(catalog_version,catalog_json,storage_encoding,publish_note,published_by,is_active) " & _
       "VALUES (?,?,?, ?,NULL,1)"
     .CommandType = 1
-    .Parameters.Append .CreateParameter(, 200, 1, 40, "bootstrap-json")
+    .Parameters.Append .CreateParameter(, 200, 1, 40, Left(CStr(catalogVersion), 40))
     .Parameters.Append .CreateParameter(, 201, 1, Len(encodedCatalog), encodedCatalog)
     .Parameters.Append .CreateParameter(, 200, 1, 12, "base64")
-    .Parameters.Append .CreateParameter(, 200, 1, 255, "JSON bootstrap")
+    .Parameters.Append .CreateParameter(, 200, 1, 255, Left(CStr(publishNote), 255))
     .Execute
   End With
   Set seedCmd = Nothing
@@ -161,9 +207,13 @@ Sub SeedCatalog(ByVal catalogText)
   On Error GoTo 0
 End Sub
 
-Dim catalogText, tableReady, catalogSource, activeRevisionId
+Dim catalogText, tableReady, catalogSource, activeRevisionId, activeVersion, fileCatalog, fileVersion
 catalogText = ""
 catalogSource = "unavailable"
+activeRevisionId = 0
+activeVersion = ""
+fileCatalog = ""
+fileVersion = ""
 tableReady = WebWindowsTrustSchemaReady()
 If Not tableReady Then
   Response.Status = "503 Service Unavailable"
@@ -172,8 +222,20 @@ If Not tableReady Then
   Response.End
 End If
 
+On Error Resume Next
+fileCatalog = ReadCatalogFile()
+If Err.Number <> 0 Then
+  Err.Clear
+  fileCatalog = ""
+End If
+On Error GoTo 0
+If fileCatalog <> "" And Not ValidCatalog(fileCatalog) Then fileCatalog = ""
+If fileCatalog <> "" Then fileVersion = CatalogVersion(fileCatalog)
+Response.AddHeader "X-WebWindows-Static-Catalog", LCase(CStr(fileCatalog <> ""))
+Response.AddHeader "X-WebWindows-Static-Catalog-Version", fileVersion
+
 If tableReady Then
-  catalogText = ActiveCatalog(activeRevisionId)
+  catalogText = ActiveCatalog(activeRevisionId, activeVersion)
   If catalogText <> "" And (Not ValidCatalog(catalogText) Or _
      Not ReleaseBindingsValid(catalogText, activeRevisionId)) Then
     On Error Resume Next
@@ -181,28 +243,30 @@ If tableReady Then
     Err.Clear
     On Error GoTo 0
     catalogText = ""
+    activeRevisionId = 0
+    activeVersion = ""
   End If
   If catalogText <> "" Then catalogSource = "database"
 End If
 
-If catalogText = "" Then
-  On Error Resume Next
-  catalogText = ReadCatalogFile()
-  If Err.Number <> 0 Then
+If fileCatalog <> "" And (catalogText = "" Or _
+   VersionIsNewer(fileVersion, activeVersion)) Then
+  If tableReady Then
+    On Error Resume Next
+    conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
     Err.Clear
-    catalogText = ""
+    On Error GoTo 0
+    SeedCatalog fileCatalog, fileVersion, "Static catalog version upgrade"
+    activeRevisionId = 0
   End If
-  On Error GoTo 0
-
-  If catalogText <> "" And Not ValidCatalog(catalogText) Then catalogText = ""
-  If catalogText <> "" And tableReady Then
-    SeedCatalog catalogText
-  End If
-  If catalogText <> "" Then catalogSource = "json-fallback"
+  catalogText = fileCatalog
+  activeVersion = fileVersion
+  If tableReady Then catalogSource = "json-upgrade" Else catalogSource = "json-fallback"
 End If
 
 Response.AddHeader "X-WebWindows-Catalog-Source", catalogSource
 Response.AddHeader "X-WebWindows-Catalog-Release-Binding", "v1"
+Response.AddHeader "X-WebWindows-Catalog-Version", activeVersion
 If catalogText = "" Then
   Response.Status = "503 Service Unavailable"
   Response.Write "{""ok"":false,""message"":""功能仓库目录暂不可用。""}"

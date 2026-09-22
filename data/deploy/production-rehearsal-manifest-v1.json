@@ -42,6 +42,20 @@
       "sha256": "1e5aebf0095af136205fdf446f5c77567fc94c5a13d48269889e6b6b3c12c140"
     },
     {
+      "path": "SystemManager/visitor-analytics.html",
+      "target": "site-root:/SystemManager/visitor-analytics.html",
+      "role": "admin-ui",
+      "bytes": 4206,
+      "sha256": "66776461785ea5aad2a45b530bf23458a4f64dd4c43f890d2b9414ad005bdc07"
+    },
+    {
+      "path": "SystemManager/assets/js/visitor-analytics.js",
+      "target": "site-root:/SystemManager/assets/js/visitor-analytics.js",
+      "role": "admin-ui",
+      "bytes": 6681,
+      "sha256": "4e311cbdd900f0ba685f19f73e3386a7579e2123c8ac485215a079bcd8633b60"
+    },
+    {
       "path": "inc/admin-security.asp",
       "target": "site-root:/inc/admin-security.asp",
       "role": "admin-security",
@@ -98,6 +112,13 @@
       "sha256": "4e711b7f13125ae7f9eecd3d694321529a15984daaff8e3d057cd5c989b16bcf"
     },
     {
+      "path": "admin_api/visitorAnalytics.asp",
+      "target": "site-root:/admin_api/visitorAnalytics.asp",
+      "role": "admin-api",
+      "bytes": 8418,
+      "sha256": "c78661bbbee9ec46419d4ea410542548a504200ed0eff006ac6c4cad6c2d7cba"
+    },
+    {
       "path": "developer_api/v1.asp",
       "target": "site-root:/developer_api/v1.asp",
       "role": "developer-api",
@@ -122,8 +143,22 @@
       "path": "api/function-catalog.asp",
       "target": "site-root:/api/function-catalog.asp",
       "role": "runtime-api",
-      "bytes": 7366,
-      "sha256": "a7da287abd8eec6846abf8bef87e9a0472e16fcb5353565a06232c34d3664c12"
+      "bytes": 10181,
+      "sha256": "e2085137dee5ef3d823db550f635bf92baa3ca8b3b04e657f272d255365321ea"
+    },
+    {
+      "path": "api/visitor-analytics.asp",
+      "target": "site-root:/api/visitor-analytics.asp",
+      "role": "runtime-api",
+      "bytes": 11514,
+      "sha256": "939d4b2eeff12d6a2ebc0fc5519a677b1e377626204a62a7e28f4a2bd1b87500"
+    },
+    {
+      "path": "assets/js/visitor-analytics.js",
+      "target": "site-root:/assets/js/visitor-analytics.js",
+      "role": "runtime",
+      "bytes": 5617,
+      "sha256": "5bf591c966efe2d175cc30f29d73e8d9dd14fa634743d9f2e55d37eefb8e99ee"
     },
     {
       "path": "package-runtime.html",
@@ -318,8 +353,8 @@
       "path": "data/sdk/webwindows-public-api-v1.d.ts",
       "target": "site-root:/data/sdk/webwindows-public-api-v1.d.ts",
       "role": "sdk",
-      "bytes": 8849,
-      "sha256": "6bdef7deed0a6cfcdb26e58294fd40d207676efa67fac3ed0b81cde9b6a8f090"
+      "bytes": 9307,
+      "sha256": "7a519d574177c7bfae5ad24a0da1a95d23a2b742a45995d80691ea99c77b2e89"
     },
     {
       "path": "database/migrations/001_webwindows_trust_schema.sql",
@@ -329,18 +364,25 @@
       "sha256": "6cab4f9a9107f03bd6f9dd87ce0a45c0a7a506dc43d339a83d0266008e73b7a9"
     },
     {
+      "path": "database/migrations/002_webwindows_visitor_analytics.sql",
+      "target": "operator-bundle:/database/migrations/002_webwindows_visitor_analytics.sql",
+      "role": "database-migration",
+      "bytes": 2403,
+      "sha256": "3f464e86234f3e333e3f934d46587b32d524af2602d14dd9908b1577c06ccc70"
+    },
+    {
       "path": "database/migrations/verify_webwindows_trust_schema.sql",
       "target": "operator-bundle:/database/migrations/verify_webwindows_trust_schema.sql",
       "role": "database-migration",
-      "bytes": 2685,
-      "sha256": "defd4e1ccb274e748e1604060896ba520b568b78919420dcd4b5edaedd03ab41"
+      "bytes": 2885,
+      "sha256": "15759d9c2735b61bbf6d0d66d32a67474e4c15fd03fff0e321c9b8e0e00e5ef0"
     },
     {
       "path": "data/deploy/production-environment-config-v1.json",
       "target": "operator-bundle:/data/deploy/production-environment-config-v1.json",
       "role": "deployment-contract",
-      "bytes": 2102,
-      "sha256": "9cd8d3f21f605f87961ca72e6a9039fdab4ca3148ffdcda56e1270cd3171456a"
+      "bytes": 2465,
+      "sha256": "ae62773751a7c176e82155eadbf72ccc0f4e856aa939858063c2e09e2f26c159"
     },
     {
       "path": "tools/Invoke-WebWindowsTrustMigration.ps1",

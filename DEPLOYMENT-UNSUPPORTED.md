@@ -58,3 +58,39 @@
 1. 将上述 39 个开发者 / 后台文件回填到本分支，或明确接受删除后果
 2. 解决 `adminGuard.asp`（本分支）与 `adminAuth.asp` + `admin-security`（主线）两套认证的取舍
 3. 让本分支通过主线的完整测试套件（81 个 smoke）
+
+---
+
+## 2026-09-23 追记：事故已处置，留痕给 Codex
+
+生产环境症状**已由主线修复**，处置过程**没有**使用本分支作为部署源。
+
+### 主线这次做了什么
+
+| 提交 | 内容 |
+|---|---|
+| `276f5a0` | 问道同步（24 文件）+ 恢复 `system-apps.json` 17 项 / `2026.09.23.1` |
+| `38ae6bc` | 修正 Studio 确定性构建钉死的 ZIP 哈希（2 个失败测试 → 81/81） |
+| `13e2206` | 开发者面恢复包 + 生产漂移分析报告 |
+| `9e53cb5` | FTP 上传脚本（SHA-256 双向校验）+ 执行留痕 |
+| `5c491ce` | 交接文档 `docs/HANDOFF_20260923_问道同步与开发者面恢复.md` |
+
+线上实际覆盖 4 个文件（`SystemManager/index.html`、`data/apps/system-apps.json`、
+`assets/data/guide-content.json`、`assets/js/tw.js`），HTTP 回读 SHA-256 全部通过，
+旧版备份为 `<path>.__previous_20260923-developer-recovery`。
+目录接口现为 `source=database` / 17 项 / `2026.09.23.1`，Developer Studio 已恢复，
+**未执行任何 SQL**（线上 `function-catalog.asp` 多一条 `json-upgrade` 路径，自动写回了 DB）。
+
+> 完整交接见**主线分支**的 `docs/HANDOFF_20260923_问道同步与开发者面恢复.md`。
+
+### 给继续在本分支工作的 Codex
+
+- 本分支远端刚新增 **13 个问道路由提交**（ORS、区域 provider、驾驶/步行/骑行、host config 键），
+  与主线的分叉**比上文记录的更大**，整分支发布的破坏性更高。
+- 主线 `276f5a0` 的问道取自**线上快照**，而线上快照来自本分支**更早的子集**，
+  因此主线的问道**必然落后于这 13 个提交**。要让它们进主线：
+  **按文件摘取**，不要 merge、不要整分支覆盖。
+- 重点比对：`road.html`、`assets/js/navigation/*`、`assets/css/navigation*`、
+  `assets/js/desktalk.js`、`assets/js/tw.js`、`assets/data/guide-content.json`。
+- 反向提醒：主线这 5 个提交里的开发者面恢复内容，本分支**一个都没有**，
+  照抄主线文件进来之前先看上文那张缺失清单。

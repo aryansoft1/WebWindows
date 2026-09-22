@@ -22,7 +22,10 @@ for (let index = 0; index < 3; index += 1) {
 
 assert.equal(builds.every((build) => build.artifactReady && build.readyForSubmission), true);
 assert.equal(new Set(builds.map((build) => build.sha256)).size, 1);
-assert.equal(builds[0].sha256, "fbcd4a5f43dd2e92bc93943c4f66e7ab72046ad967c426a0a1a6f07e527b7547");
+// 该哈希必须覆盖 data/sdk/** 合约与 hello-template 的任何改动：
+// 2026-09-14 的 976d940（dialog API）同时改动了 webwindows-public-api-v1.d.ts
+// 与 hello-template.js，因此这里固定值随之更新。修改合约后请重新运行本测试。
+assert.equal(builds[0].sha256, "48c442412bc44901b61bda051508569da7d384906056b1d63a5b4a82517aa6b0");
 for (const build of builds.slice(1)) {
   assert.deepEqual(build.zipBytes, builds[0].zipBytes);
 }

@@ -70,6 +70,19 @@ lucide、旧版 `admin-shell.js` 的调用方式），只补回被删除的两�
 线上当前活动行是 `catalogVersion 2026.09.21.4`（16 项），**比磁盘上的文件还新**，
 所以只上传文件不会有任何变化。
 
+### ✅ 2026-09-23 执行结果：SQL 这步**不需要了**
+
+线上 `api/function-catalog.asp` 与仓库版本**不同**：它多了一条 `json-upgrade` 路径
+（仓库版只有 `database` / `json-fallback` / `unavailable`）。上传完成后首次访问接口即返回
+`X-WebWindows-Catalog-Source: json-upgrade`，并把新目录**写回 DB**；此后连打三次均为：
+
+```
+source=database   apps=17   developerStudio=true   version=2026.09.23.1
+```
+
+因此 4 个文件上传完毕后，方式 A/B 都可以跳过。下面两种方式仅在
+`source` 长期停留在 `json-upgrade`（即升级未落库）时才需要执行。
+
 ### 方式 A（推荐）：先停用活动行，让接口自动种子
 
 ```sql
@@ -96,10 +109,10 @@ UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1;
 客户端目录缓存键为 `webwindows.functions.catalog-cache.v1`，**请用无痕窗口验证**。
 
 ```powershell
-# 1) 目录已恢复 Developer Studio
+# 1) 目录已恢复 Developer Studio（2026-09-23 实测：均通过）
 $r = Invoke-WebRequest https://www.y0.hk/api/function-catalog.asp -UseBasicParsing
-[Text.Encoding]::UTF8.GetString($r.Content) -match 'webwindows.system.developer-studio'   # 应为 True
-($r.Headers['X-WebWindows-Catalog-Source'])                                                # 应为 database
+$r.Content -match 'webwindows.system.developer-studio'   # 应为 True
+$r.Headers['X-WebWindows-Catalog-Source']                # 应为 database
 
 # 2) 两个导航链接已恢复
 (Invoke-WebRequest https://www.y0.hk/SystemManager/index.html -UseBasicParsing).Content -match 'functions.html'          # True

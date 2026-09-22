@@ -3,6 +3,7 @@
   "uploads": [
     {
       "target": "SystemManager/index.html",
+      "localSource": "payload/SystemManager/index.html",
       "bytes": 2436,
       "sha256": "da7874db647628e79a24b938101d2474f7e0fd8e9349c3d758bc4b2613399d63",
       "note": "补回功能仓库 / 开发者平台两个导航链接（基底=线上现网版本）"
@@ -21,6 +22,7 @@
     },
     {
       "target": "assets/js/tw.js",
+      "optional": true,
       "bytes": 61435,
       "sha256": "07273e8e2a9898f143872e0728483bf1b54139928490440b705dc211a6a21240",
       "note": "可选：补回 Developer Studio 界面翻译与 Monaco i18n 保护（本地是线上超集）"

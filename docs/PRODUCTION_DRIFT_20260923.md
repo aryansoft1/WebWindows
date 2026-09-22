@@ -203,7 +203,7 @@ assets/js/ai-file-tools.js       ?v=20260811-file-tool-1
 |---|---|---|
 | P0 | 把问道最新文件同步进主线 | ✅ 已完成（`276f5a0`） |
 | P0 | 修掉两个历史失败测试 | ✅ 已完成（见第 8 节） |
-| P1 | 按 `deploy/developer-recovery-20260923/README.md` 上传 3 个文件并**重新发布功能目录** | ⏳ 待执行 |
+| P1 | 按 `deploy/developer-recovery-20260923/README.md` 上传 3 个文件并**重新发布功能目录** | ✅ 已完成（2026-09-23，实际上传 4 个含可选 `tw.js`；HTTP 回读 SHA-256 全通过；目录接口 `source=database` / 17 项 / `2026.09.23.1`，线上 `json-upgrade` 自动落库，**SQL 未执行**；旧文件备份为 `<path>.__previous_20260923-developer-recovery`） |
 | P2 | 标记 `codex/wendao-release-20260920` 为不可部署 | ✅ 分支上已加 `DEPLOYMENT-UNSUPPORTED.md`（仅本地提交） |
 | P3 | 决定后台安全加固（`ce1f243`/`6381297`）何时整体上线 | ⏳ 需要单独一次发布 |
 | P3 | 修掉主线 3 个页面引用 195 字节 stub 的问题 | ⏳ 未修 |

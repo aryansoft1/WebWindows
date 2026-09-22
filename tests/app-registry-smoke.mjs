@@ -99,8 +99,8 @@ await apps.ready();
 await new Promise((resolve) => setTimeout(resolve, 0));
 vm.runInContext(resourceOpenSource, context, { filename: "resource-open.js" });
 
-assert.equal((await apps.listInstalled()).length, 16);
-assert.equal((await apps.listCatalog()).length, 16);
+assert.equal((await apps.listInstalled()).length, 17);
+assert.equal((await apps.listCatalog()).length, 17);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), true);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", false);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), false);
@@ -152,6 +152,18 @@ assert.deepEqual(openedWindows.at(-1), [
   "",
   "1060px",
   "740px"
+]);
+
+await apps.launch("webwindows.system.navigation");
+assert.deepEqual(openedWindows.at(-1), [
+  "road",
+  "问道",
+  "road.html?v=20260921-12",
+  "assets/icons/navigation.svg",
+  true,
+  "",
+  "1120px",
+  "760px"
 ]);
 
 const sheetResource = { name: "budget.xlsx" };

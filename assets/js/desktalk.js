@@ -1350,6 +1350,46 @@ function sendAI(){
   });
 }
 
+// “问道”只在用户主动点击“问桌讯”后调用这里。接口刻意不接受坐标，
+// 避免导航页把精确位置或连续移动轨迹带入 AI 对话。
+window.WebWindowsDeskTalk = Object.freeze({
+  askTravelAdvice: function(context){
+    var data = context && typeof context === 'object' ? context : {};
+    var clean = function(value, fallback){
+      var text = typeof value === 'string' ? value.trim().replace(/[\r\n\t]+/g, ' ') : '';
+      return (text || fallback).slice(0, 120);
+    };
+    var modeNames = { driving:'驾车', transit:'公共交通', walking:'步行', cycling:'骑行' };
+    var distance = Number(data.distanceMeters);
+    var duration = Number(data.durationSeconds);
+    if (!Number.isFinite(distance) || distance < 0 || !Number.isFinite(duration) || duration < 0) return false;
+    var costs = data.costs && typeof data.costs === 'object' ? data.costs : {};
+    var money = function(value){
+      if (value === null || value === undefined || value === '') return '未提供';
+      var amount = Number(value);
+      if (!Number.isFinite(amount) || amount < 0) return '未提供';
+      return clean(costs.currency, 'CNY') + ' ' + amount.toFixed(0);
+    };
+    var prompt = [
+      '请根据以下“问道”路线提供简洁、实用的出行建议。请提示时间安排、安全、天气或换乘注意事项；费用未知时不要猜测。',
+      '起点：' + clean(data.start, '当前位置'),
+      '终点：' + clean(data.destination, '目的地'),
+      '方式：' + (modeNames[data.mode] || '出行'),
+      '距离：' + (distance / 1000).toFixed(1) + ' 公里',
+      '预计耗时：' + Math.max(1, Math.round(duration / 60)) + ' 分钟',
+      '高速/通行费：' + money(costs.toll),
+      'IC 卡费用：' + money(costs.icCard),
+      '现金费用：' + money(costs.cash),
+      data.estimated ? '备注：当前路线或费用含估算，请明确提醒用户复核。' : ''
+    ].filter(Boolean).join('\n');
+    openPanel('ai');
+    if (!aiInput) return false;
+    aiInput.value = prompt;
+    sendAI();
+    return true;
+  }
+});
+
 /* ===== 模拟来消息 ===== */if(false){
 
 function pushIncoming(){

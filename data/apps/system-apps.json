@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.07.29.1",
-    "updatedAt": "2026-07-29T00:00:00+09:00"
+    "catalogVersion": "2026.09.23.1",
+    "updatedAt": "2026-09-23T00:00:00+09:00"
   },
   "apps": [
     {
@@ -257,6 +257,36 @@
         "width": "1060px",
         "height": "740px"
       }
+    },
+    {
+      "id": "webwindows.system.navigation",
+      "legacyIds": ["road"],
+      "type": "system",
+      "name": "问道",
+      "description": "支持当前位置、附近地点、连续导航、路线费用与桌讯出行建议的跨设备地图。",
+      "category": "system",
+      "version": "1.2.0",
+      "icon": "assets/icons/navigation.svg",
+      "entry": "road.html?v=20260921-12",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 67,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1120px",
+        "height": "760px"
+      },
+      "permissions": ["geolocation"]
     },
     {
       "id": "com.aryansoft.webwindows.aplay",

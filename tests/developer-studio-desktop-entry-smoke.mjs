@@ -32,6 +32,7 @@ assert.deepEqual(
   catalog.apps.filter((app) => app.placement?.desktop).map((app) => app.id),
   [
     "webwindows.system.developer-studio",
+    "webwindows.system.navigation",
     "com.aryansoft.webwindows.news",
     "com.aryansoft.webwindows.sheet",
     "com.aryansoft.webwindows.write",

@@ -1,0 +1,122 @@
+{
+  "generatedAt": "2026-09-22T16:31:06.285Z",
+  "uploads": [
+    {
+      "target": "SystemManager/index.html",
+      "bytes": 2436,
+      "sha256": "da7874db647628e79a24b938101d2474f7e0fd8e9349c3d758bc4b2613399d63",
+      "note": "补回功能仓库 / 开发者平台两个导航链接（基底=线上现网版本）"
+    },
+    {
+      "target": "data/apps/system-apps.json",
+      "bytes": 14028,
+      "sha256": "e42f06e2fc57f14e7202505e84d50a156fefad4efe281a4dd1b02e6f6ed80304",
+      "note": "补回 webwindows.system.developer-studio，16→17"
+    },
+    {
+      "target": "assets/data/guide-content.json",
+      "bytes": 84517,
+      "sha256": "b1e902376803a5283b61671a4055e0dad2901b816140ea79a4b1f6c7615c10b2",
+      "note": "重新生成的使用向导（registryVersion 2026.09.23.1）"
+    },
+    {
+      "target": "assets/js/tw.js",
+      "bytes": 61435,
+      "sha256": "07273e8e2a9898f143872e0728483bf1b54139928490440b705dc211a6a21240",
+      "note": "可选：补回 Developer Studio 界面翻译与 Monaco i18n 保护（本地是线上超集）"
+    }
+  ],
+  "surfaces": [
+    {
+      "path": "developer.html",
+      "status": 200,
+      "remoteBytes": 12252,
+      "localBytes": 12252,
+      "same": true
+    },
+    {
+      "path": "developer-studio.html",
+      "status": 200,
+      "remoteBytes": 1074,
+      "localBytes": 1054,
+      "same": false
+    },
+    {
+      "path": "SystemManager/functions.html",
+      "status": 200,
+      "remoteBytes": 6125,
+      "localBytes": 6234,
+      "same": false
+    },
+    {
+      "path": "SystemManager/developer-platform.html",
+      "status": 200,
+      "remoteBytes": 2453,
+      "localBytes": 2526,
+      "same": false
+    },
+    {
+      "path": "assets/js/developer-center.js",
+      "status": 200,
+      "remoteBytes": 15201,
+      "localBytes": 15201,
+      "same": true
+    },
+    {
+      "path": "SystemManager/assets/js/function-catalog-admin.js",
+      "status": 200,
+      "remoteBytes": 17676,
+      "localBytes": 19031,
+      "same": false
+    },
+    {
+      "path": "SystemManager/assets/js/developer-platform-admin.js",
+      "status": 200,
+      "remoteBytes": 12382,
+      "localBytes": 16994,
+      "same": false
+    },
+    {
+      "path": "admin_api/functionCatalog.asp",
+      "status": 401,
+      "remoteBytes": -1,
+      "localBytes": 8333,
+      "same": false
+    },
+    {
+      "path": "admin_api/developerPlatform.asp",
+      "status": 403,
+      "remoteBytes": -1,
+      "localBytes": 44959,
+      "same": false
+    },
+    {
+      "path": "admin_api/developerPackage.asp",
+      "status": 403,
+      "remoteBytes": -1,
+      "localBytes": 2146,
+      "same": false
+    },
+    {
+      "path": "developer_api/v1.asp",
+      "status": 403,
+      "remoteBytes": -1,
+      "localBytes": 28946,
+      "same": false
+    },
+    {
+      "path": "data/sdk/webwindows-public-api-v1.d.ts",
+      "status": 200,
+      "remoteBytes": 9632,
+      "localBytes": 9307,
+      "same": false
+    },
+    {
+      "path": "assets/js/auth-session.js",
+      "status": 200,
+      "remoteBytes": 4654,
+      "localBytes": -1,
+      "same": false
+    }
+  ]
+}

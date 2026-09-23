@@ -14,9 +14,12 @@ const files = [
   "cloud/browser/search.asp",
   "admin_api/developerPlatform.asp",
   "admin_api/functionCatalog.asp",
+  "admin_api/visitorAnalytics.asp",
   "api/function-catalog.asp",
   "api/function-package.asp",
-  "api/runtime-release.asp"
+  "api/runtime-release.asp",
+  "api/railway-proxy.asp",
+  "api/visitor-analytics.asp"
 ];
 
 for (const relative of files) {

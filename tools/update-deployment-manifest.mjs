@@ -9,11 +9,17 @@ const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const args = process.argv.slice(2);
 const releaseVersion = args.find((value) => !value.startsWith("--"));
 const productionIndex = args.indexOf("--production");
+const observedIndex = args.indexOf("--observed-production");
 const filesIndex = args.indexOf("--files");
 const scopeIndex = args.indexOf("--scope");
+const excludeIndex = args.indexOf("--exclude");
 const prunePrefixIndex = args.indexOf("--prune-prefix");
 const reconcileIndex = args.indexOf("--reconcile-directory");
 const productionSource = productionIndex >= 0 ? args[productionIndex + 1] : "";
+const observedSource = observedIndex >= 0 ? args[observedIndex + 1] : "";
+const excludedFiles = excludeIndex >= 0
+  ? String(args[excludeIndex + 1] || "").split(",").map((value) => value.trim()).filter(Boolean)
+  : [];
 const reconcileDirectory = reconcileIndex >= 0 ? args[reconcileIndex + 1] : "";
 const selectedFiles = filesIndex >= 0
   ? String(args[filesIndex + 1] || "").split(",").map((value) => value.trim()).filter(Boolean)
@@ -34,6 +40,22 @@ function isPruned(relative) {
 if (releaseScope) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(releaseScope)) throw new Error("Release scope must use lowercase kebab-case.");
   manifest.releaseScope = releaseScope;
+}
+
+/*
+ * --exclude：把文件移出本次发布范围。
+ * 只允许排除「线上不存在且线上运行时也不需要」的文件
+ * （例如仅被本分支 include 指令引用、线上并不存在的 inc 文件）。
+ * 完整性哈希由工具同步删除，禁止手工改 manifest。
+ */
+if (excludedFiles.length) {
+  if (excludedFiles.some((file) => file.startsWith("/") || file.includes("..") || file.includes("\\"))) {
+    throw new Error("Excluded files must be safe repository-relative paths.");
+  }
+  manifest.requiredFiles = manifest.requiredFiles.filter((relative) => !excludedFiles.includes(relative));
+  for (const relative of excludedFiles) {
+    if (manifest.integrity) delete manifest.integrity[relative];
+  }
 }
 
 async function readJsonSource(source) {
@@ -109,9 +131,80 @@ if (reconcileDirectory) {
       size: bytes.length
     };
   }
-} else {
-  delete manifest.uploadFiles;
+} else if (observedSource) {
+  /*
+   * 本地增量 + 线上真相（--observed-production）：
+   *   上传切片按本地字节重算；未上传文件沿用线上 manifest 记录的哈希
+   *   （含义是「线上保持原字节，本次不动它」），
+   *   previousReleaseVersion 直接取线上 releaseVersion。
+   * 若未上传文件在线上 manifest 里没有记录则报错，
+   * 必须要么纳入 --files 上传、要么用 --exclude 明确排除，
+   * 不允许在 manifest 里写一个无法验证的哈希。
+   * 线上真相来源可由实测探针补齐（部署 preflight 用 -ProductionManifestPath 指向同一文件）。
+   */
+  if (!releaseVersion || !selectedFiles.length) {
+    throw new Error("Observed-production slice generation requires a release version and --files.");
+  }
+  const observed = await readJsonSource(observedSource);
+  if (observed.schemaVersion !== manifest.schemaVersion || !observed.releaseVersion || !observed.integrity) {
+    throw new Error("Observed production manifest is invalid or lacks integrity data.");
+  }
+  manifest.previousReleaseVersion = observed.releaseVersion;
   delete manifest.reconciledFiles;
+  manifest.requiredFiles = [...new Set([
+    ...manifest.requiredFiles,
+    ...selectedFiles,
+    "deploy/ftp-manifest.json"
+  ])];
+  manifest.uploadFiles = [...new Set([
+    ...selectedFiles.filter((relative) => relative !== "deploy/ftp-manifest.json"),
+    "deploy/ftp-manifest.json"
+  ])];
+  integrity = {};
+  const unverified = [];
+  for (const relative of manifest.requiredFiles) {
+    if (relative === "deploy/ftp-manifest.json") continue;
+    if (manifest.uploadFiles.includes(relative)) {
+      const bytes = await readFile(resolve(root, relative));
+      integrity[relative] = {
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+        size: bytes.length
+      };
+      continue;
+    }
+    const entry = observed.integrity[relative];
+    if (!entry?.sha256) {
+      unverified.push(relative);
+      continue;
+    }
+    integrity[relative] = { sha256: entry.sha256, size: entry.size };
+  }
+  if (unverified.length) {
+    throw new Error(`Observed production integrity is missing for unchanged files: ${unverified.join(", ")}`);
+  }
+} else {
+  delete manifest.reconciledFiles;
+
+  /*
+   * 只给 --files（不带 --production）时是“本地增量发布”：
+   * 仍然只上传本次改动的切片，但完整性哈希一律按本地文件重算，
+   * 因为发布仓库必须是被 git 跟踪的当前源码。
+   */
+  if (selectedFiles.length) {
+    manifest.requiredFiles = [...new Set([
+      ...manifest.requiredFiles,
+      ...selectedFiles,
+      "deploy/ftp-manifest.json"
+    ])];
+    manifest.uploadFiles = [...new Set([
+      ...selectedFiles.filter((relative) => relative !== "deploy/ftp-manifest.json"),
+      "deploy/ftp-manifest.json"
+    ])];
+  } else {
+    delete manifest.uploadFiles;
+  }
+
+  integrity = {};
   for (const relative of manifest.requiredFiles) {
     if (relative === "deploy/ftp-manifest.json") continue;
     const bytes = await readFile(resolve(root, relative));

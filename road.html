@@ -6,18 +6,18 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' https://unpkg.com; img-src 'self' data: blob: https://tiles.openfreemap.org; connect-src 'self' https://tiles.openfreemap.org https://photon.komoot.io https://router.project-osrm.org; worker-src blob:; child-src blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <title>问道</title>
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.css">
-  <link rel="stylesheet" href="assets/css/navigation.css?v=20260922-1">
+  <link rel="stylesheet" href="assets/css/navigation.css?v=20260923-1">
   <script defer src="https://unpkg.com/maplibre-gl@5.6.1/dist/maplibre-gl.js"></script>
   <script defer src="assets/js/navigation-providers.js?v=20260921-9"></script>
   <script defer src="assets/js/flight-providers.js?v=20260922-1"></script>
   <script defer src="assets/js/flight-position.js?v=20260922-3"></script>
   <script defer src="assets/js/flight-track.js?v=20260922-1"></script>
-  <script defer src="assets/js/navigation-app.js?v=20260921-9"></script>
-  <script defer src="assets/js/navigation-enhancements.js?v=20260921-2"></script>
+  <script defer src="assets/js/navigation-app.js?v=20260923-1"></script>
+  <script defer src="assets/js/navigation-enhancements.js?v=20260923-1"></script>
   <script defer src="assets/js/flight-app.js?v=20260922-1"></script>
-  <script defer src="assets/js/transit-providers.js?v=20260922-1"></script>
-  <script defer src="assets/js/transit-position.js?v=20260922-1"></script>
-  <script defer src="assets/js/transit-app.js?v=20260922-1"></script>
+  <script defer src="assets/js/transit-providers.js?v=20260923-1"></script>
+  <script defer src="assets/js/transit-position.js?v=20260923-1"></script>
+  <script defer src="assets/js/transit-app.js?v=20260923-1"></script>
 </head>
 <body>
   <main class="navigation-shell">
@@ -36,7 +36,7 @@
       </button>
 
       <button id="transit-tab" type="button" aria-selected="false">
-        <span aria-hidden="true">🚆</span><b>问乡</b>
+        <span aria-hidden="true">🚆</span><b data-i18n="tabTransit">问乡</b>
       </button>
     </nav>
       <div id="ground-panel">
@@ -47,14 +47,14 @@
         <button type="button" data-mode="cycling" aria-pressed="false"><span>🚲</span><b data-i18n="cycling">骑行</b></button>
       </div>
       <div class="journey-time-controls">
-        <label><span>出发时间</span><input id="departure-time" type="datetime-local"></label>
-        <div id="transit-time-nav" hidden><button id="previous-departure" type="button">上一班</button><button id="next-departure" type="button">下一班</button></div>
+        <label><span data-i18n="departureTimeLabel">出发时间</span><input id="departure-time" type="datetime-local"></label>
+        <div id="transit-time-nav" hidden><button id="previous-departure" type="button" data-i18n="previousDeparture">上一班</button><button id="next-departure" type="button" data-i18n="nextDeparture">下一班</button></div>
       </div>
-      <div class="quick-places" aria-label="常用地点">
-        <button type="button" data-quick-place="home">⌂ 家</button>
-        <button type="button" data-quick-place="work">▣ 公司</button>
-        <button type="button" data-quick-place="favorite">★ 收藏</button>
-        <button id="save-quick-place" type="button" title="将当前终点保存为常用地点">＋保存终点</button>
+      <div class="quick-places" aria-label="常用地点" data-i18n-aria="quickPlacesAria">
+        <button type="button" data-quick-place="home" data-i18n="quickHome">⌂ 家</button>
+        <button type="button" data-quick-place="work" data-i18n="quickWork">▣ 公司</button>
+        <button type="button" data-quick-place="favorite" data-i18n="quickFavorite">★ 收藏</button>
+        <button id="save-quick-place" type="button" title="将当前终点保存为常用地点" data-i18n="quickSave" data-i18n-aria="quickSaveTitle">＋保存终点</button>
       </div>
       <div class="field-stack">
         <div class="route-rail" aria-hidden="true"><i></i><b></b></div>
@@ -81,17 +81,17 @@
           <div><span data-i18n="icFare">IC 卡费用</span><strong id="cost-ic">—</strong></div>
           <div><span data-i18n="cashFare">现金费用</span><strong id="cost-cash">—</strong></div>
         </div>
-        <div id="route-times" class="route-times"><div><span>出发</span><strong id="route-departure-time">—</strong></div><div><span>到达</span><strong id="route-arrival-time">—</strong></div></div>
+        <div id="route-times" class="route-times"><div><span data-i18n="routeDeparture">出发</span><strong id="route-departure-time">—</strong></div><div><span data-i18n="routeArrival">到达</span><strong id="route-arrival-time">—</strong></div></div>
         <p id="route-note"></p><ol id="route-steps"></ol>
         <div class="guidance-actions"><button id="navigation-button" type="button" data-i18n="startNavigation">开始导航</button><button id="ask-desktalk" type="button" data-i18n="askDeskTalk">问桌讯</button></div>
       </section>
       <details class="privacy-note"><summary data-i18n="privacyTitle">数据来源、隐私与使用限制</summary><p data-i18n="privacyText">交互底图来自 OpenFreeMap。社区模式会将搜索词发送给 Photon、将驾车起终点发送给 OSRM。首次进入会请求定位，以当前位置初始化地图；持续定位只在开始导航后启用，停止导航或关闭页面即终止。</p></details>
       </div>
-      <section id="sky-panel" class="sky-panel" hidden aria-label="航班查询">
+      <section id="sky-panel" class="sky-panel" hidden aria-label="航班查询" data-i18n-aria="flightAria">
         <form id="flight-search-form" class="flight-search">
           <label hidden><span id="flight-airline-label">航空公司（可选）</span><select id="flight-airline"><option value="">自动从航班号识别（推荐）</option></select><small id="flight-airline-help">可以不选；输入航班号后系统会自动识别。</small></label>
-          <label><span>航班号</span><input id="flight-number" maxlength="10" required autocomplete="off" placeholder="例如：CZ3099"></label>
-          <label><span>日期</span><input id="flight-date" type="date" required></label>
+          <label><span data-i18n="flightNumberLabel">航班号</span><input id="flight-number" maxlength="10" required autocomplete="off" placeholder="例如：CZ3099" data-i18n-placeholder="flightNumberPlaceholder"></label>
+          <label><span data-i18n="flightDateLabel">日期</span><input id="flight-date" type="date" required></label>
           <button class="primary-button" type="submit">查询航班</button>
         </form>
         <p id="flight-status-message" class="status" role="status" aria-live="polite">请输入航班号和日期。</p>
@@ -101,37 +101,56 @@
           <div class="flight-position-summary"><b id="flight-position-status">位置不可用</b><span id="flight-position-updated">—</span></div>
           <div class="flight-route"><div><b id="flight-departure-code">—</b><span>出发机场</span></div><i>→</i><div><b id="flight-arrival-code">—</b><span>到达机场</span></div></div>
           <div id="flight-detail-grid" class="flight-detail-grid"></div>
-          <p id="flight-track-note" class="flight-track-note">只有收到真实位置点时才显示飞机和已飞轨迹。</p>
+          <p id="flight-track-note" class="flight-track-note" data-i18n="flightTrackNote">只有收到真实位置点时才显示飞机和已飞轨迹。</p>
         </article>
-        <details class="privacy-note"><summary>数据来源与限制</summary><p>航班数据经 WebWindows 服务器代理访问 AirLabs。缺失字段显示“暂无信息”；不会绘制虚假飞机位置或计划航路。</p></details>
+        <details class="privacy-note"><summary data-i18n="limitsTitle">数据来源与限制</summary><p data-i18n="flightPrivacyText">航班数据经 WebWindows 服务器代理访问 AirLabs。缺失字段显示“暂无信息”；不会绘制虚假飞机位置或计划航路。</p></details>
       </section>
       <section id="transit-panel"
             class="transit-panel"
             hidden
-            aria-label="公共交通查询">
+            aria-label="公共交通查询"
+            data-i18n-aria="transitAria">
 
       <form id="transit-search-form" class="transit-search">
 
-        <label>
-          <span>出发站</span>
+        <div class="transit-field">
+          <span data-i18n="transitOriginLabel">出发站</span>
           <input
             id="transit-origin"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="transit-origin-suggestions"
             autocomplete="off"
             placeholder="例如：東京"
+            data-i18n-placeholder="transitOriginPlaceholder"
             required>
-        </label>
+          <div id="transit-origin-suggestions"
+               class="place-suggestions"
+               role="listbox"
+               hidden></div>
+        </div>
 
-        <label>
-          <span>到达站</span>
+        <div class="transit-field">
+          <span data-i18n="transitDestinationLabel">到达站</span>
           <input
             id="transit-destination"
+            role="combobox"
+            aria-expanded="false"
+            aria-autocomplete="list"
+            aria-controls="transit-destination-suggestions"
             autocomplete="off"
             placeholder="例如：名古屋"
+            data-i18n-placeholder="transitDestinationPlaceholder"
             required>
-        </label>
+          <div id="transit-destination-suggestions"
+               class="place-suggestions"
+               role="listbox"
+               hidden></div>
+        </div>
 
         <label>
-          <span>出发时间</span>
+          <span data-i18n="departureTimeLabel">出发时间</span>
           <input
             id="transit-date-time"
             type="datetime-local"
@@ -140,7 +159,8 @@
 
         <button
           class="primary-button"
-          type="submit">
+          type="submit"
+          data-i18n="transitSearch">
           查询交通
         </button>
       </form>
@@ -148,7 +168,8 @@
       <p id="transit-status-message"
         class="status"
         role="status"
-        aria-live="polite">
+        aria-live="polite"
+        data-i18n="transitPrompt">
         请输入出发站、到达站和时间。
       </p>
 
@@ -162,10 +183,15 @@
             <span id="transit-operator-name">—</span>
           </div>
 
-          <b id="transit-realtime-status"
-            class="transit-state">
-            — 
-          </b>
+          <div class="transit-badges">
+            <span id="transit-source-pill" class="source-pill">—</span>
+            <b id="transit-service-state"
+              class="transit-service-state">—</b>
+            <b id="transit-realtime-status"
+              class="transit-state">
+              —
+            </b>
+          </div>
         </header>
 
         <div class="transit-summary">
@@ -182,22 +208,40 @@
         </div>
       </div>
 
+        <p id="transit-progress" class="transit-progress"></p>
+
         <div id="transit-detail-grid"
             class="transit-detail-grid"></div>
 
+        <section id="transit-stops"
+                 class="transit-stops"
+                 hidden>
+          <h3 data-i18n="stopsTitle">经停车站</h3>
+          <ol id="transit-stop-list"></ol>
+        </section>
+
+        <div id="transit-candidates"
+             class="transit-candidates"
+             hidden>
+          <b data-i18n="candidatesTitle">可选车次</b>
+          <div id="transit-candidate-list"
+               class="transit-candidate-list"></div>
+        </div>
+
         <p id="transit-position-note"
-          class="transit-position-note">
+          class="transit-position-note"
+          data-i18n="transitPositionNoteDefault">
           实时位置可用时显示车辆实时位置；否则显示计划线路。
         </p>
 
       </article>
 
       <details class="privacy-note">
-        <summary>数据来源与限制</summary>
-        <p>
+        <summary data-i18n="limitsTitle">数据来源与限制</summary>
+        <p data-i18n="transitPrivacyText">
           公共交通数据来自 Transitland、GTFS Schedule
-          及可用的 GTFS-Realtime 数据源。
-          实时车辆位置缺失时，会明确标记为计划或推定信息。
+          及可用的 GTFS-Realtime 数据源；中国铁路车次来自 12306
+          官方接口。无实时位置时会明确标注为计划或推定，不绘制虚构线路。
         </p>
       </details>
     </section>
@@ -205,7 +249,7 @@
     <section class="map-panel" aria-label="交互地图" data-i18n-aria="interactiveMap">
       <div id="map" tabindex="0" aria-label="可平移、缩放并选择起终点的交互地图" data-i18n-aria="mapAria"></div>
       <div id="flight-map" class="flight-map" hidden aria-label="航班实时位置地图"></div>
-      <div id="transit-map" class="transit-map" hidden aria-label="公共交通线路地图"></div>
+      <div id="transit-map" class="transit-map" hidden aria-label="公共交通线路地图" data-i18n-aria="transitMapAria"></div>
       <div id="map-loading" class="map-loading"><span></span><strong data-i18n="mapLoading">正在加载道路与地名…</strong></div>
       <div class="pick-tools" aria-label="地图选点" data-i18n-aria="mapPick"><button type="button" data-pick="start" data-i18n="setStart">设为起点</button><button type="button" data-pick="end" data-i18n="setEnd">设为终点</button></div>
       <button id="fit-route" class="fit-route" type="button" hidden data-i18n="showFullRoute">显示全程</button>

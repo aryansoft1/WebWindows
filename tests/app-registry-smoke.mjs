@@ -110,7 +110,7 @@ await apps.launch("webwindows.system.settings");
 assert.deepEqual(openedWindows.at(-1), [
   "settings",
   "设置",
-  "settings.html?v=20260729-3",
+  "settings.html?v=20260923-startup-1",
   "assets/icons/settings.png",
   true,
   "",
@@ -158,7 +158,7 @@ await apps.launch("webwindows.system.navigation");
 assert.deepEqual(openedWindows.at(-1), [
   "road",
   "问道",
-  "road.html?v=20260921-12",
+  "road.html?v=20260923-1",
   "assets/icons/navigation.svg",
   true,
   "",

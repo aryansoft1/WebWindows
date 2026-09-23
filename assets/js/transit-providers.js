@@ -1181,11 +1181,13 @@
   }
 
   /*
-   * 车站匹配优先级：全名 > 电报码 > 拼音 > 拼音首字母 > 包含匹配。
+   * 车站匹配优先级：全名 > 电报码 > 拼音 > 拼音首字母 > 包含匹配
+   * > 尾字「站」/方向字（东南西北）逐层剥除回落。
    */
   function matchStation(
     stations,
-    query
+    query,
+    exactOnly = false
   ) {
     const value =
       normalizeStationName(query);
@@ -1243,17 +1245,56 @@
       return byShort;
     }
 
-    return (
-      stations.find(
-        station =>
-          normalizeStationName(
-            station.name
-          ).includes(value) ||
-          normalizeStationName(
-            station.pinyin
-          ).includes(value)
-      ) || null
-    );
+    if (!exactOnly) {
+      const contained =
+        stations.find(
+          station =>
+            normalizeStationName(
+              station.name
+            ).includes(value) ||
+            normalizeStationName(
+              station.pinyin
+            ).includes(value)
+        );
+
+      if (contained) {
+        return contained;
+      }
+    }
+
+    /*
+     * 后缀回落：「成都站/成都北/成都北站」等口语写法在精确链与包含链
+     * 都落空时，依次剥掉尾字「站」与方向字（东南西北）重试；
+     * 剥除后的重试只走精确链（exactOnly），避免「海南→海→上海」这类乱配，
+     * 彻底找不到才报 station_not_found。
+     */
+    if (/站$/.test(value)) {
+      const byNoStationSuffix =
+        matchStation(
+          stations,
+          value.slice(0, -1),
+          true
+        );
+
+      if (byNoStationSuffix) {
+        return byNoStationSuffix;
+      }
+    }
+
+    if (/[东南西北]$/.test(value)) {
+      const byNoDirectionSuffix =
+        matchStation(
+          stations,
+          value.slice(0, -1),
+          true
+        );
+
+      if (byNoDirectionSuffix) {
+        return byNoDirectionSuffix;
+      }
+    }
+
+    return null;
   }
 
   /*

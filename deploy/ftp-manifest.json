@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.23.4",
-  "catalogVersion": "2026.09.23.4",
-  "generatedAt": "2026-09-23T07:28:54.942Z",
+  "releaseVersion": "2026.09.24.1",
+  "catalogVersion": "2026.09.24.1",
+  "generatedAt": "2026-09-23T16:27:59.643Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -262,7 +262,7 @@
     "api/railway-proxy.asp",
     "assets/js/startup-manager.js"
   ],
-  "previousReleaseVersion": "2026.09.23.3",
+  "previousReleaseVersion": "2026.09.23.4",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -803,7 +803,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "3a726b6c56c3f197109c80a3a31b13f932ae9435dd101b396728668908662017",
+      "sha256": "32faa8b0df3f8ad74c4c7482d29dfd5a46ff7f045f4d601978b2481a259df659",
       "size": 14035
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1111,7 +1111,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "f7cf3bee8c5920881d6c5b580d970f65d9d263ed3554862bc16126d5a5071985",
+      "sha256": "a199e8c9f3729d3c56025f217024f8588fa9a5fc6697763afd3455e30cc34811",
       "size": 16701
     },
     "assets/css/navigation.css": {
@@ -1190,8 +1190,8 @@
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "350cc8138dc04856a93b0fd192534981d4b116dd1f8180385344be0ab795ed35",
-      "size": 50220
+      "sha256": "b1a6e9a2d4233f4ff13213613612687c0fd7c37e16bcd71299adc0f904e8e84f",
+      "size": 51291
     },
     "admin_api/adminAuth.asp": {
       "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
@@ -1270,18 +1270,18 @@
       "size": 13271
     },
     "api/railway-proxy.asp": {
-      "sha256": "4230d7815120b0672e0d1da3892e6966f896e513f0eb593f4c2785b32621ba8f",
-      "size": 19617
+      "sha256": "bd08594db0bd57a60b01516e77adb5d6f05d39f1b6b6c72d9107753cb178bce2",
+      "size": 19571
     },
     "assets/js/startup-manager.js": {
       "sha256": "39709e2e295726ca9101f64047426180142f96dc0db53d52f3b96382469c219e",
       "size": 8154
     }
   },
-  "releaseScope": "wendao-transit-resilience",
+  "releaseScope": "wendao-railway-asp-fix",
   "uploadFiles": [
+    "api/railway-proxy.asp",
     "assets/js/transit-providers.js",
-    "assets/js/transit-app.js",
     "road.html",
     "data/apps/system-apps.json",
     "sysinfo.html",

@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.09.23.4",
-    "updatedAt": "2026-09-23T00:00:00+09:00"
+    "catalogVersion": "2026.09.24.1",
+    "updatedAt": "2026-09-24T00:00:00+09:00"
   },
   "apps": [
     {
@@ -265,9 +265,9 @@
       "name": "问道",
       "description": "支持当前位置、附近地点、连续导航、路线费用与桌讯出行建议的跨设备地图。",
       "category": "system",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "icon": "assets/icons/navigation.svg",
-      "entry": "road.html?v=20260923-2",
+      "entry": "road.html?v=20260924-1",
       "install": {
         "defaultState": "installed",
         "uninstallable": false

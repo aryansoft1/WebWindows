@@ -199,8 +199,9 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260923-2/);
-assert.match(html, /transit-app\.js\?v=20260923-2/);
+assert.match(html, /transit-providers\.js\?v=20260924-1/);
+assert.match(html, /transit-app\.js\?v=20260924-1/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);
 
@@ -227,16 +228,27 @@ const position = loadContext(positionSource, "transit-position.js", {})
 /* ---------- 12306 解析 ---------- */
 
 const stationSource =
-  "var station_names='@bjb|北京北|VAP|beijingbei|bjb|0@icw|成都东|ICW|chengdudong|cdd|1@eay|西安北|EAY|xianbei|xab|2';";
+  "var station_names='@bjb|北京北|VAP|beijingbei|bjb|0@icw|成都东|ICW|chengdudong|cdd|1@eay|西安北|EAY|xianbei|xab|2@cdw|成都|CDW|chengdu|cd|3@shh|上海|SHH|shanghai|sh|4';";
 
 const stations = rail.parseStationTable(stationSource);
-assert.equal(stations.length, 3);
+assert.equal(stations.length, 5);
 assert.equal(rail.matchStation(stations, "成都东").code, "ICW");
 assert.equal(rail.matchStation(stations, "chengdudong").code, "ICW");
 assert.equal(rail.matchStation(stations, "cdd").code, "ICW");
 assert.equal(rail.matchStation(stations, "ICW").code, "ICW");
 assert.equal(rail.matchStation(stations, "西安北").code, "EAY");
 assert.equal(rail.matchStation(stations, "没有这个站"), null);
+
+/*
+ * 后缀回落：客运表没有的方向站名/带「站」口语写法逐层剥除，
+ * 剥除后只走精确链——「成都北」落到「成都」，但「海南」绝不能乱配「上海」。
+ */
+assert.equal(rail.matchStation(stations, "成都北").code, "CDW");
+assert.equal(rail.matchStation(stations, "成都站").code, "CDW");
+assert.equal(rail.matchStation(stations, "成都北站").code, "CDW");
+assert.equal(rail.matchStation(stations, "上海站").code, "SHH");
+assert.equal(rail.matchStation(stations, "海南"), null);
+assert.equal(rail.matchStation(stations, "站"), null);
 
 const ticketPayload = {
   data: {

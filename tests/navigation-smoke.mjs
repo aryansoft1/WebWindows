@@ -80,7 +80,7 @@ assert.equal(offlineSearch.results[0].name,"东京");
 const navApp=catalog.apps.find(app=>app.id==="webwindows.system.navigation");
 assert.ok(navApp&&navApp.placement.desktop&&navApp.placement.startMenu);
 assert.equal(navApp.name,"问道");
-assert.equal(navApp.version,"1.3.1");
+assert.equal(navApp.version,"1.3.2");
 assert.match(html,/maplibre-gl@5\.6\.1/);
 assert.match(html,/tiles\.openfreemap\.org/);
 assert.match(html,/photon\.komoot\.io/);

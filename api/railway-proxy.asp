@@ -333,7 +333,6 @@ Function BuildScheduleJson(ByVal body)
   ' 经停站对象都是平面 JSON（值不含花括号），先整块取出再逐字段解析
   re.Pattern = "\{[^{}]*?""station_name""\s*:\s*""[^""]*""[^{}]*?\}"
   re.Global = True
-  re.SingleLine = True
 
   Dim rows()
   Dim count
@@ -552,7 +551,6 @@ Function ExtractArrayBlock(ByVal body, ByVal fieldName)
   Dim re
   Set re = New RegExp
   re.Pattern = """" & fieldName & """\s*:\s*\[([^\]]*)\]"
-  re.SingleLine = True
 
   Dim m
   Set m = re.Execute(body)

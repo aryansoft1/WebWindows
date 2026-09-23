@@ -158,7 +158,7 @@ await apps.launch("webwindows.system.navigation");
 assert.deepEqual(openedWindows.at(-1), [
   "road",
   "问道",
-  "road.html?v=20260923-2",
+  "road.html?v=20260924-1",
   "assets/icons/navigation.svg",
   true,
   "",

@@ -64,6 +64,14 @@
       "errUpstreamBlocked",
     geocoder_unavailable:
       "errUpstreamBlocked",
+    transit_upstream_unavailable:
+      "errUpstreamBlocked",
+
+    /* 超时预算类错误码（transit-providers.js TIMEOUTS） */
+    transit_timeout: "errUpstreamBlocked",
+    rail_timeout: "errUpstreamBlocked",
+    geocoder_timeout: "errUpstreamBlocked",
+    transit_failed: "errUpstreamBlocked",
 
     /* api/railway-proxy.asp 独有错误码 */
     station_source_unavailable:
@@ -1331,8 +1339,10 @@
 
     state.controller?.abort();
 
-    state.controller =
+    const controller =
       new AbortController();
+
+    state.controller = controller;
 
     stopPolling();
 
@@ -1376,8 +1386,16 @@
               }
           },
 
-          state.controller.signal
+          controller.signal
         );
+
+      /*
+       * 期间用户已发起新查询/取消：
+       * 丢弃过期结果，避免旧响应覆盖新状态。
+       */
+      if (controller.signal.aborted) {
+        return;
+      }
 
       state.journey =
         outcome.journey;

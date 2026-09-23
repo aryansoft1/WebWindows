@@ -147,6 +147,17 @@ for (const code of [
   assert.ok(statusKeys[code], `STATUS_KEYS missing ASP code: ${code}`);
 }
 
+/* 超时与回落类错误码必须已映射（transit-providers.js TIMEOUTS / 兜底） */
+for (const code of [
+  "transit_timeout",
+  "rail_timeout",
+  "geocoder_timeout",
+  "transit_upstream_unavailable",
+  "transit_failed"
+]) {
+  assert.ok(statusKeys[code], `STATUS_KEYS missing timeout code: ${code}`);
+}
+
 assert.match(transitAppSource, /station_source_unavailable/);
 assert.match(transitAppSource, /schedule_unavailable/);
 
@@ -188,10 +199,23 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-app\.js\?v=20260923-1/);
+assert.match(html, /transit-providers\.js\?v=20260923-2/);
+assert.match(html, /transit-app\.js\?v=20260923-2/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);
 
+/*
+ * vm 上下文只有 ECMAScript 标准全局：
+ * fetchWithTimeout / withBudget 依赖宿主的 AbortController 与定时器，必须注入。
+ */
+const providerHostGlobals = {
+  AbortController,
+  setTimeout,
+  clearTimeout
+};
+
 const rail = loadContext(providerSource, "transit-providers.js", {
+  ...providerHostGlobals,
   fetch: async () => {
     throw new Error("network disabled in tests");
   }
@@ -332,6 +356,7 @@ assert.equal(
 const railRequests = [];
 
 const aspContext = loadContext(providerSource, "transit-providers.js", {
+  ...providerHostGlobals,
   URL,
   location: { origin: "https://www.y0.hk" },
   fetch: async url => {
@@ -429,6 +454,7 @@ assert.equal(scheduleRequest.searchParams.get("code"), null);
 
 /* 代理错误码必须带 httpStatus 抛出，由 STATUS_KEYS 本地化 */
 const errorContext = loadContext(providerSource, "transit-providers.js", {
+  ...providerHostGlobals,
   URL,
   location: { origin: "https://www.y0.hk" },
   fetch: async () => ({
@@ -528,19 +554,80 @@ const noFallback = await rail.searchJourneyWithFallback({
 });
 assert.equal(noFallback.source, "transitland");
 
-let hardFailure = null;
+/*
+ * 回落语义（线上事故回归）：
+ * GTFS 阶段除用户取消外任何失败都必须回落 12306——
+ * 限流、网络错误、超时、挂起，一律不许把用户卡在 GTFS 阶段。
+ */
+let hardFallback = null;
+railCalls = 0;
+
+const hardFailure = await rail.searchJourneyWithFallback({
+  transitland: {
+    searchJourney: async () => {
+      const error = new Error("quota");
+      error.code = "rate_limited";
+      throw error;
+    }
+  },
+  chinaRail: {
+    searchJourney: async () => {
+      railCalls += 1;
+      return journeyStub;
+    }
+  },
+  origin: "a",
+  destination: "b",
+  departureTime: "2026-09-24T08:10",
+  onFallback: code => {
+    hardFallback = code;
+  }
+});
+assert.equal(hardFailure.source, "china-rail");
+assert.equal(hardFailure.journey, journeyStub);
+assert.equal(hardFallback, "rate_limited");
+assert.equal(railCalls, 1);
+
+/* 网络错误（fetch TypeError，无 code）→ 回落，fallbackCode 兜底 transit_failed */
+hardFallback = null;
+railCalls = 0;
+
+const networkFailure = await rail.searchJourneyWithFallback({
+  transitland: {
+    searchJourney: async () => {
+      throw new TypeError("Failed to fetch");
+    }
+  },
+  chinaRail: {
+    searchJourney: async () => {
+      railCalls += 1;
+      return journeyStub;
+    }
+  },
+  origin: "a",
+  destination: "b",
+  departureTime: "2026-09-24T08:10",
+  onFallback: code => {
+    hardFallback = code;
+  }
+});
+assert.equal(networkFailure.source, "china-rail");
+assert.equal(hardFallback, "transit_failed");
+
+/* 用户取消 → AbortError 原样上抛，绝不回落到 12306 */
+let cancelledError = null;
 try {
   await rail.searchJourneyWithFallback({
     transitland: {
       searchJourney: async () => {
-        const error = new Error("quota");
-        error.code = "rate_limited";
+        const error = new Error("aborted");
+        error.name = "AbortError";
         throw error;
       }
     },
     chinaRail: {
       searchJourney: async () => {
-        throw new Error("rail provider must not run for hard failures");
+        throw new Error("rail provider must not run after cancel");
       }
     },
     origin: "a",
@@ -548,9 +635,83 @@ try {
     departureTime: "2026-09-24T08:10"
   });
 } catch (error) {
-  hardFailure = error;
+  cancelledError = error;
 }
-assert.equal(hardFailure?.code, "rate_limited");
+assert.equal(cancelledError?.name, "AbortError");
+
+/* ---------- 短预算：挂起必须有界，绝不永久「照会中」 ---------- */
+
+const impatient = loadContext(providerSource, "transit-providers.js", {
+  fetch: () => new Promise(() => {}), // 永不 settle 的网络黑洞
+  AbortController,
+  setTimeout,
+  clearTimeout,
+  URL,
+  __WENDAO_TRANSIT_TIMEOUTS__: {
+    transitRequest: 15,
+    geocoderRequest: 15,
+    railRequest: 15,
+    gtfsStage: 25,
+    railStage: 40
+  }
+}).WebWindowsTransit;
+
+/* GTFS 挂起 → 阶段预算超时 → 及时回落 12306 */
+railCalls = 0;
+hardFallback = null;
+
+const hungStart = Date.now();
+const hungGtfs = await impatient.searchJourneyWithFallback({
+  transitland: { searchJourney: () => new Promise(() => {}) },
+  chinaRail: {
+    searchJourney: async () => {
+      railCalls += 1;
+      return journeyStub;
+    }
+  },
+  origin: "a",
+  destination: "b",
+  departureTime: "2026-09-24T08:10",
+  onFallback: code => {
+    hardFallback = code;
+  }
+});
+assert.equal(hungGtfs.source, "china-rail");
+assert.equal(hardFallback, "transit_timeout");
+assert.equal(railCalls, 1);
+assert.ok(Date.now() - hungStart < 2000, "hung GTFS must fall back via stage budget");
+
+/* 12306 阶段也挂起 → rail_timeout 上抛（有界报错，而非卡死） */
+let railTimeout = null;
+try {
+  await impatient.searchJourneyWithFallback({
+    transitland: { searchJourney: () => new Promise(() => {}) },
+    chinaRail: { searchJourney: () => new Promise(() => {}) },
+    origin: "a",
+    destination: "b",
+    departureTime: "2026-09-24T08:10"
+  });
+} catch (error) {
+  railTimeout = error;
+}
+assert.equal(railTimeout?.name, "TimeoutError");
+assert.equal(railTimeout?.code, "rail_timeout");
+
+/* 单请求 fetch 超时：TimeoutError + code 可与 AbortError 严格区分 */
+let singleTimeout = null;
+try {
+  await impatient.fetchWithTimeout(
+    "https://example.invalid/",
+    {},
+    15,
+    "transit_timeout",
+    "timed out"
+  );
+} catch (error) {
+  singleTimeout = error;
+}
+assert.equal(singleTimeout?.name, "TimeoutError");
+assert.equal(singleTimeout?.code, "transit_timeout");
 
 /* ---------- 服务时区与运行状态 ---------- */
 

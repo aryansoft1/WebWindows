@@ -5,6 +5,23 @@
   const RAIL_ENDPOINT = "/api/railway-proxy.asp";
   const PHOTON_ENDPOINT = "https://photon.komoot.io/api/";
 
+  /*
+   * 所有外部请求的超时预算（毫秒）。
+   * 任何 fetch 都必须有界：请求挂起时 UI 会永远停在
+   * 「GTFS 数据照会中」——这是线上真实发生过的卡死根因。
+   * 测试/调试可通过 global.__WENDAO_TRANSIT_TIMEOUTS__ 覆盖。
+   */
+  const TIMEOUTS = Object.assign(
+    {
+      transitRequest: 10000,
+      geocoderRequest: 6000,
+      railRequest: 15000,
+      gtfsStage: 8000,
+      railStage: 30000
+    },
+    global.__WENDAO_TRANSIT_TIMEOUTS__ || {}
+  );
+
   function text(value) {
     return value === null || value === undefined
       ? ""
@@ -20,6 +37,82 @@
     const error = new Error(message);
     error.code = code;
     return error;
+  }
+
+  function timeoutError(code, message) {
+    const error = providerError(code, message);
+    error.name = "TimeoutError";
+    return error;
+  }
+
+  /*
+   * fetch + 硬超时。
+   * 外部 signal 正常转发；超时抛 name=TimeoutError / code=… 的错误，
+   * 与用户取消（AbortError）严格可区分：
+   * 超时 → 回落或报错，取消 → 静默中止，二者不可混淆。
+   */
+  function fetchWithTimeout(
+    url,
+    init,
+    timeoutMs,
+    timeoutCode,
+    timeoutMessage
+  ) {
+    const controller = new AbortController();
+
+    const external =
+      init && init.signal
+        ? init.signal
+        : null;
+
+    const relay = () => controller.abort();
+
+    if (external) {
+      if (external.aborted) {
+        controller.abort();
+      } else {
+        external.addEventListener("abort", relay);
+      }
+    }
+
+    let timer = null;
+
+    const request = fetch(
+      url,
+      Object.assign({}, init, {
+        signal: controller.signal
+      })
+    );
+
+    const settled = request.then(
+      value => {
+        if (timer) clearTimeout(timer);
+        return value;
+      },
+      error => {
+        if (timer) clearTimeout(timer);
+        throw error;
+      }
+    );
+
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        controller.abort();
+        reject(
+          timeoutError(timeoutCode, timeoutMessage)
+        );
+      }, timeoutMs);
+    });
+
+    const raced = Promise.race([settled, timeout]);
+
+    if (external) {
+      const cleanup = () =>
+        external.removeEventListener("abort", relay);
+      raced.then(cleanup, cleanup);
+    }
+
+    return raced;
   }
 
   function coordinatesFromStop(stop) {
@@ -351,7 +444,7 @@
       );
 
       const response =
-        await fetch(
+        await fetchWithTimeout(
           url.href,
           {
             credentials:
@@ -363,7 +456,11 @@
             },
 
             signal
-          }
+          },
+
+          TIMEOUTS.transitRequest,
+          "transit_timeout",
+          "Transit request timed out."
         );
 
       const payload =
@@ -991,7 +1088,7 @@
       }
 
       const response =
-        await fetch(
+        await fetchWithTimeout(
           url.href,
           {
             headers: {
@@ -999,7 +1096,11 @@
             },
 
             signal
-          }
+          },
+
+          TIMEOUTS.geocoderRequest,
+          "geocoder_timeout",
+          "Photon request timed out."
         );
 
       if (!response.ok) {
@@ -1578,7 +1679,7 @@
     signal
   ) {
     const response =
-      await fetch(
+      await fetchWithTimeout(
         url,
         {
           credentials: "same-origin",
@@ -1588,7 +1689,11 @@
           },
 
           signal
-        }
+        },
+
+        TIMEOUTS.railRequest,
+        "rail_timeout",
+        "Rail request timed out."
       );
 
     const payload =
@@ -2316,16 +2421,41 @@
   }
 
   /*
-   * GTFS 优先；找不到站点或直达班次时回落到 12306。
+   * 阶段总预算：到点取消子链并抛 TimeoutError，
+   * 保证「照会中」状态永远有界。
+   * race 对入参 promise 均挂有 handler，
+   * 输家后续 rejection 不会泄漏为 unhandledrejection。
    */
-  const FALLBACK_CODES =
-    new Set([
-      "stop_not_found",
-      "direct_trip_not_found",
-      "transit_request_failed",
-      "transit_upstream_unavailable"
-    ]);
+  function withBudget(
+    promise,
+    timeoutMs,
+    code,
+    message,
+    controller
+  ) {
+    let timer = null;
 
+    const budget = new Promise((_, reject) => {
+      timer = setTimeout(() => {
+        if (controller) {
+          controller.abort();
+        }
+
+        reject(timeoutError(code, message));
+      }, timeoutMs);
+    });
+
+    return Promise.race([promise, budget])
+      .finally(() => clearTimeout(timer));
+  }
+
+  /*
+   * GTFS 优先；除用户取消外，GTFS 阶段任何失败
+   * （找不到站点/班次、网络错误、限流、超时、上游异常）
+   * 一律回落 12306，由 12306 给出确定结果或明确错误，
+   * 绝不把用户卡在 GTFS 阶段（线上事故：请求挂起 → 永远「照会中」）。
+   * 12306 阶段同样带总预算：超时上抛 rail_timeout 而非永久挂起。
+   */
   async function searchJourneyWithFallback(
     {
       transitland,
@@ -2338,51 +2468,84 @@
     },
     signal
   ) {
-    try {
-      return {
-        journey:
-          await transitland.searchJourney(
-            {
-              origin,
-              destination,
-              departureTime
-            },
-            signal
-          ),
+    const gtfsController = new AbortController();
+    const railController = new AbortController();
 
-        source: "transitland"
-      };
-    } catch (error) {
-      if (
-        error?.name === "AbortError"
-      ) {
-        throw error;
+    const relayGtfs = () => gtfsController.abort();
+    const relayRail = () => railController.abort();
+
+    if (signal) {
+      if (signal.aborted) {
+        gtfsController.abort();
+        railController.abort();
+      } else {
+        signal.addEventListener("abort", relayGtfs);
+        signal.addEventListener("abort", relayRail);
       }
-
-      const code =
-        text(error?.code);
-
-      if (!FALLBACK_CODES.has(code)) {
-        throw error;
-      }
-
-      onFallback?.(code);
     }
 
-    return {
-      journey:
-        await chinaRail.searchJourney(
-          {
-            origin,
-            destination,
-            departureTime,
-            language
-          },
-          signal
-        ),
+    try {
+      try {
+        return {
+          journey:
+            await withBudget(
+              transitland.searchJourney(
+                {
+                  origin,
+                  destination,
+                  departureTime
+                },
+                gtfsController.signal
+              ),
 
-      source: "china-rail"
-    };
+              TIMEOUTS.gtfsStage,
+              "transit_timeout",
+              "GTFS query timed out.",
+              gtfsController
+            ),
+
+          source: "transitland"
+        };
+      } catch (error) {
+        if (
+          error?.name === "AbortError"
+        ) {
+          throw error;
+        }
+
+        onFallback?.(
+          text(error?.code) ||
+            "transit_failed"
+        );
+      }
+
+      return {
+        journey:
+          await withBudget(
+            chinaRail.searchJourney(
+              {
+                origin,
+                destination,
+                departureTime,
+                language
+              },
+              railController.signal
+            ),
+
+            TIMEOUTS.railStage,
+            "rail_timeout",
+            "Rail query timed out.",
+            railController
+          ),
+
+        source: "china-rail"
+      };
+    } finally {
+      if (signal) {
+        signal.removeEventListener("abort", relayGtfs);
+        signal.removeEventListener("abort", relayRail);
+      }
+    }
   }
 
   global.WebWindowsTransit =
@@ -2392,6 +2555,7 @@
       ChinaRailTransitProvider,
       PhotonGeocoder,
       searchJourneyWithFallback,
+      fetchWithTimeout,
       parseStationTable,
       matchStation,
       stationSuggestions,

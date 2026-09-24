@@ -48,7 +48,7 @@
 | T-003 | P3 | 后台安全加固 `ce1f243`/`6381297` 整体上线 | 📤 | 必须一次性整体发布，不能拆开塞线上 | 2026-09-24 | Codex |
 | T-004 | P3 | 修掉主线 3 个页面引用 195B tailwind stub | 📤 | 未修 | 2026-09-24 | Codex |
 | T-005 | P3 | 决定 `codex/wendao-release-20260920` 推还是删/改名 | 📤 | 已标 DO NOT DEPLOY，待决策 | 2026-09-24 | Codex |
-| T-006 | P4 | 对齐根 `index.html` 与线上分叉线 | 📤 | 仅分析过，先确认哪边是权威 | 2026-09-24 | Codex |
+| T-006 | P4 | 对齐根 `index.html` 与线上分叉线 → 扩展为全量内容分叉对齐 | 🔄 | 权威规则已定（用户）：**日期最新为准**。全量比对 237 静态文件（线上 vs HEAD，按内容 blob 首次出现提交判日期）：64 个分叉 → **27 个线上更新、需把真实最新合并进本分支**（daf91e3 测速组 `settings.html/settings.css/network-speed.js`、6b39119 新闻组 5 文件、170c3f2 `index.html`、8db8b6c/2cefe2f 设备天气窗口组 7 文件、404b587 云对话组 4 文件、`webwindows-message.js`、`login.js/desktop-menus/sysinfo.css`、13e2206 `SystemManager/index.html`、`main.css`），**37 个本分支已最新**（保留），171 一致，2 个仅本分支（docs 无需上线）；**3 处日期例外需人工合并**：①`main.js` 日期上本分支 08-21 赢 08-20，但实测缺线上 `9cd9627` 的 i18n 启动修复（`data-boot-status`/`WebWindowsI18n` HEAD 无、线上有），并行谱系要合不要留；②`SystemManager/index.html` 线上字节只存在于恢复包快照（`deploy/developer-recovery-20260923/payload/`），内容=访客统计导航（要留）+缺 T-003 安全加固 `admin-security/admin-shell`（本分支有、要留）+tailwind 引用源待定（牵 T-004 stub），必须手工三方合并；③`index.html` 依赖 `auth-session.js`/`file-query-parser.js`/`ai-file-tools.js` 本分支没有，但分别在 `0e0bfa5`/`d4d291b`/`529385c`（其它分支）可 git 合并。全部 27 个来源提交均在本地分支（`--all` 可达），按 git 合并取字节、不从线上抠。**阻塞**：启动项 WIP 未提交且叠在 `settings.html/index.html/main.js` 上，合并基底需先决策；待用户确认后执行合并 | 2026-09-24 | OpenCode |
 | T-007 | P2 | 发布路径二选一定案（`--production` vs 本地增量），修 preflight L62/L69/L72 契约冲突 | 📤 | 见交接记录 7.3/7.5，提交解决不了设计冲突 | 2026-09-24 | Codex |
 | T-008 | P2 | 轮换对话中明文出现过的 FTP 账密 | ⏸️ | 见交接记录第 6 节 | 2026-09-24 | 人工 |
 

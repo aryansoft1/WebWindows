@@ -4,10 +4,9 @@
 ' 一次性诊断脚本：探测 12306 移动端（微信小程序）端点在「生产服务器 IP」下
 ' 是否可用，用于评估「运行中车次 / 真实走向 polyline」能否加源实现。
 '
-' 背景：本机 IP 实测 getTrainMapLine 返回 status=false「操作失败」、
+' 背景：本机 IP 实测 getTrainLine 返回 status=false「操作失败」、
 '       travelServiceQrcodeTrainInfo 返回 data={}、bigScreen 403，
 '       无法判断是「接口不可用」还是「按 IP/Header 限制」。
-'       同一接口从生产服务器再测一次即可区分。
 '
 ' 安全：只发 GET，不带任何凭据；不写服务器文件；不改任何线上逻辑。
 ' 用法：GET /api/probe-12306-mobile.asp?date=20260925&train=G4868&trainNo=78000G486801
@@ -22,6 +21,9 @@ Response.ContentType = "application/json; charset=utf-8"
 Response.CacheControl = "no-cache"
 
 Const MOBILE_BASE = "https://mobile.12306.cn/wxxcx"
+
+' iPhone 微信 UA：12306 小程序后端对桌面 UA 常直接 403
+Const MOBILE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.49(0x18003128) NetType/WIFI Language/zh_CN"
 
 Dim serviceDate
 serviceDate = Trim(Request.QueryString("date"))
@@ -50,41 +52,50 @@ If Len(stationCode) = 0 Then
   stationCode = "ICW"
 End If
 
-' iPhone 微信 UA：12306 小程序后端对桌面 UA 常直接 403
-Const MOBILE_UA = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.49(0x18003128) NetType/WIFI Language/zh_CN"
-
 Dim results
-results = "&quot;serverDate&quot;:&quot;" & EscapeJson(Now()) & "&quot;,&quot;probeDate&quot;:&quot;" & serviceDate & "&quot;,&quot;cases&quot;:["
+results = """serverDate"":""" & EscapeJson(CStr(Now())) & _
+           """,""probeDate"":""" & serviceDate & _
+           """,""train"":""" & trainCode & _
+           """,""trainNo"":""" & trainNo & _
+           """,""cases"":["
 
 Dim first
 first = True
 
-' 1) 车次走向（真实 polyline）：能把「直线插值」升级为「沿真实线路插值」
+' 1) 车次走向（真实 polyline）：可把「直线插值」升级为「沿真实线路插值」
 If Len(trainNo) > 0 Then
-  results = results & AddCase(first, "trainMapLine", MOBILE_BASE & "/wechat/main/getTrainMapLine?version=v2&trainNo=" & UrlEncode(trainNo), MOBILE_UA, "https://mobile.12306.cn/")
+  results = results & AddCase(first, "trainMapLine", _
+    MOBILE_BASE & "/wechat/main/getTrainMapLine?version=v2&trainNo=" & UrlEncode(trainNo))
   first = False
 End If
 
-' 2) 车次运行信息（到发时刻 + 担当车底 + 车站坐标）
-results = results & AddCase(first, "qrcodeTrainInfo(" & serviceDateCompact & ")", MOBILE_BASE & "/wechat/main/travelServiceQrcodeTrainInfo?trainCode=" & UrlEncode(trainCode) & "&startDay=" & serviceDateCompact, MOBILE_UA, "https://mobile.12306.cn/")
+' 2) 车次运行信息（到发时刻 + 担当车底 + 车站坐标），紧凑日期
+results = results & AddCase(first, "qrcodeTrainInfo(" & serviceDateCompact & ")", _
+  MOBILE_BASE & "/wechat/main/travelServiceQrcodeTrainInfo?trainCode=" & UrlEncode(trainCode) & _
+  "&startDay=" & serviceDateCompact)
 first = False
 
-' 3) 同上但用 YYYY-MM-DD（部分文档两种格式都出现过）
-If InStr(serviceDateCompact, "-") = 0 Then
-  results = results & AddCase(first, "qrcodeTrainInfo(dashed)", MOBILE_BASE & "/wechat/main/travelServiceQrcodeTrainInfo?trainCode=" & UrlEncode(trainCode) & "&startDay=" & serviceDate, MOBILE_UA, "https://mobile.12306.cn/")
-  first = False
-End If
-
-' 4) 车站大屏（唯一已知能列出「已发车 + 运行中」车次的公开端点）
-results = results & AddCase(first, "bigScreenTrainList", MOBILE_BASE & "/bigScreen/getTrainList?stationCode=" & UrlEncode(stationCode) & "&trainDate=" & serviceDateCompact & "&reqType=json", MOBILE_UA, "https://mobile.12306.cn/")
+' 3) 同上但用 YYYY-MM-DD（两种格式在公开资料里都出现过）
+results = results & AddCase(first, "qrcodeTrainInfo(dashed)", _
+  MOBILE_BASE & "/wechat/main/travelServiceQrcodeTrainInfo?trainCode=" & UrlEncode(trainCode) & _
+  "&startDay=" & serviceDate)
 first = False
 
-' 5) 同一大屏端点换紧凑日期
-results = results & AddCase(first, "bigScreenTrainList(dashed)", MOBILE_BASE & "/bigScreen/getTrainList?stationCode=" & UrlEncode(stationCode) & "&trainDate=" & serviceDate & "&reqType=json", MOBILE_UA, "https://mobile.12306.cn/")
+' 4) 车站大屏：公开资料里唯一能列出「已发车 + 运行中」车次的端点
+results = results & AddCase(first, "bigScreenTrainList", _
+  MOBILE_BASE & "/bigScreen/getTrainList?stationCode=" & UrlEncode(stationCode) & _
+  "&trainDate=" & serviceDateCompact & "&reqType=json")
 first = False
 
-' 6) 备用：官网站名表（确认服务器能直连 12306 域，非全站被墙）
-results = results & AddCase(first, "stationNameJs", "https://kyfw.12306.cn/otn/resources/js/framework/station_name.js", MOBILE_UA, "https://kyfw.12306.cn/")
+' 5) 同一大屏端点换带横线日期
+results = results & AddCase(first, "bigScreenTrainList(dashed)", _
+  MOBILE_BASE & "/bigScreen/getTrainList?stationCode=" & UrlEncode(stationCode) & _
+  "&trainDate=" & serviceDate & "&reqType=json")
+first = False
+
+' 6) 官网站名表：确认服务器能直连 12306 域（排除全站不可达）
+results = results & AddCase(first, "stationNameJs", _
+  "https://kyfw.12306.cn/otn/resources/js/framework/station_name.js")
 
 results = results & "]"
 
@@ -92,27 +103,21 @@ Response.Write "{" & results & "}"
 Response.End
 
 
-Function AddCase(ByRef isFirst, label, url, userAgent, referer)
+Function AddCase(ByRef isFirst, label, url)
 
   Dim result
-  result = HttpGet(url, userAgent, referer)
-
-  Dim statusCode
-  statusCode = CLng(result(0))
-
-  Dim body
-  body = CStr(result(1))
-
-  Dim errorText
-  errorText = CStr(result(2))
+  result = HttpGet(url)
 
   Dim item
-  item = "{""label"":&quot;" & EscapeJson(label) & _
-         "&quot;,&quot;status&quot;:" & CStr(statusCode) & _
-         "&quot;bytes&quot;:" & CStr(Len(body)) & _
-         "&quot;elapsedMs&quot;:" & CStr(result(3)) & _
-         "&quot;error&quot;:&quot;" & EscapeJson(errorText) & "&quot;" & _
-         "&quot;snippet&quot;:&quot;" & EscapeJson(Left(body, 400)) & "&quot;}"
+  item = "{" & _
+         """label"":""" & EscapeJson(label) & """," & _
+         """url"":""" & EscapeJson(url) & """," & _
+         """status"":" & CStr(CLng(result(0))) & "," & _
+         """bytes"":" & CStr(Len(CStr(result(1)))) & "," & _
+         """elapsedMs"":" & CStr(CLng(result(3))) & "," & _
+         """error"":""" & EscapeJson(CStr(result(2))) & """," & _
+         """snippet"":""" & EscapeJson(Left(CStr(result(1)), 400)) & """" & _
+         "}"
 
   If isFirst Then
     isFirst = False
@@ -124,7 +129,7 @@ Function AddCase(ByRef isFirst, label, url, userAgent, referer)
 End Function
 
 
-Function HttpGet(url, userAgent, referer)
+Function HttpGet(url)
 
   On Error Resume Next
 
@@ -147,8 +152,8 @@ Function HttpGet(url, userAgent, referer)
 
   http.setRequestHeader "Accept", "application/json, text/plain, */*"
   http.setRequestHeader "Accept-Encoding", "identity"
-  http.setRequestHeader "User-Agent", userAgent
-  http.setRequestHeader "Referer", referer
+  http.setRequestHeader "User-Agent", MOBILE_UA
+  http.setRequestHeader "Referer", "https://mobile.12306.cn/"
   http.setRequestHeader "X-Requested-With", "XMLHttpRequest"
 
   http.send

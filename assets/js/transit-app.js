@@ -52,6 +52,8 @@
     stop_not_found: "errStopNotFound",
     direct_trip_not_found:
       "errDirectTripNotFound",
+    gtfs_trip_unavailable:
+      "errGtfsUnavailable",
     station_not_found:
       "errStationNotFound",
     no_train: "errNoTrain",

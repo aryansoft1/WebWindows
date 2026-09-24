@@ -189,6 +189,251 @@
     return null;
   }
 
+  /* 两点球面距离（公里），用于剔除「同名但异地」的错误站点。 */
+  function haversineKm(a, b) {
+    if (
+      !Array.isArray(a) ||
+      !Array.isArray(b) ||
+      a.length < 2 ||
+      b.length < 2
+    ) {
+      return null;
+    }
+
+    const toRad =
+      value =>
+        (Number(value) * Math.PI) / 180;
+
+    const lat1 = toRad(a[1]);
+    const lat2 = toRad(b[1]);
+    const dLat = lat2 - lat1;
+    const dLon = toRad(b[0] - a[0]);
+
+    const h =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1) *
+        Math.cos(lat2) *
+        Math.sin(dLon / 2) ** 2;
+
+    return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+
+  function stopCoordinates(stop) {
+    const point = stop?.geometry?.coordinates;
+
+    if (
+      Array.isArray(point) &&
+      point.length >= 2 &&
+      Number.isFinite(Number(point[0])) &&
+      Number.isFinite(Number(point[1]))
+    ) {
+      return point;
+    }
+
+    return null;
+  }
+
+  function stopName(stop) {
+    return text(
+      stop?.stop_name ??
+        stop?.name
+    ).trim();
+  }
+
+  function stopNameMatchScore(
+    stop,
+    query
+  ) {
+    const needle =
+      text(query)
+        .trim()
+        .toLocaleLowerCase();
+
+    const name =
+      stopName(stop)
+        .toLocaleLowerCase();
+
+    if (!needle) {
+      return 3;
+    }
+
+    if (name === needle) {
+      return 0;
+    }
+
+    if (name.startsWith(needle)) {
+      return 1;
+    }
+
+    if (name.includes(needle)) {
+      return 2;
+    }
+
+    return 3;
+  }
+
+  /*
+   * 参考点：只取「名称匹配最佳」的那一组站点的质心。
+   * 若把所有候选都算进质心，异地同名站（如北海道的「東京農業大学」）
+   * 会把质心拉到北边，导致真正可达的城市全部被判超距。
+   */
+  function referencePoint(
+    stops,
+    query
+  ) {
+    const list = Array.isArray(stops)
+      ? stops
+      : [];
+
+    if (!list.length) {
+      return null;
+    }
+
+    let best = Infinity;
+
+    for (const stop of list) {
+      const score =
+        stopNameMatchScore(
+          stop,
+          query
+        );
+
+      if (score < best) {
+        best = score;
+      }
+    }
+
+    const top = list.filter(
+      stop =>
+        stopNameMatchScore(
+          stop,
+          query
+        ) === best
+    );
+
+    return centroidOf(top);
+  }
+
+  /*
+   * 候选站排序（线上事故回归）：
+   * stops 搜索是「名称包含即命中」，且不做任何相关性排序——
+   * 搜「東京」返回的第一条可能是北海道旭川的「東京農業大学」
+   * （坐标 144.23/43.97），盲取 [0] 必然拿错站、
+   * getDepartures 返回 0，最终误报「无直达班次」。
+   *
+   * 排序规则：
+   *   1) 名称完全一致 > 前缀匹配 > 包含匹配 > 其余
+   *   2) 有坐标且落在 reference 附近者优先（剔除同名异地站）
+   *   3) 按 onestop_id 去重
+   */
+  function rankStopCandidates(
+    stops,
+    query,
+    reference,
+    maxDistanceKm
+  ) {
+    const scored = [];
+    const seen = new Set();
+
+    for (const stop of Array.isArray(stops) ? stops : []) {
+      const key =
+        text(stop?.onestop_id) ||
+        text(stop?.id);
+
+      if (key && seen.has(key)) {
+        continue;
+      }
+
+      if (key) {
+        seen.add(key);
+      }
+
+      const nameScore =
+        stopNameMatchScore(
+          stop,
+          query
+        );
+
+      const coordinates =
+        stopCoordinates(stop);
+
+      let distanceKm = null;
+
+      if (
+        coordinates &&
+        reference
+      ) {
+        distanceKm = haversineKm(
+          coordinates,
+          reference
+        );
+      }
+
+      /*
+       * 明确超距（同名但异地）直接淘汰：
+       * 例如「東京農業大学」在北海道，而终点在名古屋。
+       */
+      if (
+        distanceKm !== null &&
+        Number.isFinite(maxDistanceKm) &&
+        distanceKm > maxDistanceKm
+      ) {
+        continue;
+      }
+
+      scored.push({
+        stop,
+        nameScore,
+        distanceKm
+      });
+    }
+
+    scored.sort((a, b) => {
+      if (a.nameScore !== b.nameScore) {
+        return a.nameScore - b.nameScore;
+      }
+
+      const da =
+        a.distanceKm === null
+          ? Number.POSITIVE_INFINITY
+          : a.distanceKm;
+
+      const db =
+        b.distanceKm === null
+          ? Number.POSITIVE_INFINITY
+          : b.distanceKm;
+
+      return da - db;
+    });
+
+    return scored.map(item => item.stop);
+  }
+
+  function centroidOf(stops) {
+    const points = (
+      Array.isArray(stops) ? stops : []
+    )
+      .map(stopCoordinates)
+      .filter(Boolean);
+
+    if (!points.length) {
+      return null;
+    }
+
+    const sum = points.reduce(
+      (acc, point) => [
+        acc[0] + Number(point[0]),
+        acc[1] + Number(point[1])
+      ],
+      [0, 0]
+    );
+
+    return [
+      sum[0] / points.length,
+      sum[1] / points.length
+    ];
+  }
+
   function stopMatches(stop, destination) {
     if (!stop || !destination) {
       return false;
@@ -648,24 +893,98 @@
         );
       }
 
-      const originStop =
-        originStops[0];
-
-      const destinationStop =
-        destinationStops[0];
-
-      const departuresPayload =
-        await this.getDepartures(
-          originStop,
-          date,
-          startTime,
-          signal
+      /*
+       * 候选站排序：stops 搜索不做相关性排序，「東京」首条可能是
+       * 北海道旭川的「東京農業大学」。以对方候选站质心为参考，
+       * 剔除同名异地站，再按名称匹配度排序。
+       */
+      const originCandidates =
+        rankStopCandidates(
+          originStops,
+          origin,
+          referencePoint(
+            destinationStops,
+            destination
+          ),
+          GTFS_STOP_MAX_DISTANCE_KM
         );
 
-      const departures =
-        departureArray(
-          departuresPayload
-        ).slice(0, 12);
+      const destinationCandidates =
+        rankStopCandidates(
+          destinationStops,
+          destination,
+          referencePoint(
+            originStops,
+            origin
+          ),
+          GTFS_STOP_MAX_DISTANCE_KM
+        );
+
+      if (
+        !originCandidates.length ||
+        !destinationCandidates.length
+      ) {
+        throw providerError(
+          "stop_not_found",
+          "未找到出发站或到达站。"
+        );
+      }
+
+      const destinationStop =
+        destinationCandidates[0];
+
+      /*
+       * 逐个尝试起点候选：个别站点可能无当日班次或超时，
+       * 不能因第一个候选失败就判定「无直达」（线上事故：
+       * 盲取 [0] 拿到错误站点后直接报 direct_trip_not_found）。
+       */
+      let originStop =
+        originCandidates[0];
+
+      let departures = [];
+
+      /*
+       * 记录「班次详情取不到」与「确实没有匹配路线」的区别：
+       * 上游 trip 接口整体故障时，不能误报成「无直达班次」。
+       */
+      let tripDetailFailed = false;
+
+      for (
+        const candidate of originCandidates.slice(
+          0,
+          GTFS_STOP_CANDIDATE_LIMIT
+        )
+      ) {
+        if (signal?.aborted) {
+          break;
+        }
+
+        let list = [];
+
+        try {
+          const payload =
+            await this.getDepartures(
+              candidate,
+              date,
+              startTime,
+              signal
+            );
+
+          list = departureArray(payload);
+        } catch (error) {
+          if (error?.name === "AbortError") {
+            throw error;
+          }
+
+          list = [];
+        }
+
+        if (list.length) {
+          originStop = candidate;
+          departures = list.slice(0, 12);
+          break;
+        }
+      }
 
       for (
         const departure
@@ -691,12 +1010,29 @@
           continue;
         }
 
-        const tripPayload =
-          await this.getTrip(
-            route,
-            tripId,
-            signal
-          );
+        /*
+         * 单趟 trip 详情失败（上游 500/超时/未授权）只跳过这一趟，
+         * 不能让整次查询失败——否则一个坏 trip 就会让
+         * 整个海外查询报「无直达班次」（线上事故：
+         * Transitland trip 接口返回 500，首趟即中止全部搜索）。
+         */
+        let tripPayload = null;
+
+        try {
+          tripPayload =
+            await this.getTrip(
+              route,
+              tripId,
+              signal
+            );
+        } catch (error) {
+          if (error?.name === "AbortError") {
+            throw error;
+          }
+
+          tripDetailFailed = true;
+          continue;
+        }
 
         const trip =
           tripFromPayload(
@@ -728,9 +1064,12 @@
               (item, index) =>
                 index >
                   originIndex &&
-                stopMatches(
-                  item?.stop,
-                  destinationStop
+                destinationCandidates.some(
+                  candidate =>
+                    stopMatches(
+                      item?.stop,
+                      candidate
+                    )
                 )
             );
 
@@ -960,8 +1299,12 @@
       }
 
       throw providerError(
-        "direct_trip_not_found",
-        "当前仅支持无需换乘的直达行程，未找到可用直达班次。"
+        tripDetailFailed
+          ? "gtfs_trip_unavailable"
+          : "direct_trip_not_found",
+        tripDetailFailed
+          ? "公共交通上游暂时无法提供班次详情，请稍后重试。"
+          : "当前仅支持无需换乘的直达行程，未找到可用直达班次。"
       );
     }
   }
@@ -1593,6 +1936,15 @@
   }
 
   const CLOCK_PATTERN = /^(\d{1,2}):(\d{2})$/;
+
+  /*
+   * GTFS 候选站策略：
+   *  - MAX_DISTANCE_KM：同名异地站剔除阈值（东京↔名古屋约 290km，
+   *    旭川的「東京農業大学」距名古屋约 1000+km，应被剔除）
+   *  - CANDIDATE_LIMIT：起点最多尝试的候选站数
+   */
+  const GTFS_STOP_MAX_DISTANCE_KM = 400;
+  const GTFS_STOP_CANDIDATE_LIMIT = 4;
 
   function clockSeconds(value) {
     const match =

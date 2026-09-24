@@ -161,6 +161,106 @@ for (const code of [
 assert.match(transitAppSource, /station_source_unavailable/);
 assert.match(transitAppSource, /schedule_unavailable/);
 
+/*
+ * 行为级回归：首条候选站无班次/超时时必须继续尝试后续候选，
+ * 且单趟 trip 详情失败只跳过该趟。
+ */
+const gtfsContext = loadContext(providerSource, "transit-providers.js", {
+  URL,
+  AbortController,
+  setTimeout,
+  clearTimeout,
+  location: { origin: "https://www.y0.hk" },
+  __WENDAO_TRANSIT_TIMEOUTS__: {
+    transitRequest: 50,
+    railRequest: 50,
+    gtfsStage: 500,
+    railStage: 500
+  },
+  fetch: async url => {
+    const parsed = new URL(String(url));
+    const action = parsed.searchParams.get("action");
+
+    if (action === "stops") {
+      const search = parsed.searchParams.get("search");
+      // 「東京」首条是北海道旭川的同名站（无班次），
+      // 第二条才是真正的东京站（发车 1 趟）
+      const far = {
+        onestop_id: "s-far-" + search,
+        stop_name: search + "農業大学",
+        geometry: { type: "Point", coordinates: [144.23424, 43.967122] }
+      };
+      const near = {
+        onestop_id: "s-near-" + search,
+        stop_name: search,
+        geometry: { type: "Point", coordinates: [139.7648, 35.681935] }
+      };
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ stops: [far, near] })
+      };
+    }
+
+    if (action === "departures") {
+      const key = parsed.searchParams.get("stop_key") || "";
+      const hasData = key.startsWith("s-near");
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          stops: [{
+            departures: hasData
+              ? [{
+                  trip: {
+                    trip_id: "T1",
+                    route: { onestop_id: "r-1", route_id: "1" },
+                    stop_times: [
+                      { stop: { stop_name: "東京" } },
+                      { stop: { stop_name: "名古屋" } }
+                    ]
+                  }
+                }]
+              : []
+          }]
+        })
+      };
+    }
+
+    if (action === "trip") {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          trips: [{
+            trip_id: "T1",
+            route: { onestop_id: "r-1", route_id: "1" },
+            stop_times: [
+              { stop: { stop_name: "東京", geometry: { coordinates: [139.76, 35.68] } }, arrival: { scheduled: "09:00:00" }, departure: { scheduled: "09:05:00" } },
+              { stop: { stop_name: "名古屋", geometry: { coordinates: [136.88, 35.17] } }, arrival: { scheduled: "11:00:00" }, departure: { scheduled: "11:05:00" } }
+            ]
+          }]
+        })
+      };
+    }
+
+    return {
+      ok: false,
+      status: 400,
+      json: async () => ({ error: { code: "unsupported_action", httpStatus: 400 } })
+    };
+  }
+});
+
+const gtfsProvider = new gtfsContext.WebWindowsTransit.TransitlandTransitProvider();
+const gtfsJourney = await gtfsProvider.searchJourney({
+  origin: "東京",
+  destination: "名古屋",
+  departureTime: "2026-09-25T09:00"
+});
+assert.equal(gtfsJourney.provider, "transitland");
+assert.equal(gtfsJourney.stopTimes.length, 2, "must use the stop that actually has departures");
+
 /* transit-app 里写死的元素 id / 选择器必须真的存在于 road.html，
    否则页面运行时会拿到 null 并在查询过程中崩溃。 */
 const htmlIds = new Set(
@@ -199,11 +299,53 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260924-5/);
-assert.match(html, /transit-app\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-4/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-5/);
+assert.match(html, /transit-providers\.js\?v=20260924-6/);
+assert.match(html, /transit-app\.js\?v=20260924-7/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-5/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-6/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
+
+/*
+ * 海外事故回归：stops 搜索「名称包含即命中」且无相关性排序，
+ * 搜「東京」首条可能是北海道旭川的「東京農業大学」（144.23/43.97），
+ * 盲取 [0] 必然拿错站 → getDepartures 为 0 → 误报「无直达」。
+ * 必须有：候选站按名称匹配 + 地理邻近排序、超距剔除、逐站容错。
+ */
+assert.match(
+  providerSource,
+  /function rankStopCandidates\(/,
+  "GTFS stop candidates must be ranked, not taken as stops[0]"
+);
+assert.match(
+  providerSource,
+  /function referencePoint\(/,
+  "reference point must come from best name-match group only"
+);
+assert.match(
+  providerSource,
+  /GTFS_STOP_MAX_DISTANCE_KM/,
+  "same-name remote stops must be filtered by distance"
+);
+assert.match(
+  providerSource,
+  /GTFS_STOP_CANDIDATE_LIMIT/,
+  "origin stop candidates must be tried one by one"
+);
+assert.match(
+  providerSource,
+  /catch \(error\) \{[\s\S]{0,200}?tripDetailFailed = true;[\s\S]{0,80}?continue;/,
+  "a failing trip detail lookup must skip that trip, not abort the search"
+);
+assert.match(
+  providerSource,
+  /gtfs_trip_unavailable/,
+  "upstream trip failure must be reported distinctly from no-direct-service"
+);
+assert.match(
+  transitAppSource,
+  /gtfs_trip_unavailable:\s*\n?\s*"errGtfsUnavailable"/,
+  "app must map gtfs_trip_unavailable to a user-facing message"
+);
 
 /*
  * 线上事故回归：Photon 只接受其内置 locale（en/de/fr/default）。

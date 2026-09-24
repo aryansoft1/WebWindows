@@ -300,9 +300,9 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260924-6/);
-assert.match(html, /transit-app\.js\?v=20260924-8/);
+assert.match(html, /transit-app\.js\?v=20260924-9/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-5/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-7/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-8/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
 /*
@@ -353,7 +353,7 @@ assert.match(
  */
 assert.match(
   transitAppSource,
-  /gtfsUnavailable[\s\S]{0,260}?T\("errGtfsUnavailable"\)/,
+  /gtfsUnavailable[\s\S]{0,900}?T\("errGtfsUnavailable"\)/,
   "upstream GTFS failure must surface its own message, not the rail station error"
 );
 

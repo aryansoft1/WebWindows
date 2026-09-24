@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.24.12",
-  "catalogVersion": "2026.09.24.12",
-  "generatedAt": "2026-09-24T12:37:26.660Z",
+  "releaseVersion": "2026.09.24.13",
+  "catalogVersion": "2026.09.24.13",
+  "generatedAt": "2026-09-24T12:57:28.124Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -806,7 +806,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "65c074eccaf8734c8e38f574a80fcb22168a4b422eff13089feee96a82973ad6",
+      "sha256": "31ec3142ac3325a29ca2afb30708c3cf2b86b6c751580f55d1c4a9a0f9805f4e",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1114,7 +1114,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "e3c5d71bd25e1163b9ff5e8bb22a48632abffcd522e17546f7901c5fdd10cdbe",
+      "sha256": "cded425ca05552dd921c5b0d03495033c1d364e02c4341b86247b95a522f8f8b",
       "size": 16438
     },
     "assets/css/navigation.css": {
@@ -1185,8 +1185,8 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "e8e0c3851943604cb9d875888c1528b6b1f7e571fab6d256881244a4e43b0458",
-      "size": 42200
+      "sha256": "168c6565b590315056a1f48e2d6f789bdd11215ed93d16beef78c301302d2a42",
+      "size": 42976
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
@@ -1293,7 +1293,7 @@
       "size": 20023
     }
   },
-  "releaseScope": "wendao-transit-gtfs-error-surface",
+  "releaseScope": "wendao-transit-gtfs-msg-fix",
   "uploadFiles": [
     "api/railway-proxy.asp",
     "assets/js/transit-providers.js",

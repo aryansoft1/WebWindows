@@ -1350,25 +1350,20 @@
     const gtfsMissed =
       [
         "stop_not_found",
-        "direct_trip_not_found"
+        "direct_trip_not_found",
+        "transit_timeout",
+        "transit_upstream_unavailable"
       ].includes(
         String(fallbackCode || "")
       );
 
     /*
-     * GTFS 上游故障（班次详情取不到）不是「没有这条线路」，
-     * 而是「公共交通数据源暂时不可用」——此时即使 12306 也查不到
-     * （海外站点本就不在中国铁路表里），也必须提示上游故障，
-     * 否则查海外会显示「未在中国铁路车站表中找到该站名」，误导用户。
+     * GTFS 上游故障（班次详情取不到、或阶段预算超时）不是
+     * 「没有这条线路」，而是「公共交通数据源暂时不可用」——
+     * 此时即使 12306 也查不到（海外站点本就不在中国铁路表里），
+     * 也必须提示上游故障，否则查海外会显示
+     * 「未在中国铁路车站表中找到该站名」，误导用户。
      */
-    const gtfsUnavailable =
-      String(fallbackCode || "") ===
-      "gtfs_trip_unavailable";
-
-    if (gtfsUnavailable) {
-      return T("errGtfsUnavailable");
-    }
-
     const railMissed =
       [
         "station_not_found",
@@ -1378,6 +1373,30 @@
       ].includes(
         String(error?.code || "")
       );
+
+    /*
+     * GTFS 上游故障（班次详情取不到 / 阶段预算超时）时的文案区分：
+     *  - station_not_found：12306 站表里根本没有该站名 —— 海外线路的典型情况，
+     *    说「未在中国铁路车站表中找到该站名」对用户是误导，改为提示上游不可用。
+     *  - no_train / presale / schedule_failed：站是在 12306 覆盖内的，
+     *    只是这一段没车次，应走下面的「两源均未覆盖」提示。
+     */
+    const gtfsUnavailable =
+      [
+        "gtfs_trip_unavailable",
+        "transit_timeout",
+        "transit_upstream_unavailable"
+      ].includes(
+        String(fallbackCode || "")
+      );
+
+    if (
+      gtfsUnavailable &&
+      String(error?.code || "") ===
+        "station_not_found"
+    ) {
+      return T("errGtfsUnavailable");
+    }
 
     if (gtfsMissed && railMissed) {
       return T("errNotCovered", {

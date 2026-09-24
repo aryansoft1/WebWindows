@@ -199,8 +199,9 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260924-1/);
+assert.match(html, /transit-providers\.js\?v=20260924-2/);
 assert.match(html, /transit-app\.js\?v=20260924-1/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);
@@ -682,6 +683,48 @@ const daytime = rail.normalizeStopTimes([
   { name: "C", departure: "15:30", arrival: "15:30" }
 ]);
 assert.equal(daytime[2].arrivalTime, "15:30:00");
+
+/*
+ * 线上事故回归（G4190 真实经停，2026-09-25）：
+ * 旧实现把「同一站内到达早于发车」当成跨日，逐站给到达 +86400，
+ * 时刻显示成 24:53 / 49:35 / 100:03。同站正常停站绝不能加一天。
+ */
+const g4190 = rail.normalizeStopTimes([
+  { name: "成都东", arrival: "00:53", departure: "00:57" },
+  { name: "绵阳", arrival: "01:35", departure: "01:37" },
+  { name: "广元", arrival: "02:27", departure: "02:34" },
+  { name: "汉中", arrival: "03:15", departure: "03:20" },
+  { name: "西安北", arrival: "04:30", departure: "04:30" }
+]);
+
+assert.equal(g4190[0].arrivalTime, "00:53:00");
+assert.equal(g4190[0].departureTime, "00:57:00");
+assert.equal(g4190[1].arrivalTime, "01:35:00");
+assert.equal(g4190[4].arrivalTime, "04:30:00");
+assert.deepEqual(
+  g4190.map(stop => stop.arrivalTime),
+  ["00:53:00", "01:35:00", "02:27:00", "03:15:00", "04:30:00"],
+  "跨零点车次经停时刻必须逐站保持真实钟点"
+);
+assert.ok(
+  g4190.every(
+    stop =>
+      Number(stop.arrivalTime.slice(0, 2)) < 24 &&
+      Number(stop.departureTime.slice(0, 2)) < 24
+  ),
+  "日内经停不得出现 24 小时以上的时刻"
+);
+
+/* 同站跨零点停站：23:58 到、次日 00:02 发，只给发车进位 */
+const midnightStop = rail.normalizeStopTimes([
+  { name: "X", arrival: "23:58", departure: "00:02" },
+  { name: "Y", arrival: "00:20", departure: "00:25" }
+]);
+
+assert.equal(midnightStop[0].arrivalTime, "23:58:00");
+assert.equal(midnightStop[0].departureTime, "24:02:00");
+assert.equal(midnightStop[0].arrivalSeconds, 23 * 3600 + 58 * 60);
+assert.equal(midnightStop[0].departureSeconds, 86400 + 2 * 60);
 
 /* 车型图标只按官方类型 / 车次字母推断 */
 assert.equal(rail.routeIcon(100), "🚆");

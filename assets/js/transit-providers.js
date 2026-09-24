@@ -1682,6 +1682,10 @@
         arrival = departure;
       }
 
+      /*
+       * 跨日进位只由「与前一站比较时时刻倒退」触发：
+       * 23:50 发、次日 00:30 到时才会 carry += 86400。
+       */
       if (
         previous !== null &&
         departure + carry < previous
@@ -1695,10 +1699,17 @@
       let arrivalSeconds =
         arrival + carry;
 
+      /*
+       * 同一站内必然先到后发。若发车钟点早于到达钟点，
+       * 说明该站跨零点（23:58 到、次日 00:02 发），进位给发车。
+       * 注意：到 00:53 / 发 00:57 是正常停站，绝不能加一天——
+       * 线上事故：旧实现写成 arrival<departure 就给到达加 24 小时，
+       * 逐站累加后时刻显示成 24:53 / 49:35 / 100:03。
+       */
       if (
-        arrivalSeconds < departureSeconds
+        departureSeconds < arrivalSeconds
       ) {
-        arrivalSeconds += 86400;
+        departureSeconds += 86400;
       }
 
       previous = Math.max(

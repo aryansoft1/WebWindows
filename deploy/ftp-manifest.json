@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.24.2",
-  "catalogVersion": "2026.09.24.2",
-  "generatedAt": "2026-09-24T06:37:42.411Z",
+  "releaseVersion": "2026.09.24.3",
+  "catalogVersion": "2026.09.24.3",
+  "generatedAt": "2026-09-24T08:30:30.257Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -262,7 +262,7 @@
     "api/railway-proxy.asp",
     "assets/js/startup-manager.js"
   ],
-  "previousReleaseVersion": "2026.09.24.1",
+  "previousReleaseVersion": "2026.09.24.2",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -803,7 +803,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "3f6d167832f4a0f970735bc2cc47175e368bb20970ca354e680eaae4cbbc7053",
+      "sha256": "6785f4792d51e22131687f93bef342c5e4a564f0dcf91b265be8d59ea58e8d50",
       "size": 14035
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1111,7 +1111,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "a199e8c9f3729d3c56025f217024f8588fa9a5fc6697763afd3455e30cc34811",
+      "sha256": "164a9d233cacaa2b5a4f3e1abfff74d73609433fd9d34873c54e387c251ab087",
       "size": 16701
     },
     "assets/css/navigation.css": {
@@ -1190,8 +1190,8 @@
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "177eeb1d81d27b9f73b2c94e75770aad13ae692b25bdc4b0536af96f804cf77e",
-      "size": 53093
+      "sha256": "5b368db35ac835326bdf434d742a8e095b4835ddd8eff624a2a5fddc041ea1dc",
+      "size": 53675
     },
     "admin_api/adminAuth.asp": {
       "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
@@ -1278,10 +1278,11 @@
       "size": 8154
     }
   },
-  "releaseScope": "wendao-rail-schedule-fix",
+  "releaseScope": "wendao-transit-midnight-cachebust",
   "uploadFiles": [
     "api/railway-proxy.asp",
     "assets/js/transit-providers.js",
+    "road.html",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",

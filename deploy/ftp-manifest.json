@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.24.13",
   "catalogVersion": "2026.09.24.13",
-  "generatedAt": "2026-09-24T12:57:28.124Z",
+  "generatedAt": "2026-09-24T12:58:10.909Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -265,7 +265,7 @@
     "assets/js/ai-file-tools.js",
     "assets/js/file-query-parser.js"
   ],
-  "previousReleaseVersion": "2026.09.24.11",
+  "previousReleaseVersion": "2026.09.24.12",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",

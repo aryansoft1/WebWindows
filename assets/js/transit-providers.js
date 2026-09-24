@@ -22,6 +22,13 @@
     global.__WENDAO_TRANSIT_TIMEOUTS__ || {}
   );
 
+  /*
+   * 经停表按候选车次顺序最多尝试的次数：
+   * 12306 同城查询下首班车可能不停查询站，个别车次 czzz 也可能
+   * 无经停数据——逐个有界回退，全部失败才报 schedule_* 错误。
+   */
+  const RAIL_SCHEDULE_MAX_ATTEMPTS = 5;
+
   function text(value) {
     return value === null || value === undefined
       ? ""
@@ -1390,8 +1397,11 @@
             startCode: "",
             endCode: "",
 
-            fromCode: "",
-            toCode: "",
+            fromCode:
+              text(train?.fromCode).trim(),
+
+            toCode:
+              text(train?.toCode).trim(),
 
             fromName:
               text(train?.fromName).trim(),
@@ -2164,74 +2174,121 @@
       const candidates =
         this.pickTrains(trains);
 
-      const selected =
-        (trainNo &&
-          candidates.find(
-            item =>
-              item.trainNo === trainNo
-          )) ||
-        candidates[0];
-
-      const rows =
-        await this.getSchedule(
-          {
-            trainNo:
-              selected.trainNo,
-
-            fromCode:
-              originStation.code,
-
-            toCode:
-              destinationStation.code,
-
-            fromName:
-              originStation.name,
-
-            toName:
-              destinationStation.name,
-
-            date
-          },
-          signal
+      /*
+       * 12306 同城查询：查询「成都」可能返回「成都东」发车的车次，
+       * 个别车次 czzz 又可能无经停数据。按候选顺序有界尝试，
+       * 每次用车次行内真实站名切片；全部失败才抛错。
+       */
+      const preferred =
+        trainNo &&
+        candidates.find(
+          item => item.trainNo === trainNo
         );
 
-      const stopTimes =
-        normalizeStopTimes(rows);
+      const queue = preferred
+        ? [preferred]
+        : candidates.slice(
+            0,
+            RAIL_SCHEDULE_MAX_ATTEMPTS
+          );
 
-      const originIndex =
-        stopTimes.findIndex(
-          stop =>
-            normalizeStationName(stop.name) ===
-            normalizeStationName(
-              originStation.name
-            )
-        );
-
-      const destinationIndex =
-        stopTimes.findIndex(
-          stop =>
-            normalizeStationName(stop.name) ===
-            normalizeStationName(
-              destinationStation.name
-            )
-        );
-
-      const sliced =
-        originIndex >= 0 &&
-        destinationIndex > originIndex
-          ? stopTimes.slice(
-              originIndex,
-              destinationIndex + 1
-            )
-          : stopTimes;
-
-      if (
-        originIndex < 0 ||
-        destinationIndex <= originIndex
-      ) {
+      if (!queue.length) {
         throw providerError(
           "schedule_failed",
-          "经停表中未找到出发站或到达站。"
+          "车次经停时刻获取失败。"
+        );
+      }
+
+      let selected = null;
+      let sliced = null;
+      let lastScheduleError = null;
+
+      for (const candidate of queue) {
+        if (signal?.aborted) {
+          break;
+        }
+
+        try {
+          const legFromName =
+            text(candidate.fromName).trim() ||
+            originStation.name;
+
+          const legToName =
+            text(candidate.toName).trim() ||
+            destinationStation.name;
+
+          const rows =
+            await this.getSchedule(
+              {
+                trainNo: candidate.trainNo,
+
+                fromCode:
+                  text(candidate.fromCode).trim() ||
+                  originStation.code,
+
+                toCode:
+                  text(candidate.toCode).trim() ||
+                  destinationStation.code,
+
+                fromName: legFromName,
+                toName: legToName,
+
+                date
+              },
+              signal
+            );
+
+          const stopTimes =
+            normalizeStopTimes(rows);
+
+          const originIndex =
+            stopTimes.findIndex(
+              stop =>
+                normalizeStationName(stop.name) ===
+                normalizeStationName(legFromName)
+            );
+
+          const destinationIndex =
+            stopTimes.findIndex(
+              stop =>
+                normalizeStationName(stop.name) ===
+                normalizeStationName(legToName)
+            );
+
+          if (
+            originIndex < 0 ||
+            destinationIndex <= originIndex
+          ) {
+            throw providerError(
+              "schedule_failed",
+              "经停表中未找到出发站或到达站。"
+            );
+          }
+
+          selected = candidate;
+          sliced = stopTimes.slice(
+            originIndex,
+            destinationIndex + 1
+          );
+          break;
+        } catch (error) {
+          if (
+            error?.name === "AbortError" ||
+            signal?.aborted
+          ) {
+            throw error;
+          }
+          lastScheduleError = error;
+        }
+      }
+
+      if (!selected || !sliced) {
+        throw (
+          lastScheduleError ||
+          providerError(
+            "schedule_failed",
+            "车次经停时刻获取失败。"
+          )
         );
       }
 

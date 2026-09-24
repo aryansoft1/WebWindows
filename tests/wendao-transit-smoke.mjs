@@ -307,6 +307,8 @@ const aspTicketPayload = {
     {
       trainNo: "24000000G100K",
       code: "G100",
+      fromCode: "ICW",
+      toCode: "EAY",
       fromName: "成都东",
       toName: "西安北",
       startTime: "08:10",
@@ -317,6 +319,8 @@ const aspTicketPayload = {
     {
       trainNo: "24000000D301K",
       code: "D301",
+      fromCode: "ICW",
+      toCode: "EAY",
       fromName: "成都东",
       toName: "西安北",
       startTime: "09:00",
@@ -341,6 +345,8 @@ const aspTrains = rail.parseLeftTicket(aspTicketPayload);
 assert.equal(aspTrains.length, 2);
 assert.equal(aspTrains[0].code, "G100");
 assert.equal(aspTrains[0].trainNo, "24000000G100K");
+assert.equal(aspTrains[0].fromCode, "ICW");
+assert.equal(aspTrains[0].toCode, "EAY");
 assert.equal(aspTrains[0].fromName, "成都东");
 assert.equal(aspTrains[0].toName, "西安北");
 assert.equal(aspTrains[0].departTime, "08:10");
@@ -463,6 +469,177 @@ assert.equal(scheduleRequest.searchParams.get("to"), "EAY");
 assert.equal(scheduleRequest.searchParams.get("date"), "2026-09-24");
 assert.equal(scheduleRequest.searchParams.get("train_no"), null);
 assert.equal(scheduleRequest.searchParams.get("code"), null);
+
+/*
+ * 12306 是同城级查询：查询「成都」返回「成都东」发车的车次，
+ * 且个别车次 czzz 无经停数据（G4190 404）。
+ * 断言：① 按行内真实站名切片（成都东→西安北）而非查询站名
+ *       ② 首选车次无经停数据时按候选有界回落到下一班
+ *       ③ 全部候选失败才抛错，且保留真实错误码
+ */
+const sameCityStations = {
+  stations: [
+    { name: "成都", code: "CDW", pinyin: "chengdu", abbr: "cd", city: "成都" },
+    { name: "成都东", code: "ICW", pinyin: "chengdudong", abbr: "cdd", city: "成都" },
+    { name: "西安北", code: "EAY", pinyin: "xianbei", abbr: "xab", city: "西安" }
+  ]
+};
+
+const sameCityTicket = {
+  date: "2026-09-24",
+  from: { code: "CDW", name: "成都" },
+  to: { code: "EAY", name: "西安北" },
+  message: "",
+  trains: [
+    {
+      trainNo: "77000G419003",
+      code: "G4190",
+      fromCode: "ICW",
+      toCode: "EAY",
+      fromName: "成都东",
+      toName: "西安北",
+      startTime: "00:57",
+      arriveTime: "04:30",
+      duration: "03:33",
+      canBuy: "Y"
+    },
+    {
+      trainNo: "76000D473003",
+      code: "D4730",
+      fromCode: "ICW",
+      toCode: "EAY",
+      fromName: "成都东",
+      toName: "西安北",
+      startTime: "05:05",
+      arriveTime: "08:11",
+      duration: "03:06",
+      canBuy: "Y"
+    }
+  ]
+};
+
+/* 经停表是全路由（czzz 忽略 from/to），首班车 G4190 无数据 → 回落 D4730 */
+const sameCitySchedule = {
+  "77000G419003": null,
+  "76000D473003": {
+    stations: [
+      { no: "01", name: "重庆北", arrive: "----", depart: "23:40", stopover: "----" },
+      { no: "02", name: "成都东", arrive: "05:00", depart: "05:05", stopover: "5分" },
+      { no: "03", name: "广元", arrive: "06:32", depart: "06:38", stopover: "6分" },
+      { no: "04", name: "西安北", arrive: "08:11", depart: "----", stopover: "----" }
+    ]
+  }
+};
+
+const sameCityRequests = [];
+const sameCityContext = loadContext(providerSource, "transit-providers.js", {
+  ...providerHostGlobals,
+  URL,
+  location: { origin: "https://www.y0.hk" },
+  fetch: async url => {
+    const href = String(url);
+    sameCityRequests.push(href);
+    const parsed = new URL(href);
+    const action = parsed.searchParams.get("action");
+    if (action === "stations") {
+      return { ok: true, status: 200, json: async () => sameCityStations };
+    }
+    if (action === "leftTicket") {
+      assert.equal(parsed.searchParams.get("from"), "CDW");
+      assert.equal(parsed.searchParams.get("to"), "EAY");
+      return { ok: true, status: 200, json: async () => sameCityTicket };
+    }
+    if (action === "schedule") {
+      const payload = sameCitySchedule[parsed.searchParams.get("trainNo")];
+      if (!payload) {
+        return {
+          ok: false,
+          status: 404,
+          json: async () => ({
+            error: { code: "schedule_unavailable", httpStatus: 404, message: "该车次没有可用的经停站数据。" }
+          })
+        };
+      }
+      return { ok: true, status: 200, json: async () => payload };
+    }
+    return {
+      ok: false,
+      status: 400,
+      json: async () => ({ error: { code: "unsupported_action", httpStatus: 400, message: "unsupported action" } })
+    };
+  }
+});
+
+const sameCityRail = sameCityContext.WebWindowsTransit;
+const sameCityProvider = new sameCityRail.ChinaRailTransitProvider({
+  geocoder: { search: async () => null }
+});
+
+const sameCityJourney = await sameCityProvider.searchJourney({
+  origin: "成都北",
+  destination: "西安北",
+  departureTime: "2026-09-24T12:00",
+  language: "zh"
+});
+assert.equal(sameCityJourney.provider, "china-rail");
+assert.equal(sameCityJourney.routeId, "D4730", "G4190 无经停数据 → 回落 D4730");
+assert.equal(sameCityJourney.origin.name, "成都东", "实际上车站 = 行内发站，不是查询站成都");
+assert.equal(sameCityJourney.stopTimes[0].stop.stop_name, "成都东");
+assert.equal(
+  sameCityJourney.stopTimes[sameCityJourney.stopTimes.length - 1].stop.stop_name,
+  "西安北"
+);
+assert.ok(sameCityJourney.stopTimes.length >= 2);
+assert.equal(sameCityJourney.stopTimes[0].status, "origin");
+const sameCitySchedules = sameCityRequests.filter(href => href.includes("action=schedule"));
+assert.equal(sameCitySchedules.length, 2, "G4190 失败后必须再试下一候选");
+const d4730Schedule = new URL(sameCitySchedules.find(href => href.includes("76000D473003")));
+assert.equal(d4730Schedule.searchParams.get("from"), "ICW", "经停请求必须用车次行内发站码");
+
+/* 全部候选都无经停数据 → 有界尝试后抛出真实错误码 */
+const allFailContext = loadContext(providerSource, "transit-providers.js", {
+  ...providerHostGlobals,
+  URL,
+  location: { origin: "https://www.y0.hk" },
+  fetch: async url => {
+    const parsed = new URL(String(url));
+    const action = parsed.searchParams.get("action");
+    if (action === "stations") {
+      return { ok: true, status: 200, json: async () => sameCityStations };
+    }
+    if (action === "leftTicket") {
+      return { ok: true, status: 200, json: async () => sameCityTicket };
+    }
+    if (action === "schedule") {
+      return {
+        ok: false,
+        status: 404,
+        json: async () => ({
+          error: { code: "schedule_unavailable", httpStatus: 404, message: "该车次没有可用的经停站数据。" }
+        })
+      };
+    }
+    return {
+      ok: false,
+      status: 400,
+      json: async () => ({ error: { code: "unsupported_action", httpStatus: 400, message: "unsupported action" } })
+    };
+  }
+});
+const allFailRail = allFailContext.WebWindowsTransit;
+const allFailProvider = new allFailRail.ChinaRailTransitProvider({
+  geocoder: { search: async () => null }
+});
+await assert.rejects(
+  () =>
+    allFailProvider.searchJourney({
+      origin: "成都北",
+      destination: "西安北",
+      departureTime: "2026-09-24T12:00",
+      language: "zh"
+    }),
+  error => error?.code === "schedule_unavailable"
+);
 
 /* 代理错误码必须带 httpStatus 抛出，由 STATUS_KEYS 本地化 */
 const errorContext = loadContext(providerSource, "transit-providers.js", {

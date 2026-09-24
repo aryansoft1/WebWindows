@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.24.1",
-  "catalogVersion": "2026.09.24.1",
-  "generatedAt": "2026-09-23T16:27:59.643Z",
+  "releaseVersion": "2026.09.24.2",
+  "catalogVersion": "2026.09.24.2",
+  "generatedAt": "2026-09-24T06:37:42.411Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -262,7 +262,7 @@
     "api/railway-proxy.asp",
     "assets/js/startup-manager.js"
   ],
-  "previousReleaseVersion": "2026.09.23.4",
+  "previousReleaseVersion": "2026.09.24.1",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -803,7 +803,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "32faa8b0df3f8ad74c4c7482d29dfd5a46ff7f045f4d601978b2481a259df659",
+      "sha256": "3f6d167832f4a0f970735bc2cc47175e368bb20970ca354e680eaae4cbbc7053",
       "size": 14035
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1190,8 +1190,8 @@
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "b1a6e9a2d4233f4ff13213613612687c0fd7c37e16bcd71299adc0f904e8e84f",
-      "size": 51291
+      "sha256": "177eeb1d81d27b9f73b2c94e75770aad13ae692b25bdc4b0536af96f804cf77e",
+      "size": 53093
     },
     "admin_api/adminAuth.asp": {
       "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
@@ -1270,24 +1270,23 @@
       "size": 13271
     },
     "api/railway-proxy.asp": {
-      "sha256": "bd08594db0bd57a60b01516e77adb5d6f05d39f1b6b6c72d9107753cb178bce2",
-      "size": 19571
+      "sha256": "8483428e7d40d83ad6f5b6063b73beaddbdb3204797536dea6148534840d7a40",
+      "size": 21178
     },
     "assets/js/startup-manager.js": {
       "sha256": "39709e2e295726ca9101f64047426180142f96dc0db53d52f3b96382469c219e",
       "size": 8154
     }
   },
-  "releaseScope": "wendao-railway-asp-fix",
+  "releaseScope": "wendao-rail-schedule-fix",
   "uploadFiles": [
     "api/railway-proxy.asp",
     "assets/js/transit-providers.js",
-    "road.html",
-    "data/apps/system-apps.json",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",
     "api/mobile-version.asp",
+    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]
 }

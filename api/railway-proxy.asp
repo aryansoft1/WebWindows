@@ -201,6 +201,12 @@ Function BuildLeftTicketJson(ByVal body, ByVal travelDate, ByVal fromCode, ByVal
   If Len(fromName) = 0 Then fromName = fromCode
   If Len(toName) = 0 Then toName = toCode
 
+  ' 12306 是同城级查询：结果行的发站/到站可能是同城的其他车站
+  '（查「成都」会返回「成都东」发车的车次）。把 map 解析一次，
+  ' 每行输出真实上下车站，客户端据此切片经停表。
+  Dim nameMap
+  Set nameMap = ParseNameMap(body)
+
   Dim block
   block = ExtractArrayBlock(body, "result")
 
@@ -222,7 +228,7 @@ Function BuildLeftTicketJson(ByVal body, ByVal travelDate, ByVal fromCode, ByVal
     For Each m In re.Execute(block)
       If count > RAIL_MAX_TRAINS Then Exit For
       Dim one
-      one = BuildTrainJson(Split(m.SubMatches(0), "|"), fromName, toName)
+      one = BuildTrainJson(Split(m.SubMatches(0), "|"), fromName, toName, nameMap)
       If Len(one) > 0 Then
         rows(count) = one
         count = count + 1
@@ -246,7 +252,7 @@ Function BuildLeftTicketJson(ByVal body, ByVal travelDate, ByVal fromCode, ByVal
     """trains"":[" & trains & "]}"
 End Function
 
-Function BuildTrainJson(ByVal fields, ByVal fromName, ByVal toName)
+Function BuildTrainJson(ByVal fields, ByVal fallbackFromName, ByVal fallbackToName, ByVal nameMap)
   BuildTrainJson = ""
 
   ' 12306 result 字段：|秘密串|预订|train_no|车次|始发码|终到码|发站码|到站码|发时|到时|历时|可购|...
@@ -262,10 +268,27 @@ Function BuildTrainJson(ByVal fields, ByVal fromName, ByVal toName)
 
   If Len(code) = 0 Then Exit Function
 
+  ' 行内真实发站/到站（同城查询时 ≠ 查询站），缺 map 时回落查询站名
+  Dim rowFromCode, rowToCode, rowFromName, rowToName
+  rowFromCode = ""
+  rowToCode = ""
+  If UBound(fields) >= 7 Then
+    rowFromCode = fields(6)
+    rowToCode = fields(7)
+  End If
+  rowFromName = fallbackFromName
+  rowToName = fallbackToName
+  If IsObject(nameMap) Then
+    If Len(rowFromCode) > 0 And nameMap.Exists(rowFromCode) Then rowFromName = nameMap(rowFromCode)
+    If Len(rowToCode) > 0 And nameMap.Exists(rowToCode) Then rowToName = nameMap(rowToCode)
+  End If
+
   BuildTrainJson = "{""trainNo"":""" & JsonEscape(trainNo) & _
     """,""code"":""" & JsonEscape(code) & _
-    """,""fromName"":""" & JsonEscape(fromName) & _
-    """,""toName"":""" & JsonEscape(toName) & _
+    """,""fromCode"":""" & JsonEscape(rowFromCode) & _
+    """,""toCode"":""" & JsonEscape(rowToCode) & _
+    """,""fromName"":""" & JsonEscape(rowFromName) & _
+    """,""toName"":""" & JsonEscape(rowToName) & _
     """,""startTime"":""" & JsonEscape(startTime) & _
     """,""arriveTime"":""" & JsonEscape(arriveTime) & _
     """,""duration"":""" & JsonEscape(duration) & _
@@ -570,6 +593,28 @@ Function MapName(ByVal body, ByVal code)
   Set m = re.Execute(body)
   If m.Count > 0 Then MapName = m(0).SubMatches(0)
   Set re = Nothing
+End Function
+
+' 一次性解析 12306 响应里的电报码->站名映射（"map" 对象），
+' 供建行级 fromCode/toCode 输出；正则只匹配 3 位大写电报码键。
+Function ParseNameMap(ByVal body)
+  Dim dict
+  Set dict = CreateObject("Scripting.Dictionary")
+
+  Dim re
+  Set re = New RegExp
+  re.Pattern = """([A-Z]{3})""\s*:\s*""([^""]*)"""
+  re.Global = True
+
+  Dim m
+  For Each m In re.Execute(body)
+    If Not dict.Exists(m.SubMatches(0)) Then
+      dict(m.SubMatches(0)) = UnescapeJson(m.SubMatches(1))
+    End If
+  Next
+  Set re = Nothing
+
+  Set ParseNameMap = dict
 End Function
 
 Function JsonField(ByVal chunk, ByVal fieldName)

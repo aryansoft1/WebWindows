@@ -574,6 +574,52 @@
             600
         }
       );
+
+      return;
+    }
+
+    /*
+     * 兜底：经停站地理编码失败时 shape 为空，若不做任何处理，
+     * 地图会一直停在默认位置、看起来「不跟随查询结果」。
+     * 此处用起终点坐标（Photon 建议/选点已有）单独 fit。
+     */
+    if (fit) {
+      const fallbackBounds =
+        new maplibregl
+          .LngLatBounds();
+
+      [
+        state.journey?.origin,
+        state.journey?.destination
+      ].forEach(point => {
+        if (
+          point &&
+          Number.isFinite(
+            Number(point.longitude)
+          ) &&
+          Number.isFinite(
+            Number(point.latitude)
+          )
+        ) {
+          fallbackBounds.extend([
+            Number(point.longitude),
+            Number(point.latitude)
+          ]);
+        }
+      });
+
+      if (!fallbackBounds.isEmpty()) {
+        state.map.fitBounds(
+          fallbackBounds,
+          {
+            padding: 70,
+
+            maxZoom: 11,
+
+            duration: 600
+          }
+        );
+      }
     }
   }
 
@@ -1295,7 +1341,6 @@
       trainNo
     });
   }
-
   async function searchJourney(overrides) {
     const origin =
       String(
@@ -1317,6 +1362,17 @@
             .value
       );
 
+    /*
+     * 候选车次点击：selectTrain 传入的 trainNo 必须透传给 provider，
+     * 否则该参数被静默丢弃、查询原样重跑，界面毫无变化
+     * （线上事故：点其它车次无反应）。
+     */
+    const trainNo =
+      String(
+        overrides?.trainNo ??
+          ""
+      ).trim();
+
     if (
       !origin ||
       !destination ||
@@ -1334,7 +1390,8 @@
     state.query = {
       origin,
       destination,
-      departureTime
+      departureTime,
+      trainNo
     };
 
     state.controller?.abort();
@@ -1372,6 +1429,8 @@
             destination,
 
             departureTime,
+
+            trainNo,
 
             language,
 

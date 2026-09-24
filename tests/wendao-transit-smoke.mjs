@@ -199,11 +199,38 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260924-3/);
-assert.match(html, /transit-app\.js\?v=20260924-2/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-2/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-1/);
+assert.match(html, /transit-providers\.js\?v=20260924-4/);
+assert.match(html, /transit-app\.js\?v=20260924-3/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-3/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-2/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
+
+/*
+ * 线上事故回归：Photon 只接受其内置 locale（en/de/fr/default）。
+ * 实测 lang=zh / lang=ja / defaultlang=zh 一律 HTTP 400，
+ * 导致所有地理编码失败 -> 经停站无坐标 -> journey.shape 为空 ->
+ * 地图永不跟随查询结果。中文/日文必须走 default。
+ */
+assert.match(
+  providerSource,
+  /searchParams\.set\(\s*"lang",\s*\n?\s*language === "en"\s*\n?\s*\?\s*"en"\s*\n?\s*:\s*"default"/,
+  "Photon geocoder must send lang=en or lang=default (zh/ja return HTTP 400)"
+);
+
+/*
+ * 候选车次点击：selectTrain 传入的 trainNo 必须被 searchJourney 读取并透传，
+ * 否则参数被静默丢弃、查询原样重跑（点其它车次毫无反应）。
+ */
+assert.match(
+  transitAppSource,
+  /overrides\?\.trainNo/,
+  "searchJourney must read overrides.trainNo"
+);
+assert.match(
+  transitAppSource,
+  /trainNo,\s*\n\s*language,/,
+  "trainNo must be forwarded to the provider options"
+);
 
 /*
  * 线上事故回归：<form method="get"> 的 submit 监听器必须 preventDefault。
@@ -216,6 +243,16 @@ assert.match(
   transitAppSource,
   /addEventListener\(\s*"submit",[\s\S]{0,200}?preventDefault\(\)/,
   "transit search form must preventDefault on submit"
+);
+
+/*
+ * 地图兜底：经停站无坐标（shape 为空）时也必须用起终点 fit，
+ * 否则地图永远停在默认位置、看起来「不跟随查询结果」。
+ */
+assert.match(
+  transitAppSource,
+  /shape\.length >= 2[\s\S]{0,2500}?journey\?\.origin[\s\S]{0,600}?journey\?\.destination/,
+  "map must fall back to origin/destination bounds when shape is empty"
 );
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);

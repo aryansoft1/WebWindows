@@ -1066,17 +1066,18 @@
         );
 
       url.searchParams.set("q", value);
+      /*
+       * Photon 的 lang 只接受其内置 locale（en/de/fr/default…）。
+       * 实测传 zh / ja / defaultlang=zh 一律 HTTP 400，
+       * 导致所有地理编码失败 -> 经停站无坐标 -> journey.shape 为空
+       * -> 地图永不跟随查询结果（线上事故）。
+       * 中文/日文查询直接用 default，实测能正确返回「成都东」等中文地名。
+       */
       url.searchParams.set(
         "lang",
-        ["zh", "tw", "en", "jp"].includes(
-          language
-        )
-          ? language === "tw"
-            ? "zh"
-            : language === "jp"
-              ? "ja"
-              : language
-          : "en"
+        language === "en"
+          ? "en"
+          : "default"
       );
 
       if (

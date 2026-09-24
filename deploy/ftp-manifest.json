@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.1",
-  "catalogVersion": "2026.09.25.1",
-  "generatedAt": "2026-09-24T15:55:18.942Z",
+  "releaseVersion": "2026.09.25.2",
+  "catalogVersion": "2026.09.25.2",
+  "generatedAt": "2026-09-24T18:31:34.379Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -265,7 +265,7 @@
     "assets/js/ai-file-tools.js",
     "assets/js/file-query-parser.js"
   ],
-  "previousReleaseVersion": "2026.09.24.13",
+  "previousReleaseVersion": "2026.09.25.1",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -806,7 +806,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "ce9932f46c7e95d51d9cf178da05f97faedd626178f70b3e7dbd1f2aa1d7cb10",
+      "sha256": "ff5480798484856e7964dcb38c9719b282671e6fb90a7fea99551f7fff684c31",
       "size": 14411
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1273,8 +1273,8 @@
       "size": 13271
     },
     "api/railway-proxy.asp": {
-      "sha256": "c349d334eeda6862fc1e00a5abd83e0de266228c19cd339de83262b05586d7a8",
-      "size": 29399
+      "sha256": "51e835659574d8a998c68ff316bf47095764c4e7942a342829d7193b20bdcea2",
+      "size": 30032
     },
     "assets/js/startup-manager.js": {
       "sha256": "39709e2e295726ca9101f64047426180142f96dc0db53d52f3b96382469c219e",
@@ -1293,18 +1293,14 @@
       "size": 20023
     }
   },
-  "releaseScope": "wendao-rail-running-train-snapshot",
+  "releaseScope": "wendao-rail-snapshot-array-fix",
   "uploadFiles": [
-    "assets/js/transit-providers.js",
-    "assets/js/transit-app.js",
-    "assets/css/navigation.css",
+    "api/railway-proxy.asp",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",
     "api/mobile-version.asp",
     "data/apps/system-apps.json",
-    "api/railway-proxy.asp",
-    "road.html",
     "deploy/ftp-manifest.json"
   ]
 }

@@ -236,7 +236,18 @@ Sub SendLeftTicket()
   ' 合并进当日快照（同车次以本次结果为准），供后续 includeElapsed / 过去日期回看
   Dim mergedRows
   mergedRows = SnapshotMergeRows(snapshotKey, freshRows)
-  SnapshotWrite snapshotKey, ComposeLeftTicketJson(travelDate, fromCode, toCode, fromName, toName, messageText, mergedRows, False)
+
+  '
+  ' 快照绝不能比本次响应更差：若合并结果为空（VBScript 下函数返回的数组
+  ' 传给 ByRef 形参可能退化为空），退化成直接存本次响应。
+  ' 线上症状：首次请求 106 趟，随后缓存命中的请求返回 "trains":[]。
+  Dim snapshotPayload
+  If IsArrayNonEmpty(mergedRows) Then
+    snapshotPayload = ComposeLeftTicketJson(travelDate, fromCode, toCode, fromName, toName, messageText, mergedRows, False)
+  Else
+    snapshotPayload = payload
+  End If
+  SnapshotWrite snapshotKey, snapshotPayload
 
   If includeElapsed And IsArrayNonEmpty(mergedRows) Then
     Response.Write WithSnapshotFlag(ComposeLeftTicketJson(travelDate, fromCode, toCode, fromName, toName, messageText, mergedRows, False))
@@ -301,7 +312,9 @@ Sub ParseLeftTicketRows(ByVal body, ByVal travelDate, ByVal fromCode, ByVal toCo
   messageOut = JsonField(body, "messages")
 End Sub
 
-Function ComposeLeftTicketJson(ByVal travelDate, ByVal fromCode, ByVal toCode, ByVal fromName, ByVal toName, ByVal messageText, ByRef rows, ByVal snapshotFlag)
+' rows 故意按值传：VBScript 把「函数返回的数组」传给 ByRef 形参时可能退化为空，
+' 实测会让快照写成 "trains":[]（缓存命中后运行中车次全部消失）。
+Function ComposeLeftTicketJson(ByVal travelDate, ByVal fromCode, ByVal toCode, ByVal fromName, ByVal toName, ByVal messageText, ByVal rows, ByVal snapshotFlag)
   Dim trains
   trains = ""
   If IsArrayNonEmpty(rows) Then

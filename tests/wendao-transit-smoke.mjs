@@ -199,9 +199,9 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260924-4/);
+assert.match(html, /transit-providers\.js\?v=20260924-5/);
 assert.match(html, /transit-app\.js\?v=20260924-3/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-3/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-4/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260924-2/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -230,6 +230,22 @@ assert.match(
   transitAppSource,
   /trainNo,\s*\n\s*language,/,
   "trainNo must be forwarded to the provider options"
+);
+
+/*
+ * trainNo 必须一路传到 chinaRail.searchJourney：
+ * searchJourneyWithFallback 早期漏了解构/透传 trainNo，
+ * 导致点击候选车次后仍查回原来那趟（线上事故：点其它车次无反应）。
+ */
+assert.match(
+  providerSource,
+  /async function searchJourneyWithFallback\([\s\S]{0,400}?trainNo = null/,
+  "searchJourneyWithFallback must accept trainNo"
+);
+assert.match(
+  providerSource,
+  /chinaRail\.searchJourney\(\s*\{[\s\S]{0,220}?trainNo,/,
+  "searchJourneyWithFallback must forward trainNo to chinaRail"
 );
 
 /*

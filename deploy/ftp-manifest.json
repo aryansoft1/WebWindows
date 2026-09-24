@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.24.6",
-  "catalogVersion": "2026.09.24.6",
-  "generatedAt": "2026-09-24T11:15:06.162Z",
+  "releaseVersion": "2026.09.24.7",
+  "catalogVersion": "2026.09.24.7",
+  "generatedAt": "2026-09-24T11:26:44.670Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -262,7 +262,7 @@
     "api/railway-proxy.asp",
     "assets/js/startup-manager.js"
   ],
-  "previousReleaseVersion": "2026.09.24.5",
+  "previousReleaseVersion": "2026.09.24.6",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -803,7 +803,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "e9f2c979dd0debdc68f2421338be0bc0a6e9910ab27780525f1f4a8adaf7e77d",
+      "sha256": "19ea70c99b583423797d7b54edb6511a8ff931a823feac5c49a2700d8a6bd2bc",
       "size": 14411
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1111,7 +1111,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "356a73bc26d25d57832d797c321c637e2eddb15c9a8a61af759e4d3e7bbf9fcb",
+      "sha256": "ac8c39e001e6f7e20eb1bb724c2d2613109b99ca63db342a85aad3f22caaa97f",
       "size": 16701
     },
     "assets/css/navigation.css": {
@@ -1190,8 +1190,8 @@
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "5d978d785f7104596ac86c7abc7d401c157410bb0fbcb5f70b85b79048c0bd1e",
-      "size": 55080
+      "sha256": "db43c23006d3300121a02952385d09f5ab59fb06acfe9daa571745983d684ffe",
+      "size": 55127
     },
     "admin_api/adminAuth.asp": {
       "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
@@ -1278,7 +1278,7 @@
       "size": 8154
     }
   },
-  "releaseScope": "wendao-transit-trainno-geocoder-mapfit",
+  "releaseScope": "wendao-transit-trainno-forward",
   "uploadFiles": [
     "api/railway-proxy.asp",
     "assets/js/transit-providers.js",

@@ -301,10 +301,10 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260925-1/);
-assert.match(html, /transit-app\.js\?v=20260925-1/);
+assert.match(html, /transit-app\.js\?v=20260925-2/);
 assert.match(html, /navigation\.css\?v=20260925-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-9/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-1/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -399,6 +399,35 @@ assert.match(
   cssSource,
   /\.transit-candidate-state/,
   "candidate state badge must be styled"
+);
+
+/*
+ * 相机事故回归（真实浏览器复现）：
+ * 问乡面板默认隐藏 → 容器尺寸 0 → MapLibre transform 未初始化 →
+ * 带 padding/duration 的 fitBounds 抛
+ * "Cannot read properties of undefined (reading 'lng')"，
+ * 异常冒泡中断整次渲染：结果能显示但地图不跟随、状态栏变成错误信息。
+ * 实测 resize() 后同一调用恢复；因此相机调用必须先 resize 且有降级。
+ */
+assert.match(
+  transitAppSource,
+  /function fitBoundsSafely\(/,
+  "camera calls must go through a guarded helper"
+);
+assert.match(
+  transitAppSource,
+  /state\.map\?\.resize\?\.\(\)/,
+  "camera helper must resize the map first (hidden panel => zero-size container)"
+);
+assert.match(
+  transitAppSource,
+  /fitBoundsSafely\([\s\S]{0,400}?fitBounds\(\s*bounds\s*\)/,
+  "guarded fit must fall back to the option-less fitBounds"
+);
+assert.match(
+  transitAppSource,
+  /function updateVehicle\(\)[\s\S]{0,200}?try \{[\s\S]{0,80}?renderVehicleMarker\(\)/,
+  "vehicle marker failures must not abort rendering"
 );
 
 /*

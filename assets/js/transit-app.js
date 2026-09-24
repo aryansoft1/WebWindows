@@ -502,6 +502,26 @@
   }
 
   function updateVehicle() {
+    /*
+     * 车辆标记是锦上添花：地图 transform 未就绪时 addTo 可能抛错，
+     * 不能因此中断结果渲染（位置与状态文字已在 DOM 中）。
+     */
+    try {
+      renderVehicleMarker();
+    } catch {
+      if (state.vehicleMarker) {
+        try {
+          state.vehicleMarker.remove();
+        } catch {
+          // 标记已失效时忽略
+        }
+
+        state.vehicleMarker = null;
+      }
+    }
+  }
+
+  function renderVehicleMarker() {
     const position =
       state.resolved
         ?.position;
@@ -555,6 +575,35 @@
           position.latitude
         )
       ]);
+  }
+
+  /*
+   * 相机调用前的准备与降级。
+   *
+   * 线上事故（真实浏览器复现）：问乡面板默认隐藏，容器尺寸为 0，
+   * MapLibre 的 transform 未初始化，此时带 padding/duration 的
+   * fitBounds 会抛 "Cannot read properties of undefined (reading 'lng')"，
+   * 异常向上冒泡后整次渲染中断——结果卡片能显示，但地图不跟随，
+   * 状态栏还变成错误信息。
+   * 实测：先 map.resize() 再调用同样的 fitBounds 即恢复正常；
+   * 若仍失败，降级为无参数 fitBounds，再失败则放弃相机动画（结果照常展示）。
+   */
+  function fitBoundsSafely(
+    fit
+  ) {
+    try {
+      state.map?.resize?.();
+    } catch {
+      // resize 失败不阻断后续尝试
+    }
+
+    try {
+      fit();
+
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   function updateMap({
@@ -617,19 +666,34 @@
           )
       );
 
-      state.map.fitBounds(
-        bounds,
-        {
-          padding:
-            70,
+      if (
+        fitBoundsSafely(
+          () =>
+            state.map.fitBounds(
+              bounds,
+              {
+                padding: 70,
 
-          maxZoom:
-            11,
+                maxZoom: 11,
 
-          duration:
-            600
-        }
-      );
+                duration: 600
+              }
+            )
+        )
+      ) {
+        return;
+      }
+
+      if (
+        fitBoundsSafely(
+          () =>
+            state.map.fitBounds(
+              bounds
+            )
+        )
+      ) {
+        return;
+      }
 
       return;
     }
@@ -665,16 +729,28 @@
       });
 
       if (!fallbackBounds.isEmpty()) {
-        state.map.fitBounds(
-          fallbackBounds,
-          {
-            padding: 70,
+        if (
+          !fitBoundsSafely(
+            () =>
+              state.map.fitBounds(
+                fallbackBounds,
+                {
+                  padding: 70,
 
-            maxZoom: 11,
+                  maxZoom: 11,
 
-            duration: 600
-          }
-        );
+                  duration: 600
+                }
+              )
+          )
+        ) {
+          fitBoundsSafely(
+            () =>
+              state.map.fitBounds(
+                fallbackBounds
+              )
+          );
+        }
       }
     }
   }

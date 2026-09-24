@@ -472,3 +472,171 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     });
 })();
+
+// 设置 → 应用 → 启动项（Startup v1）。
+// 数据全部来自主桌面的 WebWindows.startup（StartupManager），
+// 设置页只做展示与用户确认，不直接维护启动列表。
+(function initializeStartupSettings() {
+    "use strict";
+
+    const MODE_LABELS = {
+        background: "后台启动",
+        minimized: "最小化启动",
+        normal: "正常窗口"
+    };
+
+    function startupApi() {
+        return getDesktopHost().WebWindows?.startup || null;
+    }
+
+    function registryApi() {
+        return getDesktopHost().WebWindows?.apps || null;
+    }
+
+    function setStatus(message, isError) {
+        const element = document.getElementById("startupStatus");
+        if (!element) return;
+        element.textContent = message || "";
+        element.classList.toggle("is-error", Boolean(isError));
+    }
+
+    function createElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        if (text != null) element.textContent = text;
+        return element;
+    }
+
+    // 应用 manifest 可以声明 startup.modes 限定可用模式（可选字段）；
+    // 未声明时提供全部三种模式。声明只做限制，绝不自动启用。
+    function allowedModes(app) {
+        const declared = Array.isArray(app.startup?.modes)
+            ? app.startup.modes.filter((mode) =>
+                Object.prototype.hasOwnProperty.call(MODE_LABELS, mode))
+            : [];
+        return declared.length ? declared : ["background", "minimized", "normal"];
+    }
+
+    function createStartupRow(app, item, startup) {
+        const card = createElement("article", "function-manager-card startup-app-card");
+        card.dataset.appId = app.id;
+
+        const icon = document.createElement("img");
+        icon.src = app.icon;
+        icon.alt = "";
+        card.appendChild(icon);
+
+        const information = createElement("div", "function-card-information");
+        information.appendChild(createElement("h5", "function-card-title", app.name));
+        const metadata = createElement("div", "function-card-meta");
+        metadata.appendChild(createElement("span", "", app.id));
+        information.appendChild(metadata);
+        card.appendChild(information);
+
+        const controls = createElement("div", "startup-app-controls");
+
+        const toggle = createElement("label", "startup-enable-toggle");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item?.enabled === true;
+        toggle.appendChild(checkbox);
+        toggle.appendChild(document.createTextNode("启用"));
+        controls.appendChild(toggle);
+
+        const modes = allowedModes(app);
+        const modeSelect = document.createElement("select");
+        modeSelect.className = "startup-mode-select";
+        modeSelect.setAttribute("aria-label", `${app.name} 启动模式`);
+        for (const mode of modes) {
+            const option = document.createElement("option");
+            option.value = mode;
+            option.textContent = MODE_LABELS[mode] || mode;
+            modeSelect.appendChild(option);
+        }
+        const preferredMode = modes.includes(item?.mode)
+            ? item.mode
+            : (modes.includes("background") ? "background" : modes[0]);
+        modeSelect.value = preferredMode;
+        controls.appendChild(modeSelect);
+
+        const delayInput = document.createElement("input");
+        delayInput.type = "number";
+        delayInput.className = "startup-delay-input";
+        delayInput.min = "0";
+        delayInput.max = "60000";
+        delayInput.step = "100";
+        delayInput.value = String(item?.delay ?? 0);
+        delayInput.setAttribute("aria-label", `${app.name} 启动延迟（毫秒）`);
+        controls.appendChild(delayInput);
+        controls.appendChild(createElement("span", "startup-delay-unit", "毫秒"));
+
+        card.appendChild(controls);
+
+        function save() {
+            try {
+                const saved = startup.add({
+                    appId: app.id,
+                    enabled: checkbox.checked,
+                    mode: modeSelect.value,
+                    delay: delayInput.value
+                });
+                delayInput.value = String(saved.delay);
+                setStatus(`${app.name} 的启动项已保存。`);
+            } catch (error) {
+                setStatus(error.message || `${app.name} 的启动项保存失败。`, true);
+            }
+        }
+
+        checkbox.addEventListener("change", save);
+        modeSelect.addEventListener("change", save);
+        delayInput.addEventListener("change", save);
+        return card;
+    }
+
+    async function renderStartupSettings() {
+        const listElement = document.getElementById("startupList");
+        if (!listElement) return;
+        const startup = startupApi();
+        const registry = registryApi();
+        if (!startup || !registry) {
+            setStatus("启动项服务尚未就绪，请重新打开设置。", true);
+            return;
+        }
+        setStatus("正在读取启动项……");
+        try {
+            await registry.ready();
+            const configured = new Map(startup.list().map((item) => [item.appId, item]));
+            const installed = (await registry.listInstalled())
+                .filter((app) => app.startup?.supported !== false)
+                .sort((left, right) =>
+                    String(left.name).localeCompare(String(right.name), "zh-Hans-CN"));
+            listElement.replaceChildren();
+            for (const app of installed) {
+                listElement.appendChild(createStartupRow(app, configured.get(app.id), startup));
+            }
+            if (!installed.length) {
+                listElement.appendChild(createElement(
+                    "div", "function-empty-state", "当前没有可配置的应用。"));
+            }
+            setStatus("");
+        } catch (error) {
+            setStatus(error.message || "启动项读取失败。", true);
+        }
+    }
+
+    window.renderStartupSettings = renderStartupSettings;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderStartupSettings();
+        try {
+            const host = getDesktopHost();
+            if (host !== window) {
+                host.addEventListener("webwindows:login", renderStartupSettings);
+                host.addEventListener("webwindows:logout", renderStartupSettings);
+                host.addEventListener("webwindows:installation-changed", renderStartupSettings);
+            }
+        } catch (_) {
+            // 设置页独立打开时没有宿主事件源，切换到该页时仍会重新渲染。
+        }
+    });
+})();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh" class="ww-boot-pending">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -8,36 +8,38 @@
     </title>
     <link href="assets/icons/logo_large.png" rel="icon" />
     <link href="dist-widget/weather-widget.css" rel="stylesheet" />
-    <link href="dist-window/window-manager-widget.css?v=20260802-mobile-language-1" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/main.css?v=20260809-snapshot-1">
+    <link href="dist-window/window-manager-widget.css?v=20260826-window-fit-1" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260823-mobile-parity-1">
     <link href="assets/css/context_menu.css?v=20260802-device-1" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/desktalk.css?v=20260802-locale-2">
-    <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20250913-3">
+    <link rel="stylesheet" href="assets/css/desktalk.css?v=20260818-presence-layout-5">
+    <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20260823-weather-drag-3">
     <!-- Markdown 解析 + 安全清洗 + 代码高亮（CDN） -->
     <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet"/>
     <!-- 引入预编译后的 WeatherTimeWidget 组件 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="assets/js/contextmenu-guard.js?v=20260726-3"></script>
     <script src="assets/js/webwindows-message.js?v=20260729-1"></script>
-    <script src="assets/js/locale-region.js?v=20260802-1"></script>
+    <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
     <script defer src="assets/js/system-session.js?v=20260802-7"></script>
+    <script defer src="assets/js/auth-session.js?v=20260810-session-truth-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260825-storage-2"></script>
-    <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
-    <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
+    <script defer src="assets/js/device-api.js?v=20260823-mobile-parity-1"></script>
+    <script defer src="assets/js/device-controls.js?v=20260823-mobile-parity-1"></script>
     <script defer src="assets/js/vendor/html2canvas.min.js?v=1.4.1"></script>
-    <script defer src="assets/js/taskbar-experience.js?v=20260809-snapshot-1"></script>
-    <script src="dist-weather/weather-widget.umd.js?v=20250913-3"></script>
-    <script defer src="dist-window/window-manager-widget.js?v=20260809-device-storage-1"></script>
-    <script defer src="assets/js/app-registry.js?v=20260729-6"></script>
+    <script defer src="assets/js/taskbar-experience.js?v=20260815-task-manager-1"></script>
+    <script src="dist-weather/weather-widget.umd.js?v=20260823-weather-drag-3"></script>
+    <script defer src="dist-window/window-manager-widget.js?v=20260826-window-fit-1"></script>
+    <script defer src="assets/js/app-registry.js?v=20260923-startup-1"></script>
+    <script defer src="assets/js/startup-manager.js?v=20260923-startup-1"></script>
     <script defer src="assets/js/function-sync.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/start-menu-functions.js?v=20260728-1"></script>
     <script defer src="assets/js/desktop-functions.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/cloud-file-dialog.js?v=20260729-1"></script>
-    <script defer src="assets/js/file-search.js?v=20260809-search-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
-    <script defer src="assets/js/resource-open.js?v=20260728-3"></script>
+    <script defer src="assets/js/visitor-analytics.js?v=20260920-1"></script>
+    <script defer src="assets/js/resource-open.js?v=20260812-aplay-media-1"></script>
     <script defer src="/dist-menus/desktop-menus.global.js?v=20260729-mobile-2"></script>
-    <script defer="True" src="assets/js/main.js?v=20260809-device-state-1"></script>
+    <script defer="True" src="assets/js/main.js?v=20260923-startup-1"></script>
     <script defer="True" src="assets/js/snap_drag.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
@@ -219,7 +221,7 @@
         <div id="start-menu-login" style="cursor:default; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
     <div style="display: flex; align-items: center;" id="login-area">
   <img id="login-avatar" src="assets/icons/149071.png" alt="avatar" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 8px;">
-  <span id="login-username">线下用户</span>
+  <span id="login-username">正在确认登录状态…</span>
   <span id="login-status" style="width: 8px; height: 8px; background: #cc8800; border-radius: 50%; display: inline-block; margin-left: 6px;"></span>
 </div>
     <button class="power-btn"  id="power-button" style="background: none; border: none; font-size: 16px; cursor: pointer;">
@@ -227,7 +229,7 @@
     </button>
   </div>
 <div id="user-popup" class="absolute bottom-14 left-3 bg-white shadow-xl border rounded-md w-40 p-2 hidden z-50">
-  <div id="user-popup-name" class="text-sm text-center mb-2 text-gray-700">未登录</div>
+  <div id="user-popup-name" class="text-sm text-center mb-2 text-gray-700">正在确认登录状态…</div>
   <button onclick="logout()" class="w-full text-red-600 hover:text-white hover:bg-red-500 py-1 rounded">
     注销
   </button>
@@ -241,11 +243,11 @@
                     云资料
                 </span>
             </li>
-            <li onclick="window.openWindow('aplay','傲映(APlay)', 'aplay.html?v=20260729-mobile-1', 'assets/icons/aplay.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('aplay','傲映(APlay)', 'aplay.html?v=20260812-cloud-media-1', 'assets/icons/aplay.png', true, '', '1020px', '725px');document.getElementById('start-menu').style.display='none'">
                 <img src="assets/icons/aplay.png">
                 <span>傲映(APlay)</span>
             </li>
-            <li onclick="window.openWindow('sysinfo', '系统信息', 'sysinfo.html', 'assets/icons/sysinfo.png', true, '', '700px', '705px');document.getElementById('start-menu').style.display='none'">
+            <li onclick="window.openWindow('sysinfo', '系统信息', 'sysinfo.html?v=20260816-quota-3', 'assets/icons/sysinfo.png', true, '', '700px', '705px');document.getElementById('start-menu').style.display='none'">
                 <img alt="系统信息" src="assets/icons/sysinfo.png" />
                 <span>
                     系统信息
@@ -448,10 +450,10 @@
 <div id="friends-list"></div>
 </div>
 <div aria-labelledby="tab-btn-ai" id="tab-ai" role="region" style="display:none">
-<div class="muted" style="margin:4px 2px 10px">有什么想对我说：</div>
-<div id="ai-body" style="display:flex;flex-direction:column;gap:8px;max-height:40vh;overflow:auto;border:1px dashed var(--border);border-radius:12px;padding:10px"></div>
-<div style="display:flex;gap:8px;margin-top:10px">
-<input id="ai-input" placeholder="问我任何问题…（Enter 发送）" style="flex:1;border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg)"/>
+<div class="muted ai-prompt-label">有什么想对我说：</div>
+<div id="ai-body" aria-live="polite"></div>
+<div id="ai-composer">
+<input id="ai-input" placeholder="问我任何问题…（Enter 发送）"/>
 <button class="btn primary" id="ai-send">发送</button>
 </div>
 </div>
@@ -469,9 +471,10 @@
     </label>
     <div style="height:8px"></div>
     <label class="switch">
-      <input id="pref-undiscoverable" type="checkbox">
-      <span style="margin-left:6px">不被推荐（隐藏我的账号）</span>
+      <input id="pref-undiscoverable" type="checkbox" disabled aria-describedby="pref-undiscoverable-status">
+      <span style="margin-left:6px">不被推荐</span>
     </label>
+    <div id="pref-undiscoverable-status" class="muted" style="margin:6px 0 0 28px;font-size:12px">正在读取账号的发现设置…</div>
   </div>
 </div>
 </div>
@@ -645,7 +648,11 @@
   </div>
 
 </div>
-<script src="assets/js/desktalk.js?v=20260809-ai-knowledge-1"></script>
-    <script src="assets/js/tw.js?v=20260808-device-api-1"></script>
+<script src="assets/js/file-query-parser.js?v=20260811-query-v2-3"></script>
+<script src="assets/js/file-search.js?v=20260811-query-v2-3"></script>
+<script src="assets/js/ai-tool-registry.js?v=20260810-file-tool-1"></script>
+<script src="assets/js/ai-file-tools.js?v=20260811-file-tool-1"></script>
+<script src="assets/js/desktalk.js?v=20260819-discovery-privacy-1"></script>
+    <script src="assets/js/tw.js?v=20260823-mobile-parity-1"></script>
 </body>
 </html>

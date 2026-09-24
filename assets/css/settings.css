@@ -140,15 +140,56 @@ body {
 .settings-range-row input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; background: #1677c8; }
 .settings-range-row input[type="range"].is-unavailable { opacity: .55; }
 .settings-range-row output { color: #344054; font-variant-numeric: tabular-nums; text-align: right; }
-.network-speed-heading { display: flex; align-items: center; gap: 10px; }
-.network-speed-heading > div { flex: 1; min-width: 0; }
-.network-speed-heading p { margin: 5px 0 0; color: #667085; font-size: 12px; line-height: 1.5; }
+.network-speed-test { overflow: hidden; }
+.network-speed-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 12px; }
+.network-speed-heading > div:first-child { min-width: 0; }
+.network-speed-heading p { max-width: 670px; margin: 5px 0 0; color: #667085; font-size: 12px; line-height: 1.5; }
+.network-speed-profile { margin: 0; color: #475467; font-size: 11px; font-weight: 500; }
+.network-speed-profile select { display: block; width: 190px; margin-top: 4px; padding: 7px 9px; font-size: 12px; }
+.network-speed-actions { display: flex; gap: 7px; }
 .network-speed-heading button { min-height: 38px; border: 0; border-radius: 8px; padding: 8px 13px; background: #1769aa; color: #fff; cursor: pointer; }
+.network-speed-heading button:disabled { cursor: wait; opacity: .62; }
 .network-speed-heading button.secondary { border: 1px solid #cfd5df; background: #fff; color: #344054; }
-.network-speed-test progress { width: 100%; margin-top: 14px; }
-.network-speed-status { margin-top: 10px; color: #475467; font-size: 13px; }
+.network-speed-test progress { width: 100%; height: 5px; margin-top: 14px; accent-color: #1769aa; }
+.network-speed-live-row { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 10px 0 8px; color: #667085; font-size: 12px; }
+.network-speed-live-row > span:first-child { flex: 1 1 240px; color: #344054; font-weight: 600; }
+.network-speed-rating { display: grid; grid-template-columns: auto auto minmax(180px, 1fr); align-items: center; gap: 8px 12px; margin: 8px 0 10px; border: 1px solid #d0d5dd; border-radius: 10px; padding: 9px 12px; background: #f8fafc; color: #344054; }
+.network-speed-rating > span { font-size: 12px; }
+.network-speed-rating > strong { border-radius: 999px; padding: 4px 10px; background: #667085; color: #fff; font-size: 13px; text-align: center; }
+.network-speed-rating > small { color: #667085; font-size: 11px; }
+.network-speed-rating.is-slow > strong { background: #b42318; }
+.network-speed-rating.is-fair > strong { background: #b54708; }
+.network-speed-rating.is-good > strong { background: #027a48; }
+.network-speed-rating.is-fast > strong { background: #1769aa; }
+.network-speed-rating.is-excellent > strong { background: #6941c6; }
+.network-speed-chart-wrap { position: relative; border: 1px solid #e4e7ec; border-radius: 12px; padding: 8px; background: linear-gradient(180deg, #f8fbff, #fff); }
+.network-speed-chart { display: block; width: 100%; height: 220px; overflow: visible; }
+.network-chart-grid path { fill: none; stroke: #e4eaf1; stroke-width: 1; }
+.network-chart-download-area { fill: #1769aa18; }
+.network-chart-upload-area { fill: #18825c18; }
+.network-chart-download, .network-chart-upload { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.network-chart-download { stroke: #1769aa; }
+.network-chart-upload { stroke: #18825c; }
+.network-chart-download-point { fill: #1769aa; stroke: #fff; stroke-width: 2; }
+.network-chart-upload-point { fill: #18825c; stroke: #fff; stroke-width: 2; }
+.network-speed-test.is-running .network-chart-download-point:not([hidden]), .network-speed-test.is-running .network-chart-upload-point:not([hidden]) { animation: network-speed-pulse 1s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.network-chart-max, .network-chart-duration { fill: #667085; font: 11px -apple-system, "Segoe UI", sans-serif; }
+.network-speed-legend { position: absolute; top: 12px; right: 14px; display: flex; gap: 12px; color: #475467; font-size: 11px; }
+.network-speed-legend span::before { display: inline-block; width: 14px; height: 3px; margin: 0 5px 3px 0; border-radius: 3px; content: ""; }
+.network-speed-legend .download::before { background: #1769aa; }
+.network-speed-legend .upload::before { background: #18825c; }
+.network-speed-stats { display: grid; grid-template-columns: 64px repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.network-speed-stats > div { min-width: 0; border-radius: 9px; padding: 9px; background: #f7f9fc; }
+.network-speed-stats span { display: block; color: #667085; font-size: 11px; }
+.network-speed-stats output { display: flex; flex-direction: column; margin-top: 4px; color: #1d2939; font-variant-numeric: tabular-nums; }
+.network-speed-stats output strong { font-size: 14px; }
+.network-speed-stats output small { margin-top: 2px; color: #667085; font-size: 10px; }
+.network-speed-stat-label { display: grid; place-items: center; color: #344054; font-size: 13px; font-weight: 700; }
+.network-speed-status { min-height: 20px; margin-top: 10px; color: #475467; font-size: 13px; }
 .network-speed-status.is-error { color: #b42318; }
-.network-speed-result { margin-top: 10px; color: #075da8; font-size: 22px; font-weight: 700; }
+.network-speed-summary { margin-top: 8px; border-left: 3px solid #1769aa; border-radius: 7px; padding: 10px 12px; background: #eef7ff; color: #1d3f5e; font-size: 12px; line-height: 1.55; }
+@keyframes network-speed-pulse { 50% { transform: scale(1.45); opacity: .58; } }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 .wallpaper-grid {
   display: flex;
@@ -530,5 +571,92 @@ body {
 
   .network-details {
     grid-template-columns: 1fr;
+  }
+
+  .network-speed-heading { grid-template-columns: 1fr; align-items: stretch; }
+  .network-speed-profile select { width: 100%; }
+  .network-speed-actions button { flex: 1; }
+  .network-speed-chart { height: 170px; }
+  .network-speed-rating { grid-template-columns: auto 1fr; }
+  .network-speed-rating > small { grid-column: 1 / -1; }
+  .network-speed-stats { grid-template-columns: 54px repeat(3, minmax(0, 1fr)); gap: 5px; }
+  .network-speed-stats > div { padding: 7px 5px; }
+  .network-speed-stats output strong { font-size: 12px; }
+  .network-speed-stats output small { font-size: 9px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-chart-download, .network-chart-upload { transition: none; }
+}
+
+@media (max-width: 520px) {
+  .settings-ipad-layout { display: block; overflow: hidden; }
+  .settings-sidebar { width: 100%; border-right: 0; border-bottom: 1px solid #ddd; padding: 10px 12px; }
+  .settings-sidebar h2 { margin: 0 0 8px; font-size: 17px; }
+  .settings-sidebar ul { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+  .settings-sidebar li { flex: 0 0 auto; margin: 0; }
+  .settings-sidebar li button { min-height: 38px; padding: 5px 8px; white-space: nowrap; }
+  .settings-nav-icon { flex-basis: 24px; width: 24px; height: 24px; }
+  .settings-content { height: calc(100vh - 104px); padding: 12px; }
+  .settings-section h3 { margin-top: 4px; }
+  .network-speed-stats { grid-template-columns: 48px repeat(3, minmax(0, 1fr)); }
+}
+
+/* 设置 → 应用 → 启动项（Startup v1） */
+.startup-app-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.startup-app-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.startup-enable-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #475467;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.startup-enable-toggle input {
+  accent-color: #1570ef;
+}
+
+.startup-app-controls .startup-mode-select {
+  width: auto;
+  min-width: 116px;
+  padding: 6px 8px;
+  border: 1px solid #cfd5df;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.startup-app-controls .startup-delay-input {
+  width: 92px;
+  padding: 6px 8px;
+  border: 1px solid #cfd5df;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.startup-delay-unit {
+  color: #667085;
+  font-size: 12px;
+}
+
+@media (max-width: 720px) {
+  .startup-app-controls {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }

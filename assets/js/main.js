@@ -31,6 +31,12 @@ function dateInTimeZone(date = new Date(), region = getWebWindowsRegion()) {
     return new Date(Number(value.year), Number(value.month) - 1, Number(value.day));
 }
 
+// session-ready：桌面基础环境与会话初始化完成后的统一挂载点。
+// StartupManager（assets/js/startup-manager.js）以此为启动项执行时机。
+function announceWebWindowsSessionReady() {
+    window.dispatchEvent(new CustomEvent('webwindows:session-ready'));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // Weather is mounted once by mountWeather() below.  Keeping a single
     // mount point prevents two independent widgets from updating in parallel.
@@ -39,6 +45,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sessionStorage.getItem("booted") === "yes") {
         const root = document.getElementById("desktop-root");
         if (root) root.style.opacity = "1";
+        document.documentElement.classList.remove("ww-boot-pending");
+        announceWebWindowsSessionReady();
         // 不执行动画加载逻辑
         return;
     }
@@ -59,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
     loader.innerHTML = `
                     <img src="assets/icons/ARYANSOFT-logo1-01.gif" style="width: 120px; height: 120px; margin-bottom: 20px;">
-                    <div style="font-size: 15px; opacity: 0.85;">正在启动WebWindows...</div>
+                    <div data-boot-status style="font-size: 15px; opacity: 0.85;">正在启动 WebWindows…</div>
                     <div style="
                       width: 44px;
                       height: 44px;
@@ -73,6 +81,10 @@ document.addEventListener("DOMContentLoaded", () => {
                       @keyframes spin { to { transform: rotate(360deg); } }
                     </style>
                 `;
+    const i18n = window.WebWindowsI18n;
+    if (i18n && typeof i18n.applyTo === 'function') {
+        i18n.applyTo(loader, i18n.getLanguage());
+    }
     document.body.appendChild(loader);
 
     // 动画延迟后淡出 boot-loader，桌面淡入
@@ -85,6 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (root) {
                 root.style.opacity = "1"; // 淡入桌面
             }
+            document.documentElement.classList.remove("ww-boot-pending");
+            announceWebWindowsSessionReady();
         }, 500);
     }, 1800);
 });
@@ -208,9 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // -------------------------------------
   });
 
-  async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
-    const cnHolidayMap = await getChinaHolidayMap(year); // 来自 timor.tech API
-    const localHolidayMap = await getLocalHolidayMap(year, userCountryCode); // Nager.Date
+async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
+    const [cnHolidayMap, localHolidayMap] = await Promise.all([
+        getChinaHolidayMap(year).catch(() => ({})),
+        getLocalHolidayMap(year, userCountryCode).catch(() => ({}))
+    ]);
 
     const result = {};
 
@@ -284,14 +300,48 @@ async function getLocalHolidayMap(year, countryCode) {
 }
 
 let calendarDate = dateInTimeZone();
+const calendarHolidayCache = new Map();
+let calendarBuildToken = 0;
+
+function holidayMapFor(year, countryCode) {
+    const key = `${year}:${countryCode}`;
+    if (!calendarHolidayCache.has(key)) {
+        calendarHolidayCache.set(key, getCombinedHolidayMap(year, countryCode).catch(() => ({})));
+    }
+    return calendarHolidayCache.get(key);
+}
+
+function decorateCalendarDay(el, currentDate, info) {
+    if (!info) return;
+    const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+    const localHoliday = info.holiday;
+    const cnHoliday = info.cnHoliday;
+    if (localHoliday && cnHoliday) {
+        el.style.color = '#ff4d4f';
+        el.title = `${info.name}  中国节：${info.cnName}`;
+    } else if (isWeekend && cnHoliday && !localHoliday) {
+        el.style.color = '#69c0ff';
+        el.title = `中国节：${info.cnName}`;
+    } else if (!localHoliday && cnHoliday) {
+        el.style.color = '#69c0ff';
+        el.title = `中国节：${info.cnName}`;
+    } else if (localHoliday) {
+        el.style.color = '#ff4d4f';
+        el.title = info.name;
+    } else if (isWeekend) {
+        el.style.color = '#ffc107';
+        el.title = info.cnName || '';
+    }
+}
+
 async function buildCalendar(date) {
+    const token = ++calendarBuildToken;
     const year = date.getFullYear();
     const month = date.getMonth();
     const region = getWebWindowsRegion();
     const today = dateInTimeZone(new Date(), region);
     const daysEl = document.getElementById('calendar-days');
 
-    const holidayMap = await getCombinedHolidayMap(year, region.code);
     const headerEl = document.getElementById('calendar-header');
     daysEl.innerHTML = '';
     headerEl.textContent = year + '/' + String(month + 1).padStart(2, '0');
@@ -316,46 +366,8 @@ async function buildCalendar(date) {
         <div style="font-weight:bold;">${d}</div>
         <div class="weekday-label">${weekday}</div>
     `;
-        //节假日调休标注
         const dateStr = `${String(year)}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const info = holidayMap[dateStr];
-        if (info) {
-            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-            const localHoliday = info.holiday;
-            const cnHoliday = info.cnHoliday;
-            // 🟢 中外都放假 红色
-            if (localHoliday && cnHoliday) {
-                el.style.color = '#ff4d4f';
-                el.title = `${info.name}  中国节：${info.cnName}`;
-            }
-            // 🟢 周末同时中国休假 非当地节日 蓝色
-            else if (isWeekend && cnHoliday & !localHoliday) {
-                el.style.color = '#69c0ff';
-                el.title = `中国节：${info.cnName}`;
-            }
-            // 🟢 周末同时国内休假，国外周末特殊假期为 红色
-            else if (isWeekend && cnHoliday && localHoliday) {
-                el.style.color = '#ff4d4f';
-                el.title = `${info.name}  中国节：${info.cnName}`;
-            }
-            // 🔵 仅中国节假日（本地不是节假日）蓝色
-            else if (!localHoliday && cnHoliday) {
-                el.style.color = '#69c0ff';
-                el.title = `中国节：${info.cnName}`;
-            }
-
-            // 🔴 仅本地节假日 红色
-            else if (localHoliday && !cnHoliday) {
-                el.style.color = '#ff4d4f';
-                el.title = info.name;
-            }
-
-            // 🟡 本地不是节日但为周末调休（且中国是工作日或补班）
-            else if (!localHoliday && isWeekend) {
-                el.style.color = '#ffc107';  // 黄色字体
-                el.title = info.cnName || '';
-            }
-        }
+        el.dataset.date = dateStr;
         if (
             d === today.getDate() &&
             month === today.getMonth() &&
@@ -363,6 +375,14 @@ async function buildCalendar(date) {
         ) el.classList.add('today');
         daysEl.appendChild(el);
     }
+
+    // 月历骨架先同步呈现；节假日数据随后异步补充，不阻塞弹窗。
+    const holidayMap = await holidayMapFor(year, region.code);
+    if (token !== calendarBuildToken) return;
+    daysEl.querySelectorAll('.day[data-date]').forEach((el) => {
+        const parts = el.dataset.date.split('-').map(Number);
+        decorateCalendarDay(el, new Date(parts[0], parts[1] - 1, parts[2]), holidayMap[el.dataset.date]);
+    });
 }
 document.getElementById('taskbar-datetime')?.addEventListener('click', () => {
     const popup = document.getElementById('calendar-popup');
@@ -517,7 +537,13 @@ window.addEventListener("message", (event) => {
 });
 
 function openAbout() {
-  document.getElementById('about-overlay').classList.add('show');
+  const overlay = document.getElementById('about-overlay');
+  if (!overlay) return;
+  const i18n = window.WebWindowsI18n;
+  if (i18n && typeof i18n.applyTo === 'function') {
+    i18n.applyTo(overlay, i18n.getLanguage());
+  }
+  overlay.classList.add('show');
 }
 
 function closeAbout() {

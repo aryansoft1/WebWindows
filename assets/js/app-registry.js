@@ -503,6 +503,26 @@
     return app.legacyIds?.[0] || app.id.replace(/[^a-z0-9_-]/gi, "-");
   }
 
+  const LAUNCH_INITIAL_STATES = ["normal", "minimized", "background"];
+
+  // 启动模式（Startup v1）：窗口创建后同步应用，不改动窗口管理器本身。
+  // openWindow 总会聚焦窗口，在首次绘制前完成最小化就不会产生可见抢焦；
+  // background 额外清除活动状态。纯"无窗口后台运行"需要窗口管理器另行支持。
+  function applyLaunchState(instanceId, state) {
+    if (!state || state === "normal") return;
+    const doc = window.document;
+    if (!doc || typeof instanceId !== "string") return;
+    const element = doc.getElementById(`win-${instanceId}`);
+    if (!element) return;
+    if (element.style && element.style.display !== "none" &&
+        typeof window.minimizeTargetWindow === "function") {
+      window.minimizeTargetWindow(instanceId);
+    }
+    if (state === "background" && element.classList) {
+      element.classList.remove("active");
+    }
+  }
+
   async function launch(appId, context) {
     const app = await get(appId);
     if (!app) throw new Error(`找不到应用：${appId}`);
@@ -534,8 +554,11 @@
     const title = launchContext.title || app.name;
     const url = launchContext.url || app.entry;
     const windowOptions = app.window || {};
+    const initialState = LAUNCH_INITIAL_STATES.includes(launchContext.initialState)
+      ? launchContext.initialState
+      : "normal";
 
-    return capturedWindowOpener(
+    const result = capturedWindowOpener(
       instanceId,
       title,
       url,
@@ -545,6 +568,8 @@
       windowOptions.width || "900px",
       windowOptions.height || "640px"
     );
+    applyLaunchState(typeof result === "string" ? result : instanceId, initialState);
+    return result;
   }
 
   async function launchLegacy(legacyId, context) {

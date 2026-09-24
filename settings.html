@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/css/settings.css?v=20260809-device-state-1" />
-    <script src="assets/js/locale-region.js?v=20260802-1"></script>
-    <script defer src="assets/js/tw.js?v=20260808-device-api-1"></script>
+    <link rel="stylesheet" href="assets/css/settings.css?v=20260923-startup-1" />
+    <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
+    <script defer src="assets/js/tw.js?v=20260913-camera-network-2"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
-    <script defer src="assets/js/network-speed.js?v=20260808-device-api-1"></script>
-    <script defer="True" src="assets/js/settings.js?v=20260809-device-state-1"></script>
+    <script defer src="assets/js/network-speed.js?v=20260913-camera-network-2"></script>
+    <script defer="True" src="assets/js/settings.js?v=20260923-startup-1"></script>
 </head>
 <body>
     <div class="settings-ipad-layout">
@@ -26,6 +26,7 @@
                 <li><button type="button" data-settings-tab="soundTab" onclick="switchTab(this, 'soundTab')"><img class="settings-nav-icon" src="assets/icons/settings-sound.svg" alt=""><span>声音</span></button></li>
                 <li><button type="button" data-settings-tab="powerTab" onclick="switchTab(this, 'powerTab')"><img class="settings-nav-icon" src="assets/icons/settings-power.svg" alt=""><span>电源管理</span></button></li>
                 <li><button type="button" data-settings-tab="networkTab" onclick="switchTab(this, 'networkTab')"><img class="settings-nav-icon" src="assets/icons/settings-network.svg" alt=""><span>网络与连接</span></button></li>
+                <li><button type="button" data-settings-tab="appsTab" onclick="switchTab(this, 'appsTab')"><img class="settings-nav-icon" src="assets/icons/function-center.svg" alt=""><span>应用</span></button></li>
                 <li><button type="button" data-settings-tab="functionTab" onclick="switchTab(this, 'functionTab')"><img class="settings-nav-icon" src="assets/icons/settings-functions.svg" alt=""><span>功能管理</span></button></li>
                 <li><button type="button" data-settings-tab="guideTab" onclick="switchTab(this, 'guideTab')"><img class="settings-nav-icon" src="assets/icons/settings-guide.svg" alt=""><span>使用向导</span></button></li>
             </ul>
@@ -148,15 +149,78 @@
                     <div class="settings-card network-speed-test">
                         <div class="network-speed-heading">
                             <div>
-                                <strong>下载速度测试</strong>
-                                <p>仅在你点击开始后下载测试数据，单次最多约 2 MB。移动网络可能产生流量费用。</p>
+                                <strong>到 WebWindows 服务节点的链路速度</strong>
+                                <p>仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。</p>
                             </div>
-                            <button id="networkSpeedStart" type="button">开始测速</button>
-                            <button id="networkSpeedCancel" type="button" class="secondary" hidden>取消</button>
+                            <label class="network-speed-profile">测试档位
+                                <select id="networkSpeedProfile" aria-label="测速流量档位">
+                                    <option value="light">轻量（约 2–4 MB）</option>
+                                    <option value="standard">标准（自适应，最多约 24 MB）</option>
+                                </select>
+                            </label>
+                            <div class="network-speed-actions">
+                                <button id="networkSpeedStart" type="button">开始测速</button>
+                                <button id="networkSpeedCancel" type="button" class="secondary" hidden>取消</button>
+                            </div>
                         </div>
-                        <progress id="networkSpeedProgress" max="100" value="0" hidden></progress>
+                        <progress id="networkSpeedProgress" max="100" value="0" hidden aria-label="测速进度"></progress>
+                        <div class="network-speed-live-row">
+                            <span id="networkSpeedPhase">尚未开始</span>
+                            <span>延迟 <strong id="networkSpeedLatency">—</strong></span>
+                            <span>抖动 <strong id="networkSpeedJitter">—</strong></span>
+                        </div>
+                        <div id="networkSpeedRating" class="network-speed-rating is-waiting" aria-live="polite">
+                            <span>网络体验</span>
+                            <strong id="networkSpeedRatingLabel">等待测速</strong>
+                            <small id="networkSpeedRatingDetail">完成后将明确显示慢、一般、良好、快或极快。</small>
+                        </div>
+                        <div class="network-speed-chart-wrap">
+                            <svg id="networkSpeedChart" class="network-speed-chart" role="img" aria-labelledby="networkSpeedChartTitle networkSpeedChartDesc" viewBox="0 0 720 220" preserveAspectRatio="none">
+                                <title id="networkSpeedChartTitle">实时上下行链路速度</title>
+                                <desc id="networkSpeedChartDesc">横轴为测试时间，纵轴为 Mbps；蓝线表示下载，绿线表示上传。</desc>
+                                <g class="network-chart-grid" aria-hidden="true"><path d="M8 26H712 M8 72H712 M8 118H712 M8 164H712 M8 210H712" /></g>
+                                <path class="network-chart-download-area" aria-hidden="true" />
+                                <path class="network-chart-upload-area" aria-hidden="true" />
+                                <path class="network-chart-download" aria-hidden="true" />
+                                <path class="network-chart-upload" aria-hidden="true" />
+                                <circle class="network-chart-download-point" r="5" hidden aria-hidden="true" />
+                                <circle class="network-chart-upload-point" r="5" hidden aria-hidden="true" />
+                                <text class="network-chart-max" x="8" y="18">1.00 Mbps</text>
+                                <text class="network-chart-duration" x="712" y="216" text-anchor="end">1.0 s</text>
+                            </svg>
+                            <p id="networkSpeedChartFallback" class="visually-hidden" aria-live="polite">尚无测速数据。</p>
+                            <div class="network-speed-legend" aria-hidden="true"><span class="download">下载</span><span class="upload">上传</span></div>
+                        </div>
+                        <div class="network-speed-stats" aria-label="链路速度统计">
+                            <div class="network-speed-stat-label">下载</div>
+                            <div><span>当前</span><output id="networkSpeedDownloadCurrent"></output></div>
+                            <div><span>平均</span><output id="networkSpeedDownloadAverage"></output></div>
+                            <div><span>峰值</span><output id="networkSpeedDownloadPeak"></output></div>
+                            <div class="network-speed-stat-label">上传</div>
+                            <div><span>当前</span><output id="networkSpeedUploadCurrent"></output></div>
+                            <div><span>平均</span><output id="networkSpeedUploadAverage"></output></div>
+                            <div><span>峰值</span><output id="networkSpeedUploadPeak"></output></div>
+                        </div>
                         <div id="networkSpeedStatus" class="network-speed-status" role="status" aria-live="polite">尚未开始</div>
-                        <div id="networkSpeedResult" class="network-speed-result" hidden></div>
+                        <div id="networkSpeedSummary" class="network-speed-summary" hidden></div>
+                    </div>
+                </section>
+            </div>
+
+            <div id="appsTab" class="tab-content" style="display: none;">
+                <section class="settings-section startup-settings">
+                    <div class="function-management-heading">
+                        <div>
+                            <h3>应用</h3>
+                            <p>管理 WebWindows 应用的桌面行为。启动项只保存当前使用者的配置，应用自身不能绕过启动管理修改该列表。</p>
+                        </div>
+                    </div>
+
+                    <div class="settings-card">
+                        <label>启动项</label>
+                        <p class="settings-help">桌面会话就绪（session-ready）后，已启用的启动项会按设定延迟依次自动启动。关闭开关即停止该应用的自动启动。</p>
+                        <div id="startupStatus" class="function-manager-status" role="status" aria-live="polite"></div>
+                        <div id="startupList" class="startup-app-list"></div>
                     </div>
                 </section>
             </div>
@@ -223,6 +287,7 @@
             document.querySelectorAll(".tab-content").forEach(div => div.style.display = "none");
             document.getElementById(tabId).style.display = "block";
             if (tabId === "wallpaperTab") window.renderWallpaperLibrary?.();
+            if (tabId === "appsTab") window.renderStartupSettings?.();
         }
 
         function openGuideFromSettings(topic) {

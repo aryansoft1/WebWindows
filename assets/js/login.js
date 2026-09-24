@@ -57,17 +57,46 @@ function login() {
     .then(data => {
       if (data.success) {
         window.top.sessionStorage.setItem('webwindows_user', JSON.stringify(data.user));
-        window.top.sessionStorage.setItem('webwindows_user_nickname', data.user.nickname); // ✅ 新增
+        window.top.sessionStorage.setItem(
+          'webwindows_user_nickname',
+          data.user.nickname || data.user.username || ''
+        );
 
         if (window.parent && typeof window.parent.initUserStatus === 'function') {
-          window.parent.initUserStatus();  
+          window.parent.initUserStatus();
+        }
+        window.top.dispatchEvent(new CustomEvent('webwindows:login', { detail: data.user }));
+
+        const returnTarget = getSafeReturnTarget();
+        if (returnTarget) {
+          // 云资料中的登录是同一窗口内的页面跳转，登录后返回云资料，
+          // 不关闭承载它的窗口或任务栏项目。
+          window.location.replace(returnTarget);
+          return;
+        }
+
+        // 独立登录窗口必须经窗口管理器关闭，保证窗口和任务栏一起移除。
+        if (window.parent && typeof window.parent.closeTargetWindow === 'function') {
+          window.parent.closeTargetWindow('login');
+          return;
+        }
+        window.top.dispatchEvent(new CustomEvent('webwindows:login', { detail: data.user }));
+
+        const returnTarget = getSafeReturnTarget();
+        if (returnTarget) {
+          // 云资料中的登录在同一窗口返回，保留窗口和任务栏项目。
+          window.location.replace(returnTarget);
+          return;
+        }
+
+        if (window.parent && typeof window.parent.closeTargetWindow === 'function') {
+          window.parent.closeTargetWindow('login');
+          return;
         }
 
         const win = window.frameElement?.closest('.window');
-        console.log(win);
         if (win) {
-          const winId = win.id; // 比如 "win-login"
-            // ✅ 在移除之前，通知父页面先删除任务栏图标
+          const winId = win.id;
           if (window.parent && typeof window.parent.removeTaskbarIcon === 'function') {
             window.parent.removeTaskbarIcon(winId);
           }
@@ -85,6 +114,19 @@ function login() {
       drawCaptcha();
       console.log(e)
     });
+}
+
+function getSafeReturnTarget() {
+  const requested = new URLSearchParams(window.location.search).get('return');
+  if (!requested) return '';
+  try {
+    const target = new URL(requested, window.location.origin + '/');
+    if (target.origin !== window.location.origin) return '';
+    if (!target.pathname.startsWith('/cloud/browser/')) return '';
+    return target.pathname + target.search + target.hash;
+  } catch (_) {
+    return '';
+  }
 }
 
 // 可选：屏蔽右键

@@ -7,6 +7,9 @@ dist-weather/
 !.env.example
 cloud/desktalk/chatproxy.config.asp
 !cloud/desktalk/chatproxy.config.example.asp
+# 代理层的真实密钥配置：只提交 .example 模板
+api/*.config.asp
+!api/*.config.example.asp
 
 # Local workspaces, caches, and logs
 tmp/
@@ -34,3 +37,8 @@ patch.diff
 *.mp4
 *.mov
 *.webm
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

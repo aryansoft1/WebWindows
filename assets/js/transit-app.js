@@ -106,6 +106,8 @@
     map: null,
     mapReady: false,
 
+    pendingFit: false,
+
     journey: null,
     resolved: null,
     described: null,
@@ -413,7 +415,13 @@
           }
         });
 
-        updateMap();
+        /*
+         * 地图就绪后补执行查询期间挂起的 fit 请求：
+         * 否则「先出结果、后完成地图初始化」时地图永不跟随。
+         */
+        updateMap({
+          fit: state.pendingFit
+        });
       }
     );
   }
@@ -514,11 +522,21 @@
   function updateMap({
     fit = false
   } = {}) {
-    if (
-      !state.mapReady
-    ) {
+    /*
+     * 地图尚未 load 完时，fit 请求必须挂起而不是丢弃：
+     * 旧实现直接 return，导致先出结果、后完成地图初始化时
+     * fitBounds 永不执行，地图一直停在默认位置（线上事故：
+     * 查询成功但地图不跟随，且没有任何报错）。
+     */
+    if (!state.mapReady) {
+      if (fit) {
+        state.pendingFit = true;
+      }
+
       return;
     }
+
+    state.pendingFit = false;
 
     state.map
       .getSource(

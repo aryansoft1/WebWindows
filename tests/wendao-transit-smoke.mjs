@@ -200,9 +200,9 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260924-5/);
-assert.match(html, /transit-app\.js\?v=20260924-3/);
+assert.match(html, /transit-app\.js\?v=20260924-4/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-4/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-2/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-3/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
 /*
@@ -269,6 +269,22 @@ assert.match(
   transitAppSource,
   /shape\.length >= 2[\s\S]{0,2500}?journey\?\.origin[\s\S]{0,600}?journey\?\.destination/,
   "map must fall back to origin/destination bounds when shape is empty"
+);
+
+/*
+ * 地图不跟随（另一路径）：查询结果先到、地图 load 事件后到时，
+ * updateMap 因 mapReady=false 直接 return，挂起的 fit 必须被记住
+ * 并在地图就绪后补执行，否则地图永远停在默认位置。
+ */
+assert.match(
+  transitAppSource,
+  /if \(!state\.mapReady\) \{[\s\S]{0,120}?state\.pendingFit = true;[\s\S]{0,80}?return;/,
+  "updateMap must remember a fit request while the map is not ready"
+);
+assert.match(
+  transitAppSource,
+  /updateMap\(\{\s*fit: state\.pendingFit\s*\}\)/,
+  "map load handler must replay the pending fit request"
 );
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);

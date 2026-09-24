@@ -1162,10 +1162,10 @@ function saveReadPtr(){ localStorage.setItem(READPTR_KEY, JSON.stringify(READ_PT
 function getConvPtr(convId){ return Number(READ_PTR[convId] || 0) || 0; }
 function setConvPtr(convId, sec){ READ_PTR[convId] = Math.max(getConvPtr(convId), Number(sec)||0); saveReadPtr(); }
 
-/* ===== AI（BigModel OpenAI 兼容接口） ===== */
+/* ===== AI（Groq OpenAI 兼容接口） ===== */
 var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
   var AI_API_URL = '/cloud/desktalk/chatproxy.asp';
-  var AI_MODEL   = 'glm-4.7-flash';
+  var AI_MODEL   = 'openai/gpt-oss-120b';
   var AI_RETRY_DELAYS = [2500, 6000, 12000];
   var AI_HISTORY_LIMIT = 16;
   var aiHistory  = [];
@@ -1222,6 +1222,9 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
     if(status === 401 || code === '1000' || code === '1001' || code === '1003'){
       return '桌讯 AI 的服务凭据暂时不可用，请稍后再试。';
     }
+    if(status === 413){
+      return '对话内容或本次问题过长，已超出模型单次处理上限。我已重置对话上下文，请重新发送。';
+    }
     if(status >= 500){
       return '桌讯 AI 服务暂时不可用，请稍后再试。';
     }
@@ -1244,6 +1247,11 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
       });
     }).then(function(result){
       if(result.ok) return result.data;
+      if(result.status === 413){
+        // 单次请求超出上游 token 上限时重试无意义；清空历史，避免同一条
+        // 超长内容在后续每一条消息上继续触发 413。
+        aiHistory = [];
+      }
       if(isRetryableAIError(result.status, result.data) && attempt < AI_RETRY_DELAYS.length){
         var waitMs = AI_RETRY_DELAYS[attempt];
         if(aiSend) aiSend.textContent = '模型繁忙，' + Math.ceil(waitMs / 1000) + ' 秒后重试…';
@@ -1262,7 +1270,7 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
       if(Array.isArray(data)) return data.map(extractAIText).join('\n');
       if(data.choices && data.choices.length){
         var c=data.choices[0];
-        if(c.message && typeof c.message.content==='string') return c.message.content;
+        if(c.message && typeof c.message.content==='string') return c.message.content || '(空响应)';
         if(typeof c.text==='string') return c.text;
         if(c.delta && c.delta.content) return c.delta.content;
       }
@@ -1331,8 +1339,8 @@ function sendAI(){
     model: AI_MODEL,
     messages: [runtimeContextMessage()].concat(aiHistory),
     temperature: 0.6,
-    max_tokens: 1200,
-    thinking: { type:'disabled' },
+    max_completion_tokens: 1200,
+    reasoning_effort: 'low',
     stream: false
   };
   requestAI(payload, 0).then(function(data){

@@ -10,3 +10,4 @@ These rules apply to every branch and worktree in this repository.
 6. Update `deploy/ftp-manifest.json` with `tools/update-deployment-manifest.mjs`; do not hand-edit integrity hashes.
 7. Upload the deployment manifest and entry page last. Never upload ignored credential configuration.
 8. Run `node tests/deployment-entry-dependency-smoke.mjs`; every same-origin entry-page dependency must exist and be recorded in the deployment manifest.
+9. Task continuity and handoff: every task (OpenCode or Codex) that is interrupted by a network failure must reconnect and resume from the checkpoint; never abandon or exit the task. All tasks executed by OpenCode must be recorded in `docs/HANDOFF_TASK_QUEUE.md`; Codex must read that ledger before continuing and write the status back after each milestone, block, handoff, or completion.

@@ -6,7 +6,7 @@
 2. chatproxy.asp extracts only the latest user question.
 3. index.inc.asp scores topic keywords and selects at most three Markdown knowledge files.
 4. The server injects the formal system prompt and selected knowledge as a system message.
-5. The proxy forces glm-4.7-flash and forwards the request without exposing its credential.
+5. The proxy forces openai/gpt-oss-120b and forwards the request without exposing its credential.
 
 The response header X-WebWindows-Knowledge lists selected topic IDs for testing.
 General questions select no product topic and continue to the base model.

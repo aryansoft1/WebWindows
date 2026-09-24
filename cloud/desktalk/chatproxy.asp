@@ -1,6 +1,8 @@
 <%@LANGUAGE="VBScript" CODEPAGE="65001"%>
 <%
 Option Explicit
+' chatproxy.config.asp assigns DeskTalkBigModelApiKey, so it must stay declared
+' under Option Explicit. The live key is read below from GROQ_API_KEY.
 Dim DeskTalkBigModelApiKey : DeskTalkBigModelApiKey = ""
 Dim KnowledgeIds(31), KnowledgeKeywords(31), KnowledgeFiles(31)
 Dim KnowledgeCount : KnowledgeCount = 0
@@ -19,10 +21,14 @@ End Sub
 Response.Charset = "utf-8"
 Response.ContentType = "application/json; charset=utf-8"
 Response.CacheControl = "no-store"
+On Error Resume Next
+Server.ScriptTimeout = 180
+Err.Clear
+On Error GoTo 0
 
-Const API_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-Const API_MODEL = "glm-4.7-flash"
-Const API_KEY_ENV = "BIGMODEL_API_KEY"
+Const API_URL = "https://api.groq.com/openai/v1/chat/completions"
+Const API_MODEL = "openai/gpt-oss-120b"
+Const API_KEY_ENV = "GROQ_API_KEY"
 Const MAX_REQUEST_BYTES = 1048576
 
 If Request.ServerVariables("REQUEST_METHOD") <> "POST" Then
@@ -47,6 +53,7 @@ If byteCount <= 0 Or byteCount > MAX_REQUEST_BYTES Then
 End If
 
 Dim requestBody : requestBody = BinaryToUtf8(Request.BinaryRead(byteCount))
+requestBody = StripUnsupportedParams(requestBody)
 requestBody = ForceModel(requestBody, API_MODEL)
 
 Dim userQuestion : userQuestion = ExtractLastUserMessage(requestBody)
@@ -75,7 +82,7 @@ If Err.Number <> 0 Then
 End If
 If Err.Number <> 0 Then FailProxy
 
-http.setTimeouts 10000, 10000, 30000, 60000
+http.setTimeouts 10000, 10000, 30000, 120000
 http.open "POST", API_URL, False
 http.setRequestHeader "Content-Type", "application/json"
 http.setRequestHeader "Authorization", "Bearer " & apiKey
@@ -101,6 +108,21 @@ Else
   Response.Status = "200 OK"
 End If
 Response.Write http.responseText
+
+' Older clients cached in the browser may still send the GLM-era "thinking"
+' flag, which Groq rejects as an unknown parameter. Strip it together with one
+' adjacent comma so the forwarded JSON stays valid.
+Function StripUnsupportedParams(json)
+  StripUnsupportedParams = CStr(json & "")
+  Dim re : Set re = New RegExp
+  re.IgnoreCase = True
+  re.Global = True
+  re.Pattern = ",\s*""thinking""\s*:\s*\{\s*""type""\s*:\s*""[^""]*""\s*\}"
+  StripUnsupportedParams = re.Replace(StripUnsupportedParams, "")
+  re.Pattern = """thinking""\s*:\s*\{\s*""type""\s*:\s*""[^""]*""\s*\},\s*"
+  StripUnsupportedParams = re.Replace(StripUnsupportedParams, "")
+  Set re = Nothing
+End Function
 
 Function BinaryToUtf8(binaryData)
   Dim stream : Set stream = Server.CreateObject("ADODB.Stream")

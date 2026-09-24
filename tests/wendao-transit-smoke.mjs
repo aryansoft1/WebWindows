@@ -300,9 +300,9 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260924-6/);
-assert.match(html, /transit-app\.js\?v=20260924-7/);
+assert.match(html, /transit-app\.js\?v=20260924-8/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-5/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-6/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-7/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
 /*
@@ -345,6 +345,16 @@ assert.match(
   transitAppSource,
   /gtfs_trip_unavailable:\s*\n?\s*"errGtfsUnavailable"/,
   "app must map gtfs_trip_unavailable to a user-facing message"
+);
+
+/*
+ * GTFS 上游故障时不能显示「未在中国铁路车站表中找到该站名」——
+ * 查海外时 12306 本就查不到，必须提示公共交通上游不可用。
+ */
+assert.match(
+  transitAppSource,
+  /gtfsUnavailable[\s\S]{0,260}?T\("errGtfsUnavailable"\)/,
+  "upstream GTFS failure must surface its own message, not the rail station error"
 );
 
 /*

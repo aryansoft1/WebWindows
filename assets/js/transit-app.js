@@ -1355,6 +1355,20 @@
         String(fallbackCode || "")
       );
 
+    /*
+     * GTFS 上游故障（班次详情取不到）不是「没有这条线路」，
+     * 而是「公共交通数据源暂时不可用」——此时即使 12306 也查不到
+     * （海外站点本就不在中国铁路表里），也必须提示上游故障，
+     * 否则查海外会显示「未在中国铁路车站表中找到该站名」，误导用户。
+     */
+    const gtfsUnavailable =
+      String(fallbackCode || "") ===
+      "gtfs_trip_unavailable";
+
+    if (gtfsUnavailable) {
+      return T("errGtfsUnavailable");
+    }
+
     const railMissed =
       [
         "station_not_found",

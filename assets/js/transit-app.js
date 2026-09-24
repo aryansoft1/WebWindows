@@ -1414,6 +1414,21 @@
         error?.name ===
         "AbortError"
       ) {
+        /*
+         * 被取消：若已有更新的查询接手（state.controller 已换人），
+         * 交由那轮刷新状态；否则说明这轮被外部中断且无人接手，
+         * 必须把状态改回可重试，绝不能永久停在「照会中」。
+         */
+        if (state.controller !== controller) {
+          return;
+        }
+
+        setStatus(
+          "transitPrompt",
+          {},
+          true
+        );
+
         return;
       }
 
@@ -1970,10 +1985,20 @@
   $("transit-date-time").value =
     localDateTimeValue();
 
+  /*
+   * 必须 preventDefault：<form> 是 method="get"，若放任原生提交，
+   * 浏览器会在 JS 查询刚发起时导航/刷新本页，beforeunload 随即
+   * abort 掉 state.controller，查询被自己杀掉，界面永远停在
+   * 「GTFS照会中」（线上事故：transit-proxy 显示 canceled、
+   * 无 leftTicket、且与点击次数无关）。
+   */
   $("transit-search-form")
     .addEventListener(
       "submit",
-      searchJourney
+      event => {
+        event.preventDefault();
+        searchJourney();
+      }
     );
 
   $("transit-tab").addEventListener(

@@ -200,9 +200,23 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260924-3/);
-assert.match(html, /transit-app\.js\?v=20260924-1/);
+assert.match(html, /transit-app\.js\?v=20260924-2/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-2/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
+
+/*
+ * 线上事故回归：<form method="get"> 的 submit 监听器必须 preventDefault。
+ * 否则点「交通を検索」时 JS 查询刚发起，浏览器就原生 GET 提交并导航，
+ * beforeunload 随即 abort 掉 state.controller 把查询自己杀掉——
+ * 界面永远停在「GTFS照会中」，transit-proxy 显示 (canceled)，
+ * 从不发出 leftTicket，且与点击次数无关（用户只点一次也复现）。
+ */
+assert.match(
+  transitAppSource,
+  /addEventListener\(\s*"submit",[\s\S]{0,200}?preventDefault\(\)/,
+  "transit search form must preventDefault on submit"
+);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);
 

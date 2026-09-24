@@ -2616,8 +2616,17 @@
           source: "transitland"
         };
       } catch (error) {
+        /*
+         * 只有「用户主动取消」（外部 signal 已中止）才整体放弃。
+         * GTFS 阶段自身的 AbortError（fetchWithTimeout 内部控制器、
+         * 阶段预算超时、或上游偶发中断）必须继续回落 12306，
+         * 否则界面会永远停在「照会中」且一个铁路请求都不会发出
+         * （线上事故：连点查询后 transit-proxy 显示 canceled，
+         *   onFallback 未触发，leftTicket 从未发出）。
+         */
         if (
-          error?.name === "AbortError"
+          error?.name === "AbortError" &&
+          signal?.aborted
         ) {
           throw error;
         }
@@ -2645,7 +2654,24 @@
             "rail_timeout",
             "Rail query timed out.",
             railController
-          ),
+          ).catch(error => {
+            /*
+             * 12306 是最后兜底：此处 AbortError 若是用户取消则照常上抛；
+             * 若是阶段内部中止（预算超时/请求中断），转成显式错误，
+             * 避免界面停在「照会中」却什么也不显示。
+             */
+            if (
+              error?.name === "AbortError" &&
+              !signal?.aborted
+            ) {
+              throw providerError(
+                "rail_failed",
+                "Rail query was interrupted."
+              );
+            }
+
+            throw error;
+          }),
 
         source: "china-rail"
       };

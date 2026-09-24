@@ -199,9 +199,9 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260924-2/);
+assert.match(html, /transit-providers\.js\?v=20260924-3/);
 assert.match(html, /transit-app\.js\?v=20260924-1/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-1/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-2/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);
@@ -846,8 +846,40 @@ const networkFailure = await rail.searchJourneyWithFallback({
 assert.equal(networkFailure.source, "china-rail");
 assert.equal(hardFallback, "transit_failed");
 
-/* 用户取消 → AbortError 原样上抛，绝不回落到 12306 */
-let cancelledError = null;
+/*
+ * GTFS 阶段的 AbortError 必须回落到 12306，而不是整体放弃。
+ * 旧实现对任意 AbortError 直接 rethrow，固化了线上事故：
+ * 连点查询时 transit-proxy 被取消 -> onFallback 不触发、
+ * leftTicket 从不发出、界面永远停在「照会中」。
+ * 「用户取消」只由外部已中止的 signal 表示（见下方 userCancel 断言）。
+ */
+let gtfsAbortFellBack = null;
+const gtfsAbortOutcome = await rail.searchJourneyWithFallback({
+  transitland: {
+    searchJourney: async () => {
+      const error = new Error("aborted");
+      error.name = "AbortError";
+      throw error;
+    }
+  },
+  chinaRail: {
+    searchJourney: async () => journeyStub
+  },
+  origin: "a",
+  destination: "b",
+  departureTime: "2026-09-24T08:10",
+  onFallback: () => {
+    gtfsAbortFellBack = true;
+  }
+});
+assert.equal(gtfsAbortOutcome.source, "china-rail");
+assert.equal(gtfsAbortFellBack, true);
+
+/* 用户主动取消（外部 signal 已中止）→ AbortError 原样上抛，不查询 12306 */
+let userCancelError = null;
+let userCancelRailCalls = 0;
+const userCancelController = new AbortController();
+userCancelController.abort();
 try {
   await rail.searchJourneyWithFallback({
     transitland: {
@@ -859,17 +891,19 @@ try {
     },
     chinaRail: {
       searchJourney: async () => {
-        throw new Error("rail provider must not run after cancel");
+        userCancelRailCalls += 1;
+        throw new Error("rail provider must not run after user cancel");
       }
     },
     origin: "a",
     destination: "b",
     departureTime: "2026-09-24T08:10"
-  });
+  }, userCancelController.signal);
 } catch (error) {
-  cancelledError = error;
+  userCancelError = error;
 }
-assert.equal(cancelledError?.name, "AbortError");
+assert.equal(userCancelError?.name, "AbortError", "用户主动取消必须保持 AbortError 语义");
+assert.equal(userCancelRailCalls, 0, "用户已取消时不得再查询 12306");
 
 /* ---------- 短预算：挂起必须有界，绝不永久「照会中」 ---------- */
 
@@ -928,6 +962,23 @@ try {
 }
 assert.equal(railTimeout?.name, "TimeoutError");
 assert.equal(railTimeout?.code, "rail_timeout");
+
+/* 中止一轮查询后，下一轮用新 signal 必须照常工作（不可被污染） */
+let afterCancelCalls = 0;
+const afterCancel = await impatient.searchJourneyWithFallback({
+  transitland: { searchJourney: () => new Promise(() => {}) },
+  chinaRail: {
+    searchJourney: async () => {
+      afterCancelCalls += 1;
+      return journeyStub;
+    }
+  },
+  origin: "a",
+  destination: "b",
+  departureTime: "2026-09-24T08:10"
+});
+assert.equal(afterCancel.source, "china-rail", "重新查询必须照常回落");
+assert.equal(afterCancelCalls, 1);
 
 /* 单请求 fetch 超时：TimeoutError + code 可与 AbortError 严格区分 */
 let singleTimeout = null;

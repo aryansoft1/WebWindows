@@ -31,6 +31,7 @@
 |---|---|---|---|---|---|---|
 | T-000 | 建立本同步台账并写入 AGENTS.md 规则 | ✅ | 台账 + 规则 9 已提交 | — | 2026-09-24 | OpenCode |
 | T-009 | 问乡（问道 transit）Q2 同城查询修复并上线 `2026.09.24.2` | ✅ | 根因确诊（12306 为同城级查询，客户端按查询站名切片经停表→失败）；`api/railway-proxy.asp` 输出行内 fromCode/toCode/站名（新增 ParseNameMap）+ `transit-providers.js` 候选车次有界回落（≤5，全败保留真实错误码）；新增同城/404 回落/全败 3 场景防回归；commit `159ca1e` 推送、preflight 通过、8 文件上传回读全过（备份 marker `20260924-wendao-rail-schedule-fix`）、入口冒烟 176 deps、**线上 E2E Q1+Q2 全过（E2E_ALL_PASS）**；工作区恢复完成（子模块 10/10 == 基线；父 37 行 = 基线46 − 9 个已被 `33ef9e5` 吸收进仓库的文件，内容哈希 `efec9db` 工作区/stash/HEAD 三方一致，即早前"staged 文件谜团"实为 T-000 提交扫入索引）；终验 **86/86** | — | 2026-09-24 | OpenCode |
+| T-010 | `2026.09.24.2` 同步上传独立复核（用户「同步后上传」请求收口） | ✅ | 确认并行任务已收口：commit `159ca1e` 推送、manifest/catalog `2026.09.24.2`、线上 `release-version.asp` 报 `2026.09.24.2`（prev `2026.09.24.1`）；独立复核全过：上版 7 文件备份哈希 == 上版 manifest（规则 5）、FTP 源码回读 3/3（`railway-proxy`/`release-version`/`mobile-version` `.asp`）== 本地 manifest、HTTP 静态回读一致、线上 manifest == 本地（`1cd544a13d30`）、preflight `already_deployed`、门禁三连过（清单 256、入口依赖 176、mobile 契约）、全量 **86/86**；`stash@{0}` 与 r3 临时 exclude 已由并行任务恢复/移除、启动项集成回工作区、启动项/visitor 冒烟转绿 | 启动项集成（settings/index/main/app-registry/settings.js/css，混有 login/dist/package 等无关 WIP）未提交未上线；线上 `settings.html`/`index.html` 与 HEAD 内容分叉见 T-006，是否提交+上线待用户决策 | 2026-09-24 | OpenCode |
 
 > 新任务从 `T-001` 起递增；每行更新时**同时刷新「更新时间」**。
 

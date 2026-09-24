@@ -200,9 +200,9 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260924-5/);
-assert.match(html, /transit-app\.js\?v=20260924-4/);
+assert.match(html, /transit-app\.js\?v=20260924-5/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-4/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-3/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-4/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
 /*
@@ -285,6 +285,22 @@ assert.match(
   transitAppSource,
   /updateMap\(\{\s*fit: state\.pendingFit\s*\}\)/,
   "map load handler must replay the pending fit request"
+);
+
+/*
+ * MapLibre 的 "load" 要等全部样式资源，OpenFreeMap 的部分图层常年不结束，
+ * 实测 loaded() 恒为 false、mapReady 永为 false、fit 永挂起。
+ * 必须另有 idle / 轮询兜底把 mapReady 置起来。
+ */
+assert.match(
+  transitAppSource,
+  /state\.map\.on\(\s*"idle",\s*markMapReady\s*\)/,
+  "map must also mark ready on idle (load may never fire)"
+);
+assert.match(
+  transitAppSource,
+  /setInterval\([\s\S]{0,320}?isStyleLoaded\?\.\(\)[\s\S]{0,120}?markMapReady\(\)/,
+  "map readiness must have a style-loaded polling fallback"
 );
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);

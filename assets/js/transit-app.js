@@ -320,11 +320,19 @@
       "top-right"
     );
 
-    state.map.on(
-      "load",
-      () => {
-        state.mapReady =
-          true;
+    /*
+     * 地图就绪判定：MapLibre 的 "load" 要等全部样式资源完成，
+     * OpenFreeMap 的部分图层（字体/3D）常年不结束，导致 load
+     * 永不触发 -> mapReady 永为 false -> 查询结果不渲染到地图、
+     * 也不 fitBounds（线上事故：查询成功但地图毫无反应）。
+     * 因此除 "load" 外，另用 idle + 轮询兜底。
+     */
+    const markMapReady = () => {
+      if (state.mapReady) {
+        return;
+      }
+
+      state.mapReady = true;
 
         state.map.addSource(
           "transit-shape",
@@ -422,8 +430,27 @@
         updateMap({
           fit: state.pendingFit
         });
+    };
+
+    state.map.on("load", markMapReady);
+    state.map.on("idle", markMapReady);
+
+    /*
+     * 兜底轮询：样式已可用（isStyleLoaded）即视为就绪，
+     * 不再等待可能永不结束的 "load"。
+     */
+    const readyPoll = setInterval(() => {
+      if (
+        !state.mapReady &&
+        state.map?.isStyleLoaded?.()
+      ) {
+        markMapReady();
       }
-    );
+
+      if (state.mapReady) {
+        clearInterval(readyPoll);
+      }
+    }, 400);
   }
 
   function vehicleIcon() {

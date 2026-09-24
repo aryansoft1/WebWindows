@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.24.9",
-  "catalogVersion": "2026.09.24.9",
-  "generatedAt": "2026-09-24T11:42:29.409Z",
+  "releaseVersion": "2026.09.24.10",
+  "catalogVersion": "2026.09.24.10",
+  "generatedAt": "2026-09-24T11:45:56.455Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -262,7 +262,7 @@
     "api/railway-proxy.asp",
     "assets/js/startup-manager.js"
   ],
-  "previousReleaseVersion": "2026.09.24.8",
+  "previousReleaseVersion": "2026.09.24.9",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -803,8 +803,8 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "2c4d71e21b28a85300b10022a23dcc3b3edec638cd16885083f0a3eda1c335b4",
-      "size": 14411
+      "sha256": "c87848c22dcfe7728b529ca221a423c34327ffb5e25b098bc8bbd8a7c93a711e",
+      "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1111,7 +1111,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "d882c11a91c45b97257921ad1ff9e249d83c555b44c21b0a507a00f8b74979ad",
+      "sha256": "ecc9d51a4dae6291cae2a37f5e42fcb9e3872fd9df875792ee5c79b6eec033f0",
       "size": 16701
     },
     "assets/css/navigation.css": {
@@ -1182,8 +1182,8 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "3a3c012daa9b93243349fb47f69504f162ab2762439776d56da856355ac03fa1",
-      "size": 41336
+      "sha256": "1faa0927fa4131dcd0b018658062281244f7f172049522a92d6903f409904f3b",
+      "size": 41643
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
@@ -1278,7 +1278,7 @@
       "size": 8154
     }
   },
-  "releaseScope": "wendao-transit-map-ready-fallback",
+  "releaseScope": "wendao-transit-map-ready-container",
   "uploadFiles": [
     "api/railway-proxy.asp",
     "assets/js/transit-providers.js",

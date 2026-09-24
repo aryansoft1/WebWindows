@@ -200,9 +200,9 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260924-5/);
-assert.match(html, /transit-app\.js\?v=20260924-5/);
+assert.match(html, /transit-app\.js\?v=20260924-6/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-4/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-4/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-5/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
 /*
@@ -299,8 +299,8 @@ assert.match(
 );
 assert.match(
   transitAppSource,
-  /setInterval\([\s\S]{0,320}?isStyleLoaded\?\.\(\)[\s\S]{0,120}?markMapReady\(\)/,
-  "map readiness must have a style-loaded polling fallback"
+  /setInterval\([\s\S]{0,700}?clientWidth > 0[\s\S]{0,200}?clientHeight > 0[\s\S]{0,300}?markMapReady\(\)/,
+  "map readiness must have a container-size polling fallback"
 );
 assert.doesNotMatch(html, /transit-app\.js\?v=20260923-1/);
 assert.doesNotMatch(html, /road\.html\?v=20260921-12/);

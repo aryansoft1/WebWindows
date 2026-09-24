@@ -436,14 +436,23 @@
     state.map.on("idle", markMapReady);
 
     /*
-     * 兜底轮询：样式已可用（isStyleLoaded）即视为就绪，
-     * 不再等待可能永不结束的 "load"。
+     * 兜底轮询：不再依赖 load / idle / isStyleLoaded
+     * （实测 OpenFreeMap 下三者都可能长时间为 false），
+     * 只要地图实例与样式对象可用、容器已有尺寸，就视为就绪。
      */
     const readyPoll = setInterval(() => {
-      if (
-        !state.mapReady &&
-        state.map?.isStyleLoaded?.()
-      ) {
+      const container =
+        state.map?.getContainer?.();
+
+      const usable =
+        state.map &&
+        state.mapReady === false &&
+        state.map.getStyle &&
+        container &&
+        container.clientWidth > 0 &&
+        container.clientHeight > 0;
+
+      if (usable) {
         markMapReady();
       }
 

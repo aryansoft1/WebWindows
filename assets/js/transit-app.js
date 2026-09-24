@@ -964,6 +964,29 @@
         time
       );
 
+      /*
+       * 运行中 / 已通过车次加状态标签：
+       * 12306 当天不返回已发车车次，能出现在这里说明来自代理的当日快照，
+       * 标出来避免用户误以为点错了车次。
+       */
+      const stateKey =
+        STATE_KEYS[item.state];
+
+      if (stateKey) {
+        const badge =
+          document.createElement(
+            "em"
+          );
+
+        badge.className =
+          "transit-candidate-state";
+
+        badge.textContent =
+          T(stateKey);
+
+        button.appendChild(badge);
+      }
+
       list.appendChild(button);
     });
   }

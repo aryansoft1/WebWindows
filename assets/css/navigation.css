@@ -456,6 +456,21 @@ select {
   background: #e8f6ef;
   color: var(--green);
 }
+/* 运行中 / 已通过车次的状态标签（来自代理的当日快照） */
+.transit-candidate-list button .transit-candidate-state {
+  justify-self: start;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: var(--muted);
+  font-size: .66rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+.transit-candidate-list button.active .transit-candidate-state {
+  background: #fff;
+  color: var(--green);
+}
 .map-panel.sky-active .pick-tools,
 .map-panel.sky-active .fit-route,
 .map-panel.sky-active .navigation-hud,

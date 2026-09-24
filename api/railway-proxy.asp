@@ -27,6 +27,16 @@ Const RAIL_INIT_URL = "https://kyfw.12306.cn/otn/leftTicket/init"
 Const RAIL_SCHEDULE_URL = "https://kyfw.12306.cn/otn/czxx/queryByTrainNo"
 Const RAIL_STATION_TTL_SECONDS = 43200
 Const RAIL_QUERY_TTL_SECONDS = 30
+'
+' 当日全量快照（实测依据）：
+'   12306 leftTicket 对「当天」只返回尚未发车的车次——北京 2026-09-24 23:12
+'   直连 queryG 仅剩 2 趟（23:25/23:40），已发车/运行中车次在上游就被过滤，
+'   并非本代理所为（queryA/queryZ/query/lcQuery 全部 302，只有 queryG 可用）。
+'   因此把每次查到的车次按「日期+区间」合并进内存快照：当天早些时候查过的
+'   车次即使此刻已发车也仍可返回，运行中车次才能被搜到并按经停时刻定位。
+'   只用 Application 内存，不落盘、不额外请求上游，2 天后过期。
+'
+Const RAIL_SNAPSHOT_TTL_SECONDS = 172800
 Const RAIL_MAX_TRAINS = 300
 Const RAIL_MAX_STOPS = 120
 
@@ -143,12 +153,31 @@ Sub SendLeftTicket()
     SendError "400 Bad Request", "invalid_station", "车站电报码不合法。"
   End If
 
+  '
+  ' includeElapsed=1：返回「当日快照」，即把当天已抓到过的车次一并返回，
+  ' 从而包含 12306 当天已过滤掉的已发车/运行中车次。
+  '
+  Dim includeElapsed
+  includeElapsed = IsTruthy(Request.QueryString("includeElapsed"))
+
   Dim cacheKey
   cacheKey = "webwindows.railway.lt." & travelDate & "." & fromCode & "." & toCode
 
+  Dim snapshotKey
+  snapshotKey = "webwindows.railway.snap." & travelDate & "." & fromCode & "." & toCode
+
   Dim payload
   payload = CacheRead(cacheKey, RAIL_QUERY_TTL_SECONDS)
+
   If Len(payload) > 0 Then
+    If includeElapsed Then
+      Dim cachedSnapshot
+      cachedSnapshot = SnapshotRead(snapshotKey)
+      If Len(cachedSnapshot) > 0 Then
+        Response.Write WithSnapshotFlag(cachedSnapshot)
+        Exit Sub
+      End If
+    End If
     Response.Write payload
     Exit Sub
   End If
@@ -180,26 +209,56 @@ Sub SendLeftTicket()
   Next
 
   If Not ok Then
+    '
+    ' 上游对过去日期直接拒绝（实测 502 upstream_blocked）。
+    ' 若本地快照里已有该日车次，仍照常返回，避免「昨天明明查得到、
+    ' 今天却搜不到」的割裂感。
+    '
+    Dim failedSnapshot
+    failedSnapshot = SnapshotRead(snapshotKey)
+    If includeElapsed And Len(failedSnapshot) > 0 Then
+      Response.Write WithSnapshotFlag(failedSnapshot)
+      Exit Sub
+    End If
     SendError "502 Bad Gateway", "upstream_blocked", "12306 余票接口暂时不可用，请稍后重试。"
   End If
 
-  payload = BuildLeftTicketJson(body, travelDate, fromCode, toCode)
-  If Len(payload) = 0 Then
+  Dim freshRows, fromName, toName, messageText
+  ParseLeftTicketRows body, travelDate, fromCode, toCode, freshRows, fromName, toName, messageText
+
+  If Not IsArrayNonEmpty(freshRows) And Len(messageText) = 0 Then
     SendError "502 Bad Gateway", "parse_failed", "无法解析 12306 余票数据。"
   End If
 
+  payload = ComposeLeftTicketJson(travelDate, fromCode, toCode, fromName, toName, messageText, freshRows, False)
   CacheWrite cacheKey, payload
+
+  ' 合并进当日快照（同车次以本次结果为准），供后续 includeElapsed / 过去日期回看
+  Dim mergedRows
+  mergedRows = SnapshotMergeRows(snapshotKey, freshRows)
+  SnapshotWrite snapshotKey, ComposeLeftTicketJson(travelDate, fromCode, toCode, fromName, toName, messageText, mergedRows, False)
+
+  If includeElapsed And IsArrayNonEmpty(mergedRows) Then
+    Response.Write WithSnapshotFlag(ComposeLeftTicketJson(travelDate, fromCode, toCode, fromName, toName, messageText, mergedRows, False))
+    Exit Sub
+  End If
+
   Response.Write payload
 End Sub
 
-Function BuildLeftTicketJson(ByVal body, ByVal travelDate, ByVal fromCode, ByVal toCode)
-  BuildLeftTicketJson = ""
+Sub ParseLeftTicketRows(ByVal body, ByVal travelDate, ByVal fromCode, ByVal toCode, ByRef rowsOut, ByRef fromNameOut, ByRef toNameOut, ByRef messageOut)
+  rowsOut = Empty
+  fromNameOut = fromCode
+  toNameOut = toCode
+  messageOut = ""
 
   Dim fromName, toName
   fromName = MapName(body, fromCode)
   toName = MapName(body, toCode)
   If Len(fromName) = 0 Then fromName = fromCode
   If Len(toName) = 0 Then toName = toCode
+  fromNameOut = fromName
+  toNameOut = toName
 
   ' 12306 是同城级查询：结果行的发站/到站可能是同城的其他车站
   '（查「成都」会返回「成都东」发车的车次）。把 map 解析一次，
@@ -209,9 +268,6 @@ Function BuildLeftTicketJson(ByVal body, ByVal travelDate, ByVal fromCode, ByVal
 
   Dim block
   block = ExtractArrayBlock(body, "result")
-
-  Dim trains
-  trains = ""
 
   If Len(block) > 0 Then
     Dim re
@@ -237,19 +293,179 @@ Function BuildLeftTicketJson(ByVal body, ByVal travelDate, ByVal fromCode, ByVal
 
     If count > 0 Then
       ReDim Preserve rows(count - 1)
-      trains = Join(rows, ",")
+      rowsOut = rows
     End If
     Set re = Nothing
   End If
 
-  Dim messageText
-  messageText = JsonField(body, "messages")
+  messageOut = JsonField(body, "messages")
+End Sub
 
-  BuildLeftTicketJson = "{""date"":""" & JsonEscape(travelDate) & _
+Function ComposeLeftTicketJson(ByVal travelDate, ByVal fromCode, ByVal toCode, ByVal fromName, ByVal toName, ByVal messageText, ByRef rows, ByVal snapshotFlag)
+  Dim trains
+  trains = ""
+  If IsArrayNonEmpty(rows) Then
+    trains = Join(rows, ",")
+  End If
+
+  Dim flag
+  flag = ""
+  If snapshotFlag Then
+    flag = ",""snapshot"":true"
+  End If
+
+  ComposeLeftTicketJson = "{""date"":""" & JsonEscape(travelDate) & _
     """,""from"":{""code"":""" & JsonEscape(fromCode) & """,""name"":""" & JsonEscape(fromName) & """}," & _
     """to"":{""code"":""" & JsonEscape(toCode) & """,""name"":""" & JsonEscape(toName) & """}," & _
     """message"":""" & JsonEscape(messageText) & """," & _
-    """trains"":[" & trains & "]}"
+    """trains"":[" & trains & "]" & flag & "}"
+End Function
+
+' ---------------------------------------------------------------------------
+' 当日快照
+' ---------------------------------------------------------------------------
+Function SnapshotRead(ByVal key)
+  Dim value
+  value = CacheRead(key, RAIL_SNAPSHOT_TTL_SECONDS)
+  If Len(value) = 0 Then
+    ' 过期条目顺手清掉，避免 Application 随查询组合无限增长
+    On Error Resume Next
+    Application.Lock
+    Application.UnLock key
+    On Error GoTo 0
+  End If
+  SnapshotRead = value
+End Function
+
+Sub SnapshotWrite(ByVal key, ByVal value)
+  CacheWrite key, value
+End Sub
+
+'
+' 把新抓到的车次并入快照，返回合并后的行数组。
+' 存储格式：每行 "trainNo<TAB>{json}"，以 vbLf 分隔；
+' 合并键取 trainNo，同车次以最新一次结果为准。
+'
+Function SnapshotMergeRows(ByVal key, ByRef freshRows)
+  Dim dict
+  Set dict = Server.CreateObject("Scripting.Dictionary")
+  dict.CompareMode = 1
+
+  Dim existing
+  existing = SnapshotRead(key)
+
+  If Len(existing) > 0 Then
+    Dim block, pieces, i, row, storedNo
+    block = ExtractTrainsArray(existing)
+    If Len(block) > 0 Then
+      pieces = Split(block, "},{")
+      For i = 0 To UBound(pieces)
+        row = CStr(pieces(i))
+        If Left(row, 1) <> "{" Then row = "{" & row
+        If Right(row, 1) <> "}" Then row = row & "}"
+        storedNo = JsonStringField(row, "trainNo")
+        If IsTrainNo(storedNo) And Not dict.Exists(storedNo) Then
+          dict.Add storedNo, row
+        End If
+      Next
+    End If
+  End If
+
+  If IsArrayNonEmpty(freshRows) Then
+    Dim j, freshRow, freshNo
+    For j = LBound(freshRows) To UBound(freshRows)
+      freshRow = CStr(freshRows(j))
+      freshNo = JsonStringField(freshRow, "trainNo")
+      If IsTrainNo(freshNo) Then
+        If dict.Exists(freshNo) Then
+          dict(freshNo) = freshRow
+        Else
+          dict.Add freshNo, freshRow
+        End If
+      End If
+    Next
+  End If
+
+  If dict.Count = 0 Then
+    SnapshotMergeRows = Empty
+    Exit Function
+  End If
+
+  Dim keys, result(), count, k
+  keys = dict.Keys
+  ReDim result(RAIL_MAX_TRAINS)
+  count = 0
+  For Each k In keys
+    If count <= RAIL_MAX_TRAINS Then
+      result(count) = CStr(dict(k))
+      count = count + 1
+    End If
+  Next
+
+  If count = 0 Then
+    SnapshotMergeRows = Empty
+    Exit Function
+  End If
+
+  ReDim Preserve result(count - 1)
+  SnapshotMergeRows = result
+End Function
+
+Function ExtractTrainsArray(ByVal payload)
+  ExtractTrainsArray = ""
+  Dim marker, startPos, endPos
+  ' marker 运行值 = "trains":[（用 Chr(34) 规避 VBScript 连续引号歧义）
+  marker = Chr(34) & "trains" & Chr(34) & ":["
+  startPos = InStr(payload, marker)
+  If startPos = 0 Then Exit Function
+  startPos = startPos + Len(marker)
+  endPos = InStrRev(payload, "]")
+  If endPos <= startPos Then Exit Function
+  ExtractTrainsArray = Mid(payload, startPos, endPos - startPos)
+End Function
+
+Function WithSnapshotFlag(ByVal payload)
+  Dim trimmed
+  trimmed = Trim(CStr(payload))
+  If Len(trimmed) = 0 Then
+    WithSnapshotFlag = trimmed
+    Exit Function
+  End If
+  If Right(trimmed, 1) <> "}" Then
+    WithSnapshotFlag = trimmed
+    Exit Function
+  End If
+  If InStr(trimmed, Chr(34) & "snapshot" & Chr(34) & ":") > 0 Then
+    WithSnapshotFlag = trimmed
+    Exit Function
+  End If
+  WithSnapshotFlag = Left(trimmed, Len(trimmed) - 1) & "," & Chr(34) & "snapshot" & Chr(34) & ":true}"
+End Function
+
+Function JsonStringField(ByVal json, ByVal fieldName)
+  JsonStringField = ""
+  Dim marker, startPos, endPos
+  ' marker 运行值 = "trainNo":（首尾各一个双引号 + 冒号）
+  marker = Chr(34) & fieldName & Chr(34) & ":"
+  startPos = InStr(json, marker)
+  If startPos = 0 Then Exit Function
+  startPos = startPos + Len(marker)
+  endPos = InStr(startPos, json, Chr(34))
+  If endPos = 0 Or endPos <= startPos Then Exit Function
+  JsonStringField = Mid(json, startPos, endPos - startPos)
+End Function
+
+Function IsArrayNonEmpty(ByVal value)
+  IsArrayNonEmpty = False
+  If Not IsArray(value) Then Exit Function
+  If UBound(value) < LBound(value) Then Exit Function
+  IsArrayNonEmpty = True
+End Function
+
+Function IsTruthy(ByVal value)
+  Dim normalized
+  normalized = LCase(Trim(CStr(value)))
+  IsTruthy = (normalized = "1" Or normalized = "true" Or normalized = "yes" Or normalized = "on")
 End Function
 
 Function BuildTrainJson(ByVal fields, ByVal fallbackFromName, ByVal fallbackToName, ByVal nameMap)

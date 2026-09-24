@@ -9,6 +9,7 @@ const positionSource = await read("../assets/js/transit-position.js");
 const appSource = await read("../assets/js/navigation-app.js");
 const transitAppSource = await read("../assets/js/transit-app.js");
 const enhancementSource = await read("../assets/js/navigation-enhancements.js");
+const cssSource = await read("../assets/css/navigation.css");
 const html = await read("../road.html");
 
 function loadContext(source, filename, sandbox = {}) {
@@ -299,11 +300,106 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260924-6/);
-assert.match(html, /transit-app\.js\?v=20260924-9/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-5/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260924-8/);
+assert.match(html, /transit-providers\.js\?v=20260925-1/);
+assert.match(html, /transit-app\.js\?v=20260925-1/);
+assert.match(html, /navigation\.css\?v=20260925-1/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260924-9/);
+assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
+
+/*
+ * 「运行中/已通过车次」事故回归（T-017）：
+ * 实测 12306 对当天只返回未发车车次（北京 23:12 直连 queryG 仅剩 2 趟），
+ * 已发车/运行中车次在上游就被过滤，客户端再怎么排序也搜不到。
+ * 修法＝代理侧「当日快照」+ 客户端按北京时区判定状态，必须都有：
+ *   代理：includeElapsed 入参、快照合并/过期、快照标记
+ *   客户端：北京时间判定、running/past/upcoming 分组、默认选中逻辑
+ */
+const railwayProxySource = await read("../api/railway-proxy.asp");
+
+assert.match(
+  railwayProxySource,
+  /includeElapsed/,
+  "proxy must accept includeElapsed to return the same-day snapshot"
+);
+assert.match(
+  railwayProxySource,
+  /RAIL_SNAPSHOT_TTL_SECONDS/,
+  "snapshot must expire so Application state cannot grow forever"
+);
+assert.match(
+  railwayProxySource,
+  /Function SnapshotMergeRows\(/,
+  "fresh trains must be merged into the same-day snapshot"
+);
+assert.match(
+  railwayProxySource,
+  /Function WithSnapshotFlag\(/,
+  "snapshot responses must be marked so the client can tell"
+);
+assert.match(
+  railwayProxySource,
+  /jsonStringField\(row, "trainNo"\)/i,
+  "snapshot merge must key on trainNo"
+);
+
+/*
+ * 引号陷阱守卫：VBScript 里 """ 是「一个双引号」，而四个连续引号会被
+ * 解析成两段（实测 `"""" & x & """:"` 静默少一个引号、marker 永远匹配不到）。
+ * 快照解析依赖精确 marker，必须用 Chr(34) 显式构造。
+ */
+assert.doesNotMatch(
+  railwayProxySource,
+  /marker = """"/,
+  "VBScript literals must use Chr(34), four quotes silently split the literal"
+);
+assert.match(
+  railwayProxySource,
+  /marker = Chr\(34\) & "trains" & Chr\(34\) & ":\["/,
+  "trains-array marker must be built with Chr(34)"
+);
+assert.match(
+  railwayProxySource,
+  /marker = Chr\(34\) & fieldName & Chr\(34\) & ":"/,
+  "field marker must be built with Chr(34)"
+);
+
+assert.match(
+  providerSource,
+  /function beijingClock\(/,
+  "state classification must use Beijing time, not the browser timezone"
+);
+assert.match(
+  providerSource,
+  /function classifyRailTrain\(/,
+  "trains must be classified running/past/upcoming"
+);
+assert.match(
+  providerSource,
+  /RAIL_RUNNING_CANDIDATE_LIMIT/,
+  "running trains must have their own candidate quota"
+);
+assert.match(
+  providerSource,
+  /pickInitialCandidate\(/,
+  "default train must match the queried moment (now → running train)"
+);
+assert.match(
+  providerSource,
+  /includeElapsed\s*:\s*includeElapsed \? "1" : ""/,
+  "client must ask the proxy for elapsed trains only when needed"
+);
+assert.match(
+  transitAppSource,
+  /transit-candidate-state/,
+  "candidate list must label running/past trains"
+);
+assert.match(
+  cssSource,
+  /\.transit-candidate-state/,
+  "candidate state badge must be styled"
+);
 
 /*
  * 海外事故回归：stops 搜索「名称包含即命中」且无相关性排序，
@@ -830,7 +926,12 @@ const sameCityProvider = new sameCityRail.ChinaRailTransitProvider({
 const sameCityJourney = await sameCityProvider.searchJourney({
   origin: "成都北",
   destination: "西安北",
-  departureTime: "2026-09-24T12:00",
+  /*
+   * 查 00:30 → 最贴合的是 G4190（00:57），它恰好无经停数据，
+   * 必须按候选顺序回落到 D4730（05:05）——有界回退不能被
+   * 「按时刻就近选车」的新逻辑破坏。
+   */
+  departureTime: "2026-09-24T00:30",
   language: "zh"
 });
 assert.equal(sameCityJourney.provider, "china-rail");
@@ -845,7 +946,7 @@ assert.ok(sameCityJourney.stopTimes.length >= 2);
 assert.equal(sameCityJourney.stopTimes[0].status, "origin");
 const sameCitySchedules = sameCityRequests.filter(href => href.includes("action=schedule"));
 assert.equal(sameCitySchedules.length, 2, "G4190 失败后必须再试下一候选");
-const d4730Schedule = new URL(sameCitySchedules.find(href => href.includes("76000D473003")));
+const d4730Schedule = new URL(sameCityRequests.find(href => href.includes("76000D473003")));
 assert.equal(d4730Schedule.searchParams.get("from"), "ICW", "经停请求必须用车次行内发站码");
 
 /* 全部候选都无经停数据 → 有界尝试后抛出真实错误码 */
@@ -893,8 +994,131 @@ await assert.rejects(
   error => error?.code === "schedule_unavailable"
 );
 
-/* 代理错误码必须带 httpStatus 抛出，由 STATUS_KEYS 本地化 */
-const errorContext = loadContext(providerSource, "transit-providers.js", {
+/*
+ * 「运行中车次」纯函数级回归（不发网络请求）：
+ * 12306 对当天不返回已发车车次，代理用当日快照补齐后，
+ * 客户端必须按【北京时区】把车次分成 running/past/upcoming 并分组排序，
+ * 否则会出现「浏览器在 JST、列车时刻是 CST」导致的错判。
+ */
+const stateContext = loadContext(providerSource, "transit-providers.js", {
+  ...providerHostGlobals,
+  URL,
+  location: { origin: "https://www.y0.hk" },
+  fetch: async () => {
+    throw new Error("state tests must not perform network calls");
+  }
+});
+const stateProvider = new stateContext.WebWindowsTransit.ChinaRailTransitProvider({
+  geocoder: { search: async () => null }
+});
+
+// 北京时间 2026-09-24 10:30 == UTC 2026-09-24T02:30:00Z
+const beijing1030 = Date.parse("2026-09-24T02:30:00Z");
+
+const sameDayTrains = [
+  { trainNo: "T-EARLY", code: "G1", departTime: "00:57", arriveTime: "04:30", serviceDate: "2026-09-24" },
+  { trainNo: "T-RUN", code: "G2", departTime: "09:00", arriveTime: "12:00", serviceDate: "2026-09-24" },
+  { trainNo: "T-NEXT", code: "G3", departTime: "14:00", arriveTime: "17:00", serviceDate: "2026-09-24" },
+  { trainNo: "T-NIGHT", code: "G4", departTime: "23:30", arriveTime: "26:10", serviceDate: "2026-09-24" }
+];
+
+const grouped = stateProvider.pickTrains(sameDayTrains, beijing1030);
+/* 注意：provider 在 vm context 里执行，其数组原型属于另一 realm，
+   故用 join/string 比较而不是 assert.deepEqual（会因原型不同误报）。 */
+assert.equal(
+  grouped.map(item => item.trainNo).join(","),
+  "T-RUN,T-NEXT,T-NIGHT,T-EARLY",
+  "当天候选顺序必须是 运行中 → 未发车 → 已通过"
+);
+assert.equal(
+  grouped.map(item => item.serviceState).join(","),
+  "running,upcoming,upcoming,past"
+);
+assert.equal(
+  grouped[0].code,
+  "G2",
+  "运行中的车次必须排在候选首位"
+);
+
+/* 查「此刻」→ 默认选中运行中的车次（可在地图上看到推定位置） */
+assert.equal(
+  stateProvider.pickInitialCandidate(grouped, "2026-09-24T10:30", beijing1030)?.trainNo,
+  "T-RUN",
+  "查此刻必须默认选中运行中的车次"
+);
+
+/* 查具体时刻 → 取最接近该时刻的车次（这正是「搜过去的车次」） */
+assert.equal(
+  stateProvider.pickInitialCandidate(grouped, "2026-09-24T09:20", beijing1030)?.trainNo,
+  "T-RUN",
+  "指定时刻应选中发车时间最接近的车次"
+);
+assert.equal(
+  stateProvider.pickInitialCandidate(grouped, "2026-09-24T01:10", beijing1030)?.trainNo,
+  "T-EARLY",
+  "查凌晨时段应能选中已通过的车次"
+);
+
+/* 没有运行中车次时退回最近的未发车车次 */
+const noRunning = grouped.filter(item => item.trainNo !== "T-RUN");
+assert.equal(
+  stateProvider.pickInitialCandidate(noRunning, "2026-09-24T10:30", beijing1030)?.trainNo,
+  "T-NEXT",
+  "无运行中车次时应选最近的未发车车次"
+);
+
+/* 未来日期保持原行为：按发车时间升序，不做状态分组 */
+const futureTrains = [
+  { trainNo: "F-LATE", code: "G9", departTime: "18:00", arriveTime: "22:00", serviceDate: "2026-09-26" },
+  { trainNo: "F-EARLY", code: "G8", departTime: "06:09", arriveTime: "09:31", serviceDate: "2026-09-26" }
+];
+assert.equal(
+  stateProvider.pickTrains(futureTrains, beijing1030).map(item => item.trainNo).join(","),
+  "F-EARLY,F-LATE",
+  "未来日期必须保持按发车时间升序"
+);
+assert.ok(
+  stateProvider.pickTrains(futureTrains, beijing1030).every(item => item.serviceState === "upcoming"),
+  "未来日期一律 upcoming"
+);
+
+/* 跨零点车次：到达 26:10 视为次日，运行中判定不能因 26>23 而判为已结束 */
+const crossMidnight = stateProvider.pickTrains(
+  [{ trainNo: "T-X", code: "G5", departTime: "23:30", arriveTime: "26:10", serviceDate: "2026-09-24" }],
+  Date.parse("2026-09-24T16:00:00Z") // 北京 2026-09-25 00:00
+);
+assert.equal(crossMidnight[0].serviceState, "running", "跨零点车次在次日 00:00 应判为运行中");
+
+/*
+ * 过去日期（如查昨天）不能被「今天的 3 趟配额」砍掉，
+ * 且应按距所查时刻的远近排序，帮用户找回自己那趟车。
+ */
+const yesterdayTrains = [
+  { trainNo: "Y-06", code: "G6", departTime: "06:00", arriveTime: "10:00", serviceDate: "2026-09-23" },
+  { trainNo: "Y-08", code: "G7", departTime: "08:00", arriveTime: "12:00", serviceDate: "2026-09-23" },
+  { trainNo: "Y-18", code: "G8", departTime: "18:00", arriveTime: "22:00", serviceDate: "2026-09-23" }
+];
+const yesterdayOrdered = stateProvider.pickTrains(
+  yesterdayTrains,
+  beijing1030,
+  8 * 3600 + 30 * 60 // 查 08:30
+);
+assert.equal(
+  yesterdayOrdered.map(item => item.trainNo).join(","),
+  "Y-08,Y-06,Y-18",
+  "过去日期应按距所查时刻排序（08:30 → 08:00 那趟排最前）"
+);
+assert.equal(
+  stateProvider.pickInitialCandidate(
+    yesterdayOrdered,
+    "2026-09-23T08:30",
+    beijing1030
+  )?.trainNo,
+  "Y-08",
+  "查过去日期必须能选中用户要的那趟车"
+);
+
+/* 代理错误码必须带 httpStatus 抛出，由 STATUS_KEYS 本地化 */const errorContext = loadContext(providerSource, "transit-providers.js", {
   ...providerHostGlobals,
   URL,
   location: { origin: "https://www.y0.hk" },

@@ -29,10 +29,173 @@
    */
   const RAIL_SCHEDULE_MAX_ATTEMPTS = 5;
 
+  /*
+   * 「运行中/已通过」车次的展示配额（仅当查询日 = 北京当天时生效）：
+   * 12306 对当天只返回未发车车次（实测北京 23:12 只剩 2 趟），
+   * 代理的「当日快照」把当天早些时候查到的车次补回来，
+   * 客户端据此把运行中车次排在候选前列并标状态。
+   */
+  const RAIL_RUNNING_CANDIDATE_LIMIT = 5;
+  const RAIL_PAST_CANDIDATE_LIMIT = 3;
+  const RAIL_FUTURE_CANDIDATE_LIMIT = 10;
+
+  /* 12306 时刻为 UTC+8；判定运行中状态时必须用中国标准时间比较。 */
+  const RAIL_TIMEZONE_OFFSET_MINUTES = 480;
+
   function text(value) {
     return value === null || value === undefined
       ? ""
       : String(value);
+  }
+
+  /* 中国标准时间下的日期与 HH:MM（不受浏览器时区影响）。 */
+  function beijingClock(now = Date.now()) {
+    const shifted =
+      new Date(
+        now +
+          RAIL_TIMEZONE_OFFSET_MINUTES * 60000
+      );
+
+    const pad = value =>
+      String(value).padStart(2, "0");
+
+    return {
+      dateKey:
+        `${shifted.getUTCFullYear()}-${pad(
+          shifted.getUTCMonth() + 1
+        )}-${pad(shifted.getUTCDate())}`,
+
+      seconds:
+        shifted.getUTCHours() * 3600 +
+        shifted.getUTCMinutes() * 60 +
+        shifted.getUTCSeconds()
+    };
+  }
+
+  /* "02:13" / "24:28" → 秒；跨日 24 点以上允许（12306 跨零点车次）。 */
+  function railSeconds(value) {
+    const match =
+      /^(\d{1,2}):(\d{2})$/.exec(
+        text(value).trim()
+      );
+
+    if (!match) {
+      return null;
+    }
+
+    const hours = Number(match[1]);
+    const minutes = Number(match[2]);
+
+    if (
+      !Number.isFinite(hours) ||
+      !Number.isFinite(minutes) ||
+      hours > 47 ||
+      minutes > 59
+    ) {
+      return null;
+    }
+
+    return hours * 3600 + minutes * 60;
+  }
+
+  /* 两个 ISO 日期相差几天（todayKey - serviceDate）：0=今天，1=昨天。 */
+  function railDayDifference(
+    todayKey,
+    serviceDate
+  ) {
+    const today = /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+      text(todayKey).trim()
+    );
+    const service =
+      /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+        text(serviceDate).trim()
+      );
+
+    if (!today || !service) {
+      return null;
+    }
+
+    const todayMs = Date.UTC(
+      Number(today[1]),
+      Number(today[2]) - 1,
+      Number(today[3])
+    );
+
+    const serviceMs = Date.UTC(
+      Number(service[1]),
+      Number(service[2]) - 1,
+      Number(service[3])
+    );
+
+    if (
+      !Number.isFinite(todayMs) ||
+      !Number.isFinite(serviceMs)
+    ) {
+      return null;
+    }
+
+    return Math.round(
+      (todayMs - serviceMs) / 86400000
+    );
+  }
+
+  /*
+   * 车次状态：running（运行中）/ past（已通过）/ upcoming（未发车）。
+   * 全部按中国标准时间比较（浏览器可能在 JST 等其它时区）。
+   * 跨零点车次要按「服务日零点起的绝对秒」判断：23:30 发车、次日 02:10 到，
+   * 在次日 00:00 仍属运行中，不能因为 serviceDate 已变成昨天就判成未发车。
+   */
+  function classifyRailTrain(
+    train,
+    clock
+  ) {
+    const dayOffset = railDayDifference(
+      clock.dateKey,
+      train?.serviceDate
+    );
+
+    if (
+      dayOffset === null ||
+      dayOffset < 0 ||
+      dayOffset > 2
+    ) {
+      return "upcoming";
+    }
+
+    const depart = railSeconds(
+      train?.departTime
+    );
+
+    if (depart === null) {
+      return "upcoming";
+    }
+
+    let arrive = railSeconds(
+      train?.arriveTime
+    );
+
+    if (
+      arrive !== null &&
+      arrive <= depart
+    ) {
+      arrive += 86400;
+    }
+
+    const now =
+      clock.seconds + dayOffset * 86400;
+
+    if (now < depart) {
+      return "upcoming";
+    }
+
+    if (
+      arrive !== null &&
+      now < arrive
+    ) {
+      return "running";
+    }
+
+    return "past";
   }
 
   function number(value) {
@@ -2296,7 +2459,8 @@
       {
         from,
         to,
-        date
+        date,
+        includeElapsed = false
       },
       signal
     ) {
@@ -2306,7 +2470,14 @@
           {
             from: from.code,
             to: to.code,
-            date
+            date,
+
+            /*
+             * 当天/过去日期：要求代理返回「当日快照」，
+             * 否则 12306 只给未发车车次，运行中车次根本拿不到。
+             */
+            includeElapsed:
+              includeElapsed ? "1" : ""
           },
           signal
         );
@@ -2336,21 +2507,195 @@
         );
       }
 
-      return trains;
+      return trains.map(train => ({
+        ...train,
+
+        /*
+         * 状态判定需要知道这趟车属于哪一天：
+         * 代理的快照可能把不同查询日的数据混在一起（仅过去日期），
+         * 故按返回体里的 date 为准，缺失时回落到请求日期。
+         */
+        serviceDate:
+          text(payload?.date).trim() ||
+          date
+      }));
     }
 
     /*
-     * 车次候选按发车时间排序，供前端列出 ±5 趟可切换。
+     * 车次候选排序：
+     *  - 查询日 = 北京当天：运行中 → 未发车 → 已通过
+     *    （用户要能搜到正在跑的車，并在地图上看到推定位置）
+     *  - 未来日期：保持原行为（按发车时间取最早 N 趟）
+     * 每趟附 serviceState，供列表显示状态标签。
      */
-    pickTrains(trains) {
-      return [...trains]
-        .sort(
-          (a, b) =>
-            text(a.departTime).localeCompare(
-              text(b.departTime)
-            )
-        )
-        .slice(0, 10);
+    pickTrains(
+      trains,
+      now = Date.now(),
+      requestedSeconds = null
+    ) {
+      const clock = beijingClock(now);
+
+      const byDepartAsc = (a, b) =>
+        text(a.train.departTime).localeCompare(
+          text(b.train.departTime)
+        );
+
+      const byDepartDesc = (a, b) =>
+        text(b.train.departTime).localeCompare(
+          text(a.train.departTime)
+        );
+
+      /* 过去日期：按「距用户所查时刻有多近」排序，帮用户找回自己那趟车。 */
+      const byRequestedDistance = (a, b) => {
+        const da = railSeconds(a.train.departTime);
+        const db = railSeconds(b.train.departTime);
+        if (da === null || db === null) {
+          return byDepartAsc(a, b);
+        }
+        if (requestedSeconds === null) {
+          return byDepartDesc(a, b);
+        }
+        return (
+          Math.abs(da - requestedSeconds) -
+          Math.abs(db - requestedSeconds)
+        );
+      };
+
+      const tagged = trains.map(train => ({
+        train,
+        state: classifyRailTrain(train, clock)
+      }));
+
+      const isServiceDay =
+        tagged.some(
+          item => item.state !== "upcoming"
+        );
+
+      if (!isServiceDay) {
+        return tagged
+          .sort(byDepartAsc)
+          .slice(
+            0,
+            RAIL_FUTURE_CANDIDATE_LIMIT
+          )
+          .map(item => ({
+            ...item.train,
+            serviceState: item.state
+          }));
+      }
+
+      /*
+       * 过去日期（查「昨天/前天」）不该被今天的配额砍到只剩 3 趟，
+       * 否则用户明明查过却找不到自己那趟车。
+       */
+      const firstOffset = railDayDifference(
+        clock.dateKey,
+        tagged[0]?.train?.serviceDate
+      );
+
+      const isPastDay =
+        firstOffset !== null && firstOffset >= 1;
+
+      const pastLimit = isPastDay
+        ? RAIL_FUTURE_CANDIDATE_LIMIT
+        : RAIL_PAST_CANDIDATE_LIMIT;
+
+      const ordered = [
+        ...tagged
+          .filter(item => item.state === "running")
+          .sort(byDepartAsc)
+          .slice(
+            0,
+            RAIL_RUNNING_CANDIDATE_LIMIT
+          ),
+
+        ...tagged
+          .filter(item => item.state === "upcoming")
+          .sort(byDepartAsc)
+          .slice(
+            0,
+            RAIL_FUTURE_CANDIDATE_LIMIT
+          ),
+
+        ...tagged
+          .filter(item => item.state === "past")
+          .sort(
+            isPastDay
+              ? byRequestedDistance
+              : byDepartDesc
+          )
+          .slice(0, pastLimit)
+      ];
+
+      return ordered.map(item => ({
+        ...item.train,
+        serviceState: item.state
+      }));
+    }
+
+    /*
+     * 默认选中哪一趟：
+     *  - 用户查的就是「此刻」→ 优先运行中的车（否则最近将发）
+     *  - 用户指定了其它时刻 → 取发车时间最接近该时刻的一趟
+     *    （这正是「搜过去的车次」的能力：指定早上 8 点就能搜到 8 点那趟）
+     */
+    pickInitialCandidate(
+      candidates,
+      departureTime,
+      now = Date.now()
+    ) {
+      if (!candidates.length) {
+        return null;
+      }
+
+      const requested = railSeconds(
+        text(departureTime).slice(11, 16)
+      );
+
+      if (requested === null) {
+        return candidates[0];
+      }
+
+      const clock = beijingClock(now);
+
+      if (
+        Math.abs(requested - clock.seconds) <=
+        3600
+      ) {
+        return (
+          candidates.find(
+            item => item.serviceState === "running"
+          ) ||
+          candidates.find(
+            item => item.serviceState === "upcoming"
+          ) ||
+          candidates[0]
+        );
+      }
+
+      let best = null;
+      let bestDistance = Infinity;
+
+      for (const candidate of candidates) {
+        const depart = railSeconds(
+          candidate.departTime
+        );
+
+        if (depart === null) {
+          continue;
+        }
+
+        const distance = Math.abs(
+          depart - requested
+        );
+
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = candidate;
+        }
+      }
+
+      return best || candidates[0];
     }
 
     async getSchedule(
@@ -2518,12 +2863,21 @@
         );
       }
 
+      /*
+       * 当天与过去日期必须带 includeElapsed：12306 上游对当天只返回
+       * 未发车车次（北京 23:12 仅剩 2 趟），不带该参数则运行中车次
+       * 永远搜不到；代理会用「当日快照」补齐。
+       */
+      const todayBeijing = beijingClock().dateKey;
+      const includeElapsed = date <= todayBeijing;
+
       const trains =
         await this.getLeftTicket(
           {
             from: originStation,
             to: destinationStation,
-            date
+            date,
+            includeElapsed
           },
           signal
         );
@@ -2536,7 +2890,13 @@
       }
 
       const candidates =
-        this.pickTrains(trains);
+        this.pickTrains(
+          trains,
+          Date.now(),
+          railSeconds(
+            text(departureValue).slice(11, 16)
+          )
+        );
 
       /*
        * 12306 同城查询：查询「成都」可能返回「成都东」发车的车次，
@@ -2549,9 +2909,30 @@
           item => item.trainNo === trainNo
         );
 
+      /*
+       * 未指定车次时，默认选中「最贴合用户所查时刻」的一趟
+       * （查此刻 → 优先运行中；查某个具体时刻 → 最接近该时刻），
+       * 随后按候选顺序有界回退。
+       */
+      const initial = preferred
+        ? null
+        : this.pickInitialCandidate(
+            candidates,
+            departureValue
+          );
+
       const queue = preferred
         ? [preferred]
-        : candidates.slice(
+        : (
+            initial
+              ? [
+                  initial,
+                  ...candidates.filter(
+                    item => item !== initial
+                  )
+                ]
+              : candidates
+          ).slice(
             0,
             RAIL_SCHEDULE_MAX_ATTEMPTS
           );
@@ -2856,6 +3237,14 @@
 
             canBuy:
               item.canBuy,
+
+            /*
+             * running / past / upcoming：列表据此显示
+             * 「运行中」「已通过」标签，不必逐个点开才知道。
+             */
+            state:
+              item.serviceState ||
+              "upcoming",
 
             selected:
               item.trainNo ===

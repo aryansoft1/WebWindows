@@ -25,39 +25,69 @@ If Len(transitlandApiKey) = 0 Then
 End If
 
 '
-' 服务器侧配置加载。注意：ASP 的 VBScript 引擎**没有 Dir()**（线上实测
-' 报「未定义: 'Dir'」于本行），文件存在性必须用 FileSystemObject 判断。
+' 服务器侧配置加载。
+'
+' 两个线上踩过的坑：
+'   1) ASP 的 VBScript 引擎**没有 Dir()**（报「未定义: 'Dir'」），存在性只能用
+'      FileSystemObject.FileExists；
+'   2) Server.Execute 执行配置文件后，配置里的变量在调用方取不到
+'      （线上表现：action=stops 返回 503 not_configured）。
+' 因此改为直接读文件并解析赋值语句，不依赖作用域。
 '
 Function LoadApiKey()
+  LoadApiKey = ""
+
   Dim configPath
   configPath = Server.MapPath("transit-proxy.config.asp")
 
-  If Len(configPath) = 0 Then
-    LoadApiKey = ""
-    Exit Function
-  End If
+  If Len(configPath) = 0 Then Exit Function
 
+  On Error Resume Next
   Dim fso
   Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Function
+  End If
 
   If Not fso.FileExists(configPath) Then
     Set fso = Nothing
-    LoadApiKey = ""
     Exit Function
   End If
 
+  Dim content
+  '
+  ' 注意：OpenTextFile 传 -65001 会报「无效的过程调用或参数」5，
+  ' FileSystemObject 也无法指定 UTF-8；用 ADODB.Stream 才是正解
+  ' （配置文件由 FTP 以 ASCII 写入，utf-8 读取同样安全）。
+  '
+  Dim stream
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2                  ' adTypeText
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.LoadFromFile configPath
+  content = stream.ReadText
+  stream.Close
+  Set stream = Nothing
   Set fso = Nothing
-
-  On Error Resume Next
-  Server.Execute(configPath)
-  If Err.Number <> 0 Then
-    Err.Clear
-    LoadApiKey = ""
-    Exit Function
-  End If
   On Error GoTo 0
 
-  LoadApiKey = Trim(CStr(transitlandApiKey))
+  ' 形如：transitlandApiKey = "..."
+  Dim re
+  Set re = New RegExp
+  re.Global = False
+  re.IgnoreCase = True
+  re.Pattern = "transitlandApiKey\s*=\s*""([^""]*)"""
+
+  Dim matches
+  Set matches = re.Execute(CStr(content))
+  Set re = Nothing
+
+  If matches.Count = 0 Then Exit Function
+
+  LoadApiKey = Trim(CStr(matches(0).SubMatches(0)))
 End Function
 
 Select Case action

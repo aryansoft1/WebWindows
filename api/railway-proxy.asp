@@ -530,16 +530,16 @@ Function IsDirWritable(ByVal dirPath)
 
   Dim probe
   probe = fso.BuildPath(dirPath & "\.probe.tmp")
-  Dim stream
-  Set stream = fso.CreateTextFile(probe, True, False, -65001)
+
+  ' 注意：CreateTextFile 不接受第 4 个参数（会报 450），统一走 ADODB UTF-8 写入
+  WriteUtf8File probe, "ok"
+
   If Err.Number <> 0 Then
     Err.Clear
     Set fso = Nothing
     Exit Function
   End If
 
-  stream.Write "ok"
-  stream.Close
   fso.DeleteFile probe, True
 
   IsDirWritable = (Err.Number = 0)
@@ -566,26 +566,15 @@ Function SnapshotReadFile(ByVal path)
     Exit Function
   End If
 
-  Dim stream
-  Set stream = fso.OpenTextFile(path, 1, False, -65001) ' -65001 = UTF-8
-  If Err.Number <> 0 Then
-    Err.Clear
+  ' 过期即视为不存在
+  If DateDiff("s", fso.GetFile(path).DateLastModified, Now()) > RAIL_SNAPSHOT_TTL_SECONDS Then
     Set fso = Nothing
     Exit Function
   End If
-
-  Dim content
-  content = stream.ReadAll
-  stream.Close
-
-  ' 过期即视为不存在
-  If DateDiff("s", fso.GetFile(path).DateLastModified, Now()) > RAIL_SNAPSHOT_TTL_SECONDS Then
-    content = ""
-  End If
-
-  SnapshotReadFile = CStr(content)
-
   Set fso = Nothing
+
+  SnapshotReadFile = ReadUtf8File(path)
+
   On Error GoTo 0
 End Function
 
@@ -606,24 +595,56 @@ Sub SnapshotWriteFile(ByVal path, ByVal value)
   If Not fso.FolderExists(folder) Then
     fso.CreateFolder(folder)
   End If
+  Set fso = Nothing
 
   ' 先写临时文件再覆盖，避免中断留下半截 JSON（线上事故的根因之一）
   Dim tempPath
   tempPath = path & ".tmp"
-  Dim stream
-  Set stream = fso.CreateTextFile(tempPath, True, False, -65001)
-  stream.Write CStr(value)
-  stream.Close
+  WriteUtf8File tempPath, CStr(value)
 
-  If fso.FileExists(path) Then
-    fso.DeleteFile path, True
+  Dim fso2
+  Set fso2 = Server.CreateObject("Scripting.FileSystemObject")
+  If fso2.FileExists(path) Then
+    fso2.DeleteFile path, True
   End If
+  fso2.MoveFile tempPath, path
+  Set fso2 = Nothing
 
-  fso.MoveFile tempPath, path
-
-  Set fso = Nothing
   On Error GoTo 0
 End Sub
+
+'
+' UTF-8 文件读写。
+'
+' 线上踩坑记录：FileSystemObject 的 CreateTextFile **不支持第 4 个参数**
+' （传 -65001 报「错误的参数个数或无效的参数属性值」450），OpenTextFile 传
+' -65001 报「无效的过程调用或参数」5。两者都会让写入/读取静默失败——
+' 曾因此误判「快照目录不可写」。ADODB.Stream 的 charset 参数才是正解。
+'
+Sub WriteUtf8File(ByVal path, ByVal content)
+  Dim stream
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2                  ' adTypeText
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.WriteText CStr(content)
+  stream.SaveToFile CStr(path), 2  ' adSaveCreateOverWriteFile
+  stream.Close
+  Set stream = Nothing
+End Sub
+
+Function ReadUtf8File(ByVal path)
+  ReadUtf8File = ""
+  Dim stream
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.LoadFromFile CStr(path)
+  ReadUtf8File = CStr(stream.ReadText)
+  stream.Close
+  Set stream = Nothing
+End Function
 
 '
 ' 把新抓到的车次并入快照，返回合并后的行数组。

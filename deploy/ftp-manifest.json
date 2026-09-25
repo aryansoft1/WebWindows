@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.22",
-  "catalogVersion": "2026.09.25.22",
-  "generatedAt": "2026-09-25T05:53:24.313Z",
+  "releaseVersion": "2026.09.25.23",
+  "catalogVersion": "2026.09.25.23",
+  "generatedAt": "2026-09-25T06:53:55.146Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -264,9 +264,10 @@
     "assets/js/auth-session.js",
     "assets/js/ai-file-tools.js",
     "assets/js/file-query-parser.js",
-    "api/transit-proxy.asp"
+    "api/transit-proxy.asp",
+    "api/longdistance-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.21",
+  "previousReleaseVersion": "2026.09.25.22",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -808,7 +809,7 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "715c46d8ff2815357f5efff4a626cfa244c89c88b150bfc8e3351e95e2322cf4",
+      "sha256": "0321edcd6e14ee83b8c275a026a35bcd6ad3e8710c76cb06b22337420e44a97d",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1116,7 +1117,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "8fff08b3d2ff0426655749a255e8e99b7012d0bc7a3de815aba43153017a8103",
+      "sha256": "0b41308fbef148469a45bb2154e3da2d862df10f65f11951a0a6080d7bf690aa",
       "size": 16440
     },
     "assets/css/navigation.css": {
@@ -1127,8 +1128,8 @@
       "sha256": "ed2ba06cbb1d45a8e5bb08a18d241a6a48ce3e038f7b8260acb6e91d4dac9ed2"
     },
     "assets/js/navigation-app.js": {
-      "sha256": "a84ad2c21dbb7f32d6a33d752fa8036cf70fe9cc74e71b0bc49d4dae5636c15a",
-      "size": 55720
+      "sha256": "259d2d8536b5487cac50cd758b191f03dbd8efce1586ca8b78ede90a159cc64f",
+      "size": 57474
     },
     "assets/js/navigation-providers.js": {
       "sha256": "b42efafac5ccd3f116f827baa1c7ea96290de4fdeeebb6d3f51d9f0af4b547bf"
@@ -1187,16 +1188,16 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "a624eccc22ae173bd28794eb8f9a2cd06085e045d05872cc7b036ae7979aa3c2",
-      "size": 72708
+      "sha256": "3db647a69bd8b006a30d56bd632c1c1dafb77e066d36d06e6541e530e458f05b",
+      "size": 75277
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "c8327da276779788cee078c548b5a6728530c22b24a58fedcb5c7e3450b1120c",
-      "size": 88905
+      "sha256": "f5df263d5473698603b3a08dad419113a1aca28f2e9839e592f0c647d1986e39",
+      "size": 107677
     },
     "admin_api/adminAuth.asp": {
       "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d",
@@ -1297,50 +1298,24 @@
     "api/transit-proxy.asp": {
       "sha256": "9307bba8d54712d0a8d62d030ec2c0c6b2989ab3b2da88e9aa2680753532815b",
       "size": 13398
+    },
+    "api/longdistance-proxy.asp": {
+      "sha256": "f0aef592375a9ab8afb809ca7d6edf812e988b77bb6bcef2adc1c60751770b1b",
+      "size": 18220
     }
   },
-  "releaseScope": "t006-date-authority-backfill",
+  "releaseScope": "wendao-global-longdistance-slot",
   "uploadFiles": [
-    "admin_api/adminAuth.asp",
-    "admin_api/deleteDatacenter.asp",
-    "admin_api/saveDatacenter.asp",
-    "admin_api/visitorAnalytics.asp",
-    "api/function-catalog.asp",
-    "aplay.html",
-    "assets/css/context_menu.css",
-    "assets/js/connectivity.js",
-    "assets/js/contextmenu-guard.js",
-    "assets/js/desktalk.js",
-    "assets/js/desktop-functions.js",
-    "assets/js/file-search.js",
-    "assets/js/function-center.js",
-    "assets/js/function-sync.js",
-    "assets/js/locale-region.js",
-    "assets/js/start-menu-functions.js",
-    "assets/js/system-session.js",
-    "assets/js/taskbar-experience.js",
-    "cloud/browser/file-search.css",
-    "cloud/browser/search.asp",
-    "contact.html",
-    "japan.html",
-    "software.html",
-    "SystemManager/assets/js/admin-shell.js",
-    "SystemManager/assets/js/datacenter.js",
-    "SystemManager/assets/js/developer-platform-admin.js",
-    "SystemManager/assets/js/function-catalog-admin.js",
-    "SystemManager/assets/js/users.js",
-    "SystemManager/datacenter.html",
-    "SystemManager/developer-platform.html",
-    "SystemManager/functions.html",
-    "SystemManager/users.html",
-    "web.html",
-    "worker_SheetCreater.html",
-    "worker_WriteEditor.html",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
+    "api/longdistance-proxy.asp",
+    "assets/js/transit-providers.js",
+    "assets/js/transit-app.js",
+    "assets/js/navigation-app.js",
+    "road.html",
+    "data/apps/system-apps.json",
     "api/release-version.asp",
     "api/mobile-version.asp",
-    "data/apps/system-apps.json",
+    "sysinfo.html",
+    "assets/js/sysinfo.js",
     "deploy/ftp-manifest.json"
   ]
 }

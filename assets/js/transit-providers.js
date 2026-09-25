@@ -1739,7 +1739,11 @@
        * 错误归因：
        *  - 一趟都没解析成功，且确实有请求失败 → 上游故障（gtfs_trip_unavailable）
        *  - 否则（拿到过经停表，只是没有一班到终点）→ 如实说「没有直达线路」，
-       *    并列出已检查的线路，让用户知道这是数据覆盖问题而不是服务故障。
+       *    并把「已检查的线路」挂成结构化详情（details.routes）。
+       *
+       * 文案不在 provider 里定死：provider 是共享库，界面有中/繁/英/日四语，
+       * 因此只抛中文 message 供日志/直调使用，**用户可见文案由 app 按当前
+       * 语言组装**（线上事故：日文界面直接显示中文「当前数据源未覆盖…」）。
        */
       const routeNames =
         tripCandidates
@@ -1764,21 +1768,27 @@
         ...new Set(routeNames)
       ];
 
-      const inspected =
-        uniqueRouteNames
-          .slice(0, 4)
-          .join("、");
+      const upstreamBroken =
+        !tripDetailOk && tripDetailFailed;
 
-      throw providerError(
-        !tripDetailOk && tripDetailFailed
+      const error = providerError(
+        upstreamBroken
           ? "gtfs_trip_unavailable"
           : "direct_trip_not_found",
-        !tripDetailOk && tripDetailFailed
+        upstreamBroken
           ? "公共交通上游暂时无法提供班次详情，请稍后重试。"
           : `当前数据源未覆盖这条直达线路（已检查 ${
-              inspected || "相关线路"
+              uniqueRouteNames
+                .slice(0, 4)
+                .join("、") || "相关线路"
             }，共 ${uniqueRouteNames.length} 条；仅支持无需换乘的直达行程）。`
       );
+
+      error.details = {
+        routes: uniqueRouteNames
+      };
+
+      throw error;
     }
   }
 
@@ -3720,13 +3730,16 @@
             "transit_failed",
 
           /*
-           * 连同文案一起回落：GTFS 侧的结论（例：当前数据源未覆盖这条直达
-           * 线路，并列出已检查的线路）比 12306 的「未在站表中找到该站名」
-           * 更贴近真实原因，只传 code 会让界面显示后者而误导用户。
+           * 连同结构化详情一起回落：GTFS 侧的结论（例：没有直达线路 +
+           * 已检查了哪些线路）比 12306 的「未在站表中找到该站名」更贴近
+           * 真实原因。**不要**把 provider 的中文 message 直接交给界面——
+           * 界面有中/繁/英/日四语，用户可见文案必须由 app 按当前语言组装。
            */
           String(
             error?.message || ""
-          )
+          ),
+
+          error?.details || null
         );
       }
 

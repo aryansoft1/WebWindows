@@ -2118,7 +2118,8 @@
   function coveredErrorMessage(
     error,
     fallbackCode,
-    fallbackMessage
+    fallbackMessage,
+    fallbackDetails
   ) {
     const gtfsMissed =
       [
@@ -2175,33 +2176,52 @@
      * 海外「两源都没有」时要说清是**覆盖问题**而不是服务故障：
      * GTFS 侧结论是 direct_trip_not_found（确实取到过经停表、只是没有
      * 一班到终点），12306 侧是 station_not_found（海外站名不在中国铁路
-     * 站表里）。此时用 GTFS 侧随回落传下来的文案（内含已检查的线路），
-     * 缺失时退回 errNotCovered；绝不能沿用 errGtfsUnavailable——
-     * 那会让用户以为服务坏了、反复重试毫无意义。
+     * 站表里）。
+     *
+     * 文案必须按当前语言组装：provider 是共享库、只抛中文 message，
+     * 直接透传会让日文/英文界面显示中文（线上事故）。所以这里用回落时
+     * 传回的 details.routes + 四语文案 errGtfsNoDirect 自行拼装。
      */
     if (
       String(fallbackCode || "") ===
         "direct_trip_not_found" &&
       railMissed
     ) {
-      const carried =
-        String(
-          fallbackMessage || ""
-        )
-          .trim();
+      const routes =
+        (fallbackDetails
+          ?.routes || [])
+          .slice(0, 4)
+          .join(" / ") || "—";
 
-      if (carried) {
-        return carried;
-      }
-
-      return T("errNotCovered", {
+      const vars = {
         origin:
           state.query?.origin || "—",
 
         destination:
           state.query?.destination ||
-          "—"
-      });
+          "—",
+
+        routes
+      };
+
+      const localized = T(
+        "errGtfsNoDirect",
+        vars
+      );
+
+      if (
+        localized &&
+        !/^\{/.test(
+          String(localized).trim()
+        )
+      ) {
+        return localized;
+      }
+
+      return T(
+        "errNotCovered",
+        vars
+      );
     }
 
     if (gtfsMissed && railMissed) {
@@ -2439,6 +2459,7 @@
     state.source = null;
     state.fallbackCode = null;
     state.fallbackMessage = "";
+    state.fallbackDetails = null;
 
     $("transit-result").hidden =
       true;
@@ -2470,7 +2491,8 @@
             onFallback:
               (
                 code,
-                message
+                message,
+                details
               ) => {
                 state.fallbackCode =
                   code;
@@ -2479,6 +2501,9 @@
                   String(
                     message || ""
                   );
+
+                state.fallbackDetails =
+                  details || null;
 
                 setStatus(
                   "transitStepRail"
@@ -2544,7 +2569,8 @@
         text: coveredErrorMessage(
           error,
           state.fallbackCode,
-          state.fallbackMessage
+          state.fallbackMessage,
+          state.fallbackDetails
         )
       };
 

@@ -302,12 +302,12 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-7/);
-assert.match(html, /transit-app\.js\?v=20260925-10/);
+assert.match(html, /transit-providers\.js\?v=20260925-8/);
+assert.match(html, /transit-app\.js\?v=20260925-11/);
 assert.match(html, /navigation\.css\?v=20260925-3/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-6/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-7/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-9/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-10/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -618,7 +618,7 @@ assert.match(
 );
 assert.match(
   providerSource,
-  /!tripDetailOk && tripDetailFailed\s*\?\s*"gtfs_trip_unavailable"/,
+  /const upstreamBroken\s*=\s*\n?\s*!tripDetailOk && tripDetailFailed/,
   "upstream failure must only be reported when nothing could be parsed"
 );
 assert.match(
@@ -1911,11 +1911,46 @@ assert.match(
 );
 assert.match(
   transitAppSource,
-  /coveredErrorMessage\(\s*error,\s*state\.fallbackCode,\s*state\.fallbackMessage\s*\)/,
-  "coveredErrorMessage must receive the fallback message"
+  /coveredErrorMessage\(\s*error,\s*state\.fallbackCode,\s*state\.fallbackMessage,\s*state\.fallbackDetails\s*\)/,
+  "coveredErrorMessage must receive the fallback message and details"
 );
 assert.match(
   transitAppSource,
   /T\("errNotCovered"/,
   "coverage-gap messaging must fall back to the existing four-language string"
+);
+/* 用户可见文案必须四语齐全且由 app 组装：
+   provider 是共享库、只抛中文 message，直接透传会让日文/英文界面显示中文
+   （线上事故：日文界面显示「当前数据源未覆盖这条直达线路…」）。 */
+const navSource = await read("../assets/js/navigation-app.js");
+for (const needle of [
+  "errGtfsNoDirect:\"{origin} 到 {destination}",
+  "errGtfsNoDirect:\"{origin} 到 {destination} 之間",
+  "errGtfsNoDirect:\"No direct route from {origin} to {destination}",
+  "errGtfsNoDirect:\"{origin}から{destination}への直通路線"
+]) {
+  assert.ok(
+    navSource.includes(needle),
+    "errGtfsNoDirect 必须四语齐全，缺少：" + needle.slice(0, 40)
+  );
+}
+assert.match(
+  providerSource,
+  /error\.details = \{\s*routes:/,
+  "provider must attach the inspected routes as structured details"
+);
+assert.match(
+  providerSource,
+  /onFallback\?\.\([\s\S]{0,500}?error\?\.details/,
+  "onFallback must forward the structured details"
+);
+assert.match(
+  transitAppSource,
+  /state\.fallbackDetails\s*=/,
+  "app must remember the fallback details"
+);
+assert.match(
+  transitAppSource,
+  /T\(\s*"errGtfsNoDirect",/,
+  "app must compose the localized coverage-gap message itself"
 );

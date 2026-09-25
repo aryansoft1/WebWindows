@@ -2126,6 +2126,27 @@ const longDistanceProxyCode =
     .join("\n");
 
 /* ---- 服务端代理契约 ---- */
+/*
+ * CodePage=65001 是硬要求：.asp 源文件是 UTF-8 无 BOM，而 IIS 默认按系统
+ * ANSI 代码页（本机 GB2312/936）读取，中文多字节序列被拆坏 →
+ * 线上 500「未结束的字符串常量」。这是 .23 首次上传时的真实事故，
+ * 编译期检查（cscript 走 UTF-16LE）发现不了，必须由断言守住。
+ */
+assert.match(
+  longDistanceProxy,
+  /^<%@\s*Language=VBScript[^\r\n]*CodePage=65001[^\r\n]*%>\r?\n<%/,
+  "the long-distance proxy must declare CodePage=65001 on the @Language directive"
+);
+assert.match(
+  longDistanceProxyCode,
+  /Response\.CodePage = 65001/,
+  "the response code page must be set explicitly as well"
+);
+assert.match(
+  longDistanceProxyCode,
+  /Response\.CharSet = "utf-8"/,
+  "the response charset must be utf-8"
+);
 assert.match(
   longDistanceProxyCode,
   /Sub SendCapabilities/,

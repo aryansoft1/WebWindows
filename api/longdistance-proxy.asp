@@ -1,7 +1,13 @@
+<%@ Language=VBScript EnableSessionState=False CodePage=65001 %>
 <%
 ' ---------------------------------------------------------------------------
 ' 全球长途交通代理（长途 / 高速 / 跨境）
 '
+' **第一行 CodePage=65001 不能删**：.asp 源文件是 UTF-8 无 BOM，
+' IIS 默认按系统 ANSI 代码页（本机 GB2312/936）读取，中文的多字节序列
+' 会被拆坏 —— 实测线上直接 500「未结束的字符串常量」，
+' 报错行指向任意含中文的 WriteError。编译期检查发现不了，只有真机才暴露。
+' ---------------------------------------------------------------------------
 ' 定位：WebWindows 面向全球，中国铁路走 railway-proxy、全球本地公交/轨道走
 ' Transitland GTFS，而**长途线路**（新干线、欧洲 ICE/高速巴士、轮渡…）
 ' 这两类免费源都不覆盖——实测 Transitland 里 `新大阪` 搜到 0 个站点、
@@ -34,6 +40,8 @@
 ' ---------------------------------------------------------------------------
 Option Explicit
 
+Response.CodePage = 65001
+Response.CharSet = "utf-8"
 Response.ContentType = "application/json; charset=utf-8"
 Response.CacheControl = "no-store"
 

@@ -89,7 +89,12 @@ function Test-TextEquivalent([string]$left, [string]$right, [string]$relative) {
   return [string]::Equals($leftText.TrimEnd([char]10), $rightText.TrimEnd([char]10), [StringComparison]::Ordinal)
 }
 
-foreach ($relative in $manifest.requiredFiles) {
+# Incremental releases only overwrite uploadFiles. Back up and compare that
+# release slice against the production manifest instead of downloading every
+# managed file; full releases still audit requiredFiles because uploadFiles is
+# absent or contains the full set.
+$auditFiles = if ($manifest.uploadFiles) { @($uploadFiles) } else { @($manifest.requiredFiles) }
+foreach ($relative in $auditFiles) {
   $backup = Join-Path $backupRoot ($relative -replace '/', '\')
   $productionEntry = if ($production.integrity -and $relative -ne "deploy/ftp-manifest.json") { $production.integrity.PSObject.Properties[$relative] } else { $null }
   $downloaded = Invoke-FtpDownload $relative $backup -AllowMissing:(-not $productionEntry)
@@ -149,7 +154,7 @@ $late = @("data/apps/system-apps.json", "api/function-catalog.asp", "deploy/ftp-
 $ordered = @($uploadFiles | Where-Object { $late -notcontains $_ }) + @($late | Where-Object { $uploadFiles -contains $_ })
 foreach ($relative in $ordered) { Invoke-FtpUpload $relative }
 
-foreach ($relative in $manifest.requiredFiles) {
+foreach ($relative in $uploadFiles) {
   if ($relative -eq "deploy/ftp-manifest.json") { continue }
   $probe = Join-Path $env:TEMP ("webwindows-deploy-" + [guid]::NewGuid().ToString("N"))
   try {

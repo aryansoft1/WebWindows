@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.21",
-  "catalogVersion": "2026.09.25.21",
-  "generatedAt": "2026-09-25T05:43:06.267Z",
+  "releaseVersion": "2026.09.25.22",
+  "catalogVersion": "2026.09.25.22",
+  "generatedAt": "2026-09-25T05:53:24.313Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -266,19 +266,19 @@
     "assets/js/file-query-parser.js",
     "api/transit-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.20",
+  "previousReleaseVersion": "2026.09.25.21",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
-      "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
-      "size": 686
+      "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
+      "size": 809
     },
     "admin_api/getDatacenters.asp": {
       "sha256": "4a1e3d68cde99fdccd90961f98faf9a53253262c21ba8540a234c32bbfe81baa",
       "size": 2360
     },
     "admin_api/saveDatacenter.asp": {
-      "sha256": "274b121f080fb981c27959a088e5c191c91e34d1c61deb4101a56fc965c16fd1",
-      "size": 4380
+      "sha256": "35d4654e6334c860d0897b979b95c889d1119319827c5b45fd2a769af490a9b2",
+      "size": 2063
     },
     "api/dt_fetch_links.asp": {
       "sha256": "787b24649aa1a04d4365bb24030a2e0766a91221752fb7c62dec6ee3bd463c28",
@@ -289,8 +289,8 @@
       "size": 7498
     },
     "api/function-catalog.asp": {
-      "sha256": "07e9ec37c4022bb58c7545b09052efea29244342b9fec9d5ce74abeae059129a",
-      "size": 8808
+      "sha256": "e2085137dee5ef3d823db550f635bf92baa3ca8b3b04e657f272d255365321ea",
+      "size": 10181
     },
     "api/mobile-version.asp": {
       "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
@@ -301,12 +301,12 @@
       "size": 1051
     },
     "aplay.html": {
-      "sha256": "c7800f5c46c8f916dda4423f738655cb6f94ec3f3dd7a2e7227072336ea1905e",
-      "size": 46850
+      "sha256": "af5b12b3cfb2c7f75350e6bde3f44b2547f9da97f08b8d440290683fca2d5e56",
+      "size": 46603
     },
     "assets/css/context_menu.css": {
-      "sha256": "3ed164b4ac80066f6d96100d5122ea073af598a47a69b976082d1ea90ed0774d",
-      "size": 3739
+      "sha256": "b4ebaf5a98e43e5ee9efbfb363ecba2683ba3e5a8eb16e4e9567a23c14461104",
+      "size": 3569
     },
     "assets/css/desktalk.css": {
       "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
@@ -541,19 +541,20 @@
       "size": 12618
     },
     "assets/js/connectivity.js": {
-      "sha256": "0770ef208fb8ed7e6828a2162597726b71d845c0861afefd2311070e39d715a8",
-      "size": 5534
+      "sha256": "c000ebb72fd9eedb4b5107fe016746fe6b59acc3f225ba27e5db56469b99fb66",
+      "size": 5356
     },
     "assets/js/contextmenu-guard.js": {
-      "sha256": "93b6d2f2ed1e5337dcc70aa85d288654a44c0279069da7948f4290b9d4f7078f",
-      "size": 1965
+      "sha256": "ce1e2b7c840f69fed0dd7b13389212c51304fcb36312a8355283b81b41f8dd5f",
+      "size": 1897
     },
     "assets/js/desktalk.js": {
-      "sha256": "169f2aefe034c8232d9e5242b43a4da3445add9c2826812fd71ee8b8080debe1"
+      "sha256": "a005879d0f5f4683fa46c48a5f5e7b2f1f0c5d00df7be9a4c6ea19c465c86d71",
+      "size": 98736
     },
     "assets/js/desktop-functions.js": {
-      "sha256": "1ab2c62e010987f4369784d9588da35e744e521a7d74c036a626b59b76a42e89",
-      "size": 5673
+      "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
+      "size": 5503
     },
     "assets/js/device-api.js": {
       "sha256": "872829cc32fc77fbc306261193ad42ffd982b7c6c520bfa414f39db4320d120f",
@@ -568,24 +569,24 @@
       "size": 21102
     },
     "assets/js/file-search.js": {
-      "sha256": "9ac136837262a5f6f853e4c7572132663be8bc5e9b48277a6fc544d9f9ed6a52",
-      "size": 11226
+      "sha256": "c276f15ad557ca63780d71fd002d33f25b3941dda19b6dd69d85632e69ed03ac",
+      "size": 15080
     },
     "assets/js/function-center.js": {
-      "sha256": "756e39f1696bf274eb4da8d4177278a9bda76e10549d9e485e8360142cc03a1e",
-      "size": 11213
+      "sha256": "fe3d31b1e11aff7a82fb9312d4e32e9e5262dc0cfa3c22c82e6ab63e87fafbf0",
+      "size": 11336
     },
     "assets/js/function-sync.js": {
-      "sha256": "98fab91c5f04245d99d3719813847063482133687aad23e919248244bafe8279",
-      "size": 9206
+      "sha256": "87d15643bf9a74db70841fe9dbca960e585f472e39b8809f4740fb3895907b4c",
+      "size": 8929
     },
     "assets/js/guide.js": {
       "sha256": "45b6a13ee7a56172c2c33bebffca058432e46462015edc10a33a018c127b26d9",
       "size": 7748
     },
     "assets/js/locale-region.js": {
-      "sha256": "950cd8da2f6f1b7b51ab5deae05bde328b5e2dc975dc57494f5bb7d33468e3e5",
-      "size": 6039
+      "sha256": "1c8b4b0d91f29169247b82aa62b55c615c218cbe4b202c521e999d94ba808cb6",
+      "size": 4689
     },
     "assets/js/login.js": {
       "sha256": "d788b24241c18f53201feb4407b63a056256a675ca04618302737ab1bd1a2af2",
@@ -620,20 +621,20 @@
       "size": 2301
     },
     "assets/js/start-menu-functions.js": {
-      "sha256": "ebd3852508f28749ebe6e6f89eec208a90114d997ebf9182b8eb3e9d756621f1",
-      "size": 6571
+      "sha256": "63ae0dc40736d1ab1cdcd35389dae932013e37ec2545a0328ccfd5963e51e0a6",
+      "size": 6359
     },
     "assets/js/sysinfo.js": {
       "sha256": "1f4c66c6835ccfac78e4cc298747f9759dcd67574750d5b8ac7a9bd3cf71b903",
       "size": 12768
     },
     "assets/js/system-session.js": {
-      "sha256": "09494ebdc48cb8b772429b50b48a9925983ed2cdda071f2b8f17063a951b41d6",
-      "size": 9661
+      "sha256": "0683b18cd513f3ff74697a11f61bb823ab2e73a9808e8bfb03bffacb9f2382a8",
+      "size": 9435
     },
     "assets/js/taskbar-experience.js": {
-      "sha256": "16cd610f120d2b60270ee267df8facca00ccc7668ab31ea9639fc6e1b866e5bd",
-      "size": 19804
+      "sha256": "003266a098235de8ea6698b02c18f66aa054c21c8b9577efd696f2edd3705350",
+      "size": 10287
     },
     "assets/js/tw.js": {
       "sha256": "4edbf171396fccd18170b76717aa71f4e3fea90dbdad4a16c5a24ff5c3eb6abe"
@@ -763,8 +764,8 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "bb73e90f72f2cd15471806a4be3e7f8ff0614eb48364f9ce7f56593ecc7d772b",
-      "size": 3059
+      "sha256": "96b635b094b32c8fc606aa93542c8624e9826d2a47fd78acc771da08084ccd5f",
+      "size": 1742
     },
     "cloud/browser/files.asp": {
       "sha256": "045705d18b86b02b848598158e48be98900962af184d99e530fe252f4bd42a4a",
@@ -791,8 +792,8 @@
       "size": 11253
     },
     "cloud/browser/search.asp": {
-      "sha256": "31e1ca25c4f7f6161083db6356baa9f67ceb414b5fcead255469f9fdde22c19d",
-      "size": 17718
+      "sha256": "86e893bd1558211e5ca76dcddf9f33e4221283a6a1042b8019d8c3149b9df2c7",
+      "size": 15940
     },
     "cloud/browser/styles.css": {
       "sha256": "441a90d5abb78d260113f02a0be0d25c6a14e3d8bf67df95c3fc1e737bcb6b3a",
@@ -803,11 +804,11 @@
       "size": 28856
     },
     "contact.html": {
-      "sha256": "4e96378baa3c0af5bfa76a8bfa0d5fdd0a6e1cdc9abe3d2f2564255c1d8e721a",
-      "size": 327
+      "sha256": "ec47be1087559454951490bef685a43806feeb8feba2232d8ad019c9d20881ea",
+      "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "3eac3289780bd3cc705aca23cfddb65041fe4ab6078bf2b7b68f15c897e83cde",
+      "sha256": "715c46d8ff2815357f5efff4a626cfa244c89c88b150bfc8e3351e95e2322cf4",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -915,8 +916,8 @@
       "size": 33239
     },
     "japan.html": {
-      "sha256": "afac9a2e9c686a15fb9836bdf54e4b80f785c9cfd17cd02ed84cedff139a66c9",
-      "size": 3583
+      "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
+      "size": 3541
     },
     "login.html": {
       "sha256": "dfcf39d4670cf62a79b0d5f4908eadb7a4321e28772d53b20f51703f26678aa8",
@@ -935,8 +936,8 @@
       "size": 20178
     },
     "software.html": {
-      "sha256": "c71553eaeaa936c46885d8f1cd8524de839733469a7c23a114c0af3b85f0a8a8",
-      "size": 2915
+      "sha256": "ace84106a5eef3718bfcb344ca82661f439b3ecd48e29ee296df7aa8240c5fb9",
+      "size": 2908
     },
     "sysinfo.html": {
       "sha256": "883d11d823c1e9985bd4462139aaf2e43534bbbe8cacc1f632183a4fed788aee",
@@ -951,28 +952,28 @@
       "size": 1504
     },
     "SystemManager/assets/js/datacenter.js": {
-      "sha256": "03e295d22b96c1394a0b0e5c75b84d3eb4d8690c7819241fc9587f113aa735e5",
-      "size": 6960
+      "sha256": "fd3d85963e28f7f628be72e60656ef6c4d79cb5e85e70ac94bf226f390f6b6a0",
+      "size": 7341
     },
     "SystemManager/datacenter.html": {
-      "sha256": "1b84b9e737ece77ed04af6d482c891fab88e3ac60d18a668ac5c45a96110f0a3",
-      "size": 5189
+      "sha256": "60177b6e60b0f38de4f0d1de1bdf03ffa47cacfd88b3c880b832b04d271586d8",
+      "size": 4454
     },
     "web.html": {
-      "sha256": "51ddffe31d490810c139bf43ef581e542803de5d82072e6c97eeb77dfee0ab0c",
-      "size": 3732
+      "sha256": "f1ad19cad845e7ec575fbfe027aaf2c1608f343b60bd2b4fff077fbcae95e2cd",
+      "size": 3707
     },
     "worker_SheetCreater.html": {
-      "sha256": "a9bfa810f0c457add9fa03723064965f53c15f44f989fdea5200337456ec86e3",
-      "size": 18511
+      "sha256": "5e67201b15408891647d0c78c3973c347a93c6ba0d561748ef6d68f8c76dd67c",
+      "size": 21822
     },
     "worker_SlideEditor.html": {
       "sha256": "1e8c7e1b032eaf395aa6e57f2042fbf8aec21355f44aff871a1b7c88bce64024",
       "size": 17101
     },
     "worker_WriteEditor.html": {
-      "sha256": "b8a9e8ad459c66faad123d1298474653b4f8321831d2b2f928c9d5b2722127ac",
-      "size": 27286
+      "sha256": "fbf343f8575965a51ae590d2db22df7af2e4960980052100fad17b2e18242cb3",
+      "size": 29630
     },
     "assets/css/developer-preview-host.css": {
       "sha256": "2913f819f6a10d08f447135fa0b341f22d90c692b48ccbb0a1af9785548fa572",
@@ -1155,8 +1156,8 @@
       "size": 201
     },
     "admin_api/visitorAnalytics.asp": {
-      "sha256": "9fd0de089eafed06a3285733103f2873848b9b526f3ed7841241dbef426ed11c",
-      "size": 8462
+      "sha256": "c78661bbbee9ec46419d4ea410542548a504200ed0eff006ac6c4cad6c2d7cba",
+      "size": 8418
     },
     "api/visitor-analytics.asp": {
       "sha256": "895db988c97253bd7f16586f4a7a436adbcc1e45a4d565a17e1f9830d9e3e2e2",
@@ -1198,20 +1199,20 @@
       "size": 88905
     },
     "admin_api/adminAuth.asp": {
-      "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
-      "size": 5409
+      "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d",
+      "size": 6434
     },
     "SystemManager/assets/js/admin-shell.js": {
-      "sha256": "37249138efad5c761c78abbea4444a7aa9f4ae95600f1739d72d447dde18356e",
-      "size": 1025
+      "sha256": "6330c35a3290aaa826f60d0c15ad6437f7a7b19ab8c4081ddf524d9ab1e1c3b3",
+      "size": 837
     },
     "SystemManager/dashboard.html": {
       "sha256": "2e5e7d1bbb131a9f89bbce53088d73f0da2f6f85c6cd2996b4629de4fbee426d",
       "size": 3421
     },
     "SystemManager/developer-platform.html": {
-      "sha256": "c7af6badcd41212b19b5b25912da2e12e8060fda1e317f8f3ab83f80760fd827",
-      "size": 2453
+      "sha256": "8a8ca422b69136e33e7ea3eb05afd2884967f09a6e3e111e910f6284cb3516d6",
+      "size": 2526
     },
     "SystemManager/feedback.html": {
       "sha256": "3d96d393b93aef06d9068786740d213637101d1ed1634e8baee6ad6327217c43",
@@ -1222,8 +1223,8 @@
       "size": 953
     },
     "SystemManager/functions.html": {
-      "sha256": "d13b2240d397d869a20918369c68fb01c2d918b2953a266f20ebc9aac6ef3e0b",
-      "size": 6125
+      "sha256": "5aa990ebfb8ab59f2b192a91b426709cf8d26c38bb6e230393912a4a8cfbfc2d",
+      "size": 6234
     },
     "SystemManager/news.html": {
       "sha256": "6194833f0dacb488144432a303b8f709bb6a8b767605654028977114dd15bf36",
@@ -1234,8 +1235,8 @@
       "size": 2137
     },
     "SystemManager/users.html": {
-      "sha256": "d5b500062014e83a84c125790ff4a23c6c6612778a6923374f6995a00ae23abc",
-      "size": 3418
+      "sha256": "eae6577d735c69e46d9622f612b55206a24c3a9df65fac1948b1cfd04e1b7340",
+      "size": 3409
     },
     "SystemManager/assets/css/developer-platform-admin.css": {
       "sha256": "a1267d674dce9cc676620ac7bd35629dac3eef4e40db403013b25ff02cae3a33",
@@ -1250,12 +1251,12 @@
       "size": 1391
     },
     "SystemManager/assets/js/developer-platform-admin.js": {
-      "sha256": "8260d721ea9014b720f97e0fc69a2d659627a518cf9baf887d9418d91f5139a6",
-      "size": 12382
+      "sha256": "a64c3f1317591eb54ba25a6f53b006888aa4b725a8e9e682677d65ab2eeebad3",
+      "size": 16994
     },
     "SystemManager/assets/js/function-catalog-admin.js": {
-      "sha256": "9c3d64ee5b97898fc0523a9552c8c008efc057d8c61a18480a862de1f9e2ea2a",
-      "size": 17676
+      "sha256": "99b2e6b24e9c78287242869924fa853d47fdc7601709f674296239085b413cde",
+      "size": 19031
     },
     "SystemManager/assets/js/news.js": {
       "sha256": "e80bea1e20d0e7c2821f2ce27a3231a4661d273462ccb5b5aba9d6c2d6b29858",
@@ -1266,8 +1267,8 @@
       "size": 839
     },
     "SystemManager/assets/js/users.js": {
-      "sha256": "e4575d0afe33e9511af0d2231e008f26b5429e72e179757b20efb94a60599add",
-      "size": 4785
+      "sha256": "d97eb67a94b112cd538733657b7e58bff1758d2dc49ece3c6f6287341d653b61",
+      "size": 5481
     },
     "cloud/browser/manage.html": {
       "sha256": "a27e57ed320cd426474d520f5c14c73530656f40dacd924c26665e3fc91632cf",
@@ -1298,11 +1299,43 @@
       "size": 13398
     }
   },
-  "releaseScope": "wendao-gtfs-parallel-departures-and-proxy-cache",
+  "releaseScope": "t006-date-authority-backfill",
   "uploadFiles": [
-    "api/transit-proxy.asp",
-    "assets/js/transit-providers.js",
-    "road.html",
+    "admin_api/adminAuth.asp",
+    "admin_api/deleteDatacenter.asp",
+    "admin_api/saveDatacenter.asp",
+    "admin_api/visitorAnalytics.asp",
+    "api/function-catalog.asp",
+    "aplay.html",
+    "assets/css/context_menu.css",
+    "assets/js/connectivity.js",
+    "assets/js/contextmenu-guard.js",
+    "assets/js/desktalk.js",
+    "assets/js/desktop-functions.js",
+    "assets/js/file-search.js",
+    "assets/js/function-center.js",
+    "assets/js/function-sync.js",
+    "assets/js/locale-region.js",
+    "assets/js/start-menu-functions.js",
+    "assets/js/system-session.js",
+    "assets/js/taskbar-experience.js",
+    "cloud/browser/file-search.css",
+    "cloud/browser/search.asp",
+    "contact.html",
+    "japan.html",
+    "software.html",
+    "SystemManager/assets/js/admin-shell.js",
+    "SystemManager/assets/js/datacenter.js",
+    "SystemManager/assets/js/developer-platform-admin.js",
+    "SystemManager/assets/js/function-catalog-admin.js",
+    "SystemManager/assets/js/users.js",
+    "SystemManager/datacenter.html",
+    "SystemManager/developer-platform.html",
+    "SystemManager/functions.html",
+    "SystemManager/users.html",
+    "web.html",
+    "worker_SheetCreater.html",
+    "worker_WriteEditor.html",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",

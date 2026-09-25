@@ -1462,18 +1462,33 @@
         name,
         classification
       ) {
+        const label =
+          String(name || "")
+            .trim() || "—";
+
+        /*
+         * 同一条线路会在多个候选班次里重复出现（丸ノ内線 40 班全属它），
+         * 不去重的话界面会显示成「丸ノ内線·地下铁/捷运 / 丸ノ内線·地下铁/捷运」。
+         */
+        const duplicate =
+          excludedServices.some(
+            item =>
+              item.name === label
+          );
+
         if (
-          excludedServices.length < 6
+          duplicate ||
+          excludedServices.length >= 6
         ) {
-          excludedServices.push({
-            name:
-              String(name || "")
-                .trim() || "—",
-            kind:
-              classification?.kind ||
-              "other"
-          });
+          return;
         }
+
+        excludedServices.push({
+          name: label,
+          kind:
+            classification?.kind ||
+            "other"
+        });
       }
       let tripDetailOk = false;
 

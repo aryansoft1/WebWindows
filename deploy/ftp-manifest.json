@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.27",
-  "catalogVersion": "2026.09.25.27",
-  "generatedAt": "2026-09-25T09:05:33.947Z",
+  "releaseVersion": "2026.09.25.28",
+  "catalogVersion": "2026.09.25.28",
+  "generatedAt": "2026-09-25T09:10:38.678Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.26",
+  "previousReleaseVersion": "2026.09.25.27",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -811,7 +811,7 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "9202c8b5a8eb97a3797d96653344929327d6db03cd47d8c37db4950cf4b0699a",
+      "sha256": "86d91d4a285904fe4ab16d9e9c86db2c52013880279453d0cd136ab1ecb33bee",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1119,7 +1119,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "5dea78f4e0a9d98e7a18b182c9b1305839c014e469f9f3074e87f4f03c4f6be8",
+      "sha256": "de55ba10ec25a87ddb25031c90b63558a2ca88e98dbf069a8613125c5cea88f8",
       "size": 16440
     },
     "assets/css/navigation.css": {
@@ -1198,8 +1198,8 @@
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "ed9dc2cf69b243ff585bd4707f6348721d7968eafeee76f2783f6a2617a1eff5",
-      "size": 123620
+      "sha256": "11b13844fa8a5492496f8e3d9ed30c1659f529e34c44f9ebbf55765f187925dc",
+      "size": 124043
     },
     "admin_api/adminAuth.asp": {
       "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d",
@@ -1310,10 +1310,9 @@
       "size": 902
     }
   },
-  "releaseScope": "wendao-overseas-scope-attribution",
+  "releaseScope": "wendao-overseas-scope-dedupe",
   "uploadFiles": [
     "assets/js/transit-providers.js",
-    "assets/js/transit-app.js",
     "road.html",
     "data/apps/system-apps.json",
     "api/release-version.asp",

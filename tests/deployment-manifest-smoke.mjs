@@ -119,6 +119,14 @@ if (manifest.releaseScope === "navigation-map") {
     "cloud/browser/private-files.asp",
     "deploy/ftp-manifest.json",
   ], "cloud layout hotfix releases must upload only CSS and the ASP cache-key rollback");
+} else if (manifest.releaseScope === "cloud-file-search-submit") {
+  assert.deepEqual(uploadFiles, [
+    "cloud/browser/search-ui.js",
+    "cloud/browser/file-search.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/private-files.asp",
+    "deploy/ftp-manifest.json",
+  ], "cloud file search releases must upload only the search UI, its layout CSS and the two pages that load them");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

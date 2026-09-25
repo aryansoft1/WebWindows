@@ -218,6 +218,16 @@ End If
     .picker-bar{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:68px;padding:10px 18px;border-top:1px solid #dbe3ec;background:rgba(255,255,255,.97);box-shadow:0 -8px 24px rgba(15,23,42,.08)}
     .picker-selection strong,.picker-selection span{display:block}.picker-selection span{margin-top:4px;color:#64748b;font-size:12px}.picker-actions{display:flex;gap:8px;align-items:center}.picker-actions button:disabled{opacity:.48;cursor:not-allowed}
     .picker-name{width:min(320px,36vw);padding:8px 10px;border:1px solid #94a3b8;border-radius:7px;font:inherit}
+    .private-layout{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px;padding:22px}
+    .private-layout .files{flex:1;min-width:0;padding:0}
+    .private-sidebar{flex:0 0 200px;padding:12px 10px;border:1px solid #dbe3ec;border-radius:11px;background:#fff}
+    .private-sidebar-title{padding:0 8px 8px;color:#64748b;font-size:12px;font-weight:700}
+    .private-folder-tree,.private-folder-children{margin:0;padding:0;list-style:none}
+    .private-folder-children{padding-left:12px}
+    a.private-tree-node{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;color:#334155;text-decoration:none}
+    a.private-tree-node:hover{background:#eff6ff}
+    a.private-tree-node.selected{color:#1d4ed8;background:#dbeafe;font-weight:600}
+    .private-tree-icon{flex:0 0 auto;color:#8a5a00;font-size:12px}
   </style>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
@@ -262,7 +272,41 @@ End If
       End If
     %>
   </nav>
-  <main class="files">
+  <div class="private-layout">
+    <aside class="private-sidebar" aria-label="私人资料夹">
+      <div class="private-sidebar-title">资料位置</div>
+      <%
+        Dim navParts, navIndex, navPath, navCurrent, navChild
+        navPath = ""
+        navParts = Split(relativePath, "/")
+        navCurrent = (relativePath <> "")
+      %>
+      <a class="private-tree-node<% If Not navCurrent Then Response.Write " selected"" aria-current=""page""" %>" href="<%=Html(PrivateFolderUrl(""))%>"><span class="private-tree-icon" aria-hidden="true">▣</span>我的文件</a>
+      <ul class="private-folder-tree">
+        <%
+          For navIndex = 0 To UBound(navParts)
+            If navParts(navIndex) <> "" Then
+              navPath = JoinPrefix(navParts, navIndex)
+        %>
+          <li>
+            <a class="private-tree-node<% If navIndex = UBound(navParts) Then Response.Write " selected"" aria-current=""page""" %>" href="<%=Html(PrivateFolderUrl(navPath))%>"><span class="private-tree-icon" aria-hidden="true">▰</span><%=Html(PrivateFolderDisplayName(navParts(navIndex)))%></a>
+            <% If navIndex = UBound(navParts) Then %>
+              <ul class="private-folder-children">
+                <% For Each navChild In folder.SubFolders %>
+                  <% If LCase(navChild.Name) <> "_system" Then %>
+                <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(navPath & "/" & navChild.Name))%>"><span class="private-tree-icon" aria-hidden="true">▰</span><%=Html(PrivateFolderDisplayName(navChild.Name))%></a></li>
+                  <% End If %>
+                <% Next %>
+              </ul>
+            <% End If %>
+          </li>
+        <%
+            End If
+          Next
+        %>
+      </ul>
+    </aside>
+    <main class="files">
     <%
       Dim childFolder, childPath, fileItem, extension, filePath, visibleCount, fileClass, fileGlyph
       visibleCount = 0
@@ -317,6 +361,7 @@ End If
       <div class="empty"><h2>此文件夹为空</h2><p>可以使用右键菜单在云资料中建立文件夹。</p></div>
     <% End If %>
   </main>
+  </div>
   <div id="status" aria-live="polite"></div>
   <% If pickerMode Then %>
   <footer class="picker-bar">

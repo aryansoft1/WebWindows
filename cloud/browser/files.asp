@@ -154,7 +154,7 @@ itemCount = subfolders.Count + visibleFileCount
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WebWindows <%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></title>
-  <link rel="stylesheet" href="styles.css?v=20260809-device-1">
+  <link rel="stylesheet" href="styles.css?v=20260926-folder-tree-1">
   <link rel="stylesheet" href="file-search.css?v=20260809-search-1">
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
@@ -162,6 +162,31 @@ itemCount = subfolders.Count + visibleFileCount
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
   <script defer src="../../assets/js/file-search.js?v=20260809-search-1"></script>
   <script defer src="search-ui.js?v=20260809-search-1"></script>
+  <script>
+    // window.WebWindowsCloudI18n is optional everywhere else in the cloud browser
+    // (search-ui.js and device-locations.js both fall back when it is missing), but
+    // toolbar.js calls cloudI18n.apply() unconditionally. The resulting TypeError
+    // aborted the last statements of toolbar.js, so the breadcrumb trail and the
+    // sidebar folder tree were never rendered. Publish the facade before toolbar.js
+    // runs. Language resolution mirrors what those two scripts already do, and
+    // toolbar.js translates its own [data-cloud-i18n] labels one line earlier, so
+    // apply() has nothing left to do.
+    (function () {
+      if (window.WebWindowsCloudI18n) return;
+      window.WebWindowsCloudI18n = {
+        labels: {},
+        language: function () {
+          var desktop = window.WebWindowsI18n;
+          var value = (desktop && desktop.getLanguage && desktop.getLanguage()) ||
+            window.localStorage.getItem("lang") || document.body.dataset.language || "zh";
+          value = String(value).toLowerCase();
+          if (value === "jp" || value.indexOf("ja") === 0) return "jp";
+          return value.indexOf("en") === 0 ? "en" : "zh";
+        },
+        apply: function () {}
+      };
+    })();
+  </script>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
       data-current-path="<%=CloudHtml(relativePath)%>" data-node-name="<%=CloudHtml(CLOUD_NODE_NAME)%>"

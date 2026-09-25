@@ -333,11 +333,36 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
   padding-left: 13px;
 }
 
+/* Folder names come from the folder tree API, so keep long ones on one line
+   instead of letting a deep folder name push the sidebar wider than 210px. */
+.folder-label {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-label:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: -2px;
+}
+
 .folder-label::before {
   content: "›";
   display: inline-block;
   margin-right: 7px;
   color: #94a3b8;
+}
+
+/* Top level rows are the subfolders of the cloud root, so mark them as folders
+   and leave the chevron for the nested levels below them. */
+#folder-tree > .folder-node > .folder-label::before {
+  content: "▰";
+  color: #8a5a00;
 }
 
 .tree-error {

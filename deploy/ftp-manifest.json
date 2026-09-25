@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.2",
+  "releaseVersion": "2026.09.26.3",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-25T15:47:34.001Z",
+  "generatedAt": "2026-09-25T16:10:52.991Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.1",
+  "previousReleaseVersion": "2026.09.26.2",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -771,16 +771,16 @@
       "size": 1902
     },
     "cloud/browser/files.asp": {
-      "sha256": "ff4b76897dbb875d7e807ba5fbcebb3a18f8eba7ac4dcce9852876b035709928",
-      "size": 22296
+      "sha256": "55ec2377764a5215dd1cefdff4fa1d914c8e57cb239abcedf46102bf06c1e99f",
+      "size": 23556
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "80a22177f1967892139bbf04f6dde372e693e20eda60e24a29e9a67c80386914",
-      "size": 34592
+      "sha256": "8803b249fcd1369a663a6177e4483af1dc0bae8c973156064753ca5a61a8c61d",
+      "size": 37191
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -799,8 +799,8 @@
       "size": 15940
     },
     "cloud/browser/styles.css": {
-      "sha256": "e7703088ff103b20f1092c54611424fa8c91dbb19a3227c042c37a6471c9b8a5",
-      "size": 13560
+      "sha256": "bee07487c0931105f8cbef5fdfb97d8dd86695f13f4878f894827b9447fdba3f",
+      "size": 14216
     },
     "cloud/browser/toolbar.js": {
       "sha256": "c904d57f6d38a1b9d0b0ff856388fa8f129005ce49762205cf50849587fab978",

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.25.26",
   "catalogVersion": "2026.09.25.26",
-  "generatedAt": "2026-09-25T08:58:04.911Z",
+  "generatedAt": "2026-09-25T08:58:42.565Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -811,7 +811,7 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "10cf781079025302c274e27023a394f13097a281ef63985b177197285891c941",
+      "sha256": "a763a04a6f7d72583fb0d22944bf6162412a3940945bc3f4c6054b4c15ab5896",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {

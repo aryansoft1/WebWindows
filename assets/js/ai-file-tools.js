@@ -95,8 +95,16 @@
 
   async function buildCriteria(args) {
     const files = global.WebWindows?.files;
-    if (!files?.search || !files?.parseQueryAsync) throw new Error("统一文件搜索暂时不可用。");
-    const parsed = await files.parseQueryAsync(args.query, { allowAI: false });
+    // file-query-parser.js exposes the v2 parser as WebWindows.fileQuery.parseAsync.
+    // This used to ask for files.parseQueryAsync, which no module has ever defined, so
+    // every searchFiles call failed with "统一文件搜索暂时不可用。" Keep the v1 parser as
+    // a fallback for windows that load file-search.js without the v2 parser.
+    const parseAsync = global.WebWindows?.fileQuery?.parseAsync;
+    const parseSync = files?.parseQuery;
+    if (!files?.search || (!parseAsync && !parseSync)) throw new Error("统一文件搜索暂时不可用。");
+    const parsed = parseAsync
+      ? await parseAsync.call(global.WebWindows.fileQuery, args.query, { allowAI: false })
+      : parseSync.call(files, args.query);
     const criteria = Object.assign({}, parsed);
     for (const key of ["nameContains", "extensions", "mimeTypes", "sources", "createdFrom", "createdTo", "modifiedFrom", "modifiedTo", "uploadedFrom", "uploadedTo", "sort", "order"]) {
       if (args[key] !== undefined) criteria[key] = args[key];

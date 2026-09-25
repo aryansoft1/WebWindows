@@ -185,8 +185,35 @@
       return String(left.path).localeCompare(String(right.path));
     });
   }
+  // search-ui.js passes allowAI:true when the user submits the box, expecting an
+  // ambiguous query to be understood rather than matched literally. That option used to
+  // be dropped on the floor, so the box only ever did literal matching. When the v2 parser
+  // (file-query-parser.js, exposed as WebWindows.fileQuery) is present, hand ambiguous
+  // queries to it; it only calls the model for queries its own parser flags as needing AI
+  // and silently falls back to the local parse if that call fails.
+  const AI_PARSER_OVERRIDES = ["nameContains", "nameExact", "extensions", "mimeTypes", "folderPath", "sources",
+    "createdFrom", "createdTo", "modifiedFrom", "modifiedTo", "uploadedFrom", "uploadedTo", "sort", "order", "limit"];
+
+  async function resolveCriteria(input, overrides) {
+    const options = overrides || {};
+    const parser = global.WebWindows?.fileQuery;
+    if (typeof input === "string" && options.allowAI === true && typeof parser?.parseAsync === "function") {
+      try {
+        const parsed = await parser.parseAsync(input, { now: options.now, signal: options.signal });
+        const explicit = {};
+        for (const key of AI_PARSER_OVERRIDES) {
+          if (options[key] !== undefined) explicit[key] = options[key];
+        }
+        return Object.assign({}, parsed, explicit, { signal: options.signal });
+      } catch (error) {
+        // A failed or unavailable model call must not break the box; use the local parser.
+      }
+    }
+    return Object.assign({}, typeof input === "string" ? parseQuery(input, overrides) : (input || {}), overrides || {});
+  }
+
   async function search(input, overrides) {
-    const criteria = Object.assign({}, typeof input === "string" ? parseQuery(input, overrides) : (input || {}), overrides || {});
+    const criteria = await resolveCriteria(input, overrides);
     criteria.sources = unique(criteria.sources?.length ? criteria.sources : ["private", "public", "device"]);
     criteria.extensions = unique(criteria.extensions || []); criteria.mimeTypes = unique(criteria.mimeTypes || []);
     const warnings = []; const tasks = [searchCloud(criteria, criteria.signal).catch((error) => ({ results: [], warnings: [`cloud:${error.message}`] }))];

@@ -96,6 +96,16 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "visitor analytics fix releases must upload only the admin shell and reporting presentation slice");
+} else if (manifest.releaseScope === "desktalk-file-search") {
+  assert.deepEqual(uploadFiles, [
+    "assets/js/ai-tool-registry.js",
+    "assets/js/ai-file-tools.js",
+    "assets/js/file-search.js",
+    "assets/js/desktalk.js",
+    "cloud/browser/files.asp",
+    "cloud/browser/private-files.asp",
+    "deploy/ftp-manifest.json",
+  ], "DeskTalk file search releases must upload only the search tool chain and the two cloud pages that load it");
 } else if (manifest.releaseScope === "cloud-layout-hotfix") {
   assert.deepEqual(uploadFiles, [
     "cloud/browser/file-search.css",

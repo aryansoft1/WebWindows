@@ -191,7 +191,8 @@ End If
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
-  <script defer src="../../assets/js/file-search.js?v=20260809-search-1"></script>
+  <script defer src="../../assets/js/file-query-parser.js?v=20260926-file-search-1"></script>
+  <script defer src="../../assets/js/file-search.js?v=20260926-file-search-1"></script>
   <script defer src="search-ui.js?v=20260809-search-1"></script>
   <link rel="stylesheet" href="file-search.css?v=20260809-search-1">
   <style>

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.4",
+  "releaseVersion": "2026.09.26.5",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-25T17:01:50.863Z",
+  "generatedAt": "2026-09-25T17:29:40.702Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.3",
+  "previousReleaseVersion": "2026.09.26.4",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -551,8 +551,8 @@
       "size": 1897
     },
     "assets/js/desktalk.js": {
-      "sha256": "a005879d0f5f4683fa46c48a5f5e7b2f1f0c5d00df7be9a4c6ea19c465c86d71",
-      "size": 98736
+      "sha256": "884e27e0926d2b676597765ba9a4f06be882d30566887145b41a62e2a3e47a3c",
+      "size": 106952
     },
     "assets/js/desktop-functions.js": {
       "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
@@ -571,8 +571,8 @@
       "size": 21102
     },
     "assets/js/file-search.js": {
-      "sha256": "c276f15ad557ca63780d71fd002d33f25b3941dda19b6dd69d85632e69ed03ac",
-      "size": 15080
+      "sha256": "a289179fa8e184d68cd054419df8403c5bb5d28bda587ab7e898eec66f902092",
+      "size": 16610
     },
     "assets/js/function-center.js": {
       "sha256": "fe3d31b1e11aff7a82fb9312d4e32e9e5262dc0cfa3c22c82e6ab63e87fafbf0",
@@ -771,16 +771,16 @@
       "size": 1902
     },
     "cloud/browser/files.asp": {
-      "sha256": "332b370b4a6cdb872ed324bd93d4f23c0de184ade8585e6b28185ac3fc9a0fd1",
-      "size": 27586
+      "sha256": "de11b60e92253ebaab30e93285af862ad345920f19af1eae22651b51a1a999e4",
+      "size": 27685
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "8803b249fcd1369a663a6177e4483af1dc0bae8c973156064753ca5a61a8c61d",
-      "size": 37191
+      "sha256": "e7944d85acf7ef7986cc16f33cf98d2b57392ac939ba449e1565821d0a564bbb",
+      "size": 37290
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -1290,8 +1290,8 @@
       "size": 4654
     },
     "assets/js/ai-file-tools.js": {
-      "sha256": "51bb624a4181e70504bacfa121a16b1d8556f3d23be8a918e942493d04dd6656",
-      "size": 10216
+      "sha256": "ee7e7758b2f4bb2149583f1ab036e3fe46bdb00366c99187834b35eb3dd3b82f",
+      "size": 10765
     },
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
@@ -1310,10 +1310,12 @@
       "size": 902
     }
   },
-  "releaseScope": "cloud-layout-hotfix",
+  "releaseScope": "desktalk-file-search",
   "uploadFiles": [
-    "cloud/browser/file-search.css",
-    "cloud/browser/styles.css",
+    "assets/js/ai-tool-registry.js",
+    "assets/js/ai-file-tools.js",
+    "assets/js/file-search.js",
+    "assets/js/desktalk.js",
     "cloud/browser/files.asp",
     "cloud/browser/private-files.asp",
     "deploy/ftp-manifest.json"

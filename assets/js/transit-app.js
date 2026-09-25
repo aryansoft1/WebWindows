@@ -21,6 +21,14 @@
   const chinaRail =
     new LIB.ChinaRailTransitProvider();
 
+  /*
+   * 全球长途 provider（第三层降级，按调用计费）。
+   * 未配置 Key 时它的 capabilities 返回 enabled:false，
+   * searchJourneyWithFallback 会整段跳过 —— 零请求、零行为变化。
+   */
+  const longDistance =
+    new LIB.LongDistanceTransitProvider();
+
   const resolver =
     new window
       .WebWindowsTransitPosition
@@ -80,6 +88,26 @@
       "errUpstreamBlocked",
     station_source_invalid:
       "errUpstreamBlocked",
+
+    /*
+     * api/longdistance-proxy.asp 错误码。
+     * longdistance_no_direct 正常由 coveredErrorMessage 带变量组装，
+     * 这里只是兜底（避免直接显示原始错误码）。
+     */
+    longdistance_no_direct:
+      "errLongDistanceNoDirect",
+    longdistance_not_configured:
+      "errNotCovered",
+    not_configured: "errNotCovered",
+    longdistance_timeout: "errUpstreamBlocked",
+    longdistance_failed: "errUpstreamBlocked",
+    longdistance_error: "errUpstreamBlocked",
+    longdistance_unauthorized:
+      "errUpstreamBlocked",
+    longdistance_rate_limited:
+      "errUpstreamBlocked",
+    missing_route: "errGeneric",
+    invalid_action: "errGeneric",
     parse_failed:
       "errScheduleFailed",
     schedule_unavailable:
@@ -1482,10 +1510,18 @@
   }
 
   function sourceLabel() {
-    return state.journey
-      ?.provider === "china-rail"
-      ? T("sourceChinaRail")
-      : T("sourceTransitland");
+    const provider =
+      state.journey?.provider;
+
+    if (provider === "china-rail") {
+      return T("sourceChinaRail");
+    }
+
+    if (provider === "longdistance") {
+      return T("sourceLongDistance");
+    }
+
+    return T("sourceTransitland");
   }
 
   function operatorLabel() {
@@ -2217,6 +2253,50 @@
     fallbackMessage,
     fallbackDetails
   ) {
+    /*
+     * 全球长途源（第三层，付费）也确认没有直达线路。
+     *
+     * 这条分支只有在长途 provider **真的被调用过**时才会命中
+     * （降级链里 station_not_found → 调用 → 失败 → 带 longdistanceCode
+     * 上抛），因此不会影响未配置 Key 时的任何既有文案。
+     */
+    if (
+      String(
+        error?.code || ""
+      ) === "longdistance_no_direct"
+    ) {
+      const rejected =
+        (
+          error?.details
+            ?.rejected || []
+        )
+          .slice(0, 3)
+          .join(" / ");
+
+      return T(
+        "errLongDistanceNoDirect",
+        {
+          origin:
+            state.query?.origin || "—",
+
+          destination:
+            state.query?.destination || "—",
+
+          detail:
+            rejected
+              ? T(
+                  "errLongDistanceRejected",
+                  {
+                    routes: rejected
+                  }
+                )
+              : T(
+                  "errLongDistanceNone"
+                )
+        }
+      );
+    }
+
     const gtfsMissed =
       [
         "stop_not_found",
@@ -2574,6 +2654,8 @@
 
             chinaRail,
 
+            longDistance,
+
             origin,
 
             destination,
@@ -2601,8 +2683,15 @@
                 state.fallbackDetails =
                   details || null;
 
+                /*
+                 * 状态文案跟着实际回落到哪一层走：
+                 * 12306 站表里没有这个站名 → 正在改查全球长途源；
+                 * 其余情况仍是 12306。
+                 */
                 setStatus(
-                  "transitStepRail"
+                  code === "longdistance_stage"
+                    ? "transitStepLongDistance"
+                    : "transitStepRail"
                 );
               }
           },

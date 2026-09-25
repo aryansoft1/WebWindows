@@ -1,4 +1,4 @@
-import assert from "node:assert/strict";
+﻿import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import vm from "node:vm";
 
@@ -302,12 +302,14 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-12/);
-assert.match(html, /transit-app\.js\?v=20260925-12/);
+assert.match(html, /transit-providers\.js\?v=20260925-13/);
+assert.match(html, /transit-app\.js\?v=20260925-13/);
+assert.match(html, /navigation-app\.js\?v=20260925-2/);
 assert.match(html, /navigation\.css\?v=20260925-4/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-11/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-12/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-11/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-12/);
+assert.doesNotMatch(html, /navigation-app\.js\?v=20260925-1/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -2102,3 +2104,811 @@ assert.doesNotMatch(
   /Application\.UnLock key/,
   "Application.UnLock must not be called with a key"
 );
+/* =====================================================================
+ * 全球长途 provider（第三层降级，按调用计费）
+ *
+ * 商业逻辑：GTFS（免费）→ 12306（免费）→ Rome2Rio（付费）。
+ * 付费源必须同时满足「已配置 Key」+「12306 说站表里没这个站名」才调用；
+ * 否则一次海外查询就可能产生真金白银的调用费。
+ * 未配置 Key 时必须**完全惰性**：不发请求、错误码与文案与现在完全一致。
+ * ===================================================================== */
+const longDistanceProxySource =
+  await read("../api/longdistance.config.example.asp");
+
+const longDistanceProxy =
+  await read("../api/longdistance-proxy.asp");
+
+/* 注释里会提到 Dir()/UnLock 等历史坑，检查代码时必须先剥掉注释 */
+const longDistanceProxyCode =
+  longDistanceProxy
+    .split(/\r?\n/)
+    .filter(line => !/^\s*'/.test(line))
+    .join("\n");
+
+/* ---- 服务端代理契约 ---- */
+assert.match(
+  longDistanceProxyCode,
+  /Sub SendCapabilities/,
+  "the long-distance proxy must expose a keyless capabilities probe"
+);
+assert.match(
+  longDistanceProxyCode,
+  /JsonBool\(Len\(apiKey\) > 0\)/,
+  "capabilities must emit a real JSON boolean (CStr(True) is not valid JSON)"
+);
+assert.doesNotMatch(
+  longDistanceProxyCode,
+  /CStr\(Len\(apiKey\) > 0\)/,
+  'CStr(True) would emit "True" and break JSON.parse on the client'
+);
+assert.match(
+  longDistanceProxyCode,
+  /JsonBool\(InStr\(1, body/,
+  "selftest booleans must use JsonBool as well"
+);
+assert.match(
+  longDistanceProxyCode,
+  /PlainSnippet/,
+  "selftest must not hard-truncate raw JSON (a split escape pair is invalid JSON)"
+);
+assert.doesNotMatch(
+  longDistanceProxyCode,
+  /JsonEscape\(Left\(body/,
+  "truncating raw JSON mid-escape produces invalid JSON"
+);
+/* Key 只能出现在上游 URL 里，绝不能出现在任何响应体构造中 */
+assert.doesNotMatch(
+  longDistanceProxyCode,
+  /Response\.Write[^\r\n]*apiKey/,
+  "the API key must never be written into a response"
+);
+assert.doesNotMatch(
+  longDistanceProxyCode,
+  /"head"[^\r\n]*apiKey/,
+  "the selftest payload must never include the API key"
+);
+assert.match(
+  longDistanceProxyCode,
+  /AddQueryParam parts, "key", CleanText\(apiKey\)/,
+  "Rome2Rio v1 authenticates through the query string"
+);
+assert.match(
+  longDistanceProxyCode,
+  /Replace\(raw, "key=", "\|KEYREMOVED\|"\)/,
+  "the cache key must be derived with the API key stripped out"
+);
+assert.match(
+  longDistanceProxyCode,
+  /Application\.Remove key/,
+  "expired cache entries must be removable (UnLock takes no argument)"
+);
+assert.doesNotMatch(
+  longDistanceProxyCode,
+  /Application\.UnLock key/,
+  "Application.UnLock must not be called with a key"
+);
+assert.doesNotMatch(
+  longDistanceProxyCode,
+  /\bDir\(/,
+  "the ASP engine has no Dir(); existence checks must use FileSystemObject"
+);
+assert.match(
+  longDistanceProxyCode,
+  /Scripting\.FileSystemObject/,
+  "config existence must be checked with FileSystemObject"
+);
+assert.match(
+  longDistanceProxyCode,
+  /ADODB\.Stream/,
+  "config files must be read as UTF-8 via ADODB.Stream"
+);
+assert.match(
+  longDistanceProxyCode,
+  /LONGDISTANCE_CACHE_TTL_SECONDS = 300/,
+  "paid responses must be cached to bound cost"
+);
+/* 上游地址必须锁死在 rome2rio.com 的 https，避免配置文件把请求引去别处 */
+assert.match(
+  longDistanceProxyCode,
+  /InStr\(1, configured, "rome2rio\.com", vbTextCompare\) = 0/,
+  "the upstream host must be pinned to rome2rio.com"
+);
+assert.match(
+  longDistanceProxyCode,
+  /InStr\(1, configured, "https:\/\/", vbTextCompare\) <> 1/,
+  "the upstream base URL must be https-only"
+);
+/* 参数白名单：不得把任意 query 透传给上游 */
+for (const param of [
+  "oName",
+  "dName",
+  "oPos",
+  "dPos",
+  "date",
+  "mode",
+  "currency",
+  "language"
+]) {
+  assert.match(
+    longDistanceProxy,
+    new RegExp('AddQueryParam parts, "' + param + '"'),
+    "search must forward the whitelisted parameter: " + param
+  );
+}
+assert.match(
+  longDistanceProxyCode,
+  /allowed = Array\("train", "bus", "ferry"\)/,
+  "mode must be restricted to a whitelist"
+);
+/* 配置模板必须存在且不含真实 Key */
+assert.match(
+  longDistanceProxySource,
+  /longDistanceApiKey = ""/,
+  "the config template must ship with an empty key"
+);
+assert.doesNotMatch(
+  longDistanceProxySource,
+  /longDistanceApiKey = "[^"]+"/,
+  "the config template must not contain a real key"
+);
+assert.doesNotMatch(
+  providerSource,
+  /longDistanceApiKey/,
+  "the API key must never reach the browser bundle"
+);
+
+/* ---- 客户端惰性与门禁（行为级） ---- */
+const longDistanceContext = loadContext(
+  providerSource,
+  "transit-providers.js",
+  {
+    URL,
+    AbortController,
+    setTimeout,
+    clearTimeout,
+    location: { origin: "https://www.y0.hk" }
+  }
+);
+
+const longDistanceLib = longDistanceContext.WebWindowsTransit;
+
+assert.ok(
+  longDistanceLib.LongDistanceTransitProvider,
+  "LongDistanceTransitProvider must be exported"
+);
+
+function stubProvider(impl) {
+  return {
+    calls: 0,
+    async searchJourney(...args) {
+      this.calls += 1;
+      return impl(...args);
+    }
+  };
+}
+
+function longDistanceRailError(code) {
+  const error = new Error(code);
+  error.code = code;
+  return error;
+}
+
+const okJourney = { provider: "transitland", marker: "gtfs" };
+
+/* 1) GTFS 命中时，付费源一次都不该被调用 */
+{
+  const gtfs = stubProvider(async () => okJourney);
+  const rail = stubProvider(async () => ({ provider: "china-rail" }));
+  const paid = stubProvider(async () => ({ provider: "longdistance" }));
+
+  const outcome =
+    await longDistanceLib.searchJourneyWithFallback(
+      {
+        transitland: gtfs,
+        chinaRail: rail,
+        longDistance: paid,
+        origin: "東京",
+        destination: "池袋"
+      },
+      null
+    );
+
+  assert.equal(outcome.source, "transitland");
+  assert.equal(rail.calls, 0, "12306 must not run when GTFS already answered");
+  assert.equal(paid.calls, 0, "the paid source must never run first");
+}
+
+/* 2) 12306 站表里有站名但没车次时，绝不能调用付费源 */
+for (const code of [
+  "no_train",
+  "presale",
+  "schedule_failed"
+]) {
+  const gtfs = stubProvider(async () => {
+    throw longDistanceRailError("direct_trip_not_found");
+  });
+  const rail = stubProvider(async () => {
+    throw longDistanceRailError(code);
+  });
+  const paid = stubProvider(async () => ({ provider: "longdistance" }));
+
+  await assert.rejects(
+    longDistanceLib.searchJourneyWithFallback(
+      {
+        transitland: gtfs,
+        chinaRail: rail,
+        longDistance: paid,
+        origin: "成都东",
+        destination: "西安北"
+      },
+      null
+    ),
+    error => error.code === code
+  );
+
+  assert.equal(
+    paid.calls,
+    0,
+    "a China Railway query (" + code + ") must never spend a paid call"
+  );
+}
+
+/* 3) 站表里没有这个站名 → 才走付费源 */
+{
+  const gtfs = stubProvider(async () => {
+    throw longDistanceRailError("direct_trip_not_found");
+  });
+  const rail = stubProvider(async () => {
+    throw longDistanceRailError("station_not_found");
+  });
+  const paid = stubProvider(async () => ({
+    provider: "longdistance",
+    marker: "paid"
+  }));
+
+  const outcome =
+    await longDistanceLib.searchJourneyWithFallback(
+      {
+        transitland: gtfs,
+        chinaRail: rail,
+        longDistance: paid,
+        origin: "東京",
+        destination: "新大阪"
+      },
+      null
+    );
+
+  assert.equal(outcome.source, "longdistance");
+  assert.equal(paid.calls, 1);
+  assert.equal(outcome.journey.marker, "paid");
+}
+
+/* 4) 长途源也没结果 → 错误码归长途源，且带回 12306 的 code */
+{
+  const gtfs = stubProvider(async () => {
+    throw longDistanceRailError("direct_trip_not_found");
+  });
+  const rail = stubProvider(async () => {
+    throw longDistanceRailError("station_not_found");
+  });
+  const paid = stubProvider(async () => {
+    const error = longDistanceRailError("longdistance_no_direct");
+    error.details = { rejected: ["Tokyo to Osaka"] };
+    throw error;
+  });
+
+  await assert.rejects(
+    longDistanceLib.searchJourneyWithFallback(
+      {
+        transitland: gtfs,
+        chinaRail: rail,
+        longDistance: paid,
+        origin: "東京",
+        destination: "新大阪"
+      },
+      null
+    ),
+    error => {
+      assert.equal(error.code, "longdistance_no_direct");
+      assert.equal(error.details.railCode, "station_not_found");
+      assert.equal(error.details.longDistanceCode, "longdistance_no_direct");
+      return true;
+    }
+  );
+}
+
+/* 5) 未配置 Key（capabilities.enabled=false）时必须完全惰性 */
+{
+  const requests = [];
+  const longDistance =
+    new longDistanceLib.LongDistanceTransitProvider();
+
+  longDistance.request = async (
+    action,
+    params,
+    signal
+  ) => {
+    requests.push({ action, params, signal });
+    return { routes: [] };
+  };
+
+  await assert.rejects(
+    longDistance.searchJourney(
+      {
+        origin: "東京",
+        destination: "新大阪",
+        departureTime: "2026-09-26T09:00"
+      },
+      null
+    ),
+    error => error.code === "longdistance_not_configured"
+  );
+
+  assert.equal(
+    requests.length,
+    1,
+    "only the capabilities probe may run while disabled"
+  );
+  assert.equal(
+    requests[0].action,
+    "capabilities",
+    "the disabled provider must not issue a search request"
+  );
+}
+
+/* 6) capabilities 每个会话只探测一次，且不绑查询的 signal */
+{
+  const requests = [];
+  const longDistance =
+    new longDistanceLib.LongDistanceTransitProvider();
+
+  longDistance.request = async (
+    action,
+    params,
+    signal
+  ) => {
+    requests.push({ action, params, signal });
+    return {
+      provider: "rome2rio",
+      enabled: true,
+      base: "https://rome2rio.com/api/1.4/json"
+    };
+  };
+
+  const first = await longDistance.capabilities();
+  const second = await longDistance.capabilities();
+
+  assert.equal(requests.length, 1, "capabilities must be probed once per session");
+  assert.equal(first.enabled, true);
+  assert.equal(second, first);
+
+  /*
+   * 探测若绑了查询的 signal，用户点「取消」就会把探测一起中止，
+   * 并把 enabled:false 永久缓存进本次会话 —— 之后即使配了 Key 也永远不启用。
+   */
+  assert.equal(
+    requests[0].signal,
+    undefined,
+    "the capabilities probe must not be tied to a query's abort signal"
+  );
+}
+
+/* 7) 探测失败必须 fail-closed（当作未配置），不能抛错阻断查询 */
+{
+  const longDistance =
+    new longDistanceLib.LongDistanceTransitProvider();
+
+  longDistance.request = async () => {
+    throw new Error("network down");
+  };
+
+  const capabilities = await longDistance.capabilities();
+  assert.equal(capabilities.enabled, false);
+}
+
+/* ---- 响应归一化：只显示单段铁路/巴士，其余一律排除 ---- */
+const normalize = longDistanceLib.normalizeLongDistanceRoutes;
+
+function makeRoute(
+  {
+    travelMode,
+    places = [
+      {
+        name: "Tokyo",
+        lat: 35.6812,
+        lng: 139.7671,
+        departAfter: "2026-09-26T09:00:00+09:00"
+      },
+      {
+        name: "Shin-Osaka",
+        lat: 34.8847,
+        lng: 135.4949,
+        arriveBefore: "2026-09-26T11:15:00+09:00"
+      }
+    ],
+    operators = [{ name: "JR Central" }],
+    name = "Tokyo to Shin-Osaka",
+    shortName = "Nozomi 9"
+  } = {}
+) {
+  return {
+    routes: [
+      {
+        name,
+        shortName,
+        id: "r-1",
+        duration: 135,
+        segments: [
+          {
+            travelMode,
+            operators,
+            places
+          }
+        ]
+      }
+    ]
+  };
+}
+
+{
+  const train = normalize(makeRoute({ travelMode: "train" }));
+  assert.equal(train.usable.length, 1);
+  assert.equal(train.usable[0].provider, "longdistance");
+  assert.equal(train.usable[0].route.type, 2, "rail must map to GTFS route_type 2");
+  assert.equal(train.usable[0].route.shortName, "Nozomi 9");
+  assert.equal(train.usable[0].operator.name, "JR Central");
+  assert.equal(train.usable[0].origin.name, "Tokyo");
+  assert.equal(train.usable[0].destination.name, "Shin-Osaka");
+
+  /*
+   * 时刻必须是「服务地墙上时间」+ 服务日 + 时区偏移：
+   * serviceSeconds() 拿 serviceTimezoneOffsetMinutes 与 serviceDate
+   * 判断「此刻」是否在行程区间内，喂 ISO 原文会算错。
+   */
+  assert.equal(train.usable[0].origin.departureTime, "09:00:00");
+  assert.equal(train.usable[0].destination.arrivalTime, "11:15:00");
+  assert.equal(train.usable[0].serviceDate, "2026-09-26");
+  assert.equal(train.usable[0].serviceTimezoneOffsetMinutes, 540);
+
+  /* 经停表与形状是渲染的硬需求（地图连线、站点列表、位置插值） */
+  assert.equal(train.usable[0].stopTimes.length, 2);
+  assert.equal(
+    train.usable[0].stopTimes[0].stop.stop_name,
+    "Tokyo"
+  );
+  assert.equal(
+    train.usable[0].stopTimes[0].stop.stop_lat,
+    35.6812
+  );
+  /*
+   * 注意：normalizeLongDistanceRoutes 在 vm 沙箱里执行，
+   * 返回的数组原型属于该 realm，deepStrictEqual 会因原型不同而误判，
+   * 因此这里用 JSON 归一后比较。
+   */
+  assert.deepEqual(
+    JSON.parse(
+      JSON.stringify(
+        train.usable[0].shape
+      )
+    ),
+    [
+      [139.7671, 35.6812],
+      [135.4949, 34.8847]
+    ],
+    "shape must be [lng, lat] pairs, matching GeoJSON and the other providers"
+  );
+}
+
+/* UTC 时刻（尾部 Z）偏移量为 0 */
+{
+  const utc = normalize(
+    makeRoute({
+      travelMode: "train",
+      places: [
+        {
+          name: "A",
+          lat: 35,
+          lng: 139,
+          departAfter: "2026-09-26T00:00:00Z"
+        },
+        {
+          name: "B",
+          lat: 34,
+          lng: 135,
+          arriveBefore: "2026-09-26T02:00:00Z"
+        }
+      ]
+    })
+  );
+
+  assert.equal(utc.usable[0].serviceTimezoneOffsetMinutes, 0);
+  assert.equal(utc.usable[0].origin.departureTime, "00:00:00");
+}
+
+/* 负偏移（美洲） */
+{
+  const west = normalize(
+    makeRoute({
+      travelMode: "train",
+      places: [
+        {
+          name: "A",
+          lat: 40,
+          lng: -74,
+          departAfter: "2026-09-26T08:00:00-04:00"
+        },
+        {
+          name: "B",
+          lat: 42,
+          lng: -71,
+          arriveBefore: "2026-09-26T12:00:00-04:00"
+        }
+      ]
+    })
+  );
+
+  assert.equal(west.usable[0].serviceTimezoneOffsetMinutes, -240);
+}
+
+/* 连续重复坐标必须去掉，否则位置插值的分母为 0 */
+{
+  const repeated = normalize(
+    makeRoute({
+      travelMode: "train",
+      places: [
+        { name: "A", lat: 35, lng: 139 },
+        { name: "A2", lat: 35, lng: 139 },
+        { name: "B", lat: 34, lng: 135 }
+      ]
+    })
+  );
+
+  assert.equal(repeated.usable[0].shape.length, 2);
+}
+
+/* 中间站缺坐标：保留在经停表里（时刻仍正确），但不进 shape */
+{
+  const partial = normalize(
+    makeRoute({
+      travelMode: "train",
+      places: [
+        { name: "A", lat: 35, lng: 139 },
+        { name: "B" },
+        { name: "C", lat: 34, lng: 135 }
+      ]
+    })
+  );
+
+  assert.equal(partial.usable.length, 1);
+  assert.equal(partial.usable[0].stopTimes.length, 3);
+  assert.equal(partial.usable[0].shape.length, 2);
+}
+
+{
+  const bus = normalize(makeRoute({ travelMode: "bus" }));
+  assert.equal(bus.usable.length, 1);
+  assert.equal(
+    bus.usable[0].route.type,
+    3,
+    "coach must map to GTFS route_type 3 (大巴，不是公交)"
+  );
+}
+
+{
+  const coach = normalize(makeRoute({ travelMode: "coach" }));
+  assert.equal(coach.usable[0].route.type, 3);
+}
+
+/* 数字编码：未知编码不得猜测（fail-closed） */
+{
+  assert.equal(
+    normalize(makeRoute({ travelMode: 2 })).usable.length,
+    1,
+    "travelMode 2 maps to train"
+  );
+  assert.equal(
+    normalize(makeRoute({ travelMode: 1 })).usable[0].route.type,
+    3,
+    "travelMode 1 maps to bus"
+  );
+  assert.equal(
+    normalize(makeRoute({ travelMode: 6 })).usable.length,
+    0,
+    "flights must be excluded"
+  );
+  assert.equal(
+    normalize(makeRoute({ travelMode: 0 })).usable.length,
+    0,
+    "cars must be excluded"
+  );
+  assert.equal(
+    normalize(makeRoute({ travelMode: 99 })).usable.length,
+    0,
+    "an unknown travelMode code must be excluded, never guessed"
+  );
+  assert.equal(
+    normalize(makeRoute({ travelMode: "teleport" })).usable.length,
+    0,
+    "an unknown travelMode string must be excluded"
+  );
+}
+
+/* 轮渡：上游有数据但界面没有对应图标与运营语义，先不显示 */
+{
+  assert.equal(
+    normalize(makeRoute({ travelMode: "ferry" })).usable.length,
+    0,
+    "ferry must be excluded until a ferry icon exists"
+  );
+}
+
+/* 换乘：当前渲染模型是单条 shape，多段必须排除 */
+{
+  const transfer = {
+    routes: [
+      {
+        name: "Tokyo to Shin-Osaka via Kyoto",
+        segments: [
+          {
+            travelMode: "train",
+            operators: [{ name: "JR" }],
+            places: [
+              { name: "Tokyo", lat: 35.68, lng: 139.76 },
+              { name: "Kyoto", lat: 35.01, lng: 135.76 }
+            ]
+          },
+          {
+            travelMode: "train",
+            operators: [{ name: "JR" }],
+            places: [
+              { name: "Kyoto", lat: 35.01, lng: 135.76 },
+              { name: "Shin-Osaka", lat: 34.88, lng: 135.49 }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  const result = normalize(transfer);
+  assert.equal(result.usable.length, 0, "multi-leg routes are not supported yet");
+  assert.equal(result.rejected.length, 1);
+}
+
+/* 缺经停站或缺坐标的方案不得进入结果 */
+{
+  assert.equal(
+    normalize(
+      makeRoute({
+        travelMode: "train",
+        places: [{ name: "Tokyo", lat: 35.68, lng: 139.76 }]
+      })
+    ).usable.length,
+    0,
+    "a segment with a single place is not a journey"
+  );
+  assert.equal(
+    normalize(
+      makeRoute({
+        travelMode: "train",
+        places: [
+          { name: "Tokyo", lat: 35.68, lng: 139.76 },
+          { name: "Shin-Osaka" }
+        ]
+      })
+    ).usable.length,
+    0,
+    "a destination without coordinates cannot be mapped"
+  );
+}
+
+/* 空响应必须得到空结果（而不是抛错） */
+{
+  assert.equal(normalize({}).usable.length, 0);
+  assert.equal(normalize(null).usable.length, 0);
+  assert.equal(normalize({ routes: "not-an-array" }).usable.length, 0);
+}
+
+/* 排序：有出发时刻的优先，其次按时刻 */
+{
+  const payload = {
+    routes: [
+      {
+        name: "later",
+        segments: [
+          {
+            travelMode: "train",
+            places: [
+              {
+                name: "A",
+                lat: 35,
+                lng: 139,
+                departAfter: "2026-09-26T10:00:00+09:00"
+              },
+              { name: "B", lat: 34, lng: 135 }
+            ]
+          }
+        ]
+      },
+      {
+        name: "earlier",
+        segments: [
+          {
+            travelMode: "train",
+            places: [
+              {
+                name: "A",
+                lat: 35,
+                lng: 139,
+                departAfter: "2026-09-26T08:00:00+09:00"
+              },
+              { name: "B", lat: 34, lng: 135 }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  const result = normalize(payload);
+  assert.equal(result.usable.length, 2);
+  assert.equal(result.usable[0].route.longName, "earlier");
+}
+
+/* ---- 界面接线 ---- */
+assert.match(
+  transitAppSource,
+  /new LIB\.LongDistanceTransitProvider\(\)/,
+  "the app must instantiate the long-distance provider"
+);
+assert.match(
+  transitAppSource,
+  /longDistance,/,
+  "the app must pass the long-distance provider into the fallback chain"
+);
+assert.match(
+  transitAppSource,
+  /provider === "longdistance"/,
+  "the app must label the long-distance source"
+);
+assert.match(
+  transitAppSource,
+  /transitStepLongDistance/,
+  "the status must tell the user the query moved to the long-distance source"
+);
+assert.match(
+  transitAppSource,
+  /T\(\s*"errLongDistanceNoDirect",/,
+  "the app must compose the long-distance coverage message itself"
+);
+for (const code of [
+  "longdistance_no_direct",
+  "longdistance_timeout",
+  "longdistance_failed",
+  "longdistance_unauthorized",
+  "longdistance_rate_limited",
+  "not_configured"
+]) {
+  assert.match(
+    transitAppSource,
+    new RegExp("\\b" + code + "\\s*:"),
+    "STATUS_KEYS must map the long-distance error code: " + code
+  );
+}
+
+/* 四语文案必须齐全 */
+for (const language of LANGUAGES) {
+  for (const key of [
+    "transitStepLongDistance",
+    "sourceLongDistance",
+    "errLongDistanceNoDirect",
+    "errLongDistanceRejected",
+    "errLongDistanceNone"
+  ]) {
+    assert.ok(
+      TEXT[language][key],
+      language + " missing long-distance key: " + key
+    );
+  }
+}
+

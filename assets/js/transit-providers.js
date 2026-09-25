@@ -3,6 +3,16 @@
 
   const ENDPOINT = "/api/transit-proxy.asp";
   const RAIL_ENDPOINT = "/api/railway-proxy.asp";
+
+  /*
+   * 全球长途 provider 的同源代理。
+   * Key 在服务器端配置文件里，浏览器永远拿不到 Key；
+   * 未配置时 action=capabilities 返回 enabled:false，
+   * 客户端整段跳过 —— 零请求、零行为变化。
+   */
+  const LONGDISTANCE_ENDPOINT =
+    "/api/longdistance-proxy.asp";
+
   const PHOTON_ENDPOINT = "https://photon.komoot.io/api/";
 
   /*
@@ -23,7 +33,15 @@
        * 显示成「上游故障」。去重后典型 1~2 秒，这里放宽到 14 秒作为余量。
        */
       gtfsStage: 20000,
-      railStage: 30000
+      railStage: 30000,
+
+      /*
+       * 长途阶段只在「两个免费源都覆盖不到」时才跑，且仅在
+       * 12306 明确回 station_not_found（= 不是中国境内车站）时触发。
+       * 预算比 GTFS 短：付费调用不能拖住界面，且 Rome2Rio 自身
+       * 响应通常在 1~3 秒内。
+       */
+      longDistanceStage: 15000
     },
     global.__WENDAO_TRANSIT_TIMEOUTS__ || {}
   );
@@ -3744,6 +3762,630 @@
   }
 
   /*
+   * ==================== 全球长途 provider（第三层降级） ====================
+   *
+   * 定位：Transitland GTFS 覆盖各地**本地**公交/轨道，12306 覆盖**中国境内**
+   * 铁路，两者都不覆盖新干线、欧洲 ICE/高速巴士这类**长途**线路
+   * （T-025 已实测：Transitland 搜「新大阪」0 个站点）。
+   *
+   * 数据源：Rome2Rio（全球 240+ 国家、2 万+ 运营商），**按调用计费**。
+   * 因此商业逻辑是：
+   *   1) GTFS（免费）→ 2) 12306（免费）→ 3) 长途（付费）
+   *   付费源永远排最后，且只在 12306 明确说「站表里没这个站名」时才调用；
+   *   站名能在中国站表里查到（no_train / presale 等）就绝不花钱调 Rome2Rio。
+   *
+   * Key 不在浏览器：同源代理在服务端持有，未配置时 capabilities 返回
+   * enabled:false，本层整段跳过（不产生任何请求）。
+   */
+
+  const LONGDISTANCE_MODES = [
+    "train",
+    "bus",
+    "coach",
+    "rail",
+    "ferry"
+  ];
+
+  /* Rome2Rio travelMode 数字编码 → 内部车型。未知编码不猜，直接排除。 */
+  const LONGDISTANCE_MODE_CODES = {
+    0: "car",
+    1: "bus",
+    2: "train",
+    3: "ferry",
+    4: "taxi",
+    5: "car",
+    6: "flight"
+  };
+
+  function longDistanceMode(
+    segment
+  ) {
+    const raw =
+      text(
+        segment?.travelMode ??
+        segment?.mode
+      )
+        .toLowerCase();
+
+    if (
+      raw &&
+      LONGDISTANCE_MODES.includes(raw)
+    ) {
+      return raw;
+    }
+
+    const code =
+      number(
+        segment?.travelMode
+      );
+
+    if (
+      code !== null &&
+      LONGDISTANCE_MODE_CODES[code]
+    ) {
+      return LONGDISTANCE_MODE_CODES[code];
+    }
+
+    return null;
+  }
+
+  /*
+   * Rome2Rio 返回的是 ISO 绝对时刻（"2026-09-26T09:00:00+09:00"）。
+   *
+   * 直接交给界面会出错：serviceSeconds() 期望「服务地墙上时间」的
+   * HH:MM:SS 加一个 YYYY-MM-DD 服务日，并用 serviceTimezoneOffsetMinutes
+   * 换算「此刻」。所以这里做三件事：
+   *   1) 取 ISO 字符串里字面的墙上时间（它本身就是服务当地时间）；
+   *   2) 取日期部分作为 serviceDate；
+   *   3) 从尾部 +09:00 / Z 解析分钟偏移，供位置估算用。
+   * 不做任何 Date 换算：换算反而会把服务当地时间换成本机时间。
+   */
+  function isoMoment(
+    value
+  ) {
+    const raw =
+      text(value).trim();
+
+    if (!raw) {
+      return null;
+    }
+
+    const match =
+      raw.match(
+        /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})(?::(\d{2}))?/
+      );
+
+    if (!match) {
+      return null;
+    }
+
+    return {
+      date: match[1],
+      time: match[2] + ":" + (match[3] || "00"),
+      offsetMinutes: isoOffsetMinutes(raw)
+    };
+  }
+
+  function isoOffsetMinutes(
+    raw
+  ) {
+    if (/\dT[\d:.]+Z$/i.test(raw)) {
+      return 0;
+    }
+
+    const match =
+      raw.match(
+        /([+-])(\d{2}):?(\d{2})$/
+      );
+
+    if (!match) {
+      return null;
+    }
+
+    const minutes =
+      Number(match[2]) * 60 +
+      Number(match[3]);
+
+    return match[1] === "-"
+      ? -minutes
+      : minutes;
+  }
+
+  /*
+   * 只保留**铁路/巴士**单段直达方案：
+   *  - 轮渡/飞机/自驾/出租没有对应的车辆图标与运营语义，硬画会误导；
+   *  - 多段换乘需要跨段时刻与形状合并，超出当前渲染模型（shape 是单条线），
+   *    与其渲染错位不如先不显示。
+   * 被排除的方案名会带回错误详情，便于界面说明「有但需换乘」。
+   */
+  function normalizeLongDistanceRoutes(
+    payload
+  ) {
+    const routes =
+      Array.isArray(payload?.routes)
+        ? payload.routes
+        : [];
+
+    const usable = [];
+    const rejected = [];
+
+    routes.forEach(route => {
+      const segments =
+        Array.isArray(route?.segments)
+          ? route.segments
+          : [];
+
+      const label =
+        text(route?.name) ||
+        text(route?.shortName) ||
+        "—";
+
+      if (
+        segments.length !== 1
+      ) {
+        rejected.push(label);
+        return;
+      }
+
+      const segment = segments[0];
+
+      const mode =
+        longDistanceMode(segment);
+
+      if (
+        mode !== "train" &&
+        mode !== "bus" &&
+        mode !== "coach"
+      ) {
+        rejected.push(label);
+        return;
+      }
+
+      const places =
+        Array.isArray(segment?.places)
+          ? segment.places
+          : [];
+
+      if (
+        places.length < 2
+      ) {
+        rejected.push(label);
+        return;
+      }
+
+      const operators =
+        Array.isArray(segment?.operators)
+          ? segment.operators
+          : [];
+
+      const stops = places.map(place => {
+        const arrival = isoMoment(
+          place?.arriveBefore ??
+          place?.arrivalTime ??
+          place?.arrival_time
+        );
+
+        const departure = isoMoment(
+          place?.departAfter ??
+          place?.departureTime ??
+          place?.departure_time
+        );
+
+        return {
+          arrival_time: arrival?.time || "",
+          departure_time: departure?.time || "",
+
+          /* 保留解析结果：serviceDate / 时区偏移要从 ISO 原文取，不能从 HH:MM:SS 反推。 */
+          arrivalMoment: arrival,
+          departureMoment: departure,
+
+          /*
+           * shape 只能由有坐标的站组成；中间站缺坐标时保留在
+           * stopTimes 里（时刻仍然正确），只是不画线。
+           */
+          latitude: number(place?.lat),
+          longitude: number(place?.lng ?? place?.lon),
+
+          stop_id:
+            text(place?.id) ||
+            text(place?.placeId),
+
+          stop_name:
+            text(place?.name) ||
+            text(place?.shortName)
+        };
+      });
+
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+
+      /*
+       * 起终点必须有坐标：缺了就画不出线、也 fit 不动地图，
+       * 与其显示一条无法定位的行程，不如如实报「无可用方案」。
+       */
+      if (
+        !Number.isFinite(first.latitude) ||
+        !Number.isFinite(first.longitude) ||
+        !Number.isFinite(last.latitude) ||
+        !Number.isFinite(last.longitude)
+      ) {
+        rejected.push(label);
+        return;
+      }
+
+      const departureMoment =
+        first.departureMoment ||
+        first.arrivalMoment;
+
+      const arrivalMoment =
+        last.arrivalMoment ||
+        last.departureMoment;
+
+      /*
+       * shape 复用上游给的经停点坐标（Rome2Rio 不提供轨道几何），
+       * 顺序为 [lng, lat]，与 GeoJSON / 现有 provider 一致。
+       * 连续重复点会让插值分母为 0，必须去掉。
+       */
+      const shape = [];
+      stops.forEach(stop => {
+        if (
+          !Number.isFinite(stop.latitude) ||
+          !Number.isFinite(stop.longitude)
+        ) {
+          return;
+        }
+
+        const coordinate = [
+          stop.longitude,
+          stop.latitude
+        ];
+
+        const previous = shape[shape.length - 1];
+
+        if (
+          previous &&
+          previous[0] === coordinate[0] &&
+          previous[1] === coordinate[1]
+        ) {
+          return;
+        }
+
+        shape.push(coordinate);
+      });
+
+      usable.push({
+        provider: "longdistance",
+
+        tripId:
+          text(route?.id) ||
+          label,
+
+        routeId:
+          text(route?.id),
+
+        operator: {
+          id:
+            text(operators[0]?.id),
+
+          name:
+            text(operators[0]?.name)
+        },
+
+        route: {
+          shortName:
+            text(route?.shortName) ||
+            label,
+
+          longName:
+            text(route?.name),
+
+          /*
+           * GTFS route_type 对齐：2=铁路、3=巴士。
+           * gtfsVehicleKind() 据此选图标（高铁/动车另走 bullet 判定），
+           * 所以长途铁路会显示普通火车、长途巴士显示大巴。
+           */
+          type:
+            mode === "train"
+              ? 2
+              : 3
+        },
+
+        origin: {
+          stopId: first.stop_id,
+          name: first.stop_name,
+          latitude: first.latitude,
+          longitude: first.longitude,
+          departureTime: first.departure_time
+        },
+
+        destination: {
+          stopId: last.stop_id,
+          name: last.stop_name,
+          latitude: last.latitude,
+          longitude: last.longitude,
+          arrivalTime: last.arrival_time
+        },
+
+        serviceDate:
+          departureMoment?.date ||
+          arrivalMoment?.date ||
+          text(route?.serviceDate) ||
+          text(route?.date),
+
+        /*
+         * 位置估算按「服务地当地时间」比较：没有偏移量时
+         * serviceTimezoneOffset() 会回落到浏览器本地时区。
+         */
+        serviceTimezoneOffsetMinutes:
+          departureMoment?.offsetMinutes ??
+          arrivalMoment?.offsetMinutes ??
+          null,
+
+        /* GTFS 形状：站序 + 时刻，供地图连线与经停表渲染。 */
+        shape,
+
+        stopTimes: stops.map(stop => ({
+          arrival_time: stop.arrival_time,
+          departure_time: stop.departure_time,
+
+          stop: {
+            stop_id: stop.stop_id,
+            stop_name: stop.stop_name,
+            stop_lat: stop.latitude,
+            stop_lon: stop.longitude
+          }
+        })),
+
+        durationMinutes:
+          number(route?.duration),
+
+        price:
+          text(route?.price) ||
+          text(route?.indicativePrice),
+
+        mode,
+
+        rejected
+      });
+    });
+
+    /*
+     * 排序：先按出发时刻（>0 的排前面），再按总时长。
+     * Rome2Rio 的 duration 单位未在可得资料中明示（官方文档 404），
+     * 这里只用于**同一响应内的相对排序**，不展示给用户，
+     * 因此单位判断错误也不会产生错误文案。
+     */
+    usable.sort((a, b) => {
+      const aHas = Boolean(a.origin.departureTime);
+      const bHas = Boolean(b.origin.departureTime);
+
+      if (aHas !== bHas) {
+        return aHas ? -1 : 1;
+      }
+
+      if (aHas && bHas) {
+        const byTime =
+          text(a.origin.departureTime)
+            .localeCompare(
+              text(b.origin.departureTime)
+            );
+
+        if (byTime !== 0) {
+          return byTime;
+        }
+      }
+
+      return (
+        (a.durationMinutes ?? 1e9) -
+        (b.durationMinutes ?? 1e9)
+      );
+    });
+
+    return { usable, rejected };
+  }
+
+  class LongDistanceTransitProvider
+    extends TransitProvider {
+
+    constructor({
+      endpoint = LONGDISTANCE_ENDPOINT
+    } = {}) {
+      super();
+
+      this.endpoint = endpoint;
+
+      /*
+       * capabilities 每个会话只探测一次，且**不绑查询的 signal**：
+       * 否则用户点「取消」会把探测一起中止、把 enabled:false
+       * 永久缓存进本次会话，之后即使配了 Key 也永远不启用。
+       */
+      this.capabilitiesPromise = null;
+    }
+
+    async capabilities() {
+      if (!this.capabilitiesPromise) {
+        this.capabilitiesPromise =
+          this
+            .request(
+              "capabilities",
+              {}
+            )
+            .then(payload => ({
+              provider:
+                text(payload?.provider) ||
+                "rome2rio",
+
+              enabled:
+                payload?.enabled === true,
+
+              base:
+                text(payload?.base)
+            }))
+            .catch(() => ({
+              provider: "rome2rio",
+              enabled: false,
+              base: ""
+            }));
+      }
+
+      return this.capabilitiesPromise;
+    }
+
+    async request(
+      action,
+      params,
+      signal
+    ) {
+      const url =
+        new URL(
+          this.endpoint,
+          global.location.origin
+        );
+
+      url.searchParams.set(
+        "action",
+        action
+      );
+
+      Object.entries(params || {}).forEach(
+        ([key, value]) => {
+          if (
+            value !== null &&
+            value !== undefined &&
+            value !== ""
+          ) {
+            url.searchParams.set(
+              key,
+              String(value)
+            );
+          }
+        }
+      );
+
+      const response =
+        await fetchWithTimeout(
+          url.href,
+          {
+            credentials: "same-origin",
+
+            headers: {
+              Accept: "application/json"
+            },
+
+            signal
+          },
+
+          TIMEOUTS.longDistanceStage,
+          "longdistance_timeout",
+          "Long-distance request timed out."
+        );
+
+      const payload =
+        await response
+          .json()
+          .catch(() => ({}));
+
+      if (!response.ok) {
+        const error = providerError(
+          payload?.error?.code ||
+            "longdistance_failed",
+
+          payload?.error?.message ||
+            `Long-distance request failed (${response.status})`
+        );
+
+        error.httpStatus = response.status;
+
+        throw error;
+      }
+
+      if (payload?.error) {
+        throw providerError(
+          payload.error.code ||
+            "longdistance_failed",
+
+          payload.error.message ||
+            "Long-distance request failed."
+        );
+      }
+
+      return payload;
+    }
+
+    async searchJourney(
+      {
+        origin,
+        destination,
+        departureTime
+      },
+      signal
+    ) {
+      const capabilities =
+        await this.capabilities();
+
+      if (!capabilities.enabled) {
+        throw providerError(
+          "longdistance_not_configured",
+          "Long-distance source is not configured."
+        );
+      }
+
+      const params = {
+        oName: origin,
+        dName: destination,
+
+        /*
+         * 只请求铁路与巴士。轮渡/航空/自驾虽然上游也返回，
+         * 但界面没有对应图标与运营语义（且跨运营商换乘
+         * 需要合并多段时刻/形状），先不显示。
+         */
+        mode: "train|bus",
+
+        language: "en"
+      };
+
+      const date =
+        text(departureTime)
+          .slice(0, 10);
+
+      if (date) {
+        params.date = date;
+      }
+
+      const payload =
+        await this.request(
+          "search",
+          params,
+          signal
+        );
+
+      const {
+        usable,
+        rejected
+      } =
+        normalizeLongDistanceRoutes(
+          payload
+        );
+
+      if (!usable.length) {
+        const error = providerError(
+          "longdistance_no_direct",
+          "No direct long-distance route found."
+        );
+
+        error.details = {
+          provider: "rome2rio",
+          rejected: rejected.slice(0, 4)
+        };
+
+        throw error;
+      }
+
+      return usable[0];
+    }
+  }
+
+  /*
    * 阶段总预算：到点取消子链并抛 TimeoutError，
    * 保证「照会中」状态永远有界。
    * race 对入参 promise 均挂有 handler，
@@ -3783,6 +4425,7 @@
     {
       transitland,
       chinaRail,
+      longDistance = null,
       origin,
       destination,
       departureTime,
@@ -3794,17 +4437,26 @@
   ) {
     const gtfsController = new AbortController();
     const railController = new AbortController();
+    const longDistanceController =
+      new AbortController();
 
     const relayGtfs = () => gtfsController.abort();
     const relayRail = () => railController.abort();
+    const relayLongDistance = () =>
+      longDistanceController.abort();
 
     if (signal) {
       if (signal.aborted) {
         gtfsController.abort();
         railController.abort();
+        longDistanceController.abort();
       } else {
         signal.addEventListener("abort", relayGtfs);
         signal.addEventListener("abort", relayRail);
+        signal.addEventListener(
+          "abort",
+          relayLongDistance
+        );
       }
     }
 
@@ -3903,10 +4555,107 @@
 
         source: "china-rail"
       };
+    } catch (railError) {
+      /*
+       * ------------------------------------------------------------------
+       * 第三层：全球长途（付费）。
+       *
+       * 商业门禁（这就是「B 方案」的核心）：
+       *   - 未配置 Key → capabilities.enabled=false → **整段跳过**，
+       *     不发任何请求（部署后行为与现在完全一致）；
+       *   - 12306 若回 no_train / presale / schedule_failed，说明站名
+       *     在中国站表里、只是这一段没车 → **绝不调用付费源**；
+       *   - 只有 12306 回 station_not_found（站名不在中国站表 = 极可能是
+       *     海外/跨境线路，正是付费源的覆盖范围）才调用；
+       *   - 用户主动取消立即上抛，不发起任何新请求。
+       */
+      const longDistanceEligible =
+        longDistance &&
+        String(railError?.code || "") ===
+          "station_not_found";
+
+      if (!longDistanceEligible) {
+        throw railError;
+      }
+
+      if (
+        signal?.aborted ||
+        railError?.name === "AbortError"
+      ) {
+        throw railError;
+      }
+
+      onFallback?.(
+        "longdistance_stage",
+        "Falling back to the global long-distance source.",
+        {
+          railCode:
+            railError?.code ||
+            "unknown"
+        }
+      );
+
+      try {
+        const journey =
+          await withBudget(
+            longDistance.searchJourney(
+              {
+                origin,
+                destination,
+                departureTime,
+                language
+              },
+              longDistanceController.signal
+            ),
+
+            TIMEOUTS.longDistanceStage,
+            "longdistance_timeout",
+            "Long-distance query timed out.",
+            longDistanceController
+          );
+
+        return {
+          journey,
+          source: "longdistance"
+        };
+      } catch (longDistanceError) {
+        /*
+         * 长途源也没结果：把两边的真实错误都带回界面层，
+         * 由界面按当前语言组装文案（provider 只抛 code + 中文 message，
+         * 直接透传会让日/英文界面显示中文——T-023 已踩过）。
+         *
+         * 优先抛长途源的错误（它的结论更贴近「为什么没查到」），
+         * 但把 12306 的 code 挂在 details 上，便于界面区分
+         * 「站表没有这个站」与「付费源也没这条长途线路」。
+         */
+        const error =
+          longDistanceError?.code ===
+            "longdistance_not_configured"
+            ? railError
+            : longDistanceError;
+
+        error.details = {
+          ...(error.details || {}),
+
+          railCode:
+            railError?.code ||
+            "unknown",
+
+          longDistanceCode:
+            longDistanceError?.code ||
+            "unknown"
+        };
+
+        throw error;
+      }
     } finally {
       if (signal) {
         signal.removeEventListener("abort", relayGtfs);
         signal.removeEventListener("abort", relayRail);
+        signal.removeEventListener(
+          "abort",
+          relayLongDistance
+        );
       }
     }
   }
@@ -3916,6 +4665,7 @@
       TransitProvider,
       TransitlandTransitProvider,
       ChinaRailTransitProvider,
+      LongDistanceTransitProvider,
       PhotonGeocoder,
       searchJourneyWithFallback,
       fetchWithTimeout,
@@ -3925,6 +4675,7 @@
       parseLeftTicket,
       sliceSchedule,
       normalizeStopTimes,
+      normalizeLongDistanceRoutes,
       routeIcon,
       trainIcon
     });

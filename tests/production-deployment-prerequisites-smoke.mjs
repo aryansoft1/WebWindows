@@ -48,6 +48,28 @@ for (const [name, source] of Object.entries({ developerApi, adminPlatform, admin
 }
 for (const source of [runtimeRelease, functionPackage]) assert.match(source, /WebWindowsTrustSchemaReady/);
 
+// A pending trust-schema migration must not surface as a 503 to every desktop boot.
+// function-catalog.asp serves the static catalog instead, because that is the same
+// document the client already falls back to. It must still fail closed for anything the
+// trust schema protects: a catalog carrying developer releases cannot be binding-checked
+// without the schema, so it must keep returning trust-schema-required.
+assert.match(publicCatalog, /staticCatalogTrusted = \(fileCatalog <> "" And _/,
+  "the schema gate must be conditioned on whether the static catalog is safe to serve");
+assert.match(publicCatalog, /"""sourceType"":""developer-release"""/,
+  "the gate must detect developer releases in the static catalog");
+assert.match(publicCatalog, /If Not tableReady And Not staticCatalogTrusted Then[\s\S]*?trust-schema-required/,
+  "the 503 must remain for a catalog that cannot be verified without the trust schema");
+assert.ok(
+  publicCatalog.indexOf("fileCatalog = ReadCatalogFile()") < publicCatalog.indexOf("tableReady = WebWindowsTrustSchemaReady()"),
+  "the static catalog must be read before the schema gate decides whether to fail");
+assert.match(publicCatalog, /json-fallback/,
+  "serving the static catalog must be reported as the existing json-fallback source");
+
+// The degradation above is only safe while the deployed catalog makes no trust claim.
+const deployedCatalog = await read("data/apps/system-apps.json");
+assert.doesNotMatch(deployedCatalog, /"sourceType"\s*:\s*"developer-release"/,
+  "system-apps.json must not carry developer releases, or the schema-less fallback would serve unverified packages");
+
 const migrationHash = sha256(migration);
 assert.match(schemaGate, new RegExp(migrationHash));
 assert.match(migration, /webwindows_schema_migrations/);

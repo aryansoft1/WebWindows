@@ -96,6 +96,11 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "visitor analytics fix releases must upload only the admin shell and reporting presentation slice");
+} else if (manifest.releaseScope === "catalog-static-fallback") {
+  assert.deepEqual(uploadFiles, [
+    "api/function-catalog.asp",
+    "deploy/ftp-manifest.json",
+  ], "the catalog fallback release must upload only the catalog endpoint and the manifest");
 } else if (manifest.releaseScope === "desktalk-file-search") {
   assert.deepEqual(uploadFiles, [
     "assets/js/ai-tool-registry.js",

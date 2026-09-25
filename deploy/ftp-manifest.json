@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.5",
+  "releaseVersion": "2026.09.26.6",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-25T17:29:40.702Z",
+  "generatedAt": "2026-09-25T17:41:14.163Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.4",
+  "previousReleaseVersion": "2026.09.26.5",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -291,8 +291,8 @@
       "size": 7498
     },
     "api/function-catalog.asp": {
-      "sha256": "e2085137dee5ef3d823db550f635bf92baa3ca8b3b04e657f272d255365321ea",
-      "size": 10181
+      "sha256": "55f822aebe7ee33ec8ce00670d7ad1652b8fa8787cf7a2e5131182857ad5ea79",
+      "size": 10911
     },
     "api/mobile-version.asp": {
       "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
@@ -1310,14 +1310,9 @@
       "size": 902
     }
   },
-  "releaseScope": "desktalk-file-search",
+  "releaseScope": "catalog-static-fallback",
   "uploadFiles": [
-    "assets/js/ai-tool-registry.js",
-    "assets/js/ai-file-tools.js",
-    "assets/js/file-search.js",
-    "assets/js/desktalk.js",
-    "cloud/browser/files.asp",
-    "cloud/browser/private-files.asp",
+    "api/function-catalog.asp",
     "deploy/ftp-manifest.json"
   ]
 }

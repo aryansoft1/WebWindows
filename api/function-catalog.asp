@@ -214,14 +214,10 @@ activeRevisionId = 0
 activeVersion = ""
 fileCatalog = ""
 fileVersion = ""
-tableReady = WebWindowsTrustSchemaReady()
-If Not tableReady Then
-  Response.Status = "503 Service Unavailable"
-  Response.Write "{""ok"":false,""code"":""trust-schema-required"",""message"":""WebWindows 信任数据库结构尚未完成部署迁移。""}"
-  If conn.State <> 0 Then conn.Close
-  Response.End
-End If
 
+' Read the static catalog before the schema gate. It is the same document the client
+' already falls back to when this endpoint fails, so serving it keeps the desktop working
+' while the trust database is still being migrated.
 On Error Resume Next
 fileCatalog = ReadCatalogFile()
 If Err.Number <> 0 Then
@@ -233,6 +229,21 @@ If fileCatalog <> "" And Not ValidCatalog(fileCatalog) Then fileCatalog = ""
 If fileCatalog <> "" Then fileVersion = CatalogVersion(fileCatalog)
 Response.AddHeader "X-WebWindows-Static-Catalog", LCase(CStr(fileCatalog <> ""))
 Response.AddHeader "X-WebWindows-Static-Catalog-Version", fileVersion
+
+tableReady = WebWindowsTrustSchemaReady()
+' Fail closed on anything the trust schema exists to protect. Without the schema there is
+' no release-binding table, so a catalog carrying developer releases cannot be verified and
+' must not be served. A catalog of built-in system apps makes no such claim, so it is safe
+' to serve until the migration is applied.
+Dim staticCatalogTrusted
+staticCatalogTrusted = (fileCatalog <> "" And _
+  InStr(1, fileCatalog, """sourceType"":""developer-release""", vbTextCompare) = 0)
+If Not tableReady And Not staticCatalogTrusted Then
+  Response.Status = "503 Service Unavailable"
+  Response.Write "{""ok"":false,""code"":""trust-schema-required"",""message"":""WebWindows 信任数据库结构尚未完成部署迁移。""}"
+  If conn.State <> 0 Then conn.Close
+  Response.End
+End If
 
 If tableReady Then
   catalogText = ActiveCatalog(activeRevisionId, activeVersion)

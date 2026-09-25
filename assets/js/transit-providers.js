@@ -174,6 +174,56 @@
 
   const RAIL_LOCAL_SNAPSHOT_MAX_TRAINS = 400;
 
+  /*
+   * 跨起点站轮转取样：把有限的 trip 详情预算公平分给不同 feed 的候选站。
+   *
+   * 这是「你查的都是公交车，所以查不到」的第二个成因：预算若按站顺序分配，
+   * 会被第一个候选站吃掉（市内公交/地铁在候选里通常排最前且必有发车），
+   * 铁路站 / 高速巴士站一次都轮不到。改成轮转后，3 个候选站各先得到 1 次
+   * 机会，再依次追加，直到用满 limit。
+   */
+  function roundRobinTripCandidates(
+    groups,
+    limit
+  ) {
+    const result = [];
+    let round = 0;
+
+    while (result.length < limit) {
+      let added = false;
+
+      for (
+        const group
+        of groups
+      ) {
+        if (result.length >= limit) {
+          break;
+        }
+
+        const departure =
+          group.departures[round];
+
+        if (!departure) {
+          continue;
+        }
+
+        result.push({
+          stop: group.stop,
+          departure
+        });
+        added = true;
+      }
+
+      if (!added) {
+        break;
+      }
+
+      round++;
+    }
+
+    return result;
+  }
+
   function railSnapshotKey(
     date,
     fromCode,
@@ -1323,10 +1373,6 @@
        * 不能因第一个候选失败就判定「无直达」（线上事故：
        * 盲取 [0] 拿到错误站点后直接报 direct_trip_not_found）。
        */
-      let originStop =
-        originCandidates[0];
-
-      let departures = [];
 
       /*
        * 记录「班次详情取不到」与「确实没有匹配路线」的区别：
@@ -1338,6 +1384,18 @@
        */
       let tripDetailFailed = false;
       let tripDetailOk = false;
+
+      /*
+       * 起点候选**逐个**尝试，不再「第一个有发车的站就停」。
+       *
+       * 旧行为的实际后果（用户反馈「你查的都是公交车，所以查不到」）：
+       * 「東京」「大分」这类站名被多个运营商/交通方式的 feed 同时收录，
+       * 候选排序往往把市内公交/地铁的站排在前面，一旦它有发车就 break，
+       * 于是高速巴士站、铁路站这些**真正可能到终点的候选永远不会被试**。
+       * 现在每个有发车的候选站都进入后续匹配，trip 详情预算由
+       * roundRobinTripCandidates 跨站轮转分配。
+       */
+      const perStopCandidates = [];
 
       for (
         const candidate of originCandidates.slice(
@@ -1369,19 +1427,35 @@
           list = [];
         }
 
-        if (list.length) {
-          originStop = candidate;
-
-          /*
-           * 取较多发车用于跨线路取样（单次请求，不额外耗时）：
-           * 只看前 12 班时可能整段都落在同一条线路上。
-           */
-          departures = list.slice(
-            0,
-            GTFS_DEPARTURE_SCAN_LIMIT
-          );
-          break;
+        if (!list.length) {
+          continue;
         }
+
+        /*
+         * 取较多发车用于跨线路取样（单次请求，不额外耗时）：
+         * 只看前 12 班时可能整段都落在同一条线路上。
+         */
+        const picks =
+          diversifyTripCandidates(
+            list.slice(
+              0,
+              GTFS_DEPARTURE_SCAN_LIMIT
+            )
+          );
+
+        if (picks.length) {
+          perStopCandidates.push({
+            stop: candidate,
+            departures: picks
+          });
+        }
+      }
+
+      if (!perStopCandidates.length) {
+        throw providerError(
+          "direct_trip_not_found",
+          "当前数据源未覆盖这条线路（起点站没有可用的班次数据；仅支持无需换乘的直达行程）。"
+        );
       }
 
       /*
@@ -1398,15 +1472,31 @@
        * GTFS_TRIP_CANDIDATE_LIMIT，既把耗时压到 1~2 秒，又让线路覆盖面
        * 反而更广（原先只看前 12 班，很可能全落在一条线路上）。
        */
+      /*
+       * 出发站发车列表 → 候选班次。两层去重/轮转，都是为了在有限请求预算内
+       * 覆盖尽可能多的线路与运营商：
+       *  1) 站间轮转（roundRobinTripCandidates）：不同 feed 的候选站轮流
+       *     获得 trip 详情预算，避免预算全被第一个站吃掉；
+       *  2) 站内按 (route, stop_pattern) 去重 + 跨线路轮转
+       *     （diversifyTripCandidates）：同一份经停表绝不重复取。
+       * 实测「東京」站 40 班全属丸ノ内線同一 pattern，旧实现连发 11 次
+       * 相同请求、耗时 8.6 秒并撞穿阶段预算。
+       */
       const tripCandidates =
-        diversifyTripCandidates(
-          departures
+        roundRobinTripCandidates(
+          perStopCandidates,
+          GTFS_TRIP_CANDIDATE_LIMIT
         );
 
       for (
-        const departure
+        const entry
         of tripCandidates
       ) {
+        const departure =
+          entry.departure;
+
+        const candidateStop =
+          entry.stop;
         const departureTrip =
           departure?.trip;
 
@@ -1485,7 +1575,7 @@
               item =>
                 stopMatches(
                   item?.stop,
-                  originStop
+                  candidateStop
                 )
             );
 
@@ -1761,8 +1851,12 @@
        * 因此只抛中文 message 供日志/直调使用，**用户可见文案由 app 按当前
        * 语言组装**（线上事故：日文界面直接显示中文「当前数据源未覆盖…」）。
        */
-      const routeNames =
+            const routeNames =
         tripCandidates
+          .map(
+            entry =>
+              entry.departure
+          )
           .map(
             candidate =>
               text(

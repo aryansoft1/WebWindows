@@ -302,10 +302,10 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-10/);
+assert.match(html, /transit-providers\.js\?v=20260925-11/);
 assert.match(html, /transit-app\.js\?v=20260925-12/);
 assert.match(html, /navigation\.css\?v=20260925-4/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-9/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-10/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260925-11/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
@@ -2025,4 +2025,34 @@ assert.match(
   providerSource,
   /type:\s*\n\s*number\(\s*\n\s*routeMeta/,
   "journey.route.type must come from the merged route metadata"
+);
+/*
+ * 「你查的都是公交车，所以查不到」的代码根因：起点候选循环里只要某个
+ * 候选站有发车就 break，铁路站/高速巴士站这些真正可能到终点的候选
+ * 一次都轮不到（市内公交/地铁在候选里通常排最前且必有发车）。
+ */
+assert.match(
+  providerSource,
+  /function roundRobinTripCandidates\(/,
+  "trip detail budget must be rotated across origin stop candidates"
+);
+assert.match(
+  providerSource,
+  /perStopCandidates\.push\(\{\s*\n\s*stop: candidate,\s*\n\s*departures: picks/,
+  "every origin candidate with departures must enter the match set"
+);
+assert.doesNotMatch(
+  providerSource,
+  /departures = list\.slice\([\s\S]{0,120}?break;/,
+  "the origin candidate loop must not stop at the first stop with departures"
+);
+assert.match(
+  providerSource,
+  /roundRobinTripCandidates\(\s*\n\s*perStopCandidates,\s*\n\s*GTFS_TRIP_CANDIDATE_LIMIT/,
+  "candidate rotation must respect the global trip budget"
+);
+assert.match(
+  providerSource,
+  /stopMatches\(\s*\n\s*item\?\.stop,\s*\n\s*candidateStop/,
+  "the origin stop used for matching must be the per-candidate one"
 );

@@ -1070,9 +1070,14 @@ try{
   var __hb = function(){
     var me = (typeof getProfile === 'function') ? getProfile() : null;
     if(!me) return;
-    // 仅用稳定 ID 识别用户；昵称仅作展示（可选）
-    fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(me.name), 
-         { credentials: 'omit', cache: 'no-store', headers: { 'Accept': 'application/json' }});
+    // 必须发布稳定账号 ID：服务端以 Session("webwindows_user_id") 为权威，
+    // 无会话时只接受 guest_ 前缀的 ID，昵称（me.name）会被直接丢弃。
+    // 同时必须带上同源会话 Cookie，否则登录用户永远不会被写入 presence。
+    var pid = String(me.id || '');
+    if(!pid) return;
+    fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(pid)
+         + '&name=' + encodeURIComponent(me.name || pid),
+         { credentials: 'include', cache: 'no-store', headers: { 'Accept': 'application/json' }});
   };
   __hb(); setInterval(__hb, 30000);
 }catch(e){}
@@ -1637,9 +1642,10 @@ async function fetchPresenceList(){
   try{
     // 1) 防缓存：cache:no-store + 时间戳参数
     var me  = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
-    var url = '/api/dt_presence_mem.asp?list=1&_=' + Date.now();
+    // 带上自己的 ID：服务端会回显 me，且同源会话 Cookie 必须发送（与心跳保持一致）
+    var url = '/api/dt_presence_mem.asp?list=1&u=' + encodeURIComponent(me.id || '') + '&_=' + Date.now();
     var r = await fetch(url, {
-      credentials: 'omit',     // 你现在的服务端允许 omit 也行，但 include 更不易被代理公用缓存复用
+      credentials: 'include',
       cache: 'no-store'
     });
 
@@ -1679,9 +1685,30 @@ async function fetchPresenceList(){
       p.last   = online ? '在线'  : Math.max(1, Math.round((nowSec - tsSec)/60)) + ' 分钟前';
     }
 
+    migrateLegacyFriendIds();
     renderAll();  // 刷 UI
     if (typeof seedInboxTs === 'function') seedInboxTs();
   }catch(e){}
+}
+
+/* 旧版客户端把“昵称”当作好友 ID 存进 localStorage。presence 改用稳定账号 ID 后，
+   这些旧键会失配导致“好友”页空白。这里按“旧键 === 当前在线用户的昵称”精确回键，
+   仅当该昵称在当前在线列表中唯一时才迁移，避免把两个不同的人合并。 */
+function migrateLegacyFriendIds(){
+  if(!friendSet || friendSet.size===0 || !people.length) return;
+  var byName = new Map();
+  people.forEach(function(p){
+    var k = String(p.name||'').trim().toLowerCase();
+    if(!k) return;
+    byName.set(k, byName.has(k) ? null : p);   // 重名 -> null（不迁移）
+  });
+  var moved = false;
+  Array.from(friendSet).forEach(function(oldId){
+    if(people.some(function(p){ return p.id===oldId })) return;  // 已经是稳定 ID
+    var hit = byName.get(String(oldId).trim().toLowerCase());
+    if(hit && hit.id && hit.id!==oldId){ friendSet.delete(oldId); friendSet.add(hit.id); moved = true; }
+  });
+  if(moved) saveFriends();
 }
 
 

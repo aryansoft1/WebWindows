@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.3",
-  "catalogVersion": "2026.09.25.3",
-  "generatedAt": "2026-09-24T18:39:23.102Z",
+  "releaseVersion": "2026.09.25.4",
+  "catalogVersion": "2026.09.25.4",
+  "generatedAt": "2026-09-25T02:41:07.882Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -263,9 +263,10 @@
     "assets/js/startup-manager.js",
     "assets/js/auth-session.js",
     "assets/js/ai-file-tools.js",
-    "assets/js/file-query-parser.js"
+    "assets/js/file-query-parser.js",
+    "api/transit-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.2",
+  "previousReleaseVersion": "2026.09.25.3",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -806,7 +807,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "ee622e32c6ac8acb71c5d4768aaaed88e78bed41b19d202b66ab5b5d8ba03587",
+      "sha256": "73d2fa4f05a96ef30844f656b77b62df52a82f33870ef07544da87e7ee36c55b",
       "size": 14411
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1114,7 +1115,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "161d7d521373d92b054c84fca87be10f8f961eccf0d32ce3ef4423b8a4c61f60",
+      "sha256": "2d84197e3cfab8b469e1cfd059786a9cc190eabaff7af09d7e74cb5d9dc528ca",
       "size": 16438
     },
     "assets/css/navigation.css": {
@@ -1185,16 +1186,16 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "c6d61213bcfc56351d9805f2e4143d6acd0a923d2c7c82e5bc671de7466911dc",
-      "size": 45434
+      "sha256": "56124da77e005bfce5f339678f914409b0e7892856ed2acc9d3d6e50f173c50d",
+      "size": 49249
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "8b1e3904749586a5ca7e42c93cc80efdbb7f3f1d37543fe2bf99612b56596f0c",
-      "size": 73163
+      "sha256": "fd8a7a7e375d817b9372233f6183a0518f5ba231cc5dafac05f6b1028df5a812",
+      "size": 73782
     },
     "admin_api/adminAuth.asp": {
       "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
@@ -1273,8 +1274,8 @@
       "size": 13271
     },
     "api/railway-proxy.asp": {
-      "sha256": "51e835659574d8a998c68ff316bf47095764c4e7942a342829d7193b20bdcea2",
-      "size": 30032
+      "sha256": "70269ecd958953147fc09a67b4283350ce42cc13c11d5eb9b7ec508cb9e715c9",
+      "size": 32759
     },
     "assets/js/startup-manager.js": {
       "sha256": "39709e2e295726ca9101f64047426180142f96dc0db53d52f3b96382469c219e",
@@ -1291,10 +1292,17 @@
     "assets/js/file-query-parser.js": {
       "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
       "size": 20023
+    },
+    "api/transit-proxy.asp": {
+      "sha256": "7520225838ff976faec40100d4b8c03d3a4c45204a5ae5d690807fcf130fae57",
+      "size": 8972
     }
   },
-  "releaseScope": "wendao-transit-camera-fit-guard",
+  "releaseScope": "wendao-overseas-trip-id-and-rail-snapshot-disk",
   "uploadFiles": [
+    "api/transit-proxy.asp",
+    "api/railway-proxy.asp",
+    "assets/js/transit-providers.js",
     "assets/js/transit-app.js",
     "road.html",
     "sysinfo.html",

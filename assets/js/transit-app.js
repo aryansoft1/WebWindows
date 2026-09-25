@@ -1089,6 +1089,25 @@
     const journey =
       state.journey;
 
+    /*
+     * 记住这条线路（含行内电报码）：12306 对当天只返回未发车车次，
+     * 「运行中/已通过」车次只能靠代理当日快照，而快照必须在发车前抓到。
+     * 记住电报码后，下次打开页面即可用同一区间预热当天（每天一次）。
+     */
+    if (journey?.source === "china-rail") {
+      rememberRoute(
+        journey.origin?.name || "",
+        journey.destination?.name || "",
+        journey.origin?.stopId || "",
+        journey.destination?.stopId || ""
+      );
+
+      warmTodaySnapshot(
+        journey.origin?.stopId || "",
+        journey.destination?.stopId || ""
+      );
+    }
+
     const icon =
       vehicleIcon();
 
@@ -1529,6 +1548,143 @@
       trainNo
     });
   }
+  /*
+   * 当日快照的本地记忆与预热。
+   *
+   * 背景：12306 对「当天」只返回尚未发车的车次（北京 10:31 只剩 10:42
+   * 之后的 80 趟），所以「运行中/已通过」车次只能来自代理的当日快照；
+   * 而快照必须**在那些车次发车之前**被抓到，否则永远补不回来。
+   * 代理侧已把快照落盘（不再随应用池回收丢失），这里再补两点：
+   *   1) 记住上次查询的区间，下次打开页面即可用它预热当天；
+   *   2) 每天只预热一次（本地标记），避免无谓请求。
+   * 预热失败静默忽略——它只是让覆盖更全，不该影响正常查询。
+   */
+  const ROUTE_MEMORY_KEY =
+    "webwindows.transit.route.v1";
+
+  const WARM_MARK_KEY =
+    "webwindows.transit.warm.v1";
+
+  function readStorage(key) {
+    try {
+      return window.localStorage.getItem(
+        key
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  function writeStorage(
+    key,
+    value
+  ) {
+    try {
+      window.localStorage.setItem(
+        key,
+        value
+      );
+    } catch {
+      // 隐私模式/存储被禁用时忽略
+    }
+  }
+
+  function beijingDateKey() {
+    const shifted =
+      new Date(
+        Date.now() + 8 * 3600 * 1000
+      );
+
+    const pad = value =>
+      String(value).padStart(2, "0");
+
+    return (
+      shifted.getUTCFullYear() +
+      "-" +
+      pad(shifted.getUTCMonth() + 1) +
+      "-" +
+      pad(shifted.getUTCDate())
+    );
+  }
+
+  function rememberRoute(
+    origin,
+    destination,
+    fromCode,
+    toCode
+  ) {
+    if (!fromCode || !toCode) {
+      return;
+    }
+
+    writeStorage(
+      ROUTE_MEMORY_KEY,
+      JSON.stringify({
+        origin,
+        destination,
+        fromCode,
+        toCode
+      })
+    );
+  }
+
+  function warmTodaySnapshot(
+    fromCode,
+    toCode
+  ) {
+    if (!fromCode || !toCode) {
+      return;
+    }
+
+    const dateKey = beijingDateKey();
+    const mark = `${dateKey}|${fromCode}|${toCode}`;
+
+    if (readStorage(WARM_MARK_KEY) === mark) {
+      return;
+    }
+
+    writeStorage(WARM_MARK_KEY, mark);
+
+    /*
+     * 直接打 leftTicket（而不是完整 searchJourney）：
+     * 目的只是让代理把「当天剩余车次」并入快照，
+     * 不需要经停表、地理编码与地图渲染。
+     */
+    chinaRail
+      .getLeftTicket(
+        {
+          from: { code: fromCode },
+          to: { code: toCode },
+          date: dateKey,
+          includeElapsed: true
+        }
+      )
+      .catch(() => null);
+  }
+
+  function warmFromLastRoute() {
+    const raw = readStorage(
+      ROUTE_MEMORY_KEY
+    );
+
+    if (!raw) {
+      return;
+    }
+
+    let pair = null;
+
+    try {
+      pair = JSON.parse(raw);
+    } catch {
+      return;
+    }
+
+    warmTodaySnapshot(
+      String(pair?.fromCode || "").trim(),
+      String(pair?.toCode || "").trim()
+    );
+  }
+
   async function searchJourney(overrides) {
     const origin =
       String(
@@ -2231,6 +2387,13 @@
 
   $("transit-date-time").value =
     localDateTimeValue();
+
+  /*
+   * 打开页面即用「上次查询的区间」预热当天快照（每天一次）：
+   * 让「运行中/已通过」车次的覆盖随使用自我修复，
+   * 而不是完全依赖用户在车次发车前恰好查过一次。
+   */
+  warmFromLastRoute();
 
   /*
    * 必须 preventDefault：<form> 是 method="get"，若放任原生提交，

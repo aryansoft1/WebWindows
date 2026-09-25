@@ -10,6 +10,8 @@ const appSource = await read("../assets/js/navigation-app.js");
 const transitAppSource = await read("../assets/js/transit-app.js");
 const enhancementSource = await read("../assets/js/navigation-enhancements.js");
 const cssSource = await read("../assets/css/navigation.css");
+const railwayProxySource = await read("../api/railway-proxy.asp");
+const transitProxySource = await read("../api/transit-proxy.asp");
 const html = await read("../road.html");
 
 function loadContext(source, filename, sandbox = {}) {
@@ -300,13 +302,75 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-1/);
-assert.match(html, /transit-app\.js\?v=20260925-2/);
+assert.match(html, /transit-providers\.js\?v=20260925-3/);
+assert.match(html, /transit-app\.js\?v=20260925-4/);
 assert.match(html, /navigation\.css\?v=20260925-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-1/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-2/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
+
+/*
+ * 海外 500 真因（生产代理双向实测）：
+ * Transitland 单班次端点只认**内部数字 id**：
+ *   /routes/{route_key}/trips/20B0809000  → 502（上游 500 parameter error，无经停）
+ *   /routes/{route_key}/trips/12368625337 → 200，stop_times=18
+ * departures 响应里两种 id 都有（trip.trip_id 与 trip.id），
+ * 客户端优先用 trip.id，代理原样透传并接受两种形态。
+ */
+assert.match(
+  providerSource,
+  /departureTrip\?\.id/,
+  "GTFS must prefer the internal trip id (trip.id) over trip_id"
+);
+assert.match(
+  transitProxySource,
+  /Function IsTripRef\(/,
+  "transit proxy must accept both trip_id and internal trip id"
+);
+assert.doesNotMatch(
+  transitProxySource,
+  /IsTrainNo\(tripId\)/,
+  "trip id must not be validated as a China Rail train number"
+);
+
+/*
+ * 当日快照必须落盘：线上事故——Application 内存快照随应用池回收丢失后，
+ * 北京 10:31 的查询只剩「10:42 之后的 80 趟」，运行中/已通过车次全部消失，
+ * 且响应不再带 snapshot 标记。快照需写站点内文件（服务器已有写盘先例）。
+ */
+assert.match(
+  railwayProxySource,
+  /Function SnapshotReadFile\(/,
+  "snapshot must survive app-pool recycle via a file fallback"
+);
+assert.match(
+  railwayProxySource,
+  /Sub SnapshotWriteFile\(/,
+  "snapshot must be persisted to disk"
+);
+assert.match(
+  railwayProxySource,
+  /\.rail-snapshot/,
+  "snapshot file location must be explicit and auditable"
+);
+
+/* 客户端预热：记住上次线路（含电报码）并在打开页面时预热当天一次 */
+assert.match(
+  transitAppSource,
+  /function warmTodaySnapshot\(/,
+  "app must pre-warm today's snapshot so coverage self-heals"
+);
+assert.match(
+  transitAppSource,
+  /function warmFromLastRoute\(/,
+  "app must pre-warm using the last used route on page load"
+);
+assert.match(
+  transitAppSource,
+  /includeElapsed:\s*true/,
+  "pre-warm must ask the proxy for elapsed trains"
+);
 
 /*
  * 「运行中/已通过车次」事故回归（T-017）：
@@ -316,8 +380,6 @@ assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
  *   代理：includeElapsed 入参、快照合并/过期、快照标记
  *   客户端：北京时间判定、running/past/upcoming 分组、默认选中逻辑
  */
-const railwayProxySource = await read("../api/railway-proxy.asp");
-
 assert.match(
   railwayProxySource,
   /includeElapsed/,

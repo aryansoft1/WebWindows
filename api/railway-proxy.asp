@@ -337,9 +337,24 @@ End Function
 ' ---------------------------------------------------------------------------
 ' 当日快照
 ' ---------------------------------------------------------------------------
+'
+' 存储分两层：
+'   1) Application 内存（快，但应用池回收即丢——线上事故：回收后
+'      includeElapsed 不再返回 snapshot 标记，10:31 的查询里
+'      80 趟全是 10:42 之后的「未发车」，运行中/已过站车次全部消失）；
+'   2) 站点内文件（../data/.rail-snapshot/，随站点持久化）。
+'   服务器已有写盘先例（api/dt_fetch_links.asp 用 FSO 写删 ../data，
+'   api/storage-quota.asp 遍历 ../cloud/file/），故复用该目录。
+'   读取顺序：内存 → 文件；写入：两层都写。
+'
 Function SnapshotRead(ByVal key)
   Dim value
   value = CacheRead(key, RAIL_SNAPSHOT_TTL_SECONDS)
+
+  If Len(value) = 0 Then
+    value = SnapshotReadFile(SnapshotFilePath(key))
+  End If
+
   If Len(value) = 0 Then
     ' 过期条目顺手清掉，避免 Application 随查询组合无限增长
     On Error Resume Next
@@ -347,11 +362,97 @@ Function SnapshotRead(ByVal key)
     Application.UnLock key
     On Error GoTo 0
   End If
+
   SnapshotRead = value
 End Function
 
 Sub SnapshotWrite(ByVal key, ByVal value)
   CacheWrite key, value
+  SnapshotWriteFile SnapshotFilePath(key), value
+End Sub
+
+Function SnapshotFilePath(ByVal key)
+  ' key 形如 webwindows.railway.snap.2026-09-25.ICW.EAY
+  Dim safeName
+  safeName = Replace(CStr(key), ".", "_")
+  SnapshotFilePath = Server.MapPath("../data/.rail-snapshot/" & safeName & ".json")
+End Function
+
+Function SnapshotReadFile(ByVal path)
+  SnapshotReadFile = ""
+  If Len(CStr(path)) = 0 Then Exit Function
+
+  On Error Resume Next
+  Dim fso
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Function
+  End If
+
+  If Not fso.FileExists(path) Then
+    Set fso = Nothing
+    Exit Function
+  End If
+
+  Dim stream
+  Set stream = fso.OpenTextFile(path, 1, False, -65001) ' -65001 = UTF-8
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Function
+  End If
+
+  Dim content
+  content = stream.ReadAll
+  stream.Close
+
+  ' 过期即视为不存在
+  If DateDiff("s", fso.GetFile(path).DateLastModified, Now()) > RAIL_SNAPSHOT_TTL_SECONDS Then
+    content = ""
+  End If
+
+  SnapshotReadFile = CStr(content)
+
+  Set fso = Nothing
+  On Error GoTo 0
+End Function
+
+Sub SnapshotWriteFile(ByVal path, ByVal value)
+  If Len(CStr(path)) = 0 Then Exit Sub
+
+  On Error Resume Next
+  Dim fso
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Sub
+  End If
+
+  Dim folder
+  folder = fso.GetParentFolderName(path)
+  If Not fso.FolderExists(folder) Then
+    fso.CreateFolder(folder)
+  End If
+
+  ' 先写临时文件再覆盖，避免中断留下半截 JSON（线上事故的根因之一）
+  Dim tempPath
+  tempPath = path & ".tmp"
+  Dim stream
+  Set stream = fso.CreateTextFile(tempPath, True, False, -65001)
+  stream.Write CStr(value)
+  stream.Close
+
+  If fso.FileExists(path) Then
+    fso.DeleteFile path, True
+  End If
+
+  fso.MoveFile tempPath, path
+
+  Set fso = Nothing
+  On Error GoTo 0
 End Sub
 
 '

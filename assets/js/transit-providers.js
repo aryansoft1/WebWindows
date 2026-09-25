@@ -1156,7 +1156,19 @@
         const departureTrip =
           departure?.trip;
 
+        /*
+         * Transitland 单班次端点只认**内部数字 id**（trip.id）：
+         * /routes/{route_key}/trips/{内部id} → 200 且返回 stop_times；
+         * 换成对外 trip_id（如 20B0809000）一律 500 "parameter error"。
+         * 实测（同一线路同一班次）：
+         *   20B0809000     → 500 parameter error（无经停，海外查询必然失败）
+         *   12368625337    → 200，stop_times=18
+         * 故优先用 id，缺失时才退回 trip_id（并让代理接受两种形态）。
+         */
         const tripId =
+          text(
+            departureTrip?.id
+          ) ||
           text(
             departureTrip
               ?.trip_id

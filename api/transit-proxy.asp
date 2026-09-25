@@ -160,6 +160,17 @@ Sub HandleTrip()
     WriteError 400, "missing_trip_id", "Missing trip_id."
   End If
 
+  If Not IsTripRef(tripId) Then
+    WriteError 400, "invalid_trip", "trip_id is neither a Transitland trip_id nor an internal id."
+  End If
+
+  '
+  ' 关键：Transitland v2 的单班次端点只接受**内部数字 id**。
+  ' 实测（同一线路同一班次 r-xn77-丸ノ内線）：
+  '   /trips/20B0809000    → 500 {"error":"parameter error"}（无经停，海外查询必然失败）
+  '   /trips/12368625337   → 200，stop_times=18
+  ' 所以这里不做任何转换，原样透传；客户端负责传 id（见 transit-providers.js）。
+  '
   Dim url
   url = TRANSITLAND_BASE & _
         "/routes/" & _
@@ -172,6 +183,23 @@ Sub HandleTrip()
   ProxyJson url
 
 End Sub
+
+
+' 允许两种形态：对外 trip_id（如 20B0809000）或内部数字 id（如 12368625337）
+Function IsTripRef(ByVal value)
+
+  Dim re
+  Set re = New RegExp
+
+  re.Global = False
+  re.IgnoreCase = True
+
+  re.Pattern = "^[A-Za-z0-9_\-]{1,32}$"
+  IsTripRef = re.Test(CStr(value))
+
+  Set re = Nothing
+
+End Function
 
 
 Sub HandleRealtime()

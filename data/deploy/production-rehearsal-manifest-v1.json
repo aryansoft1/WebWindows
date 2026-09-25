@@ -24,8 +24,8 @@
       "path": "web.config",
       "target": "site-root:/web.config",
       "role": "host",
-      "bytes": 3303,
-      "sha256": "0e356b2bd45f665c00bdb0a5854727684214396bf68be5a148dc0de977d0603c"
+      "bytes": 3534,
+      "sha256": "8c87d8200ce804df0500b94f8a1a451ecaa8d142c2feb8b0c667084369c0f35a"
     },
     {
       "path": "SystemManager/login.html",

@@ -15,6 +15,7 @@ const scopeIndex = args.indexOf("--scope");
 const excludeIndex = args.indexOf("--exclude");
 const prunePrefixIndex = args.indexOf("--prune-prefix");
 const reconcileIndex = args.indexOf("--reconcile-directory");
+const preserveCatalogVersion = args.includes("--preserve-catalog-version");
 const productionSource = productionIndex >= 0 ? args[productionIndex + 1] : "";
 const observedSource = observedIndex >= 0 ? args[observedIndex + 1] : "";
 const excludedFiles = excludeIndex >= 0
@@ -75,9 +76,9 @@ if (releaseVersion) {
   if (manifest.releaseVersion !== releaseVersion) {
     manifest.previousReleaseVersion = manifest.releaseVersion;
     manifest.releaseVersion = releaseVersion;
-    manifest.catalogVersion = reconcileDirectory ? priorCatalogVersion : releaseVersion;
+    manifest.catalogVersion = (reconcileDirectory || preserveCatalogVersion) ? priorCatalogVersion : releaseVersion;
   }
-  if (!reconcileDirectory) manifest.catalogVersion = releaseVersion;
+  if (!reconcileDirectory && !preserveCatalogVersion) manifest.catalogVersion = releaseVersion;
 }
 
 let integrity = {};

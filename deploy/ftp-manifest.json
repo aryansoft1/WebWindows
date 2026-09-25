@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.1",
+  "releaseVersion": "2026.09.26.2",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-25T15:29:08.451Z",
+  "generatedAt": "2026-09-25T15:47:34.001Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.28",
+  "previousReleaseVersion": "2026.09.26.1",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -767,20 +767,20 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "bb73e90f72f2cd15471806a4be3e7f8ff0614eb48364f9ce7f56593ecc7d772b",
-      "size": 3059
+      "sha256": "9602edc7cb010a3a35d006f8bfb8b4dd81c3b3d2163b0832030a03d98211b349",
+      "size": 1902
     },
     "cloud/browser/files.asp": {
-      "sha256": "46a252ff60a1c5a08632110f57a030457801f042f1031e49837b1dc1ed96ece2",
-      "size": 22308
+      "sha256": "ff4b76897dbb875d7e807ba5fbcebb3a18f8eba7ac4dcce9852876b035709928",
+      "size": 22296
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "6b709c3ce0ac3d901efe542da0a05cbe20f5f4984a38daa60ab44035ede43dd3",
-      "size": 34598
+      "sha256": "80a22177f1967892139bbf04f6dde372e693e20eda60e24a29e9a67c80386914",
+      "size": 34592
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -799,8 +799,8 @@
       "size": 15940
     },
     "cloud/browser/styles.css": {
-      "sha256": "0c4e4fb70dc11c512686beb4788f8c31df2ced090bd6964d7e6c5d8594dbcebd",
-      "size": 13811
+      "sha256": "e7703088ff103b20f1092c54611424fa8c91dbb19a3227c042c37a6471c9b8a5",
+      "size": 13560
     },
     "cloud/browser/toolbar.js": {
       "sha256": "c904d57f6d38a1b9d0b0ff856388fa8f129005ce49762205cf50849587fab978",
@@ -1316,7 +1316,6 @@
     "cloud/browser/styles.css",
     "cloud/browser/files.asp",
     "cloud/browser/private-files.asp",
-    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json"
   ]
 }

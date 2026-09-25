@@ -102,9 +102,8 @@ if (manifest.releaseScope === "navigation-map") {
     "cloud/browser/styles.css",
     "cloud/browser/files.asp",
     "cloud/browser/private-files.asp",
-    "data/apps/system-apps.json",
     "deploy/ftp-manifest.json",
-  ], "cloud layout hotfix releases must upload only the cloud browser presentation slice");
+  ], "cloud layout hotfix releases must upload only CSS and the ASP cache-key rollback");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

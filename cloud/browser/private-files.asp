@@ -193,7 +193,7 @@ End If
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
   <script defer src="../../assets/js/file-search.js?v=20260809-search-1"></script>
   <script defer src="search-ui.js?v=20260809-search-1"></script>
-  <link rel="stylesheet" href="file-search.css?v=20260926-cloud-layout-1">
+  <link rel="stylesheet" href="file-search.css?v=20260809-search-1">
   <style>
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}

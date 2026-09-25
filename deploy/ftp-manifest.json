@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.7",
+  "releaseVersion": "2026.09.26.8",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-25T17:51:44.286Z",
+  "generatedAt": "2026-09-25T18:09:33.111Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.6",
+  "previousReleaseVersion": "2026.09.26.7",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -551,8 +551,8 @@
       "size": 1897
     },
     "assets/js/desktalk.js": {
-      "sha256": "884e27e0926d2b676597765ba9a4f06be882d30566887145b41a62e2a3e47a3c",
-      "size": 106952
+      "sha256": "0fa6d243f376479b7d5eff0368747c01d44dcd043ea6b0e661bb1c16ee5a7d00",
+      "size": 108379
     },
     "assets/js/desktop-functions.js": {
       "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
@@ -915,7 +915,7 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "3bb04ddcfc2efb0c467eb80b711bdac4ccef386446345c6bf54c4d5505f45b98",
+      "sha256": "bbb2173e267a03bdd7161408279e9d7d862e54e55e03f9f7f63875e16b07d19d",
       "size": 33244
     },
     "japan.html": {
@@ -1310,12 +1310,10 @@
       "size": 902
     }
   },
-  "releaseScope": "cloud-file-search-submit",
+  "releaseScope": "desktalk-presence-identity",
   "uploadFiles": [
-    "cloud/browser/search-ui.js",
-    "cloud/browser/file-search.css",
-    "cloud/browser/files.asp",
-    "cloud/browser/private-files.asp",
+    "assets/js/desktalk.js",
+    "index.html",
     "deploy/ftp-manifest.json"
   ]
 }

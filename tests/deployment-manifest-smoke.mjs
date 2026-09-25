@@ -127,6 +127,12 @@ if (manifest.releaseScope === "navigation-map") {
     "cloud/browser/private-files.asp",
     "deploy/ftp-manifest.json",
   ], "cloud file search releases must upload only the search UI, its layout CSS and the two pages that load them");
+} else if (manifest.releaseScope === "desktalk-presence-identity") {
+  assert.deepEqual(uploadFiles, [
+    "assets/js/desktalk.js",
+    "index.html",
+    "deploy/ftp-manifest.json",
+  ], "DeskTalk presence identity releases must upload only the client runtime and the entry page that cache-stamps it");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

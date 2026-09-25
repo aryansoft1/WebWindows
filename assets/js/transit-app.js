@@ -464,35 +464,52 @@
     }, 400);
   }
 
-  function vehicleIcon() {
-    const journey =
-      state.journey;
+  /*
+   * 车辆图标的形态（2026-09-25 按用户要求重做设计，第二次修订）：
+   *   bullet —— 高铁/动车（G/D/C 头）：火箭头造型，车头是流线型尖鼻；
+   *   train  —— 普通火车：轨道/地铁/电车等**一切轨道方式**都用它
+   *              （用户明确：不要「地铁」观感）；
+   *   coach  —— 大巴：GTFS 巴士类 route_type（用户明确：是大巴，不是城市公交）。
+   * 国内按车次字头判定；海外只按官方 route_type 判定，不臆造车型。
+   */
+  const BULLET_PREFIXES = ["G", "D", "C"];
 
-    if (!journey) {
-      return "🚆";
+  /*
+   * GTFS route_type → 形态。只认官方取值（含 extended 系列）：
+   *   巴士类：3 Bus、200~209 Coach Service、700~717 Bus Service(extended)、
+   *           800 Trolleybus；
+   *   轨道类：0 Tram、1 Subway、2 Railway、5 Cable Tram、6 Aerial Lift、
+   *           7 Funicular、100~117 Railway Service（含 110 Metro、
+   *           111 Underground、112 Light Rail/Tram、113 Monorail 等）、
+   *           400~405 Urban Railway、900~906 Tram Service、1600~1607
+   *           Regional Rail。
+   * 其余（轮渡 4/1000+、航空 1100 等）落回 train 形态——目前接入的
+   * feed 里没有这类线路，不为它单独设计图标以免臆造。
+   *
+   * 旧实现用的是 emoji 映射，且有明显错误：700~799（巴士扩展类型）
+   * 返回 🚲 自行车、轨道返回 🚆/🚇 地铁观感——这正是用户看到
+   * 「海外像普通地铁 / 公交」的原因。现已全部换成 SVG，不再用 emoji。
+   */
+  function gtfsVehicleKind(
+    type
+  ) {
+    const value = Number(type);
+
+    if (!Number.isFinite(value)) {
+      return "train";
     }
 
     if (
-      journey.provider ===
-      "china-rail"
+      value === 3 ||
+      value === 800 ||
+      (value >= 200 && value < 300) ||
+      (value >= 700 && value < 800)
     ) {
-      return LIB.trainIcon(
-        journey.route?.shortName
-      );
+      return "coach";
     }
 
-    return LIB.routeIcon(
-      journey.route?.type
-    );
+    return "train";
   }
-
-  /*
-   * 车辆图标的两种形态（2026-09-25 按用户要求重做设计）：
-   *   bullet —— 高铁/动车（G/D/C 头），火箭头造型，车头是流线型尖鼻；
-   *   train  —— 普通列车（K/Z/T 头，以及所有海外普通火车），常规车头造型。
-   * 判定只看车次字头，海外一律按普通火车处理。
-   */
-  const BULLET_PREFIXES = ["G", "D", "C"];
 
   function vehicleKind() {
     const journey =
@@ -502,7 +519,9 @@
       journey?.provider !==
       "china-rail"
     ) {
-      return "train";
+      return gtfsVehicleKind(
+        journey?.route?.type
+      );
     }
 
     const code = [
@@ -651,8 +670,9 @@
     ].join(""),
 
     /*
-     * 普通火车：方正车头 + 双风挡 + 前照灯 + 受电弓暗示，
-     * 车头同样朝右（0°）。
+     * 普通火车（一切轨道方式共用）：圆顶车体 + 双前风挡 + 前照灯 +
+     * 车钩排障器 + 两侧车轮。刻意**不画受电弓**——方盒车体加受电弓
+     * 正是地铁/电车的观感（用户明确不要）。
      */
     train: [
       '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">',
@@ -664,18 +684,53 @@
       "</defs>",
       '<circle cx="16" cy="16" r="15" fill="url(#tvk-train)"/>',
       '<circle cx="16" cy="16" r="14" fill="none" stroke="#fff" stroke-width="1.6"/>',
-      // 车头（略带圆角方正轮廓）
-      '<rect x="7.5" y="9" width="15" height="14" rx="3.4" fill="#f2f5f8"/>',
-      // 双风挡
-      '<rect x="9.4" y="11" width="5" height="4.2" rx="1.2" fill="#2b3743"/>',
-      '<rect x="15.4" y="11" width="5" height="4.2" rx="1.2" fill="#2b3743"/>',
+      // 圆顶车体
+      '<path d="M7.6 20.4v-6.9c0-2.5 1.9-4.5 4.3-4.5h8.2c2.4 0 4.3 2 4.3 4.5v6.9z" fill="#f2f5f8"/>',
+      // 双前风挡
+      '<rect x="9.5" y="11.5" width="5.1" height="4.5" rx="1.3" fill="#2b3743"/>',
+      '<rect x="15.4" y="11.5" width="5.1" height="4.5" rx="1.3" fill="#2b3743"/>',
       // 前照灯
-      '<circle cx="10.6" cy="18.6" r="1.5" fill="#ffd75e"/>',
-      '<circle cx="19.4" cy="18.6" r="1.5" fill="#ffd75e"/>',
-      // 底部裙板
-      '<rect x="8.6" y="21" width="12.8" height="1.6" rx="0.8" fill="#c3ccd6"/>',
-      // 受电弓（普通列车特征）
-      '<path d="M13 7.4h6M15.2 7.4l2.4-2.6" stroke="#f2f5f8" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
+      '<circle cx="11.3" cy="18.1" r="1.35" fill="#ffd75e"/>',
+      '<circle cx="18.7" cy="18.1" r="1.35" fill="#ffd75e"/>',
+      // 车钩 / 排障器
+      '<rect x="8.4" y="20.9" width="15.2" height="1.8" rx="0.9" fill="#b9c4cf"/>',
+      // 车轮
+      '<circle cx="11.4" cy="24.1" r="1.9" fill="#1d2730"/>',
+      '<circle cx="20.6" cy="24.1" r="1.9" fill="#1d2730"/>',
+      '<circle cx="11.4" cy="24.1" r="0.75" fill="#dbe3ea"/>',
+      '<circle cx="20.6" cy="24.1" r="0.75" fill="#dbe3ea"/>',
+      "</svg>"
+    ].join(""),
+
+    /*
+     * 大巴：长圆角车体 + 侧窗带 + 斜前风挡 + 行李舱线 + 后视镜 + 车轮。
+     * 明确是「大巴」造型（长车身、行李舱、后视镜），不是城市公交。
+     */
+    coach: [
+      '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">',
+      '<defs>',
+      '<linearGradient id="tvk-coach" x1="0" y1="0" x2="1" y2="1">',
+      '<stop offset="0" stop-color="#f7b733"/>',
+      '<stop offset="1" stop-color="#d97706"/>',
+      "</linearGradient>",
+      "</defs>",
+      '<circle cx="16" cy="16" r="15" fill="url(#tvk-coach)"/>',
+      '<circle cx="16" cy="16" r="14" fill="none" stroke="#fff" stroke-width="1.6"/>',
+      // 长车体
+      '<rect x="5.4" y="10" width="21.2" height="12.2" rx="3.8" fill="#fdf7ea"/>',
+      // 侧窗带
+      '<rect x="7.1" y="12" width="10.6" height="3.7" rx="1.2" fill="#1f3b5b"/>',
+      // 斜前风挡
+      '<path d="M19.2 12h3.9c1.2 0 2.2 1 2.2 2.2v1.3c0 1.2-1 2.2-2.2 2.2h-3.9z" fill="#16304d"/>',
+      // 行李舱线
+      '<rect x="7.1" y="17.5" width="16.6" height="1.2" rx="0.6" fill="#dcc79c"/>',
+      // 后视镜
+      '<rect x="24.4" y="9.2" width="2.8" height="1.5" rx="0.75" fill="#eef3f7"/>',
+      // 车轮
+      '<circle cx="10.3" cy="23.9" r="2.1" fill="#2b3743"/>',
+      '<circle cx="10.3" cy="23.9" r="0.85" fill="#dbe3ea"/>',
+      '<circle cx="21.7" cy="23.9" r="2.1" fill="#2b3743"/>',
+      '<circle cx="21.7" cy="23.9" r="0.85" fill="#dbe3ea"/>',
       "</svg>"
     ].join("")
   };
@@ -713,6 +768,42 @@
     return element;
   }
 
+  /*
+   * 把某个形态的 SVG 注入容器（DOMParser，不用 innerHTML——项目规则）。
+   * 地图标记与结果标题共用同一份 VEHICLE_SVG，图标语义保持一致。
+   */
+  function vehicleSvgNode(
+    kind
+  ) {
+    const markup =
+      VEHICLE_SVG[kind] ||
+      VEHICLE_SVG.train;
+
+    const parsed =
+      new DOMParser()
+        .parseFromString(
+          markup,
+          "image/svg+xml"
+        );
+
+    const node =
+      parsed.documentElement;
+
+    if (node && node.setAttribute) {
+      node.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+
+      node.setAttribute(
+        "focusable",
+        "false"
+      );
+    }
+
+    return node;
+  }
+
   function applyVehicleLook(
     element
   ) {
@@ -736,24 +827,8 @@
     ) {
       glyph.dataset.kind = kind;
 
-      /*
-       * 用 DOMParser 而不是 innerHTML：项目规则禁止 innerHTML 赋值
-       * （tests/wendao-transit-smoke.mjs 有断言），而这里的内容是
-       * 模块内静态常量模板、不含任何用户数据，但仍走无 innerHTML 的路径。
-       */
-      const markup =
-        VEHICLE_SVG[kind] ||
-        VEHICLE_SVG.train;
-
-      const parsed =
-        new DOMParser()
-          .parseFromString(
-            markup,
-            "image/svg+xml"
-          );
-
       glyph.replaceChildren(
-        parsed.documentElement
+        vehicleSvgNode(kind)
       );
     }
 
@@ -1762,18 +1837,39 @@
       );
     }
 
-    const icon =
-      vehicleIcon();
+    /*
+     * 结果标题的车型图标：改用与地图标记同一套 SVG。
+     * 之前这里塞的是 emoji（LIB.routeIcon → 🚋/🚌/🚇，且 700~799 巴士
+     * 类型还错映射成 🚲 自行车），用户看到的「海外像普通地铁 / 公交」
+     * 就是这么来的。emoji 已从用户可见的车型标识里彻底移除。
+     */
+    const routeKind =
+      vehicleKind();
 
-    $("transit-route-name")
-      .textContent =
-        `${icon} ${
-          journey.route
-            ?.shortName ||
-          journey.route
-            ?.longName ||
-          T("transitRouteFallback")
-        }`;
+    const routeGlyph =
+      document.createElement(
+        "span"
+      );
+
+    routeGlyph.className =
+      "transit-route-glyph";
+
+    routeGlyph.dataset.kind =
+      routeKind;
+
+    routeGlyph.replaceChildren(
+      vehicleSvgNode(routeKind)
+    );
+
+    $("transit-route-name").replaceChildren(
+      routeGlyph,
+      document.createTextNode(
+        " " +
+          (journey.route?.shortName ||
+            journey.route?.longName ||
+            T("transitRouteFallback"))
+      )
+    );
 
     $("transit-operator-name")
       .textContent =

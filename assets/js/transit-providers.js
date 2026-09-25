@@ -992,8 +992,13 @@
       return "🚇";
     }
 
-    if (value === 700 || (value >= 700 && value < 800)) {
-      return "🚲";
+    /*
+     * 700~799 是 GTFS **Bus Service (extended)**，不是自行车；
+     * 旧实现返回 🚲 是明显误映射（用户 overseas 看到「公交/自行车」观感）。
+     * 这里改为大巴 🚌，与 UI 里新增的 coach（大巴）图标语义一致。
+     */
+    if (value >= 700 && value < 800) {
+      return "🚌";
     }
 
     if (

@@ -302,12 +302,12 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-8/);
-assert.match(html, /transit-app\.js\?v=20260925-11/);
-assert.match(html, /navigation\.css\?v=20260925-3/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-7/);
+assert.match(html, /transit-providers\.js\?v=20260925-9/);
+assert.match(html, /transit-app\.js\?v=20260925-12/);
+assert.match(html, /navigation\.css\?v=20260925-4/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-8/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-10/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-11/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -541,8 +541,13 @@ assert.match(
 );
 assert.match(
   transitAppSource,
-  /function vehicleKind\(\)[\s\S]{0,900}?provider\s*!==\s*\n?\s*"china-rail"[\s\S]{0,200}?return "train"/,
-  "overseas transit must fall back to the ordinary train icon"
+  /function gtfsVehicleKind\([\s\S]{0,1200}?return "train"/,
+  "overseas rail/tram/other route types must resolve to the ordinary train icon"
+);
+assert.match(
+  transitAppSource,
+  /function vehicleKind\(\)[\s\S]{0,700}?provider\s*!==\s*\n?\s*"china-rail"[\s\S]{0,200}?gtfsVehicleKind\(/,
+  "overseas journeys must be classified by GTFS route_type, not by a blanket default"
 );
 assert.match(
   transitAppSource,
@@ -1953,4 +1958,50 @@ assert.match(
   transitAppSource,
   /T\(\s*"errGtfsNoDirect",/,
   "app must compose the localized coverage-gap message itself"
+);
+/*
+ * 车型图标（用户第二次修订）：
+ *  轨道/地铁一律「普通火车」观感（不要 🚋/🚇 地铁观感），
+ *  巴士一律「大巴」（明确不是城市公交 🚃/🚌 观感）。
+ * 旧实现用 emoji 映射，还有 700~799（GTFS 扩展巴士）→ 🚲 自行车的误映射。
+ */
+assert.match(
+  transitAppSource,
+  /function gtfsVehicleKind\(/,
+  "overseaf vehicle kind must be derived from GTFS route_type"
+);
+assert.match(
+  transitAppSource,
+  /value === 3[\s\S]{0,400}?value >= 700 && value < 800[\s\S]{0,200}?"coach"/,
+  "GTFS bus route types (3 / 200s / 700s / 800) must map to the coach icon"
+);
+assert.match(
+  transitAppSource,
+  /coach:\s*\[/,
+  "a coach (long-distance bus) SVG must exist"
+);
+assert.doesNotMatch(
+  transitAppSource,
+  /function vehicleIcon\(/,
+  "the emoji vehicleIcon() helper must be gone from the app"
+);
+assert.match(
+  transitAppSource,
+  /transit-route-glyph/,
+  "the result header must use the same SVG glyphs instead of emoji"
+);
+assert.match(
+  cssSource,
+  /\.transit-route-glyph\s*\{[^}]*width:\s*20px/,
+  "header glyph must be sized"
+);
+assert.match(
+  providerSource,
+  /value >= 700 && value < 800\) \{\s*\n?\s*return "🚌";/,
+  "routeIcon must not map GTFS extended bus types to a bicycle"
+);
+assert.doesNotMatch(
+  providerSource,
+  /value >= 700 && value < 800\) \{\s*\n?\s*return "🚲";/,
+  "the bicycle mis-mapping for bus route types must be gone"
 );

@@ -266,6 +266,31 @@ End Sub
 
 Sub ProxyJson(url)
 
+  ' ---------------------------------------------------------------------
+  ' 时刻表类响应缓存（stops / departures / trip）
+  '
+  ' 为什么要缓存：Transitland 的 /stops/{key}/departures 极慢（实测单次
+  ' 1.7s~5.7s，个别超过 10s 超时），而客户端为覆盖「多运营商同名站」
+  ' 会连续请求多个起点站的 departures——串行叠加后整次查询可达 29 秒，
+  ' 直接撞穿客户端阶段预算，界面误报「上游故障」（真实页面回归事故）。
+  '
+  ' 时刻表数据按 service_date 是静态的，缓存 10 分钟既安全又能让重复
+  ' 查询秒回；GTFS-Realtime（vehicle_positions）**不缓存**，否则车辆位置
+  ' 会停在旧数据上。
+  ' ---------------------------------------------------------------------
+  Dim cacheable
+  cacheable = (InStr(1, url, "vehicle_positions", vbTextCompare) = 0)
+
+  If cacheable Then
+    Dim cachedBody
+    cachedBody = ScheduleCacheRead(url)
+
+    If Len(cachedBody) > 0 Then
+      Response.Write cachedBody
+      Exit Sub
+    End If
+  End If
+
   Dim result
   result = HttpGet(url)
 
@@ -293,9 +318,113 @@ Sub ProxyJson(url)
 
   Response.Status = "200 OK"
   Response.ContentType = "application/json; charset=utf-8"
+
+  If cacheable Then
+    ScheduleCacheWrite url, body
+  End If
+
   Response.Write body
   Response.End
 
+End Sub
+
+
+' 时刻表缓存：Application 内存，键含 action+参数，TTL 10 分钟。
+' 过期条目在读取时顺手清掉，避免随查询组合无限增长。
+Const SCHEDULE_CACHE_TTL_SECONDS = 600
+
+Function ScheduleCacheKey(ByVal url)
+  Dim raw
+  raw = CStr(url)
+
+  ' 去掉 apikey 之类的可变部分（本代理的 key 不在 url 里，这里只做保险）
+  raw = Replace(raw, "?", "_")
+  raw = Replace(raw, "/", "_")
+  raw = Replace(raw, "&", "_")
+  raw = Replace(raw, "=", "-")
+
+  ScheduleCacheKey = "webwindows.transit.cache." & Left(CStr(Md5Hex(raw)), 40)
+End Function
+
+Function Md5Hex(ByVal value)
+  ' 纯 VBScript 无 MD5；用长度+校验和做键足够（仅用于内存缓存去重）
+  Dim sum
+  Dim i
+  sum = 0
+
+  For i = 1 To Len(value)
+    sum = sum + (AscW(Mid(value, i, 1)) * ((i Mod 7) + 1))
+  Next
+
+  Md5Hex = Hex(Len(value)) & "_" & Hex(sum) & "_" & Left(CStr(value), 24)
+End Function
+
+Function ScheduleCacheRead(ByVal url)
+  ScheduleCacheRead = ""
+
+  Dim key
+  key = ScheduleCacheKey(url)
+
+  On Error Resume Next
+
+  Dim raw
+  raw = CStr(Application(key) & "")
+
+  If Err.Number <> 0 Then
+    Err.Clear
+    raw = ""
+  End If
+
+  On Error GoTo 0
+
+  If Len(raw) = 0 Then Exit Function
+
+  Dim sep
+  sep = InStr(raw, "|")
+
+  If sep <= 0 Then
+    ' 结构损坏：清掉并当作未命中
+    On Error Resume Next
+    Application.Lock
+    Application.Remove key
+    On Error GoTo 0
+    Exit Function
+  End If
+
+  Dim stamp
+  stamp = Left(raw, sep - 1)
+  Dim body
+  body = Mid(raw, sep + 1)
+
+  Dim age
+  age = -1
+
+  On Error Resume Next
+  age = DateDiff("s", CDate(stamp), Now())
+  On Error GoTo 0
+
+  If age < 0 Or age > SCHEDULE_CACHE_TTL_SECONDS Then
+    On Error Resume Next
+    Application.Lock
+    Application.Remove key
+    On Error GoTo 0
+    Exit Function
+  End If
+
+  ScheduleCacheRead = body
+End Function
+
+Sub ScheduleCacheWrite(ByVal url, ByVal body)
+  If Len(CStr(body)) = 0 Then Exit Sub
+
+  Dim key
+  key = ScheduleCacheKey(url)
+
+  On Error Resume Next
+  Application.Lock
+  Application(key) = CStr(Now()) & "|" & CStr(body)
+  Application.UnLock
+  On Error GoTo 0
 End Sub
 
 

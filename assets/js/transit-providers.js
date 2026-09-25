@@ -22,7 +22,7 @@
        * 必然撞穿预算 → 被判 transit_timeout → 回落 12306 → 对海外线路
        * 显示成「上游故障」。去重后典型 1~2 秒，这里放宽到 14 秒作为余量。
        */
-      gtfsStage: 14000,
+      gtfsStage: 20000,
       railStage: 30000
     },
     global.__WENDAO_TRANSIT_TIMEOUTS__ || {}
@@ -43,7 +43,7 @@
    * 阶段耗时 1~2 秒；即使最坏 8 趟也在 14 秒预算内。
    */
   const GTFS_TRIP_PER_ROUTE = 2;
-  const GTFS_TRIP_CANDIDATE_LIMIT = 8;
+  const GTFS_TRIP_CANDIDATE_LIMIT = 6;
 
   /* 起点发车扫描上限：单次请求，供跨线路取样使用。 */
   const GTFS_DEPARTURE_SCAN_LIMIT = 30;
@@ -1395,61 +1395,72 @@
        * 现在每个有发车的候选站都进入后续匹配，trip 详情预算由
        * roundRobinTripCandidates 跨站轮转分配。
        */
-      const perStopCandidates = [];
-
-      for (
-        const candidate of originCandidates.slice(
-          0,
-          GTFS_STOP_CANDIDATE_LIMIT
-        )
-      ) {
-        if (signal?.aborted) {
-          break;
-        }
-
-        let list = [];
-
-        try {
-          const payload =
-            await this.getDepartures(
-              candidate,
-              date,
-              startTime,
-              signal
-            );
-
-          list = departureArray(payload);
-        } catch (error) {
-          if (error?.name === "AbortError") {
-            throw error;
-          }
-
-          list = [];
-        }
-
-        if (!list.length) {
-          continue;
-        }
-
-        /*
-         * 取较多发车用于跨线路取样（单次请求，不额外耗时）：
-         * 只看前 12 班时可能整段都落在同一条线路上。
-         */
-        const picks =
-          diversifyTripCandidates(
-            list.slice(
+      /*
+       * 起点候选的 departures **并行**请求。
+       *
+       * Transitland 的 /stops/{key}/departures 极慢（实测 1.7s~5.7s，
+       * 偶发 >10s 超时），而「多运营商同名站」需要试多个候选站；
+       * 串行叠加后整次查询实测 29 秒，直接撞穿阶段预算 → 界面误报
+       * 「上游故障」（真实页面回归）。并行后总耗时约等于最慢的那一个。
+       * 单个候选失败只影响它自己（catch 后返回 null）。
+       */
+      const perStopCandidates = (
+        await Promise.all(
+          originCandidates
+            .slice(
               0,
-              GTFS_DEPARTURE_SCAN_LIMIT
+              GTFS_STOP_CANDIDATE_LIMIT
             )
-          );
+            .map(async candidate => {
+              if (signal?.aborted) {
+                return null;
+              }
 
-        if (picks.length) {
-          perStopCandidates.push({
-            stop: candidate,
-            departures: picks
-          });
-        }
-      }
+              let list = [];
+
+              try {
+                const payload =
+                  await this.getDepartures(
+                    candidate,
+                    date,
+                    startTime,
+                    signal
+                  );
+
+                list = departureArray(payload);
+              } catch (error) {
+                if (error?.name === "AbortError") {
+                  throw error;
+                }
+
+                list = [];
+              }
+
+              if (!list.length) {
+                return null;
+              }
+
+              /*
+               * 取较多发车用于跨线路取样（同一请求，不额外耗时）：
+               * 只看前 12 班时可能整段都落在同一条线路上。
+               */
+              const picks =
+                diversifyTripCandidates(
+                  list.slice(
+                    0,
+                    GTFS_DEPARTURE_SCAN_LIMIT
+                  )
+                );
+
+              return picks.length
+                ? {
+                    stop: candidate,
+                    departures: picks
+                  }
+                : null;
+            })
+        )
+      ).filter(Boolean);
 
       if (!perStopCandidates.length) {
         throw providerError(

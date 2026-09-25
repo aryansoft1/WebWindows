@@ -302,10 +302,10 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-11/);
+assert.match(html, /transit-providers\.js\?v=20260925-12/);
 assert.match(html, /transit-app\.js\?v=20260925-12/);
 assert.match(html, /navigation\.css\?v=20260925-4/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-10/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-11/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260925-11/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
@@ -608,12 +608,27 @@ assert.match(
 );
 assert.match(
   providerSource,
-  /const GTFS_TRIP_CANDIDATE_LIMIT = 8;/,
+  /const GTFS_TRIP_CANDIDATE_LIMIT = 6;/,
   "total trip detail calls must be bounded"
+);
+
+/*
+ * 起点候选的 departures 必须并行：Transitland 该端点单次 1.7~10s，
+ * 串行多站会累加到 29s，撞穿阶段预算 → 界面误报「上游故障」。
+ */
+assert.match(
+  providerSource,
+  /await Promise\.all\(\s*\n\s*originCandidates/,
+  "departures for origin candidates must be fetched in parallel"
+);
+assert.doesNotMatch(
+  providerSource,
+  /for \(\s*\n\s*const candidate of originCandidates\.slice\([\s\S]{0,400}?await this\.getDepartures/,
+  "the origin candidate departures loop must not be sequential"
 );
 assert.match(
   providerSource,
-  /gtfsStage:\s*14000/,
+  /gtfsStage:\s*20000/,
   "GTFS stage budget must exceed the deduplicated worst case"
 );
 assert.match(
@@ -2038,7 +2053,7 @@ assert.match(
 );
 assert.match(
   providerSource,
-  /perStopCandidates\.push\(\{\s*\n\s*stop: candidate,\s*\n\s*departures: picks/,
+  /return picks\.length\s*\n?\s*\?\s*\{\s*\n\s*stop: candidate,\s*\n\s*departures: picks/,
   "every origin candidate with departures must enter the match set"
 );
 assert.doesNotMatch(
@@ -2055,4 +2070,35 @@ assert.match(
   providerSource,
   /stopMatches\(\s*\n\s*item\?\.stop,\s*\n\s*candidateStop/,
   "the origin stop used for matching must be the per-candidate one"
+);
+/*
+ * 代理必须缓存时刻表响应：Transitland 的 /stops/{key}/departures 极慢
+ * （实测 1.7~5.7s，偶发 >10s），客户端又会并行请求多个候选站，
+ * 不缓存则每次查询都要重新打上游、慢且易被限流。
+ * GTFS-Realtime（vehicle_positions）必须**不缓存**。
+ */
+assert.match(
+  transitProxySource,
+  /Sub ScheduleCacheWrite\(/,
+  "the transit proxy must cache schedule responses"
+);
+assert.match(
+  transitProxySource,
+  /SCHEDULE_CACHE_TTL_SECONDS = 600/,
+  "schedule cache TTL must be bounded"
+);
+assert.match(
+  transitProxySource,
+  /vehicle_positions[\s\S]{0,200}?cacheable = \(InStr[\s\S]{0,200}?\) = 0/,
+  "realtime positions must be excluded from the cache"
+);
+assert.match(
+  transitProxySource,
+  /Application\.Remove key/,
+  "expired cache entries must be removable (UnLock takes no argument)"
+);
+assert.doesNotMatch(
+  transitProxySource,
+  /Application\.UnLock key/,
+  "Application.UnLock must not be called with a key"
 );

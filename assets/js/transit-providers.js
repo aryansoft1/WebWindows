@@ -666,6 +666,54 @@
     return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(h)));
   }
 
+  /*
+   * 站间行程时长（分钟）。
+   * GTFS 允许 24:00:00 以上的 service time（跨日车次），
+   * 这里按绝对秒差算，不做时钟回绕处理。
+   */
+  function legDurationMinutes(
+    from,
+    to
+  ) {
+    const toSeconds = value => {
+      const match =
+        String(value || "")
+          .match(
+            /^(\d{1,3}):(\d{2})(?::(\d{2}))?$/
+          );
+
+      if (!match) {
+        return null;
+      }
+
+      return (
+        Number(match[1]) * 3600 +
+        Number(match[2]) * 60 +
+        Number(match[3] || 0)
+      );
+    };
+
+    const start = toSeconds(
+      from?.departure_time ||
+        from?.arrival_time
+    );
+
+    const end = toSeconds(
+      to?.arrival_time ||
+        to?.departure_time
+    );
+
+    if (
+      start === null ||
+      end === null ||
+      end <= start
+    ) {
+      return null;
+    }
+
+    return (end - start) / 60;
+  }
+
   function stopCoordinates(stop) {
     const point = stop?.geometry?.coordinates;
 
@@ -1401,6 +1449,32 @@
        *  经停，只因其中一次失败就把「无直达」说成「上游暂时无法提供」）。
        */
       let tripDetailFailed = false;
+
+      /*
+       * 被范围过滤排除掉的线路（地铁/捷运/通勤/市内公交…）。
+       * 全部候选都被排除时，错误详情要带上它们 ——
+       * 否则界面只会说「没有直达班次」，用户会以为线路不存在，
+       * 而真实情况是「有地铁，但问乡海外不显示这类线路」。
+       */
+      const excludedServices = [];
+
+      function rememberExcluded(
+        name,
+        classification
+      ) {
+        if (
+          excludedServices.length < 6
+        ) {
+          excludedServices.push({
+            name:
+              String(name || "")
+                .trim() || "—",
+            kind:
+              classification?.kind ||
+              "other"
+          });
+        }
+      }
       let tripDetailOk = false;
 
       /*
@@ -1559,6 +1633,39 @@
         }
 
         /*
+         * 【海外范围过滤 · 第一道】
+         * 用户只认城际/干线铁路、高铁（新干线、磁悬浮）与长途大巴；
+         * 地下铁、捷运、subway、市区通勤铁路与市内公交一律不显示。
+         * 在**取 trip 详情之前**就排除：既是正确性要求，也顺带省掉大量
+         * 无用的经停表请求（实测「東京」站 40 班全是丸ノ内線）。
+         */
+        const earlyClass =
+          classifyOverseasService({
+            routeType:
+              route?.route_type,
+
+            names: [
+              route?.route_short_name,
+              route?.route_long_name,
+              departureTrip?.trip_headsign
+            ],
+
+            agency:
+              route?.agency
+                ?.agency_name
+          });
+
+        if (!earlyClass.include) {
+          rememberExcluded(
+            route?.route_long_name ||
+              route?.route_short_name,
+            earlyClass
+          );
+
+          continue;
+        }
+
+        /*
          * 单趟 trip 详情失败（上游 500/超时/未授权）只跳过这一趟，
          * 不能让整次查询失败——否则一个坏 trip 就会让
          * 整个海外查询报「无直达班次」（线上事故：
@@ -1650,6 +1757,62 @@
             destinationTime.stop
           );
 
+        /*
+         * 【海外范围过滤 · 第二道】
+         * 实测长途大巴与市内公交**都是 route_type=3**，光看制式分不出
+         * 长途/市内，所以用行程尺度兜底：≤45 分钟且 ≤40 公里判为市内。
+         * 高铁在第一道已按线路名放行，不受里程限制
+         * （东京→品川的新干线只有 12 分钟，也是该显示的）。
+         */
+        const gateRoute = {
+          ...(departureTrip?.route || {}),
+          ...(trip?.route || {})
+        };
+
+        const finalClass =
+          classifyOverseasService({
+            routeType:
+              gateRoute?.route_type,
+
+            names: [
+              gateRoute?.route_short_name,
+              gateRoute?.route_long_name,
+              trip?.trip_headsign
+            ],
+
+            agency:
+              gateRoute?.agency
+                ?.agency_name,
+
+            durationMinutes:
+              legDurationMinutes(
+                originTime,
+                destinationTime
+              ),
+
+            distanceKm:
+              haversineKm(
+                [
+                  originPoint?.longitude,
+                  originPoint?.latitude
+                ],
+                [
+                  destinationPoint?.longitude,
+                  destinationPoint?.latitude
+                ]
+              )
+          });
+
+        if (!finalClass.include) {
+          rememberExcluded(
+            gateRoute?.route_long_name ||
+              gateRoute?.route_short_name,
+            finalClass
+          );
+
+          continue;
+        }
+
         const feedKey =
           text(
             trip
@@ -1702,6 +1865,17 @@
           feedKey,
 
           tripId,
+
+          /*
+           * 范围分类结果：highspeed（高铁/新干线/磁悬浮）→ 火箭头图标，
+           * rail（城际/干线铁路）→ 普通火车，coach（长途大巴）→ 大巴。
+           * 图标层直接读这个字段，不必再猜 route_type。
+           */
+          serviceClass:
+            finalClass.kind,
+
+          serviceScope:
+            finalClass.reason,
 
           routeId:
             text(
@@ -1910,21 +2084,43 @@
       const upstreamBroken =
         !tripDetailOk && tripDetailFailed;
 
+      /*
+       * 全部候选都被「海外显示范围」过滤掉（而不是没有班次）：
+       * 独立错误码，界面明确告诉用户「找到的是地铁/通勤/市内公交，
+       * 问乡海外只显示城际/干线铁路、高铁与长途大巴」，
+       * 而不是含糊地说「没有直达班次」—— 否则用户会以为线路不存在。
+       *
+       * 上游故障优先：连经停表都没取到时，先说上游问题。
+       */
+      const allExcluded =
+        !tripDetailOk &&
+        !upstreamBroken &&
+        excludedServices.length > 0;
+
       const error = providerError(
         upstreamBroken
           ? "gtfs_trip_unavailable"
-          : "direct_trip_not_found",
+          : allExcluded
+            ? "out_of_scope_service"
+            : "direct_trip_not_found",
         upstreamBroken
           ? "公共交通上游暂时无法提供班次详情，请稍后重试。"
-          : `当前数据源未覆盖这条直达线路（已检查 ${
-              uniqueRouteNames
-                .slice(0, 4)
-                .join("、") || "相关线路"
-            }，共 ${uniqueRouteNames.length} 条；仅支持无需换乘的直达行程）。`
+          : allExcluded
+            ? "找到的班次都不在问乡海外的显示范围内（仅显示城际/干线铁路、高铁与长途大巴）。"
+            : `当前数据源未覆盖这条直达线路（已检查 ${
+                uniqueRouteNames
+                  .slice(0, 4)
+                  .join("、") || "相关线路"
+              }，共 ${uniqueRouteNames.length} 条；仅支持无需换乘的直达行程）。`
       );
 
       error.details = {
-        routes: uniqueRouteNames
+        routes: uniqueRouteNames,
+
+        /* 界面上「已排除：××（地铁/通勤/市内公交）」用 */
+        excluded: allExcluded
+          ? excludedServices
+          : []
       };
 
       throw error;
@@ -3941,6 +4137,37 @@
         return;
       }
 
+      /*
+       * 与 GTFS 同一套显示范围：地铁/捷运/通勤/市内公交不显示。
+       * Rome2Rio 返回的多为城际长途，少数短途查询仍可能命中市内线路，
+       * 同样按线路名 + 行程尺度判定。
+       */
+      const serviceNames = [
+        route?.name,
+        route?.shortName,
+        segment?.name,
+        ...(Array.isArray(segment?.operators)
+          ? segment.operators.map(
+            operator => operator?.name
+          )
+          : [])
+      ];
+
+      const serviceClass =
+        classifyOverseasService({
+          routeType:
+            mode === "train"
+              ? 2
+              : 3,
+
+          names: serviceNames
+        });
+
+      if (!serviceClass.include) {
+        rejected.push(label);
+        return;
+      }
+
       const places =
         Array.isArray(segment?.places)
           ? segment.places
@@ -4055,6 +4282,13 @@
 
       usable.push({
         provider: "longdistance",
+
+        /* 图标层读它决定火箭头/普通火车/大巴 */
+        serviceClass:
+          serviceClass.kind,
+
+        serviceScope:
+          serviceClass.reason,
 
         tripId:
           text(route?.id) ||
@@ -4386,6 +4620,310 @@
   }
 
   /*
+   * ==================== 海外线路分类：城际/干线 vs 城市轨道 ====================
+   *
+   * 用户要求（明确定调）：海外只显示
+   *   ① 普通铁路的**城际/干线**车次
+   *   ② 高铁（新干线、磁悬浮等）
+   *   ③ 长途大巴（高速/城际巴士）
+   * 明确**排除**地下铁、捷运、subway，以及市区通勤铁路（山手线、京王线、
+   * 台北电铁市区段……）与市内公交。
+   *
+   * 为什么必须三重判据（都基于实测，不是照抄规格书）：
+   *  - GTFS route_type 只能判「制式」：实测丸ノ内線=1（Subway，排除），
+   *    但**长途大巴与市内公交都是 3**，光看 type 分不出长途/市内；
+   *  - 线路名/运营方关键字补上「名字里就写了通勤」的情况
+   *    （JR 系 feed 常把山手线也标成 2）；
+   *  - 行程尺度（时长 + 起终点直线距离）兜住前两者都判不出来的情况。
+   *    实测要町：東京メトロ「有楽町線」type=1、越後交通「長岡線」type=3；
+   *    而用户要的大分↔熊本高速巴士同样是 type=3 —— 只能靠尺度区分。
+   *
+   * 判定顺序（先命中先决定）：
+   *   高铁名 → include（即使里程很短，东京→品川的新干线也该显示）
+   *   巴士 type → include，但「≤45 分钟且 ≤40 公里」判为市内 → exclude
+   *   城市制式 type/name → exclude
+   *   通勤 type/name → exclude
+   *   轨道 type → include，同样受尺度判据约束
+   *   其余（轮渡/航空/出租/无法识别）→ exclude
+   */
+
+  const OVERSEAS_EXCLUDE_METRO_TYPE = new Set([
+    0, /* Tram */
+    1, /* Subway / Metro */
+    5, /* Monorail */
+    6, /* Funicular */
+    7, /* Rack Railway */
+    11, /* Trolleybus */
+    12, /* Monorail */
+    401, /* City Railway */
+    405, /* Metro Service */
+    406, /* Underground */
+    900, /* Tram Service */
+    901,
+    902,
+    903, /* Car Tram */
+    904, /* Rack and Pinion */
+    905, /* Funicular */
+    906, /* Suspended Monorail */
+    110, /* Metro Service */
+    111, /* Underground */
+    112, /* Light Rail / Tram */
+    113 /* Monorail */
+  ]);
+
+  const OVERSEAS_EXCLUDE_COMMUTER_TYPE = new Set([
+    402, /* Commuter Rail */
+    103, /* Suburban Railway */
+    107, /* Local Train */
+    108, /* Short line */
+    404 /* Urban Railway */
+  ]);
+
+  const OVERSEAS_RAIL_TYPE = new Set([
+    2, /* Railway */
+    100, /* Railway Service */
+    101, /* Long-distance Train */
+    104, /* Intercity */
+    105, /* Long-distance */
+    106, /* Regional Rail */
+    109, /* Night Train */
+    114,
+    115,
+    116,
+    117,
+    403, /* Interurban */
+    1600,
+    1601,
+    1602,
+    1603,
+    1604,
+    1605,
+    1606,
+    1607
+  ]);
+
+  const OVERSEAS_COACH_TYPE = new Set([
+    3, /* Bus */
+    200,
+    201,
+    202,
+    203,
+    204,
+    205,
+    206,
+    207,
+    208,
+    209,
+    700,
+    701,
+    702,
+    703,
+    704,
+    705,
+    706,
+    707,
+    708,
+    709,
+    710,
+    711,
+    712,
+    713,
+    714,
+    715,
+    716,
+    717,
+    800 /* Trolleybus：与巴士同类处理 */
+  ]);
+
+  /*
+   * 市内判据：两个条件同时成立才算「市内」。
+   * 用 AND 而不是 OR —— 大阪→京都 的 JR 干线约 30 分钟/42 公里，
+   * 只按时间会被误杀；实测东京→池袋的丸ノ内線是 16 分钟/13 公里，两条都成立。
+   */
+  const OVERSEAS_URBAN_MAX_MINUTES = 45;
+  const OVERSEAS_URBAN_MAX_KM = 40;
+
+  const OVERSEAS_METRO_NAME =
+    /地下鉄|地鐵|捷運|捷运|地下铁|单轨|單軌|市电|市電|路面電車|新交通|\bmetro\b|\bmetropolitan\b|\bsubway\b|\bunderground\b|u-?bahn|\btube\b|\bmrt\b|\blrt\b|\btram\b|light\s*rail|people\s*mover|cable\s*car|缆车|纜車|funicular|索道|monorail/i;
+
+  const OVERSEAS_COMMUTER_NAME =
+    /山手|環状|环状|総武|京王|東急|東武|伊勢崎|相鉄|相铁|湘南|京浜東北|各駅停車|各站停车|区間|区间|通勤|\bsuburban\b|\bcommuter\b|\blocal\s+(train|service)\b|\bshort\s+line\b|\burban\b|市區|市区/i;
+
+  const OVERSEAS_HIGH_SPEED_NAME =
+    /新幹線|shinkansen|磁気浮上|磁悬浮|磁浮|maglev|超電鉄|高鐵|高铁|high[\s-]?speed|\bhsr\b|\btgv\b|\bice\b|\bave\b|eurostar/i;
+
+  const OVERSEAS_METRO_AGENCY =
+    /メトロ|\bmetro\b|subway|捷運|捷运|地鐵|地下铁/i;
+
+  function classifyOverseasService(
+    {
+      routeType = null,
+      names = [],
+      agency = "",
+      durationMinutes = null,
+      distanceKm = null
+    } = {}
+  ) {
+    /*
+     * 注意：Number(null) === 0、Number("") === 0，而 0 在城市制式排除表里
+     *（Tram）。直接 Number(routeType) 会把「没有 route_type」的线路
+     * 误判成有轨电车而排除 —— 实测 Gautrain（无 type）就是这样被误杀的。
+     * 所以先把 null / undefined / 空串显式判为「无类型」。
+     */
+    const typeMissing =
+      routeType === null ||
+      routeType === undefined ||
+      routeType === "";
+
+    const type =
+      typeMissing ? NaN : Number(routeType);
+
+    const hasType = Number.isFinite(type);
+
+    const label = [
+      ...(Array.isArray(names) ? names : [names]),
+      agency
+    ]
+      .map(
+        value =>
+          String(value ?? "")
+            .trim()
+      )
+      .filter(Boolean)
+      .join(" ");
+
+    const urbanScale =
+      Number.isFinite(durationMinutes) &&
+      Number.isFinite(distanceKm) &&
+      durationMinutes <= OVERSEAS_URBAN_MAX_MINUTES &&
+      distanceKm <= OVERSEAS_URBAN_MAX_KM;
+
+    /*
+     * ① 高铁优先：名字里写了新幹線/TGV/maglev 的，无论里程多短都该显示
+     *    （东京→品川的新干线只有 12 分钟，尺度判据会误杀）。
+     */
+    if (
+      label &&
+      OVERSEAS_HIGH_SPEED_NAME.test(label)
+    ) {
+      return {
+        kind: "highspeed",
+        include: true,
+        reason: "high-speed"
+      };
+    }
+
+    if (
+      hasType &&
+      OVERSEAS_COACH_TYPE.has(type)
+    ) {
+      if (urbanScale) {
+        return {
+          kind: "urbancoach",
+          include: false,
+          reason: "short city coach"
+        };
+      }
+
+      return {
+        kind: "coach",
+        include: true,
+        reason: "long-distance coach"
+      };
+    }
+
+    if (
+      hasType &&
+      OVERSEAS_EXCLUDE_METRO_TYPE.has(type)
+    ) {
+      return {
+        kind: "metro",
+        include: false,
+        reason: "urban rail / metro"
+      };
+    }
+
+    if (
+      label &&
+      OVERSEAS_METRO_NAME.test(label)
+    ) {
+      return {
+        kind: "metro",
+        include: false,
+        reason: "urban rail / metro"
+      };
+    }
+
+    if (
+      hasType &&
+      OVERSEAS_EXCLUDE_COMMUTER_TYPE.has(type)
+    ) {
+      return {
+        kind: "commuter",
+        include: false,
+        reason: "commuter rail"
+      };
+    }
+
+    if (
+      label &&
+      OVERSEAS_COMMUTER_NAME.test(label)
+    ) {
+      return {
+        kind: "commuter",
+        include: false,
+        reason: "commuter rail"
+      };
+    }
+
+    if (
+      hasType &&
+      OVERSEAS_RAIL_TYPE.has(type)
+    ) {
+      if (urbanScale) {
+        return {
+          kind: "commuter",
+          include: false,
+          reason: "short urban rail"
+        };
+      }
+
+      return {
+        kind: "rail",
+        include: true,
+        reason: "intercity rail"
+      };
+    }
+
+    /*
+     * ② 运营方带地铁/捷运字样时兜底排除
+     *    （放在最后：运营方名里出现 Metro 时，route_type 与线路名都不该被推翻）。
+     */
+    if (
+      String(agency || "") &&
+      OVERSEAS_METRO_AGENCY.test(
+        String(agency)
+      )
+    ) {
+      return {
+        kind: "metro",
+        include: false,
+        reason: "urban rail / metro"
+      };
+    }
+
+    /*
+     * ③ 无法识别的制式一律不显示：轮渡/航空/出租没有对应的车辆图标与
+     *    运营语义，硬画会误导；宁可如实报「没有符合范围的线路」。
+     */
+    return {
+      kind: "other",
+      include: false,
+      reason: "unsupported mode"
+    };
+  }
+
+  /*
    * 阶段总预算：到点取消子链并抛 TimeoutError，
    * 保证「照会中」状态永远有界。
    * race 对入参 promise 均挂有 handler，
@@ -4676,6 +5214,7 @@
       sliceSchedule,
       normalizeStopTimes,
       normalizeLongDistanceRoutes,
+      classifyOverseasService,
       routeIcon,
       trainIcon
     });

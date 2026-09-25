@@ -217,7 +217,14 @@ const gtfsContext = loadContext(providerSource, "transit-providers.js", {
               ? [{
                   trip: {
                     trip_id: "T1",
-                    route: { onestop_id: "r-1", route_id: "1" },
+                    route: {
+                      onestop_id: "r-1",
+                      route_id: "1",
+                      route_type: 2,
+                      route_short_name: "Nozomi 9",
+                      route_long_name: "東海道新幹線",
+                      agency: { agency_name: "JR Central" }
+                    },
                     stop_times: [
                       { stop: { stop_name: "東京" } },
                       { stop: { stop_name: "名古屋" } }
@@ -237,7 +244,14 @@ const gtfsContext = loadContext(providerSource, "transit-providers.js", {
         json: async () => ({
           trips: [{
             trip_id: "T1",
-            route: { onestop_id: "r-1", route_id: "1" },
+            route: {
+              onestop_id: "r-1",
+              route_id: "1",
+              route_type: 2,
+              route_short_name: "Nozomi 9",
+              route_long_name: "東海道新幹線",
+              agency: { agency_name: "JR Central" }
+            },
             stop_times: [
               { stop: { stop_name: "東京", geometry: { coordinates: [139.76, 35.68] } }, arrival: { scheduled: "09:00:00" }, departure: { scheduled: "09:05:00" } },
               { stop: { stop_name: "名古屋", geometry: { coordinates: [136.88, 35.17] } }, arrival: { scheduled: "11:00:00" }, departure: { scheduled: "11:05:00" } }
@@ -263,6 +277,104 @@ const gtfsJourney = await gtfsProvider.searchJourney({
 });
 assert.equal(gtfsJourney.provider, "transitland");
 assert.equal(gtfsJourney.stopTimes.length, 2, "must use the stop that actually has departures");
+assert.equal(
+  gtfsJourney.serviceClass,
+  "highspeed",
+  "新幹線 must be classified as high-speed so the icon layer shows the bullet (火箭头)"
+);
+
+/*
+ * 用户反馈的正是这条：東京→池袋 命中「丸ノ内線 / 東京メトロ」（route_type=1 Subway）。
+ * 同样的数据现在必须被排除，并给出独立的 out_of_scope_service 错误码 +
+ * 被排除线路清单，让界面能说清「有地铁但海外不显示」。
+ */
+const metroContext = loadContext(
+  providerSource,
+  "transit-providers.js",
+  {
+    URL,
+    AbortController,
+    setTimeout,
+    clearTimeout,
+    location: { origin: "https://www.y0.hk" },
+    fetch: async url => {
+      const parsed = new URL(String(url));
+      const action = parsed.searchParams.get("action");
+
+      if (action === "stops") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            stops: [
+              {
+                onestop_id: "s-metro-東京",
+                stop_name: "東京",
+                geometry: { type: "Point", coordinates: [139.7648, 35.681935] }
+              },
+              {
+                onestop_id: "s-metro-池袋",
+                stop_name: "池袋",
+                geometry: { type: "Point", coordinates: [139.7106, 35.7295] }
+              }
+            ]
+          })
+        };
+      }
+
+      if (action === "departures") {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            stops: [{
+              departures: [{
+                trip: {
+                  trip_id: "M1",
+                  trip_headsign: "荻窪",
+                  route: {
+                    onestop_id: "r-marunouchi",
+                    route_id: "M",
+                    route_type: 1,
+                    route_long_name: "丸ノ内線",
+                    agency: { agency_name: "東京メトロ" }
+                  },
+                  stop_times: [
+                    { stop: { stop_name: "東京" } },
+                    { stop: { stop_name: "池袋" } }
+                  ]
+                }
+              }]
+            }]
+          })
+        };
+      }
+
+      throw new Error("trip detail must not be fetched for a metro service");
+    }
+  }
+);
+
+const metroProvider =
+  new metroContext.WebWindowsTransit.TransitlandTransitProvider();
+
+await assert.rejects(
+  metroProvider.searchJourney({
+    origin: "東京",
+    destination: "池袋",
+    departureTime: "2026-09-27T09:00"
+  }),
+  error => {
+    assert.equal(
+      error.code,
+      "out_of_scope_service",
+      "東京→池袋 命中丸ノ内線(type=1) 时必须报「在显示范围外」，而不是当成查到了"
+    );
+    assert.equal(error.details.excluded[0].kind, "metro");
+    assert.equal(error.details.excluded[0].name, "丸ノ内線");
+    return true;
+  }
+);
 
 /* transit-app 里写死的元素 id / 选择器必须真的存在于 road.html，
    否则页面运行时会拿到 null 并在查询过程中崩溃。 */
@@ -302,14 +414,14 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-13/);
-assert.match(html, /transit-app\.js\?v=20260925-13/);
-assert.match(html, /navigation-app\.js\?v=20260925-2/);
+assert.match(html, /transit-providers\.js\?v=20260925-14/);
+assert.match(html, /transit-app\.js\?v=20260925-14/);
+assert.match(html, /navigation-app\.js\?v=20260925-3/);
 assert.match(html, /navigation\.css\?v=20260925-4/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-12/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-13/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-12/);
-assert.doesNotMatch(html, /navigation-app\.js\?v=20260925-1/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-13/);
+assert.doesNotMatch(html, /navigation-app\.js\?v=20260925-2/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -548,8 +660,8 @@ assert.match(
 );
 assert.match(
   transitAppSource,
-  /function vehicleKind\(\)[\s\S]{0,700}?provider\s*!==\s*\n?\s*"china-rail"[\s\S]{0,200}?gtfsVehicleKind\(/,
-  "overseas journeys must be classified by GTFS route_type, not by a blanket default"
+  /function vehicleKind\(\)[\s\S]{0,1400}?provider\s*!==\s*\n?\s*"china-rail"[\s\S]{0,1400}?gtfsVehicleKind\(/,
+  "overseas journeys must be classified (serviceClass first, then GTFS route_type), not by a blanket default"
 );
 assert.match(
   transitAppSource,
@@ -2929,6 +3041,299 @@ for (const language of LANGUAGES) {
     assert.ok(
       TEXT[language][key],
       language + " missing long-distance key: " + key
+    );
+  }
+}
+
+
+/* =====================================================================
+ * 海外显示范围（用户第三次明确定调）
+ *
+ * 只显示：① 城际/干线普通铁路 ② 高铁（新干线、磁悬浮） ③ 长途大巴
+ * 排除：  地下铁、捷运、subway、市区通勤铁路、市内公交
+ *
+ * 下面全部用**实测数据**做断言（不是照抄 GTFS 规格书）：
+ *   丸ノ内線 / 東京メトロ   type=1  → 排除（用户截图里那条）
+ *   有楽町線 / 東京メトロ   type=1  → 排除
+ *   越後交通「長岡線」      type=3  → 市内段排除
+ *   九州産交バス（大分↔熊本）type=3 且 2h/130km → 保留（T-025 已验证过的长途大巴）
+ * ===================================================================== */
+const scopeLib = loadContext(providerSource, "transit-providers.js", {
+  URL,
+  AbortController,
+  setTimeout,
+  clearTimeout,
+  location: { origin: "https://www.y0.hk" }
+}).WebWindowsTransit;
+
+const classify = scopeLib.classifyOverseasService;
+
+assert.ok(classify, "classifyOverseasService must be exported");
+
+/* ---- 地铁/捷运：实测 type=1 ---- */
+{
+  const r = classify({
+    routeType: 1,
+    names: ["丸ノ内線"],
+    agency: "東京メトロ"
+  });
+  assert.equal(r.include, false, "route_type 1 (Subway) must be excluded");
+  assert.equal(r.kind, "metro");
+}
+
+/* 运营方是地铁、但 route_type 缺失，也要排除 */
+{
+  assert.equal(
+    classify({ names: ["有楽町線"], agency: "東京メトロ" }).include,
+    false,
+    "a metro agency must be excluded even without route_type"
+  );
+  /*
+   * 没有 route_type 又没有任何线路名时，fail-closed 判为 other 并排除 ——
+   * kind 必须是 other（而不是 metro），否则说明是「按运营方名字误杀」。
+   */
+  const unknown = classify({
+    names: ["Gautrain"],
+    agency: "Gautrain"
+  });
+
+  assert.equal(unknown.include, false);
+  assert.equal(
+    unknown.kind,
+    "other",
+    "an unknown route with no type must fall back to 'other', not be excluded as metro"
+  );
+}
+
+/* 捷运 / subway / U-Bahn / 地铁 关键字 */
+for (const [names, agency, label] of [
+  [["桃園機場捷運"], "臺北大眾捷運", "zh 捷运"],
+  [["Taipei Metro Tamsui Line"], "Taipei Metro", "en metro"],
+  [["U8"], "Berliner Verkehrsbetriebe", "de U-Bahn (type 1)"],
+  [["Central line"], "London Underground", "underground"]
+]) {
+  const r = classify({ routeType: 1, names, agency });
+  assert.equal(r.include, false, label + " must be excluded");
+}
+
+/* ---- 通勤铁路：用户明确「只留城际/干线」 ---- */
+for (const [names, label] of [
+  [["山手線"], "山手線"],
+  [["京王線"], "京王線"],
+  [["総武線 (各駅停車)"], "総武線各駅停車"],
+  [["Suburban line"], "suburban"]
+]) {
+  const r = classify({ routeType: 2, names });
+  assert.equal(r.include, false, label + " must be excluded (commuter)");
+  assert.equal(r.kind, "commuter");
+}
+
+/* route_type 402/103/107/108 本身就是通勤/区间 */
+for (const type of [402, 103, 107, 108, 404]) {
+  assert.equal(
+    classify({ routeType: type, names: ["Some line"] }).include,
+    false,
+    "commuter route_type must be excluded: " + type
+  );
+}
+
+/* ---- 市内公交 vs 长途大巴：两者 type 都是 3，只能靠尺度 ---- */
+{
+  const city = classify({
+    routeType: 3,
+    names: ["長岡駅前＝小千谷線"],
+    agency: "越後交通",
+    durationMinutes: 18,
+    distanceKm: 9
+  });
+  assert.equal(city.include, false, "短途市内公交必须排除");
+  assert.equal(city.kind, "urbancoach");
+
+  const highway = classify({
+    routeType: 3,
+    names: ["大分駅前＝熊本線"],
+    agency: "九州産交バス",
+    durationMinutes: 120,
+    distanceKm: 130
+  });
+  assert.equal(
+    highway.include,
+    true,
+    "长途/高速巴士必须保留（T-025 已验证过的大分↔熊本）"
+  );
+  assert.equal(highway.kind, "coach");
+}
+
+/* 尺度判据用 AND：时间短但距离远（大阪→京都的 JR 干线）不能杀 */
+{
+  const rail = classify({
+    routeType: 2,
+    names: ["東海道本線"],
+    agency: "JR西日本",
+    durationMinutes: 30,
+    distanceKm: 42
+  });
+  assert.equal(
+    rail.include,
+    true,
+    "短时间但 42 公里的干线铁路不能被当成市内（AND 判据）"
+  );
+}
+
+/* ---- 干线普通铁路 ---- */
+{
+  const rail = classify({
+    routeType: 2,
+    names: ["東海道新幹線", "のぞみ 27"],
+    agency: "JR Central",
+    durationMinutes: 135,
+    distanceKm: 500
+  });
+  assert.equal(rail.kind, "highspeed", "新幹線必须判为高铁（火箭头）");
+  assert.equal(rail.include, true);
+}
+
+{
+  const rail = classify({
+    routeType: 2,
+    names: ["中央本線"],
+    agency: "JR East",
+    durationMinutes: 95,
+    distanceKm: 120
+  });
+  assert.equal(rail.include, true);
+  assert.equal(rail.kind, "rail");
+}
+
+/* ---- 高铁：即使里程很短也必须显示（东京→品川的新干线只有 12 分钟） ---- */
+{
+  const short = classify({
+    routeType: 2,
+    names: ["東海道新幹線", "のぞみ 9"],
+    agency: "JR Central",
+    durationMinutes: 12,
+    distanceKm: 13
+  });
+  assert.equal(
+    short.include,
+    true,
+    "高铁名优先于尺度判据：短途新幹線仍要显示"
+  );
+  assert.equal(short.kind, "highspeed");
+}
+
+for (const name of [
+  "Maglev",
+  "maglev",
+  "TGV",
+  "Eurostar",
+  "新幹線",
+  "磁悬浮",
+  "高铁"
+]) {
+  assert.equal(
+    classify({ routeType: 2, names: [name] }).kind,
+    "highspeed",
+    "high-speed name must be detected: " + name
+  );
+}
+
+/* ---- 轮渡/航空/出租/无法识别：没有对应图标与运营语义，一律不显示 ---- */
+for (const type of [4, 1000, 1200, 1100, 1500, 1700]) {
+  assert.equal(
+    classify({ routeType: type, names: ["Some service"] }).include,
+    false,
+    "unsupported mode must be excluded: " + type
+  );
+}
+
+assert.equal(
+  classify({ names: [] }).include,
+  false,
+  "a route with neither type nor names must not be shown"
+);
+
+/* ---- 图标层必须按 serviceClass 选火箭头/普通火车/大巴 ---- */
+assert.match(
+  transitAppSource,
+  /serviceClass === "highspeed"/,
+  "the icon layer must give high-speed services the bullet (火箭头)"
+);
+assert.match(
+  transitAppSource,
+  /serviceClass === "rail"[\s\S]{0,120}?"train"/,
+  "intercity rail must use the ordinary train icon"
+);
+assert.match(
+  transitAppSource,
+  /serviceClass === "coach"[\s\S]{0,120}?"coach"/,
+  "long-distance coach must use the coach (大巴) icon"
+);
+assert.match(
+  providerSource,
+  /serviceClass:\s*\n?\s*finalClass\.kind/,
+  "the GTFS journey must carry the classification for the icon layer"
+);
+assert.match(
+  providerSource,
+  /serviceClass:\s*\n?\s*serviceClass\.kind/,
+  "the Rome2Rio journey must carry the classification too"
+);
+
+/* ---- 全部候选被排除时用独立错误码，并带上被排除的线路 ---- */
+assert.match(
+  providerSource,
+  /"out_of_scope_service"/,
+  "a distinct error code is required for 'found, but out of scope'"
+);
+assert.match(
+  providerSource,
+  /excluded:\s*\n?\s*allExcluded\s*\n?\s*\?\s*excludedServices/,
+  "the error details must list the excluded services"
+);
+assert.match(
+  transitAppSource,
+  /\bout_of_scope_service\s*:\s*\n?\s*"errOutOfScopeService"/,
+  "STATUS_KEYS must map out_of_scope_service"
+);
+assert.match(
+  transitAppSource,
+  /T\(\s*"errOutOfScopeService",/,
+  "the app must compose the localized out-of-scope message itself"
+);
+
+/* 两道闸都要在：制式/线路名一道，行程尺度一道 */
+assert.match(
+  providerSource,
+  /const earlyClass =\s*\n?\s*classifyOverseasService\(/,
+  "the first gate (mode + name) must run before fetching trip details"
+);
+assert.match(
+  providerSource,
+  /const finalClass =\s*\n?\s*classifyOverseasService\(/,
+  "the second gate (trip scale) must run after stop times are known"
+);
+
+/* Rome2Rio 归一化必须走同一套范围 */
+assert.match(
+  providerSource,
+  /与 GTFS 同一套显示范围/,
+  "the Rome2Rio normalizer must reuse the same scope rules"
+);
+
+/* 四语文案 */
+for (const language of LANGUAGES) {
+  for (const key of [
+    "errOutOfScopeService",
+    "errOutOfScopeKind",
+    "scopeKindMetro",
+    "scopeKindCommuter",
+    "scopeKindUrbanCoach",
+    "scopeKindOther"
+  ]) {
+    assert.ok(
+      TEXT[language][key],
+      language + " missing scope key: " + key
     );
   }
 }

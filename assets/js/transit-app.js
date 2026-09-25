@@ -94,6 +94,9 @@
      * longdistance_no_direct 正常由 coveredErrorMessage 带变量组装，
      * 这里只是兜底（避免直接显示原始错误码）。
      */
+    out_of_scope_service:
+      "errOutOfScopeService",
+
     longdistance_no_direct:
       "errLongDistanceNoDirect",
     longdistance_not_configured:
@@ -545,8 +548,33 @@
 
     if (
       journey?.provider !==
-      "china-rail"
+        "china-rail"
     ) {
+      /*
+       * 海外线路的车型由 provider 的范围分类决定（用户要求：
+       * 高铁/新干线/磁悬浮 = 火箭头，城际干线铁路 = 普通火车，
+       * 长途大巴 = 大巴；地下铁/捷运/通勤线路根本不显示）。
+       * 只看 route_type 判不出高铁 —— 干线与新干线常常都是 2，
+       * 差别只在线路名里。
+       */
+      const serviceClass =
+        String(
+          journey?.serviceClass ||
+            ""
+        );
+
+      if (serviceClass === "highspeed") {
+        return "bullet";
+      }
+
+      if (serviceClass === "coach") {
+        return "coach";
+      }
+
+      if (serviceClass === "rail") {
+        return "train";
+      }
+
       return gtfsVehicleKind(
         journey?.route?.type
       );
@@ -2247,6 +2275,47 @@
    * GTFS 找不到站点 / 直达班次时回落到 12306；
    * 两个数据源都失败时给出覆盖范围提示，而不是编造班次。
    */
+  /*
+   * 被排除线路的分类代码 → 四语短标签。
+   * 界面直接把 kind 暴露给用户等于泄漏内部实现，这里做一层映射。
+   */
+  const SCOPE_KIND_KEYS = {
+    metro: "scopeKindMetro",
+    commuter: "scopeKindCommuter",
+    urbancoach: "scopeKindUrbanCoach",
+    other: "scopeKindOther"
+  };
+
+  function scopeExcludedLabel(
+    error
+  ) {
+    const excluded =
+      Array.isArray(error?.details?.excluded)
+        ? error.details.excluded
+        : [];
+
+    return excluded
+      .slice(0, 3)
+      .map(item =>
+        T(
+          "errOutOfScopeKind",
+          {
+            name:
+              String(item?.name || "—")
+                .trim() || "—",
+
+            kind:
+              T(
+                SCOPE_KIND_KEYS[
+                  item?.kind
+                ] || "scopeKindOther"
+              )
+          }
+        )
+      )
+      .join(" / ");
+  }
+
   function coveredErrorMessage(
     error,
     fallbackCode,
@@ -2260,6 +2329,32 @@
      * （降级链里 station_not_found → 调用 → 失败 → 带 longdistanceCode
      * 上抛），因此不会影响未配置 Key 时的任何既有文案。
      */
+    /*
+     * 海外显示范围：找到的班次全是地铁/捷运/通勤/市内公交。
+     * 这与「没有这条线路」是两回事，必须说清楚 ——
+     * 否则用户会以为线路不存在，而真实情况是「问乡海外不显示这类线路」。
+     */
+    if (
+      String(
+        error?.code || ""
+      ) === "out_of_scope_service"
+    ) {
+      return T(
+        "errOutOfScopeService",
+        {
+          origin:
+            state.query?.origin || "—",
+
+          destination:
+            state.query?.destination || "—",
+
+          excluded:
+            scopeExcludedLabel(error) ||
+            T("scopeKindOther")
+        }
+      );
+    }
+
     if (
       String(
         error?.code || ""

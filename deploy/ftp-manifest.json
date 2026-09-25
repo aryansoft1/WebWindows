@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.24",
-  "catalogVersion": "2026.09.25.24",
-  "generatedAt": "2026-09-25T07:02:07.223Z",
+  "releaseVersion": "2026.09.25.25",
+  "catalogVersion": "2026.09.25.25",
+  "generatedAt": "2026-09-25T07:05:26.263Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -265,9 +265,10 @@
     "assets/js/ai-file-tools.js",
     "assets/js/file-query-parser.js",
     "api/transit-proxy.asp",
-    "api/longdistance-proxy.asp"
+    "api/longdistance-proxy.asp",
+    "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.23",
+  "previousReleaseVersion": "2026.09.25.24",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -638,7 +639,8 @@
       "size": 10287
     },
     "assets/js/tw.js": {
-      "sha256": "4edbf171396fccd18170b76717aa71f4e3fea90dbdad4a16c5a24ff5c3eb6abe"
+      "sha256": "b667a1f7984f3aa7c5839b47b682587a2a249d48aac8abdcaf569966d2ef6872",
+      "size": 66301
     },
     "assets/js/vendor/html2canvas.min.js": {
       "sha256": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e",
@@ -809,7 +811,7 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "d40101972816959a41c74edd7d670a08eb9d0f68b75f594bc5aad498a5a87c50",
+      "sha256": "10cf781079025302c274e27023a394f13097a281ef63985b177197285891c941",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -913,8 +915,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "79e3974cb170bcfa4899d1d3ed92e1ed551c455ca5fc17e8ec534ea30207fcde",
-      "size": 33239
+      "sha256": "3bb04ddcfc2efb0c467eb80b711bdac4ccef386446345c6bf54c4d5505f45b98",
+      "size": 33244
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
@@ -933,8 +935,8 @@
       "size": 2554
     },
     "settings.html": {
-      "sha256": "9006215918990d9d86bcccb6ff0516d1be45aa3099f7dfa3c9b283b7684f74a1",
-      "size": 20178
+      "sha256": "2c5a7f0243b033eabb1ee1dea4d7e77b2a194a1c849c8f59b317bd50adad43c5",
+      "size": 20182
     },
     "software.html": {
       "sha256": "ace84106a5eef3718bfcb344ca82661f439b3ecd48e29ee296df7aa8240c5fb9",
@@ -1302,16 +1304,23 @@
     "api/longdistance-proxy.asp": {
       "sha256": "a841de069890c298170e89bc034b7a226659e43eb5be3e30f27d5502c68d4388",
       "size": 18772
+    },
+    "inc/trust-schema.asp": {
+      "sha256": "5a525e4edf83a3710a5f3d1794735884aca8d3148a6cef5a03878782733c571e",
+      "size": 902
     }
   },
-  "releaseScope": "wendao-longdistance-codepage-hotfix",
+  "releaseScope": "t031-settings-apps-i18n",
   "uploadFiles": [
-    "api/longdistance-proxy.asp",
+    "assets/js/tw.js",
+    "settings.html",
+    "index.html",
+    "inc/trust-schema.asp",
     "data/apps/system-apps.json",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
     "sysinfo.html",
     "assets/js/sysinfo.js",
+    "api/release-version.asp",
+    "api/mobile-version.asp",
     "deploy/ftp-manifest.json"
   ]
 }

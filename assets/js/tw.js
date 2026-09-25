@@ -426,6 +426,66 @@ Object.assign(languageCatalog.jp, {
   "catalog、package、runtime 为 published-only 字段，不在 Source Manifest 表单中开放。launch 保持平台保留。": "catalog、package、runtime は公開時のみのフィールドで、Source Manifest フォームでは編集できません。launch はプラットフォーム予約のままです。"
 });
 
+// 设置 → 应用（启动项）选项卡：静态文案与 settings.js 动态状态/控件文案。
+// 缺键会导致其它语言下中英混排（半截替换），三语必须齐全。
+Object.assign(languageCatalog.en, {
+  "应用": "Apps",
+  "管理 WebWindows 应用的桌面行为。启动项只保存当前使用者的配置，应用自身不能绕过启动管理修改该列表。": "Manage the desktop behavior of WebWindows apps. Startup entries only save the current user's configuration; apps cannot bypass startup management to modify this list.",
+  "启动项": "Startup",
+  "桌面会话就绪（session-ready）后，已启用的启动项会按设定延迟依次自动启动。关闭开关即停止该应用的自动启动。": "Once the desktop session is ready (session-ready), enabled startup items start automatically in sequence after their configured delay. Turn off the switch to stop that app from starting automatically.",
+  "启动项服务尚未就绪，请重新打开设置。": "The startup service is not ready. Please reopen Settings.",
+  "正在读取启动项……": "Loading startup items…",
+  "启动项读取失败。": "Failed to load startup items.",
+  "当前没有可配置的应用。": "There are no configurable apps right now.",
+  "后台启动": "Start in background",
+  "最小化启动": "Start minimized",
+  "正常窗口": "Normal window",
+  "启用": "Enabled",
+  "毫秒": "ms",
+  " 的启动项已保存。": " was saved as a startup item.",
+  " 的启动项保存失败。": " could not be saved as a startup item.",
+  " 启动模式": " startup mode",
+  " 启动延迟（毫秒）": " startup delay (ms)"
+});
+Object.assign(languageCatalog.jp, {
+  "应用": "アプリ",
+  "管理 WebWindows 应用的桌面行为。启动项只保存当前使用者的配置，应用自身不能绕过启动管理修改该列表。": "WebWindows アプリのデスクトップ動作を管理します。起動項目は現在の利用者の設定のみを保存し、アプリ自体が起動管理を回避してこの一覧を変更することはできません。",
+  "启动项": "起動項目",
+  "桌面会话就绪（session-ready）后，已启用的启动项会按设定延迟依次自动启动。关闭开关即停止该应用的自动启动。": "デスクトップセッションの準備完了（session-ready）後、有効にした起動項目が設定された遅延に従って順次自動起動します。スイッチをオフにすると、そのアプリの自動起動は停止します。",
+  "启动项服务尚未就绪，请重新打开设置。": "起動項目サービスの準備ができていません。設定をもう一度開いてください。",
+  "正在读取启动项……": "起動項目を読み込み中……",
+  "启动项读取失败。": "起動項目の読み込みに失敗しました。",
+  "当前没有可配置的应用。": "構成可能なアプリがありません。",
+  "后台启动": "バックグラウンド起動",
+  "最小化启动": "最小化起動",
+  "正常窗口": "通常ウィンドウ",
+  "启用": "有効",
+  "毫秒": "ミリ秒",
+  " 的启动项已保存。": " の起動項目を保存しました。",
+  " 的启动项保存失败。": " の起動項目の保存に失敗しました。",
+  " 启动模式": " 起動モード",
+  " 启动延迟（毫秒）": " 起動遅延（ミリ秒）"
+});
+Object.assign(languageCatalog.tw, {
+  "应用": "應用程式",
+  "管理 WebWindows 应用的桌面行为。启动项只保存当前使用者的配置，应用自身不能绕过启动管理修改该列表。": "管理 WebWindows 應用程式的桌面行為。啟動項目只儲存目前使用者的設定，應用程式本身無法繞過啟動管理修改此清單。",
+  "启动项": "啟動項目",
+  "桌面会话就绪（session-ready）后，已启用的启动项会按设定延迟依次自动启动。关闭开关即停止该应用的自动启动。": "桌面工作階段就緒（session-ready）後，已啟用的啟動項目會依設定延遲依次自動啟動。關閉開關即停止該應用程式的自動啟動。",
+  "启动项服务尚未就绪，请重新打开设置。": "啟動項目服務尚未就緒，請重新開啟設定。",
+  "正在读取启动项……": "正在讀取啟動項目……",
+  "启动项读取失败。": "讀取啟動項目失敗。",
+  "当前没有可配置的应用。": "目前沒有可設定的應用程式。",
+  "后台启动": "背景啟動",
+  "最小化启动": "最小化啟動",
+  "正常窗口": "一般視窗",
+  "启用": "啟用",
+  "毫秒": "毫秒",
+  " 的启动项已保存。": " 的啟動項目已儲存。",
+  " 的启动项保存失败。": " 的啟動項目儲存失敗。",
+  " 启动模式": " 啟動模式",
+  " 启动延迟（毫秒）": " 啟動延遲（毫秒）"
+});
+
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;

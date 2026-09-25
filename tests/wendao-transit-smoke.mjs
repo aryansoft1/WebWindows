@@ -303,11 +303,11 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260925-5/);
-assert.match(html, /transit-app\.js\?v=20260925-5/);
-assert.match(html, /navigation\.css\?v=20260925-1/);
+assert.match(html, /transit-app\.js\?v=20260925-6/);
+assert.match(html, /navigation\.css\?v=20260925-2/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-4/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-4/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-5/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -496,6 +496,82 @@ assert.match(
   transitAppSource,
   /function updateVehicle\(\)[\s\S]{0,200}?try \{[\s\S]{0,80}?renderVehicleMarker\(\)/,
   "vehicle marker failures must not abort rendering"
+);
+
+/*
+ * 车辆标记看不到的事故回归（真实浏览器 + 控制台证据）：
+ * 旧代码 `new Marker(...).addTo(map)` 之后才 setLngLat()，而 MapLibre 5.6
+ * 的 addTo() 结尾会立刻用尚未定义的 _lngLat 调 _update()，抛
+ * "Cannot read properties of undefined (reading 'lng')"；元素已进容器、
+ * move/resize 监听已注册，留下「没有坐标却监听地图事件」的半残 Marker。
+ * 地图一动它就在渲染循环里抛错，把渲染队列楔死（控制台刷
+ * "Attempting to run(), but is already running"），此后 jumpTo/setCenter/
+ * setZoom/无参 fitBounds 全部抛错——地图不再跟随、标记永远停在容器原点，
+ * 且每次查询再泄漏一个。症状：用户「看不到运行中车辆位置」。
+ */
+const vehicleMarkerBlock =
+  transitAppSource.slice(
+    transitAppSource.indexOf(
+      "function renderVehicleMarker("
+    ),
+    transitAppSource.indexOf(
+      "function purgeStrayVehicleMarkers("
+    ) >
+      transitAppSource.indexOf(
+        "function renderVehicleMarker("
+      )
+        ? transitAppSource.indexOf(
+            "function purgeStrayVehicleMarkers("
+          )
+        : transitAppSource.length
+  );
+
+assert.match(
+  vehicleMarkerBlock,
+  /setLngLat\(lngLat\);[\s\S]{0,80}?addTo\(/,
+  "Marker.setLngLat() MUST run before addTo() — reversed order wedges the MapLibre render queue"
+);
+assert.doesNotMatch(
+  vehicleMarkerBlock,
+  /\.addTo\([\s\S]{0,200}?\.setLngLat\(/,
+  "addTo() before setLngLat() is the exact defect that hid the vehicle marker"
+);
+assert.match(
+  transitAppSource,
+  /function purgeStrayVehicleMarkers\(/,
+  "stray half-registered markers must be purged"
+);
+assert.match(
+  transitAppSource,
+  /transit-vehicle-marker/,
+  "vehicle marker must carry a dedicated hook class"
+);
+assert.match(
+  cssSource,
+  /\.transit-vehicle-marker\s*\{[^}]*position:\s*absolute/,
+  "MapLibre only writes transform — the marker element must be absolutely positioned"
+);
+
+/* 相机降级链：easeTo 是楔死状态下唯一实测可用的相机路径 */
+assert.match(
+  transitAppSource,
+  /function focusBounds\(/,
+  "camera moves must go through a single chained helper"
+);
+assert.match(
+  transitAppSource,
+  /function easeToBounds\(/,
+  "camera chain must fall back to easeTo"
+);
+assert.match(
+  transitAppSource,
+  /cameraForBounds\?\.|\.cameraForBounds\(/,
+  "easeTo fallback needs a camera computed from the bounds"
+);
+assert.match(
+  transitAppSource,
+  /state\.map\.easeTo\(/,
+  "camera chain must actually call easeTo"
 );
 
 /*

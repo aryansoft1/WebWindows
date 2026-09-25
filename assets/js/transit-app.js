@@ -492,13 +492,49 @@
         "div"
       );
 
+    /*
+     * transit-vehicle-marker 是本模块专用钩子：
+     * 一来给 CSS 做绝对定位（MapLibre 只写 transform，
+     * 元素自身必须是 absolute 才会精确落在投影点上），
+     * 二来用来清理历史事故留下的半残标记（见 purgeStrayVehicleMarkers）。
+     */
     element.className =
-      "airport-marker";
+      "airport-marker transit-vehicle-marker";
 
     element.textContent =
       vehicleIcon();
 
     return element;
+  }
+
+  /*
+   * 清理不属于当前标记的「半残 Marker」元素。
+   *
+   * 事故链（真实浏览器 + 控制台证据）：旧代码先 addTo() 再 setLngLat()，
+   * MapLibre 5.6 的 addTo() 会立刻用尚未定义的 _lngLat 调 _update()，直接抛
+   * "Cannot read properties of undefined (reading 'lng')"；元素已被挂进地图
+   * 容器、地图事件监听也已注册，于是留下一个「没有坐标却监听 move/resize」
+   * 的残骸。地图一动，它就在渲染循环内部抛错，把 MapLibre 渲染队列楔死
+   * （控制台刷 "Attempting to run(), but is already running"），此后
+   * jumpTo/setCenter/setZoom/fitBounds 全部抛错——地图再也不跟随、车辆标记
+   * 永远停在容器原点，且每次查询再泄漏一个。修好创建顺序后本函数是兜底：
+   * 老会话已经楔死时也能把残骸清掉。
+   */
+  function purgeStrayVehicleMarkers() {
+    const current =
+      state.vehicleMarker
+        ?.getElement?.() ||
+      null;
+
+    document
+      .querySelectorAll(
+        ".transit-vehicle-marker"
+      )
+      .forEach(node => {
+        if (node !== current) {
+          node.remove();
+        }
+      });
   }
 
   function updateVehicle() {
@@ -536,45 +572,82 @@
       if (
         state.vehicleMarker
       ) {
-        state.vehicleMarker
-          .remove();
+        try {
+          state.vehicleMarker
+            .remove();
+        } catch {
+          // 标记已失效时忽略
+        }
 
         state.vehicleMarker =
           null;
       }
 
+      purgeStrayVehicleMarkers();
+
       return;
     }
+
+    const lngLat = [
+      Number(
+        position.longitude
+      ),
+
+      Number(
+        position.latitude
+      )
+    ];
 
     if (
       !state.vehicleMarker
     ) {
-      state.vehicleMarker =
-        new maplibregl
-          .Marker({
-            element:
-              createVehicleMarker()
-          })
-          .addTo(
-            state.map
-          );
+      const element =
+        createVehicleMarker();
+
+      const marker =
+        new maplibregl.Marker({
+          element
+        });
+
+      /*
+       * 顺序是硬约束：必须先 setLngLat 再 addTo。
+       * MapLibre 5.6 的 addTo() 结尾会立刻调 _update()，而此时
+       * _lngLat 还没赋值 → project(undefined) 抛
+       * "Cannot read properties of undefined (reading 'lng')"。
+       * 更糟的是元素已经进了地图容器、move/resize 监听也已注册，
+       * 于是留下没有坐标的半残 Marker，它在后续渲染循环里持续抛错并
+       * 楔死 MapLibre 的渲染队列（详见 purgeStrayVehicleMarkers）。
+       * 真实浏览器实测：改成正确顺序后 marker 拿到精确 transform、
+       * 相机 API 全部可用、控制台零报错。
+       */
+      try {
+        marker.setLngLat(lngLat);
+        marker.addTo(state.map);
+        state.vehicleMarker = marker;
+      } catch (error) {
+        // addTo 失败时元素可能已挂进容器，必须兜底摘掉，避免再留残骸
+        try {
+          marker.remove();
+        } catch {
+          // remove 也失败时下面直接摘 DOM
+        }
+
+        element.remove();
+        state.vehicleMarker = null;
+
+        throw error;
+      }
     } else {
       state.vehicleMarker
         .getElement()
         .textContent =
           vehicleIcon();
+
+      state.vehicleMarker
+        .setLngLat(lngLat);
     }
 
-    state.vehicleMarker
-      .setLngLat([
-        Number(
-          position.longitude
-        ),
-
-        Number(
-          position.latitude
-        )
-      ]);
+    purgeStrayVehicleMarkers();
   }
 
   /*
@@ -666,34 +739,7 @@
           )
       );
 
-      if (
-        fitBoundsSafely(
-          () =>
-            state.map.fitBounds(
-              bounds,
-              {
-                padding: 70,
-
-                maxZoom: 11,
-
-                duration: 600
-              }
-            )
-        )
-      ) {
-        return;
-      }
-
-      if (
-        fitBoundsSafely(
-          () =>
-            state.map.fitBounds(
-              bounds
-            )
-        )
-      ) {
-        return;
-      }
+      focusBounds(bounds);
 
       return;
     }
@@ -729,30 +775,115 @@
       });
 
       if (!fallbackBounds.isEmpty()) {
-        if (
-          !fitBoundsSafely(
-            () =>
-              state.map.fitBounds(
-                fallbackBounds,
-                {
-                  padding: 70,
-
-                  maxZoom: 11,
-
-                  duration: 600
-                }
-              )
-          )
-        ) {
-          fitBoundsSafely(
-            () =>
-              state.map.fitBounds(
-                fallbackBounds
-              )
-          );
-        }
+        focusBounds(fallbackBounds);
       }
     }
+  }
+
+  /*
+   * 统一的「把相机移到这些边界」入口，带逐级降级。
+   *
+   * 为什么需要这么多层：真实浏览器抓到的两种坏状态都会让 fitBounds 抛错
+   * 1) 问乡面板隐藏时容器尺寸为 0，transform 未就绪；
+   * 2) 半残 Marker 在渲染循环里抛错后，MapLibre 渲染队列被楔死，
+   *    此时 jumpTo/setCenter/setZoom/无参 fitBounds 全部抛
+   *    "Cannot read properties of undefined (reading 'lng')"，
+   *    但带 options 的 fitBounds 与 easeTo 仍可用（走动画队列）。
+   * 所以顺序是：带动画 fitBounds → 无参 fitBounds → easeTo（用
+   * cameraForBounds 算出的 center/zoom）→ 放弃（结果照常展示）。
+   */
+  function focusBounds(
+    bounds
+  ) {
+    if (
+      fitBoundsSafely(
+        () =>
+          state.map.fitBounds(
+            bounds,
+            {
+              padding: 70,
+
+              maxZoom: 11,
+
+              duration: 600
+            }
+          )
+      )
+    ) {
+      return true;
+    }
+
+    if (
+      fitBoundsSafely(
+        () =>
+          state.map.fitBounds(
+            bounds
+          )
+      )
+    ) {
+      return true;
+    }
+
+    return easeToBounds(bounds);
+  }
+
+  function easeToBounds(
+    bounds
+  ) {
+    let camera = null;
+
+    try {
+      camera =
+        state.map
+          ?.cameraForBounds?.(
+            bounds,
+            {
+              padding: 70,
+
+              maxZoom: 11
+            }
+          ) ||
+        null;
+    } catch {
+      camera = null;
+    }
+
+    let center =
+      camera?.center ||
+      null;
+
+    if (!center) {
+      try {
+        center =
+          bounds.getCenter() ||
+          null;
+      } catch {
+        center = null;
+      }
+    }
+
+    if (!center) {
+      return false;
+    }
+
+    const zoom =
+      Number.isFinite(
+        camera?.zoom
+      )
+        ? camera.zoom
+        : 6;
+
+    return fitBoundsSafely(
+      () =>
+        state.map.easeTo(
+          {
+            center,
+            zoom,
+
+            duration: 600
+          }
+        )
+    );
   }
 
   function sourceLabel() {
@@ -2524,6 +2655,73 @@
           positionStatus:
             state.resolved
               ?.positionStatus,
+
+          /*
+           * 车辆标记与相机的可观测状态：2026-09-25 的「看不到运行中车辆
+           * 位置」事故就是「标记没定位 + 相机楔死」，这两个字段能在
+           * 真实浏览器里一眼看出是否复发，不必再翻控制台。
+           */
+          vehicleMarker:
+            (() => {
+              const element =
+                state.vehicleMarker
+                  ?.getElement?.() ||
+                null;
+
+              const strays =
+                document.querySelectorAll(
+                  ".transit-vehicle-marker"
+                ).length -
+                (element ? 1 : 0);
+
+              return {
+                present:
+                  Boolean(element),
+
+                positioned:
+                  Boolean(
+                    element?.style
+                      ?.transform
+                  ),
+
+                transform:
+                  element?.style
+                    ?.transform ||
+                  null,
+
+                strays:
+                  strays > 0
+                    ? strays
+                    : 0
+              };
+            })(),
+
+          camera:
+            (() => {
+              try {
+                const center =
+                  state.map
+                    ?.getCenter?.();
+
+                return center
+                  ? {
+                      lng: +Number(
+                        center.lng
+                      ).toFixed(3),
+
+                      lat: +Number(
+                        center.lat
+                      ).toFixed(3),
+
+                      zoom: +Number(
+                        state.map.getZoom()
+                      ).toFixed(2)
+                    }
+                  : null;
+              } catch {
+                return null;
+              }
+            })(),
 
           serviceState:
             state.described?.state ||

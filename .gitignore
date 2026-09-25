@@ -42,3 +42,7 @@ patch.diff
 test-results/
 playwright-report/
 blob-report/
+
+# deploy-ftp.ps1 writes its rule-5 production backups here; they are local evidence,
+# never deployment source, and leaving them untracked-but-visible fails preflight.
+deploy/backups/

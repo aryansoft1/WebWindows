@@ -715,6 +715,7 @@
       );
 
     updateVehicle();
+    keepVehicleInView();
 
     if (
       !state.journey
@@ -781,53 +782,125 @@
   }
 
   /*
-   * 统一的「把相机移到这些边界」入口，带逐级降级。
+   * 统一的「把相机移到这些边界」入口。
    *
-   * 为什么需要这么多层：真实浏览器抓到的两种坏状态都会让 fitBounds 抛错
-   * 1) 问乡面板隐藏时容器尺寸为 0，transform 未就绪；
-   * 2) 半残 Marker 在渲染循环里抛错后，MapLibre 渲染队列被楔死，
-   *    此时 jumpTo/setCenter/setZoom/无参 fitBounds 全部抛
-   *    "Cannot read properties of undefined (reading 'lng')"，
-   *    但带 options 的 fitBounds 与 easeTo 仍可用（走动画队列）。
-   * 所以顺序是：带动画 fitBounds → 无参 fitBounds → easeTo（用
-   * cameraForBounds 算出的 center/zoom）→ 放弃（结果照常展示）。
+   * 真实浏览器抓到的关键事实（决定了这里的写法）：
+   * 1) 相机**动画**在这类窗口里可能永远不推进——`fitBounds({duration})`、
+   *    `easeTo({duration})` 既不抛错也不动，`isMoving()/isEasing()` 永久为
+   *    true（rAF 循环不跑：窗口不可见/被遮挡时就会这样）。所以**不能**把
+   *    「没抛异常」当作成功，必须校验相机是否真的移动了。
+   * 2) 同步 `map.stop()` + `map.jumpTo()` 立即生效，不依赖动画循环；
+   *    `cameraForBounds()` 在坏状态下也能算出正确的 center/zoom。
+   * 因此主路径是「stop → cameraForBounds → jumpTo → 校验是否真的移动」，
+   * 之后才依次降级到 easeTo、带 options 的 fitBounds、无参 fitBounds。
    */
   function focusBounds(
     bounds
   ) {
+    stopCamera();
+
+    const camera =
+      boundsCamera(bounds);
+
     if (
-      fitBoundsSafely(
-        () =>
-          state.map.fitBounds(
-            bounds,
-            {
-              padding: 70,
-
-              maxZoom: 11,
-
-              duration: 600
-            }
-          )
+      camera &&
+      jumpCameraVerified(
+        camera
       )
     ) {
       return true;
     }
 
     if (
-      fitBoundsSafely(
-        () =>
-          state.map.fitBounds(
-            bounds
-          )
+      camera &&
+      easeToBounds(
+        camera
       )
     ) {
       return true;
     }
 
-    return easeToBounds(bounds);
+    if (
+      fitBoundsVerified(
+        bounds,
+        {
+          padding: 70,
+
+          maxZoom: 11
+        }
+      )
+    ) {
+      return true;
+    }
+
+    return fitBoundsVerified(
+      bounds
+    );
   }
 
-  function easeToBounds(
+  function stopCamera() {
+    try {
+      state.map?.stop?.();
+    } catch {
+      // 停止动画失败不阻断后续跳转
+    }
+  }
+
+  function cameraSnapshot() {
+    try {
+      const map = state.map;
+      const center =
+        map?.getCenter?.();
+
+      if (!center) {
+        return null;
+      }
+
+      return {
+        lng: Number(center.lng),
+
+        lat: Number(center.lat),
+
+        zoom: Number(map.getZoom())
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  function cameraCenterOf(
+    value
+  ) {
+    const raw =
+      value?.lng !==
+        undefined
+        ? value
+        : Array.isArray(value)
+          ? {
+              lng: value[0],
+
+              lat: value[1]
+            }
+          : null;
+
+    if (!raw) {
+      return null;
+    }
+
+    const lng = Number(raw.lng);
+    const lat = Number(raw.lat);
+
+    if (
+      !Number.isFinite(lng) ||
+      !Number.isFinite(lat)
+    ) {
+      return null;
+    }
+
+    return [lng, lat];
+  }
+
+  function boundsCamera(
     bounds
   ) {
     let camera = null;
@@ -848,32 +921,116 @@
       camera = null;
     }
 
-    let center =
-      camera?.center ||
-      null;
+    const center =
+      cameraCenterOf(camera?.center) ||
+      cameraCenterOf(
+        (() => {
+          try {
+            return bounds.getCenter();
+          } catch {
+            return null;
+          }
+        })()
+      );
 
     if (!center) {
-      try {
-        center =
-          bounds.getCenter() ||
-          null;
-      } catch {
-        center = null;
-      }
+      return null;
     }
+
+    return {
+      center,
+
+      zoom:
+        Number.isFinite(
+          camera?.zoom
+        )
+          ? camera.zoom
+          : 6
+    };
+  }
+
+  /*
+   * 执行一次相机调用，并**校验相机是否真的移动**。
+   * 「没抛错但没动」在动画不推进时非常常见，必须当成失败继续降级。
+   */
+  function moveCameraVerified(
+    move
+  ) {
+    const before =
+      cameraSnapshot();
+
+    if (!before) {
+      return false;
+    }
+
+    if (
+      !fitBoundsSafely(move)
+    ) {
+      return false;
+    }
+
+    const after =
+      cameraSnapshot();
+
+    if (!after) {
+      return false;
+    }
+
+    return (
+      Math.abs(
+        after.lng - before.lng
+      ) > 1e-6 ||
+      Math.abs(
+        after.lat - before.lat
+      ) > 1e-6 ||
+      Math.abs(
+        after.zoom - before.zoom
+      ) > 1e-6
+    );
+  }
+
+  function jumpCameraVerified(
+    camera
+  ) {
+    const center =
+      cameraCenterOf(camera?.center);
 
     if (!center) {
       return false;
     }
 
     const zoom =
-      Number.isFinite(
-        camera?.zoom
-      )
+      Number.isFinite(camera?.zoom)
         ? camera.zoom
         : 6;
 
-    return fitBoundsSafely(
+    return moveCameraVerified(
+      () =>
+        state.map.jumpTo(
+          {
+            center,
+            zoom
+          }
+        )
+    );
+  }
+
+  function easeToBounds(
+    camera
+  ) {
+    const center =
+      cameraCenterOf(camera?.center);
+
+    if (!center) {
+      return false;
+    }
+
+    const zoom =
+      Number.isFinite(camera?.zoom)
+        ? camera.zoom
+        : 6;
+
+    return moveCameraVerified(
       () =>
         state.map.easeTo(
           {
@@ -883,6 +1040,105 @@
             duration: 600
           }
         )
+    );
+  }
+
+  function fitBoundsVerified(
+    bounds,
+    options
+  ) {
+    return moveCameraVerified(
+      () =>
+        options
+          ? state.map.fitBounds(
+              bounds,
+              options
+            )
+          : state.map.fitBounds(
+              bounds
+            )
+    );
+  }
+
+  /*
+   * 车辆在视野外时把相机带过去。
+   *
+   * 切换候选车次时 render({fit:false}) 是有意不重新 fit 全程的；但如果
+   * 新车次的推定位置落在当前视野外（实测切到运行中车次后标记 x=-297，
+   * 完全在画布外），用户依然会「看不到车辆位置」。这里只在标记确实不在
+   * 可视区内时平移一次，且靠上面的「校验真的移动了」避免反复触发。
+   */
+  function keepVehicleInView() {
+    const position =
+      state.resolved
+        ?.position;
+
+    if (
+      !position ||
+      !window
+        .WebWindowsTransitPosition
+        .validPoint(
+          position
+        )
+    ) {
+      return;
+    }
+
+    const canvas =
+      state.map?.getCanvas?.();
+
+    if (
+      !canvas?.clientWidth ||
+      !canvas?.clientHeight
+    ) {
+      return;
+    }
+
+    const center =
+      cameraCenterOf(
+        state.resolved?.position
+      );
+
+    if (!center) {
+      return;
+    }
+
+    let projected = null;
+
+    try {
+      projected =
+        state.map.project(center);
+    } catch {
+      projected = null;
+    }
+
+    const margin = 56;
+
+    if (
+      projected &&
+      projected.x >= margin &&
+      projected.y >= margin &&
+      projected.x <=
+        canvas.clientWidth - margin &&
+      projected.y <=
+        canvas.clientHeight - margin
+    ) {
+      return;
+    }
+
+    const zoom =
+      Math.max(
+        Number(
+          state.map.getZoom()
+        ) || 0,
+        6
+      );
+
+    jumpCameraVerified(
+      {
+        center,
+        zoom
+      }
     );
   }
 

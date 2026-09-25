@@ -303,11 +303,11 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260925-5/);
-assert.match(html, /transit-app\.js\?v=20260925-6/);
+assert.match(html, /transit-app\.js\?v=20260925-7/);
 assert.match(html, /navigation\.css\?v=20260925-2/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-4/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-5/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-6/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -489,8 +489,55 @@ assert.match(
 );
 assert.match(
   transitAppSource,
-  /fitBoundsSafely\([\s\S]{0,400}?fitBounds\(\s*bounds\s*\)/,
-  "guarded fit must fall back to the option-less fitBounds"
+  /function focusBounds\([\s\S]{0,2500}?fitBoundsVerified\(\s*bounds\s*\)/,
+  "camera chain must end with the option-less fitBounds as last resort"
+);
+assert.match(
+  transitAppSource,
+  /function fitBoundsVerified\([\s\S]{0,800}?state\.map\.fitBounds\(\s*bounds\s*\)/,
+  "the option-less fitBounds call must exist inside the verified helper"
+);
+
+/*
+ * 相机动画在窗口不可见/rAF 受限时会「不抛错但永不推进」：
+ * 实测 fitBounds({duration}) 与 easeTo({duration}) 都返回正常，
+ * 但 isMoving()/isEasing() 永久为 true、中心永不变；而同步
+ * stop() + jumpTo() 立即生效。所以相机必须走「同步跳转 + 校验真的移动」。
+ */
+assert.match(
+  transitAppSource,
+  /function moveCameraVerified\(/,
+  "camera calls must be verified, not trusted"
+);
+assert.match(
+  transitAppSource,
+  /function moveCameraVerified\([\s\S]{0,900}?const after\s*=\s*\n?\s*cameraSnapshot\(\)/,
+  "verified camera move must re-read the camera afterwards"
+);
+assert.match(
+  transitAppSource,
+  /state\.map\.jumpTo\(/,
+  "primary camera path must be the synchronous jumpTo"
+);
+assert.match(
+  transitAppSource,
+  /function stopCamera\(/,
+  "in-flight animations must be stopped before moving the camera"
+);
+assert.match(
+  transitAppSource,
+  /function keepVehicleInView\(/,
+  "a vehicle outside the viewport must pull the camera to it"
+);
+assert.match(
+  transitAppSource,
+  /function keepVehicleInView\([\s\S]{0,1200}?state\.map\.project\(/,
+  "keepVehicleInView must project the position to detect off-screen"
+);
+assert.match(
+  transitAppSource,
+  /updateVehicle\(\);\s*\n\s*keepVehicleInView\(\);/,
+  "keepVehicleInView must run right after the marker is placed"
 );
 assert.match(
   transitAppSource,

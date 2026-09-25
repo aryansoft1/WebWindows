@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.11",
-  "catalogVersion": "2026.09.25.11",
-  "generatedAt": "2026-09-25T03:19:32.024Z",
+  "releaseVersion": "2026.09.25.12",
+  "catalogVersion": "2026.09.25.12",
+  "generatedAt": "2026-09-25T03:34:22.177Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -266,7 +266,7 @@
     "assets/js/file-query-parser.js",
     "api/transit-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.9",
+  "previousReleaseVersion": "2026.09.25.11",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -807,7 +807,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "8df5b0cc1077b36113dcb9b4122dbf992a6b38ced9acb05a21c9a687931f440b",
+      "sha256": "3c117c849e5d865ba08659a30bb1258b9b99a61a55f86ffaba6ebf0b390112ff",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1115,7 +1115,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "e9e8acafe78a03c46b9308efabe91bf467180a4b1fd7e5c1eda3d5ed9a5b21e7",
+      "sha256": "68f150bfcbad85f68eb3306546e1fc48144af04abda1a5a9a9bc169512863983",
       "size": 16438
     },
     "assets/css/navigation.css": {
@@ -1186,8 +1186,8 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "cd3e1a3efdd736761737283fd14b7bb889738ae01e1ae393e35466426b2e6a8a",
-      "size": 55240
+      "sha256": "87b5f07f28f0c6d0b50314772797af7bb57cf03da81f5f932f52dd13976ea272",
+      "size": 59675
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
@@ -1298,10 +1298,9 @@
       "size": 10155
     }
   },
-  "releaseScope": "wendao-vehicle-marker-setlnglat-before-addto",
+  "releaseScope": "wendao-camera-verified-jump",
   "uploadFiles": [
     "assets/js/transit-app.js",
-    "assets/css/navigation.css",
     "road.html",
     "sysinfo.html",
     "assets/js/sysinfo.js",

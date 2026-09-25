@@ -1447,6 +1447,17 @@
                 trip
                   ?.route
                   ?.route_short_name
+              ) ||
+              /*
+               * Transitland 的单班次响应里 route 常常只有 id/onestop_id，
+               * 线路名缺失时回落 trip_short_name / trip_headsign，
+               * 否则界面只能显示「公共交通」占位（实测修复后仍见占位）。
+               */
+              text(
+                trip?.trip_short_name
+              ) ||
+              text(
+                trip?.trip_headsign
               ),
 
             longName:

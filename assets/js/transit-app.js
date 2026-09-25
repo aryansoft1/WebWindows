@@ -1042,11 +1042,14 @@
 
       /*
        * 运行中 / 已通过车次加状态标签：
-       * 12306 当天不返回已发车车次，能出现在这里说明来自代理的当日快照，
-       * 标出来避免用户误以为点错了车次。
+       * provider 的状态词是 running/past/upcoming，而本文件的状态键表用
+       * before/running/arrived——past 需映射到 arrived，否则已过站车次
+       * 没有标签（真实浏览器验证时发现）。
        */
       const stateKey =
-        STATE_KEYS[item.state];
+        item.state === "past"
+          ? STATE_KEYS.arrived
+          : STATE_KEYS[item.state];
 
       if (stateKey) {
         const badge =

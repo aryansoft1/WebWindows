@@ -302,12 +302,12 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-4/);
-assert.match(html, /transit-app\.js\?v=20260925-4/);
+assert.match(html, /transit-providers\.js\?v=20260925-5/);
+assert.match(html, /transit-app\.js\?v=20260925-5/);
 assert.match(html, /navigation\.css\?v=20260925-1/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-3/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-4/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-2/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-4/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 

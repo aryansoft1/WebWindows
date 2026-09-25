@@ -162,10 +162,15 @@ button {
 
 .view-btn {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 5px;
+  min-width: max-content;
   padding: 7px 9px;
   font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .view-btn img,
@@ -273,6 +278,24 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
 .device-permission-badge { display: inline-flex; margin-top: 7px; border-radius: 999px; padding: 3px 7px; color: #166534; background: #dcfce7; font-size: 10px; }
 .device-permission-badge.is-revoked { color: #9f1239; background: #ffe4e6; }
 .device-location-actions { display: flex; margin-top: 8px; gap: 6px; }
+
+@media (max-width: 1100px) {
+  .toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toolbar-left,
+  .toolbar-right {
+    width: 100%;
+  }
+
+  .toolbar-right {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
 
 @media (max-width: 720px) {
   .device-panel { padding: 14px; }

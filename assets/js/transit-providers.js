@@ -4975,6 +4975,15 @@
   ) {
     const gtfsController = new AbortController();
     const railController = new AbortController();
+
+    /*
+     * GTFS 侧若给出 out_of_scope_service（「找到的班次都是地铁/通勤/市内公交」），
+     * 这就是本次查询的确定结论：线路存在，只是不显示。
+     * 必须记住它，否则最后会被 12306 的 station_not_found 覆盖成
+     * 「未在中国铁路车站表中找到该站名」—— 线路明明存在。
+     * 声明必须在这两个 try 之外：读它的 catch 块是兄弟块，拿不到块内变量。
+     */
+    let gtfsOutOfScope = null;
     const longDistanceController =
       new AbortController();
 
@@ -4999,6 +5008,7 @@
     }
 
     try {
+
       try {
         return {
           journey:
@@ -5034,6 +5044,13 @@
           signal?.aborted
         ) {
           throw error;
+        }
+
+        if (
+          error?.code ===
+            "out_of_scope_service"
+        ) {
+          gtfsOutOfScope = error;
         }
 
         onFallback?.(
@@ -5107,8 +5124,23 @@
        *     海外/跨境线路，正是付费源的覆盖范围）才调用；
        *   - 用户主动取消立即上抛，不发起任何新请求。
        */
+      /*
+       * 站表里没有这个站名（=海外/跨境），而 GTFS 侧已经明确「只找到
+       * 城市轨道」时，结论就是「线路存在但不在海外显示范围」——
+       * 不用再回落给 12306 的文案，也不必花钱问付费长途源
+       * （问了也只会返回市内线路，照样被范围过滤挡掉）。
+       */
+      if (
+        gtfsOutOfScope &&
+        String(railError?.code || "") ===
+          "station_not_found"
+      ) {
+        throw gtfsOutOfScope;
+      }
+
       const longDistanceEligible =
         longDistance &&
+        !gtfsOutOfScope &&
         String(railError?.code || "") ===
           "station_not_found";
 

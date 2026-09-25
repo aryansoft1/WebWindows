@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.26",
-  "catalogVersion": "2026.09.25.26",
-  "generatedAt": "2026-09-25T08:58:42.565Z",
+  "releaseVersion": "2026.09.25.27",
+  "catalogVersion": "2026.09.25.27",
+  "generatedAt": "2026-09-25T09:05:33.947Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.25",
+  "previousReleaseVersion": "2026.09.25.26",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -811,7 +811,7 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "a763a04a6f7d72583fb0d22944bf6162412a3940945bc3f4c6054b4c15ab5896",
+      "sha256": "9202c8b5a8eb97a3797d96653344929327d6db03cd47d8c37db4950cf4b0699a",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1119,7 +1119,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "592673b6dd82019f6a8beeff728dfdce8dc133d6f3bb894280996a1a9d34818a",
+      "sha256": "5dea78f4e0a9d98e7a18b182c9b1305839c014e469f9f3074e87f4f03c4f6be8",
       "size": 16440
     },
     "assets/css/navigation.css": {
@@ -1190,16 +1190,16 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "7a02bec72c9ee07ffd8a05be79d3556103f40277cf408fbdd0d44979e3191e8d",
-      "size": 77641
+      "sha256": "ab00f6745ad9e63ee460543ca6e6e29360670db8cebd9c64d468d97aff9b6976",
+      "size": 78104
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "98bb6921fc46f525395a106a7405239f311387a1eac41c7cfa232258d2a93a33",
-      "size": 122424
+      "sha256": "ed9dc2cf69b243ff585bd4707f6348721d7968eafeee76f2783f6a2617a1eff5",
+      "size": 123620
     },
     "admin_api/adminAuth.asp": {
       "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d",
@@ -1310,11 +1310,10 @@
       "size": 902
     }
   },
-  "releaseScope": "wendao-overseas-scope",
+  "releaseScope": "wendao-overseas-scope-attribution",
   "uploadFiles": [
     "assets/js/transit-providers.js",
     "assets/js/transit-app.js",
-    "assets/js/navigation-app.js",
     "road.html",
     "data/apps/system-apps.json",
     "api/release-version.asp",

@@ -2335,10 +2335,18 @@
      * 否则用户会以为线路不存在，而真实情况是「问乡海外不显示这类线路」。
      */
     if (
-      String(
-        error?.code || ""
-      ) === "out_of_scope_service"
+      ["out_of_scope_service"].includes(
+        String(
+          error?.code || ""
+        )
+      ) ||
+      String(fallbackCode || "") ===
+        "out_of_scope_service"
     ) {
+      /*
+       * 线路是存在的，只是不在问乡海外的显示范围（地铁/捷运/通勤/市内公交）。
+       * 两种来源都要覆盖：错误本身就是它，或它是 GTFS 侧的回落记录。
+       */
       return T(
         "errOutOfScopeService",
         {
@@ -2349,8 +2357,12 @@
             state.query?.destination || "—",
 
           excluded:
-            scopeExcludedLabel(error) ||
-            T("scopeKindOther")
+            scopeExcludedLabel(
+              error?.code ===
+                "out_of_scope_service"
+                ? error
+                : { details: fallbackDetails }
+            ) || T("scopeKindOther")
         }
       );
     }

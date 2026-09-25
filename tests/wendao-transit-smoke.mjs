@@ -302,12 +302,12 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-6/);
-assert.match(html, /transit-app\.js\?v=20260925-9/);
+assert.match(html, /transit-providers\.js\?v=20260925-7/);
+assert.match(html, /transit-app\.js\?v=20260925-10/);
 assert.match(html, /navigation\.css\?v=20260925-3/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-5/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-6/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-8/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-9/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -1896,3 +1896,26 @@ assert.equal(
 );
 
 console.log("wendao transit, china rail, and i18n smoke tests passed");
+
+/* 回落时必须把 GTFS 侧的文案一起传回：只传 code 会让界面显示 12306 的
+   「未在中国铁路车站表中找到该站名」，而真实原因是「该数据源没有这条直达线路」 */
+assert.match(
+  providerSource,
+  /onFallback\?\.\([\s\S]{0,400}?error\?\.message/,
+  "onFallback must carry the GTFS-side message, not only the code"
+);
+assert.match(
+  transitAppSource,
+  /state\.fallbackMessage\s*=/,
+  "app must remember the fallback message"
+);
+assert.match(
+  transitAppSource,
+  /coveredErrorMessage\(\s*error,\s*state\.fallbackCode,\s*state\.fallbackMessage\s*\)/,
+  "coveredErrorMessage must receive the fallback message"
+);
+assert.match(
+  transitAppSource,
+  /T\("errNotCovered"/,
+  "coverage-gap messaging must fall back to the existing four-language string"
+);

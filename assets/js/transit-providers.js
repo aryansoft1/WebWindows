@@ -3717,7 +3717,16 @@
 
         onFallback?.(
           text(error?.code) ||
-            "transit_failed"
+            "transit_failed",
+
+          /*
+           * 连同文案一起回落：GTFS 侧的结论（例：当前数据源未覆盖这条直达
+           * 线路，并列出已检查的线路）比 12306 的「未在站表中找到该站名」
+           * 更贴近真实原因，只传 code 会让界面显示后者而误导用户。
+           */
+          String(
+            error?.message || ""
+          )
         );
       }
 

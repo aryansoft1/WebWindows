@@ -2117,7 +2117,8 @@
    */
   function coveredErrorMessage(
     error,
-    fallbackCode
+    fallbackCode,
+    fallbackMessage
   ) {
     const gtfsMissed =
       [
@@ -2174,21 +2175,33 @@
      * 海外「两源都没有」时要说清是**覆盖问题**而不是服务故障：
      * GTFS 侧结论是 direct_trip_not_found（确实取到过经停表、只是没有
      * 一班到终点），12306 侧是 station_not_found（海外站名不在中国铁路
-     * 站表里）。此时沿用 errGtfsUnavailable 会让用户以为服务坏了，
-     * 反复重试毫无意义——如实说明「当前数据源未覆盖这条线路」。
+     * 站表里）。此时用 GTFS 侧随回落传下来的文案（内含已检查的线路），
+     * 缺失时退回 errNotCovered；绝不能沿用 errGtfsUnavailable——
+     * 那会让用户以为服务坏了、反复重试毫无意义。
      */
     if (
       String(fallbackCode || "") ===
         "direct_trip_not_found" &&
       railMissed
     ) {
-      return (
+      const carried =
         String(
-          error?.message || ""
+          fallbackMessage || ""
         )
-          .trim() ||
-        T("errGtfsUnavailable")
-      );
+          .trim();
+
+      if (carried) {
+        return carried;
+      }
+
+      return T("errNotCovered", {
+        origin:
+          state.query?.origin || "—",
+
+        destination:
+          state.query?.destination ||
+          "—"
+      });
     }
 
     if (gtfsMissed && railMissed) {
@@ -2425,6 +2438,7 @@
     state.journey = null;
     state.source = null;
     state.fallbackCode = null;
+    state.fallbackMessage = "";
 
     $("transit-result").hidden =
       true;
@@ -2454,9 +2468,17 @@
             language,
 
             onFallback:
-              code => {
+              (
+                code,
+                message
+              ) => {
                 state.fallbackCode =
                   code;
+
+                state.fallbackMessage =
+                  String(
+                    message || ""
+                  );
 
                 setStatus(
                   "transitStepRail"
@@ -2521,7 +2543,8 @@
 
         text: coveredErrorMessage(
           error,
-          state.fallbackCode
+          state.fallbackCode,
+          state.fallbackMessage
         )
       };
 

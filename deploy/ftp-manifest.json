@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.25",
-  "catalogVersion": "2026.09.25.25",
-  "generatedAt": "2026-09-25T07:05:26.263Z",
+  "releaseVersion": "2026.09.25.26",
+  "catalogVersion": "2026.09.25.26",
+  "generatedAt": "2026-09-25T08:58:04.911Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.24",
+  "previousReleaseVersion": "2026.09.25.25",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1119,7 +1119,7 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "0b41308fbef148469a45bb2154e3da2d862df10f65f11951a0a6080d7bf690aa",
+      "sha256": "592673b6dd82019f6a8beeff728dfdce8dc133d6f3bb894280996a1a9d34818a",
       "size": 16440
     },
     "assets/css/navigation.css": {
@@ -1130,8 +1130,8 @@
       "sha256": "ed2ba06cbb1d45a8e5bb08a18d241a6a48ce3e038f7b8260acb6e91d4dac9ed2"
     },
     "assets/js/navigation-app.js": {
-      "sha256": "259d2d8536b5487cac50cd758b191f03dbd8efce1586ca8b78ede90a159cc64f",
-      "size": 57474
+      "sha256": "d887703cdc31b0d072e73bf4f9603b740d27175582126042f7ff18d09eba8e70",
+      "size": 59221
     },
     "assets/js/navigation-providers.js": {
       "sha256": "b42efafac5ccd3f116f827baa1c7ea96290de4fdeeebb6d3f51d9f0af4b547bf"
@@ -1190,16 +1190,16 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "3db647a69bd8b006a30d56bd632c1c1dafb77e066d36d06e6541e530e458f05b",
-      "size": 75277
+      "sha256": "7a02bec72c9ee07ffd8a05be79d3556103f40277cf408fbdd0d44979e3191e8d",
+      "size": 77641
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "f5df263d5473698603b3a08dad419113a1aca28f2e9839e592f0c647d1986e39",
-      "size": 107677
+      "sha256": "98bb6921fc46f525395a106a7405239f311387a1eac41c7cfa232258d2a93a33",
+      "size": 122424
     },
     "admin_api/adminAuth.asp": {
       "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d",
@@ -1310,17 +1310,17 @@
       "size": 902
     }
   },
-  "releaseScope": "t031-settings-apps-i18n",
+  "releaseScope": "wendao-overseas-scope",
   "uploadFiles": [
-    "assets/js/tw.js",
-    "settings.html",
-    "index.html",
-    "inc/trust-schema.asp",
+    "assets/js/transit-providers.js",
+    "assets/js/transit-app.js",
+    "assets/js/navigation-app.js",
+    "road.html",
     "data/apps/system-apps.json",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
     "api/release-version.asp",
     "api/mobile-version.asp",
+    "sysinfo.html",
+    "assets/js/sysinfo.js",
     "deploy/ftp-manifest.json"
   ]
 }

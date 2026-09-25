@@ -1,14 +1,36 @@
 (function installCloudSearchUI(global) {
   "use strict";
   const labels = {
-    zh: { placeholder:"搜索文件、日期、类型或描述",search:"搜索",clear:"清除搜索",loading:"正在搜索…",failed:"搜索暂时不可用",heading:"搜索结果：",understood:"理解结果",empty:"未找到文件",emptyHint:"请尝试其他文件名、日期或文件类型。",results:"项结果",private:"我的云资料",public:"公共资料",device:"此设备",multiple:"多条件匹配",fileNameExact:"文件名匹配",fileNamePrefix:"文件名匹配",fileNameContains:"文件名匹配",fileNameTokens:"文件名匹配",fileNameFuzzy:"文件名模糊匹配",fileType:"文件类型匹配",mimeType:"文件类型匹配",folderPath:"路径匹配",createdAt:"日期匹配",modifiedAt:"日期匹配",uploadedAt:"日期匹配",size:"大小匹配" },
-    jp: { placeholder:"ファイル・日付・種類・説明を検索",search:"検索",clear:"検索をクリア",loading:"検索中…",failed:"現在検索を利用できません",heading:"検索結果：",understood:"検索条件",empty:"ファイルが見つかりません",emptyHint:"別の名前、日付、種類をお試しください。",results:"件",private:"マイクラウド",public:"パブリック",device:"このデバイス",multiple:"複数条件に一致",fileNameExact:"ファイル名一致",fileNamePrefix:"ファイル名一致",fileNameContains:"ファイル名一致",fileNameTokens:"ファイル名一致",fileNameFuzzy:"ファイル名の類似一致",fileType:"ファイル種類一致",mimeType:"ファイル種類一致",folderPath:"パス一致",createdAt:"日付一致",modifiedAt:"日付一致",uploadedAt:"日付一致",size:"サイズ一致" },
-    en: { placeholder:"Search files, dates, types, or descriptions",search:"Search",clear:"Clear search",loading:"Searching…",failed:"Search is temporarily unavailable",heading:"Search results: ",understood:"Understood as",empty:"No files found",emptyHint:"Try another name, date, or file type.",results:"results",private:"My cloud files",public:"Public files",device:"This device",multiple:"Multiple conditions",fileNameExact:"File name match",fileNamePrefix:"File name match",fileNameContains:"File name match",fileNameTokens:"File name match",fileNameFuzzy:"Fuzzy file name match",fileType:"File type match",mimeType:"File type match",folderPath:"Path match",createdAt:"Date match",modifiedAt:"Date match",uploadedAt:"Date match",size:"Size match" }
+    zh: { placeholder:"搜索文件、日期、类型或描述",search:"搜索",clear:"清除搜索",loading:"正在搜索…",failed:"搜索暂时不可用",understood:"理解结果",empty:"未找到文件",emptyHint:"请尝试其他文件名、日期或文件类型。",results:"项结果",private:"我的云资料",public:"公共资料",device:"此设备",multiple:"多条件匹配",fileNameExact:"文件名匹配",fileNamePrefix:"文件名匹配",fileNameContains:"文件名匹配",fileNameTokens:"文件名匹配",fileNameFuzzy:"文件名模糊匹配",fileType:"文件类型匹配",mimeType:"文件类型匹配",folderPath:"路径匹配",createdAt:"日期匹配",modifiedAt:"日期匹配",uploadedAt:"日期匹配",size:"大小匹配" },
+    jp: { placeholder:"ファイル・日付・種類・説明を検索",search:"検索",clear:"検索をクリア",loading:"検索中…",failed:"現在検索を利用できません",understood:"検索条件",empty:"ファイルが見つかりません",emptyHint:"別の名前、日付、種類をお試しください。",results:"件",private:"マイクラウド",public:"パブリック",device:"このデバイス",multiple:"複数条件に一致",fileNameExact:"ファイル名一致",fileNamePrefix:"ファイル名一致",fileNameContains:"ファイル名一致",fileNameTokens:"ファイル名一致",fileNameFuzzy:"ファイル名の類似一致",fileType:"ファイル種類一致",mimeType:"ファイル種類一致",folderPath:"パス一致",createdAt:"日付一致",modifiedAt:"日付一致",uploadedAt:"日付一致",size:"サイズ一致" },
+    en: { placeholder:"Search files, dates, types, or descriptions",search:"Search",clear:"Clear search",loading:"Searching…",failed:"Search is temporarily unavailable",understood:"Filtered by",empty:"No files found",emptyHint:"Try another name, date, or file type.",results:"results",private:"My cloud files",public:"Public files",device:"This device",multiple:"Multiple conditions",fileNameExact:"File name match",fileNamePrefix:"File name match",fileNameContains:"File name match",fileNameTokens:"File name match",fileNameFuzzy:"Fuzzy file name match",fileType:"File type match",mimeType:"File type match",folderPath:"Path match",createdAt:"Date match",modifiedAt:"Date match",uploadedAt:"Date match",size:"Size match" }
   };
+  // 解析器只给结构化条件，界面文案在这里按语言组装（顺序 zh / jp / en）。
+  const CATEGORY_LABELS={markdown:["Markdown / MD","Markdown / MD","Markdown / MD"],spreadsheet:["Excel","Excel","Excel"],word:["Word","Word","Word"],document:["文档","ドキュメント","Documents"],presentation:["PowerPoint","PowerPoint","PowerPoint"],pdf:["PDF","PDF","PDF"],image:["图片","画像","Images"],video:["视频","動画","Videos"],archive:["压缩文件","アーカイブ","Archives"],mixed:["多种类型","複数種類","Mixed types"]};
+  // 用户已经写出来的词 = 回声，标签就不必再重复一遍（输入「所有md文件」不必再显示 Markdown / MD）。
+  const CATEGORY_TOKENS={markdown:["md","markdown"],spreadsheet:["excel","spreadsheet","xlsx","xls","csv"],word:["word","docx","doc"],document:["document","documents","文档","文書","docx","doc","odt","rtf","pdf","md","txt"],presentation:["powerpoint","pptx","ppt","演示","演示文稿","プレゼン","スライド"],pdf:["pdf"],image:["image","images","picture","pictures","图片","图像","照片","画像","写真","png","jpg","jpeg","gif","webp","svg"],video:["video","videos","视频","影片","動画","mp4","webm","mov","m4v"],archive:["archive","archives","zip","压缩包","压缩文件","アーカイブ"],mixed:[]};
+  // 键必须与解析器产出的 kind 对齐（dateCreated / dateModified / dateUploaded → created / modified / uploaded）。
+  const DATE_VERBS={created:["创建","作成","created"],modified:["修改","変更","modified"],uploaded:["保存","保存","saved"]};
+  const VALUE_PREFIXES={nameContains:["名称包含","名前に含む","Name contains"],path:["位置","場所","Location"]};
+  const UNSUPPORTED_LABELS={openedAt:["最近打开（暂无元数据）","最近開いた項目は未対応（メタデータがありません）","Recently opened files cannot be filtered yet"]};
+
   function language(){if(global.WebWindowsCloudI18n)return global.WebWindowsCloudI18n.language();const value=String(global.WebWindowsI18n?.getLanguage?.()||global.localStorage?.getItem("lang")||document.body.dataset.language||"zh").toLowerCase();if(value==="jp"||value.startsWith("ja"))return"jp";if(value.startsWith("en"))return"en";return"zh"}
   function t(key){return labels[language()][key]||labels.zh[key]||key}
   function formatDate(value){if(!value)return"";const date=new Date(typeof value==="number"?value:String(value));return Number.isNaN(date.getTime())?"":date.toLocaleDateString()}
   function formatSize(value){const size=Number(value)||0;if(size<1024)return size+" B";if(size<1048576)return(size/1024).toFixed(1)+" KB";return(size/1048576).toFixed(1)+" MB"}
+  function localized(table,key){const row=table?.[key];if(!row)return"";const value=language();return row[value==="jp"?1:value==="en"?2:0]||""}
+  function mentioned(query,tokens){const value=String(query||"").toLowerCase();return (tokens||[]).some(token=>value.includes(String(token).toLowerCase()))}
+  function formatRange(from,to){const start=formatDate(from);if(!start)return"";const endDate=to?new Date(new Date(to).getTime()-1):null;const end=endDate?formatDate(endDate):"";return end&&end!==start?`${start} ~ ${end}`:start}
+  // 把解析器的结构化条件翻成一句话；返回空串表示这条只是把用户输入复述一遍，不显示。
+  function understandingText(entry,query){
+    if(!entry||typeof entry!=="object")return"";
+    if(entry.kind==="fileCategory"){const label=localized(CATEGORY_LABELS,entry.category);return label&&!mentioned(query,CATEGORY_TOKENS[entry.category])?label:""}
+    if(entry.kind==="extensions"){const list=String(entry.value||"").split(",").map(item=>item.trim().toUpperCase()).filter(Boolean);if(!list.length)return"";return list.every(item=>mentioned(query,[item]))?"":list.join(" / ")}
+    if(entry.kind==="dateCreated"||entry.kind==="dateModified"||entry.kind==="dateUploaded"){const verb=localized(DATE_VERBS,entry.kind.slice(4).toLowerCase());const range=formatRange(entry.from,entry.to);return verb&&range?`${verb} ${range}`:""}
+    if(entry.kind==="nameContains"||entry.kind==="path"){const prefix=localized(VALUE_PREFIXES,entry.kind);return prefix&&entry.value?`${prefix} ${entry.value}`:""}
+    if(entry.kind==="unsupported")return localized(UNSUPPORTED_LABELS,entry.value);
+    return"";
+  }
   function iconFor(result){const extension=String(result.extension||result.name?.split(".").pop()||"").toLowerCase();if(["png","jpg","jpeg","gif","webp"].includes(extension))return"assets/image.svg";if(extension==="pdf")return"assets/pdf.svg";if(["xlsx","xls","csv"].includes(extension))return"assets/sheet.svg";if(["docx","doc"].includes(extension))return"assets/word.svg";if(["pptx","ppt"].includes(extension))return"assets/presentation.svg";if(extension==="json")return"assets/json.svg";if(extension==="md")return"assets/markdown.svg";if(extension==="zip")return"assets/archive.svg";return"assets/file.svg"}
   function reasonsFor(reasons){const values=[...new Set((reasons||[]).map(t))];return values.length>1?[t("multiple"),...values]:values}
   async function openResult(result){
@@ -26,11 +48,10 @@
   }
   function render(view,payload,query){
     view.replaceChildren();
+    // 搜索词就在正上方的输入框里，结果区再抄一遍只是重复；这里只留结果数。
     const head=document.createElement("header");head.className="file-search-state";
-    const title=document.createElement("h2");title.append(document.createTextNode(t("heading")));
-    const queryLabel=document.createElement("input");queryLabel.className="file-search-query";queryLabel.type="text";queryLabel.readOnly=true;queryLabel.tabIndex=-1;queryLabel.value=query;queryLabel.size=Math.min(60,Math.max(1,[...query].length));title.appendChild(queryLabel);
-    const summary=document.createElement("span");summary.textContent=`${payload.total} ${t("results")}`;head.append(title,summary);view.appendChild(head);
-    const understood=[...(payload.criteria?.understanding||[])];
+    const summary=document.createElement("span");summary.className="file-search-count";summary.textContent=`${payload.total} ${t("results")}`;head.appendChild(summary);view.appendChild(head);
+    const understood=[...(payload.criteria?.understanding||[])].map(entry=>understandingText(entry,query)).filter(Boolean);
     if(understood.length){const row=document.createElement("div");row.className="file-search-understanding";const label=document.createElement("strong");label.textContent=`${t("understood")}：`;row.appendChild(label);understood.forEach(value=>{const tag=document.createElement("span");tag.textContent=value;row.appendChild(tag)});view.appendChild(row)}
     const ordered=[...(payload.results||[])].sort((a,b)=>Number(b.relevanceScore||0)-Number(a.relevanceScore||0));
     if(!ordered.length){const empty=document.createElement("div");empty.className="empty-state file-search-empty";empty.innerHTML='<img src="assets/file.svg" alt=""><h2></h2><p></p>';empty.querySelector("h2").textContent=t("empty");empty.querySelector("p").textContent=t("emptyHint");view.appendChild(empty);return}

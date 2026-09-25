@@ -13,9 +13,12 @@ const [publicPage, privatePage, styles, searchStyles, toolbar, searchUi] = await
 
 assert.match(publicPage, /styles\.css\?v=20260926-folder-tree-1/);
 for (const page of [publicPage, privatePage]) {
-  assert.match(page, /file-search\.css\?v=20260926-file-search-2/);
-  assert.match(page, /search-ui\.js\?v=20260926-file-search-2/,
+  assert.match(page, /file-search\.css\?v=20260926-file-search-3/);
+  assert.match(page, /search-ui\.js\?v=20260926-file-search-3/,
     "both changed search assets must share one cache stamp so a stale copy cannot be mixed in");
+  // The parser changed the shape of criteria.understanding, so a cached copy would leave the
+  // cloud pages running a new UI against an old parser.
+  assert.match(page, /assets\/js\/file-query-parser\.js\?v=20260926-file-search-3/);
 }
 assert.match(searchStyles, /\.file-search-view\[hidden\]\{display:none!important\}/);
 // private-files.asp renders the folder grid as <main class="files"> with display:grid, which
@@ -32,13 +35,27 @@ assert.doesNotMatch(styles, /@media \(max-width: 1100px\)/);
 // tiles. Dropping these rules reintroduces the broken layout, so they are pinned here.
 assert.match(searchStyles, /\.file-search-state,\.file-search-understanding,\.file-search-loading,\.file-search-empty\{grid-column:1\/-1\}/);
 assert.match(searchStyles, /\.main>\.file-search-view\{flex:1 1 auto\}/);
-assert.match(searchStyles, /\.file-search-state\{[^}]*display:flex[^}]*justify-content:space-between/s);
+assert.match(searchStyles, /\.file-search-state\{[^}]*display:flex/s);
 assert.match(searchStyles, /\.file-search-understanding\{[^}]*display:flex/s);
-assert.match(searchStyles, /\.file-search-query\{[^}]*pointer-events:none/s);
 assert.match(searchStyles, /\.file-search-view\.large \.file-search-result\{/);
 assert.match(searchStyles, /\.file-search-view\.detail \.file-search-result\{grid-template-columns:34px minmax\(0,1fr\)\}/);
 assert.match(searchStyles, /\.file-search-view\.detail \.file-search-result>\*:not\(img\)[^{]*\{grid-column:2/,
   "in list/compact mode the result rows must stack in one text column next to the icon");
+
+// The result header must not repeat the query: the search box sits directly above it and the
+// understanding row used to restate the same words ("所有md文件" -> "Markdown / MD").
+assert.doesNotMatch(searchUi, /file-search-query/,
+  "search-ui.js must not echo the query into the result header; the input box already shows it");
+assert.doesNotMatch(searchStyles, /\.file-search-query\{/);
+assert.match(searchUi, /summary\.className="file-search-count"/);
+assert.match(searchUi, /CATEGORY_TOKENS/,
+  "the understanding row must drop tags that only restate what the user typed");
+assert.match(searchUi, /\.filter\(Boolean\)/,
+  "tags that resolve to an empty string must not leave an empty pill behind");
+// The verb table is keyed by the parser's date kinds. It shipped once as "saved" while the
+// parser emits "dateUploaded", which silently dropped the tag for 「昨天/今天 + 文件」 queries.
+assert.match(searchUi, /DATE_VERBS=\{created:\[.*?\],modified:\[.*?\],uploaded:\[/s,
+  "DATE_VERBS must cover exactly created/modified/uploaded, matching the parser's date kinds");
 
 // Typing must not search. The input event never reaches the model, so a live list can only be
 // a literal local match, which is a different result set from the one the search button

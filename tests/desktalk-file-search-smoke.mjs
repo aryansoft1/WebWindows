@@ -112,6 +112,33 @@ const LOAD_ORDER = [
   assert.ok(aiParsed.criteria.modifiedFrom, "allowAI:true must reach the v2 parser");
   assert.ok(Array.isArray(aiParsed.criteria.understanding), "the v2 parser supplies understanding for the results header");
 
+  // 3b. understanding must be structured and language-free. It used to be a list of Chinese
+  //     strings ("上周 修改", "名称包含 X"), which the Japanese and English pages rendered
+  //     verbatim, and which merely repeated the words the user had already typed.
+  const understanding = aiParsed.criteria.understanding;
+  assert.ok(understanding.every((entry) => entry && typeof entry === "object" && typeof entry.kind === "string"),
+    "every understanding entry must be a structured object with a kind");
+  assert.doesNotMatch(JSON.stringify(understanding), /[一-鿿]/,
+    "the parser must not emit Chinese UI text; search-ui.js assembles the wording per language");
+  const dateEntry = understanding.find((entry) => entry.kind === "dateModified");
+  assert.ok(dateEntry?.from && dateEntry?.to, "a date filter must report the range it resolved to");
+  assert.equal(understanding.some((entry) => entry.kind === "sort"), false,
+    "the sort intent is what the user typed, so repeating it adds nothing");
+  // Every date kind the parser can emit, so search-ui.js can key its verb table on all of them.
+  assert.deepEqual([...page.WebWindows.fileQuery.parse("昨天创建的文件", {}).understanding]
+    .map((entry) => entry.kind), ["dateCreated"]);
+  assert.deepEqual([...page.WebWindows.fileQuery.parse("昨天上传的文件", {}).understanding]
+    .map((entry) => entry.kind), ["dateUploaded"]);
+
+  // A query that already names the type produces a category entry the UI can suppress.
+  // The objects come from the script realm, so compare their serialized form.
+  const readable = (criteria) => JSON.parse(JSON.stringify(criteria.understanding));
+  assert.deepEqual(readable(page.WebWindows.fileQuery.parse("所有md文件", {})),
+    [{ kind: "fileCategory", category: "markdown" }]);
+  // A type word the UI would have to translate is still reported, because the label differs.
+  assert.deepEqual(readable(page.WebWindows.fileQuery.parse("表格", {})),
+    [{ kind: "fileCategory", category: "spreadsheet" }]);
+
   // Deterministic path must be unchanged when allowAI is absent.
   const plain = await page.WebWindows.files.search("上周修改的 PDF", {});
   assert.ok(plain.criteria.modifiedFrom, "the local parser still handles the query on its own");

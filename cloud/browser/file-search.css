@@ -3,9 +3,8 @@
 .file-search-view{width:100%;min-width:0;align-content:start;grid-auto-rows:max-content;overflow:auto}
 .main>.file-search-view{flex:1 1 auto}
 .file-search-state,.file-search-understanding,.file-search-loading,.file-search-empty{grid-column:1/-1}
-.file-search-state{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:14px 16px;border-bottom:1px solid #e2e8f0}
-.file-search-state h2{min-width:0;margin:0;font-size:18px}.file-search-state>span{flex:none;color:#64748b}
-.file-search-query{max-width:min(100%,32rem);border:0;background:transparent;color:inherit;font:inherit;pointer-events:none}
+.file-search-state{display:flex;align-items:center;gap:12px;min-width:0;padding:14px 16px;border-bottom:1px solid #e2e8f0}
+.file-search-state .file-search-count{color:#64748b;font-size:13px}
 .file-search-view.large .file-search-result{width:100%;height:auto;min-height:132px;margin:0}
 .file-search-view.detail .file-search-result{grid-template-columns:34px minmax(0,1fr)}
 .file-search-view.small .file-search-result{grid-template-columns:38px minmax(0,1fr)}

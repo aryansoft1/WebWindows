@@ -240,7 +240,11 @@ itemCount = subfolders.Count + visibleFileCount
     <main class="main">
       <aside id="sidebar" aria-label="公共资料夹">
         <div class="sidebar-title" data-cloud-i18n="locations">资料位置</div>
-        <button type="button" id="public-root-button" class="root-node selected"><img src="assets/home.svg" alt=""><span data-directory-name="Public"><%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></span></button>
+        <% If relativePath = "" Then %>
+        <button type="button" id="public-root-button" class="root-node selected" aria-current="page"><img src="assets/home.svg" alt=""><span data-directory-name="Public"><%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></span></button>
+        <% Else %>
+        <button type="button" id="public-root-button" class="root-node"><img src="assets/home.svg" alt=""><span data-directory-name="Public"><%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></span></button>
+        <% End If %>
         <% If Not pickerMode Then %><button type="button" id="device-root-button" class="root-node device-root-node" hidden><span class="device-root-icon" aria-hidden="true">▣</span><span>此设备</span></button><% End If %>
         <ul id="folder-tree"></ul>
       </aside>
@@ -418,6 +422,93 @@ itemCount = subfolders.Count + visibleFileCount
   </div>
 
   <script src="toolbar.js?v=20260730-1"></script>
+  <script>
+    // Highlight the folder the user is currently in.
+    //
+    // toolbar.js owns the tree but cannot mark the active node: getFolders.asp takes no
+    // path parameter, so every navigation re-renders the same full tree and the rendered
+    // nodes carry no idea of where the user is. Doing it here instead means matching by
+    // something both sides agree on. Matching on the visible label does not work: the tree
+    // labels come from getFolders.asp (CloudDisplayName in node-config.asp) while
+    // toolbar.js resolves names from its own directoryNames table, and those two tables
+    // can disagree for the same folder, which silently leaves nothing highlighted.
+    //
+    // The page's own body dataset does carry the answer, so ask the server for the tree the
+    // same way toolbar.js does and match on the physical path. Reusing toolbar.js's request
+    // is safe because it caches nothing and the folder tree only changes when the page
+    // reloads, which re-runs this script anyway. The response is memoized, so the repeated
+    // rebuilds (every language change triggers one) share a single request.
+    (function () {
+      const tree = document.getElementById("folder-tree");
+      if (!tree) return;
+
+      const currentPath = document.body.dataset.currentPath || "";
+      const language = document.body.dataset.language || "zh";
+      let scheduled = false;
+      // One request per page load, shared by every rebuild of the tree.
+      let treePromise = null;
+
+      function clearHighlight() {
+        tree.querySelectorAll(".folder-label.selected").forEach((label) => {
+          label.classList.remove("selected");
+          label.removeAttribute("aria-current");
+        });
+      }
+
+      // Depth-first order matches the order toolbar.js appends nodes in, so the index of
+      // the current folder in the flattened payload is the index of its rendered button.
+      function flattenAll(nodes, flat) {
+        for (const node of nodes || []) {
+          flat.push(node);
+          flattenAll(node.children, flat);
+        }
+        return flat;
+      }
+
+      async function loadTree() {
+        if (!treePromise) {
+          treePromise = fetch(`getFolders.asp?lang=${encodeURIComponent(language)}`, { cache: "no-store" })
+            .then((response) => (response.ok ? response.json() : null))
+            .catch(() => null);
+        }
+        return treePromise;
+      }
+
+      async function highlightCurrentFolder() {
+        clearHighlight();
+        if (!currentPath) return;
+        const payload = await loadTree();
+        if (!Array.isArray(payload)) return;
+
+        const flat = flattenAll(payload, []);
+        const index = flat.findIndex((node) => node && node.path === currentPath);
+        // -1 means the folder is gone or was renamed; the tree is simply left unmarked
+        // rather than highlighting a neighbour.
+        if (index < 0) return;
+
+        const labels = tree.querySelectorAll(".folder-label");
+        if (index >= labels.length) return;
+        const label = labels[index];
+        label.classList.add("selected");
+        label.setAttribute("aria-current", "page");
+        label.scrollIntoView({ block: "nearest" });
+      }
+
+      function schedule() {
+        if (scheduled) return;
+        scheduled = true;
+        window.setTimeout(() => {
+          scheduled = false;
+          highlightCurrentFolder();
+        }, 0);
+      }
+
+      // The tree is filled asynchronously and rebuilt again on every language change, so
+      // re-run whenever it changes rather than once at load.
+      new MutationObserver(schedule).observe(tree, { childList: true, subtree: true });
+      schedule();
+    })();
+  </script>
   <% If Not pickerMode Then %><script src="device-locations.js?v=20260809-device-1"></script><% End If %>
 </body>
 </html>

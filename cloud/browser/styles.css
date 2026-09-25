@@ -351,6 +351,14 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
   outline-offset: -2px;
 }
 
+/* The folder the user is currently in. toolbar.js never marks it, so files.asp applies
+   this class once the tree has been rendered. */
+.folder-label.selected {
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-weight: 600;
+}
+
 .folder-label::before {
   content: "›";
   display: inline-block;

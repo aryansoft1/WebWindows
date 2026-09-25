@@ -1,8 +1,8 @@
 (function () {
   "use strict";
 
-  const REGISTRY_API_URL = "api/function-catalog.asp";
-  const REGISTRY_FALLBACK_URL = "data/apps/system-apps.json";
+  const REGISTRY_API_URL = "api/function-catalog.asp?v=20260810.2";
+  const REGISTRY_FALLBACK_URL = "data/apps/system-apps.json?v=20260810.2";
   const REGISTRY_CACHE_KEY = "webwindows.functions.catalog-cache.v1";
   const DATABASE_NAME = "webwindows-apps";
   const DATABASE_VERSION = 2;

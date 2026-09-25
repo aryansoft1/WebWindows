@@ -31,6 +31,9 @@ window.addEventListener("DOMContentLoaded", () => {
         if (typeof host.setLanguage === "function") {
             host.setLanguage(langSelect.value);
         } else {
+            host.localStorage.setItem("lang", langSelect.value);
+            host.localStorage.setItem("webwindows.language.source", "manual");
+            host.localStorage.setItem("webwindows.language.migration", "2026.08.19.1");
             host.postMessage({ type: "change-language", lang: langSelect.value }, window.location.origin);
         }
     });

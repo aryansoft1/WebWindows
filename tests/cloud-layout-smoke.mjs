@@ -2,23 +2,55 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [publicPage, privatePage, styles, searchStyles, toolbar] = await Promise.all([
+const [publicPage, privatePage, styles, searchStyles, toolbar, searchUi] = await Promise.all([
   read("cloud/browser/files.asp"),
   read("cloud/browser/private-files.asp"),
   read("cloud/browser/styles.css"),
   read("cloud/browser/file-search.css"),
-  read("cloud/browser/toolbar.js")
+  read("cloud/browser/toolbar.js"),
+  read("cloud/browser/search-ui.js")
 ]);
 
 assert.match(publicPage, /styles\.css\?v=20260926-folder-tree-1/);
 for (const page of [publicPage, privatePage]) {
-  assert.match(page, /file-search\.css\?v=20260809-search-1/);
+  assert.match(page, /file-search\.css\?v=20260926-file-search-2/);
+  assert.match(page, /search-ui\.js\?v=20260926-file-search-2/,
+    "both changed search assets must share one cache stamp so a stale copy cannot be mixed in");
 }
 assert.match(searchStyles, /\.file-search-view\[hidden\]\{display:none!important\}/);
+// private-files.asp renders the folder grid as <main class="files"> with display:grid, which
+// beats the hidden attribute, so the directory would stay on screen under the results.
+assert.match(searchStyles, /\.file-list\[hidden\],\.files\[hidden\],\.file-search-view\[hidden\]\{display:none!important\}/);
 assert.match(searchStyles, /white-space:nowrap/);
 assert.match(searchStyles, /word-break:keep-all/);
 assert.match(styles, /\.file-list\.large\s*\{[^}]*repeat\(auto-fill,\s*minmax\(116px,\s*1fr\)\)/s);
 assert.doesNotMatch(styles, /@media \(max-width: 1100px\)/);
+
+// The search results are rendered into a .file-list grid, so the heading, the understanding
+// row, the loading line and the empty state have to span the whole row. Without grid-column
+// they became ordinary grid cells, which is what pushed 「理解结果」 on top of the first icon
+// tiles. Dropping these rules reintroduces the broken layout, so they are pinned here.
+assert.match(searchStyles, /\.file-search-state,\.file-search-understanding,\.file-search-loading,\.file-search-empty\{grid-column:1\/-1\}/);
+assert.match(searchStyles, /\.main>\.file-search-view\{flex:1 1 auto\}/);
+assert.match(searchStyles, /\.file-search-state\{[^}]*display:flex[^}]*justify-content:space-between/s);
+assert.match(searchStyles, /\.file-search-understanding\{[^}]*display:flex/s);
+assert.match(searchStyles, /\.file-search-query\{[^}]*pointer-events:none/s);
+assert.match(searchStyles, /\.file-search-view\.large \.file-search-result\{/);
+assert.match(searchStyles, /\.file-search-view\.detail \.file-search-result\{grid-template-columns:34px minmax\(0,1fr\)\}/);
+assert.match(searchStyles, /\.file-search-view\.detail \.file-search-result>\*:not\(img\)[^{]*\{grid-column:2/,
+  "in list/compact mode the result rows must stack in one text column next to the icon");
+
+// Typing must not search. The input event never reaches the model, so a live list can only be
+// a literal local match, which is a different result set from the one the search button
+// produces with the AI understanding pass. Results therefore appear on submit only.
+assert.doesNotMatch(searchUi, /DEBOUNCE/);
+assert.doesNotMatch(searchUi, /addEventListener\("input"/,
+  "search-ui.js must not search while the user types; submit is the only trigger");
+assert.doesNotMatch(searchUi, /setTimeout\(/,
+  "search-ui.js must not run a debounced search");
+assert.match(searchUi, /form\.addEventListener\("submit",event=>\{event\.preventDefault\(\);searchNow\(\)\}\)/);
+assert.match(searchUi, /allowAI:true/,
+  "submitting must still allow the AI understanding pass, otherwise the button result regresses");
 
 // The sidebar folder tree is filled by toolbar.js from getFolders.asp. toolbar.js calls
 // window.WebWindowsCloudI18n.apply() unconditionally even though nothing in the site

@@ -1,6 +1,5 @@
 (function installCloudSearchUI(global) {
   "use strict";
-  const DEBOUNCE_MS = 350;
   const labels = {
     zh: { placeholder:"搜索文件、日期、类型或描述",search:"搜索",clear:"清除搜索",loading:"正在搜索…",failed:"搜索暂时不可用",heading:"搜索结果：",understood:"理解结果",empty:"未找到文件",emptyHint:"请尝试其他文件名、日期或文件类型。",results:"项结果",private:"我的云资料",public:"公共资料",device:"此设备",multiple:"多条件匹配",fileNameExact:"文件名匹配",fileNamePrefix:"文件名匹配",fileNameContains:"文件名匹配",fileNameTokens:"文件名匹配",fileNameFuzzy:"文件名模糊匹配",fileType:"文件类型匹配",mimeType:"文件类型匹配",folderPath:"路径匹配",createdAt:"日期匹配",modifiedAt:"日期匹配",uploadedAt:"日期匹配",size:"大小匹配" },
     jp: { placeholder:"ファイル・日付・種類・説明を検索",search:"検索",clear:"検索をクリア",loading:"検索中…",failed:"現在検索を利用できません",heading:"検索結果：",understood:"検索条件",empty:"ファイルが見つかりません",emptyHint:"別の名前、日付、種類をお試しください。",results:"件",private:"マイクラウド",public:"パブリック",device:"このデバイス",multiple:"複数条件に一致",fileNameExact:"ファイル名一致",fileNamePrefix:"ファイル名一致",fileNameContains:"ファイル名一致",fileNameTokens:"ファイル名一致",fileNameFuzzy:"ファイル名の類似一致",fileType:"ファイル種類一致",mimeType:"ファイル種類一致",folderPath:"パス一致",createdAt:"日付一致",modifiedAt:"日付一致",uploadedAt:"日付一致",size:"サイズ一致" },
@@ -54,12 +53,13 @@
     const clear=document.createElement("button");clear.type="button";clear.className="file-search-clear";clear.textContent="×";clear.title=t("clear");clear.setAttribute("aria-label",t("clear"));clear.hidden=true;
     const submit=document.createElement("button");submit.type="submit";submit.className="file-search-submit";submit.textContent=t("search");form.append(input,clear,submit);host.prepend(form);
     const view=document.createElement("section");view.className=`file-list file-search-view ${[...directory.classList].find(value=>["large","small","detail"].includes(value))||"large"}`;view.hidden=true;view.setAttribute("aria-live","polite");directory.insertAdjacentElement("afterend",view);
-    let timer=0,serial=0,controller=null,lastPayload=null,lastQuery="";
-    function restore(){clearTimeout(timer);serial+=1;controller?.abort();controller=null;input.value="";clear.hidden=true;view.hidden=true;view.replaceChildren();directory.hidden=false}
-    async function searchNow(allowAI){const query=input.value.trim();if(!query){restore();return}const request=++serial;controller?.abort();controller=new AbortController();clear.hidden=false;directory.hidden=true;view.hidden=false;view.innerHTML=`<div class="file-search-loading">${t("loading")}</div>`;try{const payload=await global.WebWindows.files.search(query,{signal:controller.signal,allowAI:allowAI===true});if(request===serial){lastPayload=payload;lastQuery=query;render(view,payload,query)}}catch(error){if(error?.name!=="AbortError"&&request===serial)view.textContent=t("failed")}}
-    function schedule(){clearTimeout(timer);if(!input.value.trim()){restore();return}timer=global.setTimeout(()=>searchNow(false),DEBOUNCE_MS)}
+    let serial=0,controller=null,lastPayload=null,lastQuery="";
+    function restore(){serial+=1;controller?.abort();controller=null;input.value="";clear.hidden=true;view.hidden=true;view.replaceChildren();directory.hidden=false}
+    async function searchNow(){const query=input.value.trim();if(!query){restore();return}const request=++serial;controller?.abort();controller=new AbortController();clear.hidden=false;directory.hidden=true;view.hidden=false;view.replaceChildren(Object.assign(document.createElement("div"),{className:"file-search-loading",textContent:t("loading")}));try{const payload=await global.WebWindows.files.search(query,{signal:controller.signal,allowAI:true});if(request===serial){lastPayload=payload;lastQuery=query;render(view,payload,query)}}catch(error){if(error?.name!=="AbortError"&&request===serial)view.textContent=t("failed")}}
     function applyLanguage(){input.placeholder=t("placeholder");input.setAttribute("aria-label",t("placeholder"));clear.title=t("clear");clear.setAttribute("aria-label",t("clear"));submit.textContent=t("search");if(lastPayload&&!view.hidden)render(view,lastPayload,lastQuery)}
-    form.addEventListener("submit",event=>{event.preventDefault();clearTimeout(timer);searchNow(true)});input.addEventListener("input",schedule);clear.addEventListener("click",()=>{restore();input.focus()});
+    // 只有按下「搜索」或回车才出结果。输入过程不联网、不调桌讯，只能做本地字面匹配，
+    // 边打边出结果会让用户看到与按钮结果不一致的一套列表，所以输入时保持目录原样。
+    form.addEventListener("submit",event=>{event.preventDefault();searchNow()});clear.addEventListener("click",()=>{restore();input.focus()});
     global.addEventListener("storage",event=>{if(event.key==="lang")applyLanguage()});
     global.addEventListener("message",event=>{if(event.data?.type==="change-language")applyLanguage()});
   }

@@ -25,17 +25,28 @@ If Len(transitlandApiKey) = 0 Then
 End If
 
 '
-' 服务器侧 Include 配置；VBScript 无原生 Include 保护，
-' 这里用 Server.Execute 在受控路径下加载，文件缺失时静默降级为空密钥。
+' 服务器侧配置加载。注意：ASP 的 VBScript 引擎**没有 Dir()**（线上实测
+' 报「未定义: 'Dir'」于本行），文件存在性必须用 FileSystemObject 判断。
 '
 Function LoadApiKey()
   Dim configPath
   configPath = Server.MapPath("transit-proxy.config.asp")
 
-  If Len(configPath) = 0 Or Len(Dir(configPath)) = 0 Then
+  If Len(configPath) = 0 Then
     LoadApiKey = ""
     Exit Function
   End If
+
+  Dim fso
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+
+  If Not fso.FileExists(configPath) Then
+    Set fso = Nothing
+    LoadApiKey = ""
+    Exit Function
+  End If
+
+  Set fso = Nothing
 
   On Error Resume Next
   Server.Execute(configPath)

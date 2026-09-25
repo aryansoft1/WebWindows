@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.25.5",
   "catalogVersion": "2026.09.25.5",
-  "generatedAt": "2026-09-25T02:46:30.018Z",
+  "generatedAt": "2026-09-25T02:48:03.819Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -333,8 +333,8 @@
       "size": 7666
     },
     "assets/css/settings.css": {
-      "sha256": "903724370babf8b49e2a53422f0a3338e34ab3fdbfecc1f0ea0452d1a1eebbb0",
-      "size": 16816
+      "sha256": "17dea7a844dfc965136d740ba80c53ea221fde86d70d0ad7d3603eb415b05b2e",
+      "size": 16383
     },
     "assets/css/sysinfo.css": {
       "sha256": "5fcb411d4eabafc7548a7cea9352c2956eb57b39091577ad29de24940f673b14",
@@ -533,8 +533,8 @@
       "size": 4868
     },
     "assets/js/app-registry.js": {
-      "sha256": "325471fbb17646e0ce2a8c68d85f4290a7c553b88e5e2241988b4efdf698b86e",
-      "size": 22380
+      "sha256": "4754dd1ed877f4a6fbf8456cdbd5e75d31708e12956474936e3a9d16d9042962",
+      "size": 20725
     },
     "assets/js/cloud-file-dialog.js": {
       "sha256": "3deef1fc31d464a57dd3396076f64103bee41d62d9b513dff6dc76befba4a351",
@@ -556,8 +556,8 @@
       "size": 5673
     },
     "assets/js/device-api.js": {
-      "sha256": "872829cc32fc77fbc306261193ad42ffd982b7c6c520bfa414f39db4320d120f",
-      "size": 30029
+      "sha256": "8ad1d8f833e0d3c4470a7ae0471db19bd234fefe1f0c3ff4f5b83e0c9a5a649c",
+      "size": 19357
     },
     "assets/js/device-controls.js": {
       "sha256": "322818e1b37468c17f633603f04005b905e855c1bb87754e941ebe4463e63fd6",
@@ -588,12 +588,12 @@
       "size": 6039
     },
     "assets/js/login.js": {
-      "sha256": "d788b24241c18f53201feb4407b63a056256a675ca04618302737ab1bd1a2af2",
-      "size": 4771
+      "sha256": "2299f0c3a5c1f07bed23047515dcf75a5a30554a6ccc01ee23ffc5ecdc7cabba",
+      "size": 4301
     },
     "assets/js/main.js": {
-      "sha256": "d6d896ac93c72181ff994363cd3e79ee4603283f78732e8ec83b5fa2c00a00aa",
-      "size": 23398
+      "sha256": "e0dd75f16d4cf4ba9329ca7413b05d38488dce9aa750a695adca4f330b64a28b",
+      "size": 23610
     },
     "assets/js/network-speed.js": {
       "sha256": "3bae1453ed88635593befe2bba6defbb04a2f6e0a587f38ecbd7de9c6edcc7a1",
@@ -612,8 +612,8 @@
       "size": 7893
     },
     "assets/js/settings.js": {
-      "sha256": "813cf120ed07996a6d3dcd666461a51dac61d472c917105541c0e3b80f7f1c52",
-      "size": 28440
+      "sha256": "58ef8dc3025aec0c521a9738ba4e32e27a162b521390a43696985752dca135c2",
+      "size": 22153
     },
     "assets/js/snap_drag.js": {
       "sha256": "db2279015ffce0c7bc57935799262d25a44ee226202607ff5adb03b07119dae5",
@@ -911,8 +911,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "79e3974cb170bcfa4899d1d3ed92e1ed551c455ca5fc17e8ec534ea30207fcde",
-      "size": 33239
+      "sha256": "ca8e6afe6aaa1233db7ffc9a284b6e24a6fe69e6e366b3ffc116b3f0f1c330f6",
+      "size": 33818
     },
     "japan.html": {
       "sha256": "afac9a2e9c686a15fb9836bdf54e4b80f785c9cfd17cd02ed84cedff139a66c9",
@@ -931,8 +931,8 @@
       "size": 2554
     },
     "settings.html": {
-      "sha256": "9006215918990d9d86bcccb6ff0516d1be45aa3099f7dfa3c9b283b7684f74a1",
-      "size": 20178
+      "sha256": "a4f576ef9f7c7b65c753a3fd6ee746df5761285285dac0401569edc62315e8cb",
+      "size": 19086
     },
     "software.html": {
       "sha256": "c71553eaeaa936c46885d8f1cd8524de839733469a7c23a114c0af3b85f0a8a8",
@@ -1167,8 +1167,8 @@
       "size": 5767
     },
     "SystemManager/index.html": {
-      "sha256": "acc62eaed953020d730eecbcf3a6582cd02809902e8454da03a90a7b1b1f411a",
-      "size": 2587
+      "sha256": "f472ac1bdce0c3d0ffdd2affec6655d51660989458878503637b0422583f689d",
+      "size": 2175
     },
     "SystemManager/assets/css/visitor-analytics.css": {
       "sha256": "b382a3c3547a7158c815630ca2cb3d34568deca6050c72ff8dca67db7930faae",
@@ -1274,8 +1274,8 @@
       "size": 13271
     },
     "api/railway-proxy.asp": {
-      "sha256": "70269ecd958953147fc09a67b4283350ce42cc13c11d5eb9b7ec508cb9e715c9",
-      "size": 32759
+      "sha256": "8457b81357850f8296041864f98b2fd53402d6f3f9df1d04e22e48f2b5b5a6f0",
+      "size": 37344
     },
     "assets/js/startup-manager.js": {
       "sha256": "39709e2e295726ca9101f64047426180142f96dc0db53d52f3b96382469c219e",
@@ -1294,26 +1294,19 @@
       "size": 20023
     },
     "api/transit-proxy.asp": {
-      "sha256": "7520225838ff976faec40100d4b8c03d3a4c45204a5ae5d690807fcf130fae57",
-      "size": 8972
+      "sha256": "1721562c32e7f10a46571dc4282133087da0d655e26d68c030340f88d1af2530",
+      "size": 9170
     }
   },
-  "releaseScope": "wendao-overseas-trip-id-and-rail-snapshot-disk",
+  "releaseScope": "wendao-transit-dir-fix-and-snapshot-dir-probe",
   "uploadFiles": [
-    "assets/js/settings.js",
-    "assets/js/app-registry.js",
-    "assets/js/main.js",
-    "assets/css/settings.css",
-    "settings.html",
-    "assets/js/device-api.js",
-    "assets/js/login.js",
-    "SystemManager/index.html",
+    "api/transit-proxy.asp",
+    "api/railway-proxy.asp",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",
     "api/mobile-version.asp",
     "data/apps/system-apps.json",
-    "index.html",
     "deploy/ftp-manifest.json"
   ]
 }

@@ -59,6 +59,12 @@ Select Case gAction
     SendLeftTicket
   Case "schedule"
     SendSchedule
+  Case "__diag_snapshot_dir"
+    '
+    ' 一次性诊断：报告快照落盘目录探测结果（只读，不写业务数据）。
+    ' 用于确认宿主实际允许应用池写入的位置；确认后应移除本 action。
+    '
+    SendSnapshotDirDiagnostic
   Case Else
     SendError "400 Bad Request", "unsupported_action", "不支持的 action，可用值：stations、leftTicket、schedule。"
 End Select
@@ -68,6 +74,42 @@ Response.End
 ' ---------------------------------------------------------------------------
 ' 车站电报码表
 ' ---------------------------------------------------------------------------
+
+' 一次性诊断：快照目录探测结果（确认后移除）
+Sub SendSnapshotDirDiagnostic()
+  Dim rows
+  rows = ""
+
+  Dim candidates()
+  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES)
+  candidates(0) = Server.MapPath("../data/.rail-snapshot")
+  candidates(1) = Server.MapPath("../cloud/file/.rail-snapshot")
+  candidates(2) = Server.MapPath("../logs/.rail-snapshot")
+  candidates(3) = LocalAppDataSnapshotDir()
+
+  Dim i
+  For i = 0 To UBound(candidates)
+    Dim path
+    path = CStr(candidates(i))
+    Dim writable
+    If Len(path) = 0 Then
+      writable = "n/a"
+    Else
+      writable = CStr(IsDirWritable(path))
+    End If
+
+    If i > 0 Then rows = rows & ","
+    rows = rows & "{""index"":" & CStr(i) & _
+      ",""path"":""" & JsonEscape(path) & """" & _
+      ",""writable"":""" & writable & """}"
+  Next
+
+  Dim resolved
+  resolved = CStr(ResolveSnapshotDir())
+
+  Response.Write "{""resolved"":""" & JsonEscape(resolved) & """,""candidates"":[" & rows & "]}"
+End Sub
+
 Sub SendStations()
   Dim payload
   payload = CacheRead("webwindows.railway.stations", RAIL_STATION_TTL_SECONDS)
@@ -375,7 +417,135 @@ Function SnapshotFilePath(ByVal key)
   ' key 形如 webwindows.railway.snap.2026-09-25.ICW.EAY
   Dim safeName
   safeName = Replace(CStr(key), ".", "_")
-  SnapshotFilePath = Server.MapPath("../data/.rail-snapshot/" & safeName & ".json")
+
+  Dim dirPath
+  dirPath = ResolveSnapshotDir()
+
+  If Len(dirPath) = 0 Then
+    SnapshotFilePath = ""
+    Exit Function
+  End If
+
+  SnapshotFilePath = dirPath & "\" & safeName & ".json"
+End Function
+
+'
+' 快照落盘目录探测。
+'
+' 线上实测：Server.MapPath("../data/.rail-snapshot/") 写不进去（快照文件 404），
+' 说明应用池对 data/ 没有建目录权限——而 api/dt_fetch_links.asp 能写 ../data，
+' 说明不同目录的权限不一致。与其猜，不如启动时按候选顺序实测「能否建目录 +
+' 写探针文件」，把第一个可写目录缓存下来；都不行就退化为纯内存快照
+' （功能不受影响，只是不再跨应用池回收持久）。
+'
+Const RAIL_SNAPSHOT_DIR_CANDIDATES = 4
+
+Function ResolveSnapshotDir()
+  Dim cached
+  cached = CachedSnapshotDir()
+  If Len(cached) = 0 Then
+    cached = CStr(Application("webwindows.railway.snapdir") & "")
+  End If
+
+  If Len(cached) > 0 Then
+    ResolveSnapshotDir = cached
+    Exit Function
+  End If
+
+  Dim candidates()
+  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES)
+  candidates(0) = Server.MapPath("../data/.rail-snapshot")
+  candidates(1) = Server.MapPath("../cloud/file/.rail-snapshot")
+  candidates(2) = Server.MapPath("../logs/.rail-snapshot")
+  candidates(3) = LocalAppDataSnapshotDir()
+
+  Dim i
+  Dim chosen
+  chosen = ""
+  For i = 0 To UBound(candidates)
+    If Len(candidates(i)) > 0 Then
+      If IsDirWritable(candidates(i)) Then
+        chosen = candidates(i)
+        Exit For
+      End If
+    End If
+  Next
+
+  On Error Resume Next
+  Application.Lock
+  Application("webwindows.railway.snapdir") = chosen
+  Application.UnLock
+  On Error GoTo 0
+
+  ResolveSnapshotDir = chosen
+End Function
+
+Function LocalAppDataSnapshotDir()
+  LocalAppDataSnapshotDir = ""
+  On Error Resume Next
+  Dim fso
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Exit Function
+  End If
+  Dim root
+  root = fso.GetSpecialFolder(2) ' 2 = local app data
+  If Err.Number <> 0 Then
+    Err.Clear
+    Exit Function
+  End If
+  LocalAppDataSnapshotDir = fso.BuildPath(root & "\WebWindows\rail-snapshot")
+  On Error GoTo 0
+End Function
+
+Function CachedSnapshotDir()
+  CachedSnapshotDir = ""
+  On Error Resume Next
+  CachedSnapshotDir = CStr(Application("webwindows.railway.snapdir") & "")
+  On Error GoTo 0
+End Function
+
+' 能否建目录并写入探针文件（注意：ASP 引擎没有 Dir()，只能用 FSO）
+Function IsDirWritable(ByVal dirPath)
+  IsDirWritable = False
+
+  On Error Resume Next
+  Dim fso
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Exit Function
+  End If
+
+  If Not fso.FolderExists(dirPath) Then
+    fso.CreateFolder(dirPath)
+  End If
+
+  If Err.Number <> 0 Or Not fso.FolderExists(dirPath) Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Function
+  End If
+
+  Dim probe
+  probe = fso.BuildPath(dirPath & "\.probe.tmp")
+  Dim stream
+  Set stream = fso.CreateTextFile(probe, True, False, -65001)
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Function
+  End If
+
+  stream.Write "ok"
+  stream.Close
+  fso.DeleteFile probe, True
+
+  IsDirWritable = (Err.Number = 0)
+
+  Set fso = Nothing
+  On Error GoTo 0
 End Function
 
 Function SnapshotReadFile(ByVal path)

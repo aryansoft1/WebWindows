@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.23",
-  "catalogVersion": "2026.09.25.23",
-  "generatedAt": "2026-09-25T06:53:55.146Z",
+  "releaseVersion": "2026.09.25.24",
+  "catalogVersion": "2026.09.25.24",
+  "generatedAt": "2026-09-25T07:02:07.223Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -267,7 +267,7 @@
     "api/transit-proxy.asp",
     "api/longdistance-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.22",
+  "previousReleaseVersion": "2026.09.25.23",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -809,7 +809,7 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "0321edcd6e14ee83b8c275a026a35bcd6ad3e8710c76cb06b22337420e44a97d",
+      "sha256": "d40101972816959a41c74edd7d670a08eb9d0f68b75f594bc5aad498a5a87c50",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1300,17 +1300,13 @@
       "size": 13398
     },
     "api/longdistance-proxy.asp": {
-      "sha256": "f0aef592375a9ab8afb809ca7d6edf812e988b77bb6bcef2adc1c60751770b1b",
-      "size": 18220
+      "sha256": "a841de069890c298170e89bc034b7a226659e43eb5be3e30f27d5502c68d4388",
+      "size": 18772
     }
   },
-  "releaseScope": "wendao-global-longdistance-slot",
+  "releaseScope": "wendao-longdistance-codepage-hotfix",
   "uploadFiles": [
     "api/longdistance-proxy.asp",
-    "assets/js/transit-providers.js",
-    "assets/js/transit-app.js",
-    "assets/js/navigation-app.js",
-    "road.html",
     "data/apps/system-apps.json",
     "api/release-version.asp",
     "api/mobile-version.asp",

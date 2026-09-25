@@ -75,17 +75,26 @@ Response.End
 ' 车站电报码表
 ' ---------------------------------------------------------------------------
 
-' 一次性诊断：快照目录探测结果（确认后移除）
+' 快照落盘目录诊断（只写探针文件并立即删除；用于确认宿主权限）
 Sub SendSnapshotDirDiagnostic()
   Dim rows
   rows = ""
 
+  Dim dataDir, cloudDir, logsDir
+  dataDir = Server.MapPath("../data")
+  cloudDir = Server.MapPath("../cloud/file")
+  logsDir = Server.MapPath("../logs")
+
   Dim candidates()
-  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES)
-  candidates(0) = Server.MapPath("../data/.rail-snapshot")
-  candidates(1) = Server.MapPath("../cloud/file/.rail-snapshot")
-  candidates(2) = Server.MapPath("../logs/.rail-snapshot")
-  candidates(3) = LocalAppDataSnapshotDir()
+  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES * 2 - 1)
+  candidates(0) = dataDir & "\.rail-snapshot"
+  candidates(1) = dataDir
+  candidates(2) = cloudDir & "\.rail-snapshot"
+  candidates(3) = cloudDir
+  candidates(4) = logsDir & "\.rail-snapshot"
+  candidates(5) = logsDir
+  candidates(6) = ""
+  candidates(7) = ""
 
   Dim i
   For i = 0 To UBound(candidates)
@@ -105,9 +114,9 @@ Sub SendSnapshotDirDiagnostic()
   Next
 
   Dim resolved
-  resolved = CStr(ResolveSnapshotDir())
+  resolved = CStr(CachedSnapshotDir())
 
-  Response.Write "{""resolved"":""" & JsonEscape(resolved) & """,""candidates"":[" & rows & "]}"
+  Response.Write "{""cached"":""" & JsonEscape(resolved) & """,""candidates"":[" & rows & "]}"
 End Sub
 
 Sub SendStations()
@@ -440,24 +449,43 @@ End Function
 '
 Const RAIL_SNAPSHOT_DIR_CANDIDATES = 4
 
-Function ResolveSnapshotDir()
-  Dim cached
-  cached = CachedSnapshotDir()
-  If Len(cached) = 0 Then
-    cached = CStr(Application("webwindows.railway.snapdir") & "")
-  End If
+'
+' 快照文件路径解析：按候选顺序实测「能否真正写入」，取第一个可用的。
+'
+' 线上实测（2026-09-25）：该托管的应用池**不能新建目录**
+' （data/、cloud/file/、logs/ 下 CreateFolder 均失败），但在既有目录里
+' 直接写文件可能可行，所以候选同时包含「子目录」与「扁平文件」两种形态。
+' 都不可写时返回空串，快照自动退化为纯内存（功能不受影响）。
+'
+Function SnapshotFilePath(ByVal key)
+  SnapshotFilePath = ""
 
-  If Len(cached) > 0 Then
-    ResolveSnapshotDir = cached
+  Dim safeName
+  safeName = Replace(CStr(key), ".", "_")
+
+  Dim cachedDir
+  cachedDir = CachedSnapshotDir()
+
+  If Len(cachedDir) > 0 Then
+    SnapshotFilePath = cachedDir & "\" & safeName & ".json"
     Exit Function
   End If
 
   Dim candidates()
-  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES)
-  candidates(0) = Server.MapPath("../data/.rail-snapshot")
-  candidates(1) = Server.MapPath("../cloud/file/.rail-snapshot")
-  candidates(2) = Server.MapPath("../logs/.rail-snapshot")
-  candidates(3) = LocalAppDataSnapshotDir()
+  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES * 2 - 1)
+  Dim dataDir, cloudDir, logsDir
+  dataDir = Server.MapPath("../data")
+  cloudDir = Server.MapPath("../cloud/file")
+  logsDir = Server.MapPath("../logs")
+
+  candidates(0) = dataDir & "\.rail-snapshot"
+  candidates(1) = dataDir
+  candidates(2) = cloudDir & "\.rail-snapshot"
+  candidates(3) = cloudDir
+  candidates(4) = logsDir & "\.rail-snapshot"
+  candidates(5) = logsDir
+  candidates(6) = ""
+  candidates(7) = ""
 
   Dim i
   Dim chosen
@@ -477,26 +505,9 @@ Function ResolveSnapshotDir()
   Application.UnLock
   On Error GoTo 0
 
-  ResolveSnapshotDir = chosen
-End Function
+  If Len(chosen) = 0 Then Exit Function
 
-Function LocalAppDataSnapshotDir()
-  LocalAppDataSnapshotDir = ""
-  On Error Resume Next
-  Dim fso
-  Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  If Err.Number <> 0 Then
-    Err.Clear
-    Exit Function
-  End If
-  Dim root
-  root = fso.GetSpecialFolder(2) ' 2 = local app data
-  If Err.Number <> 0 Then
-    Err.Clear
-    Exit Function
-  End If
-  LocalAppDataSnapshotDir = fso.BuildPath(root & "\WebWindows\rail-snapshot")
-  On Error GoTo 0
+  SnapshotFilePath = chosen & "\" & safeName & ".json"
 End Function
 
 Function CachedSnapshotDir()
@@ -506,7 +517,8 @@ Function CachedSnapshotDir()
   On Error GoTo 0
 End Function
 
-' 能否建目录并写入探针文件（注意：ASP 引擎没有 Dir()，只能用 FSO）
+' 能否在该目录写入（注意：ASP 引擎没有 Dir()，只能用 FSO；
+' CreateTextFile 不接受第 4 个参数，统一走 ADODB UTF-8 写入）
 Function IsDirWritable(ByVal dirPath)
   IsDirWritable = False
 
@@ -518,20 +530,15 @@ Function IsDirWritable(ByVal dirPath)
     Exit Function
   End If
 
+  ' 子目录不存在时尝试创建；失败不致命——候选里还有「既有目录直接写」形态
   If Not fso.FolderExists(dirPath) Then
     fso.CreateFolder(dirPath)
-  End If
-
-  If Err.Number <> 0 Or Not fso.FolderExists(dirPath) Then
     Err.Clear
-    Set fso = Nothing
-    Exit Function
   End If
 
   Dim probe
-  probe = fso.BuildPath(dirPath & "\.probe.tmp")
+  probe = fso.BuildPath(dirPath & "\.railprobe.tmp")
 
-  ' 注意：CreateTextFile 不接受第 4 个参数（会报 450），统一走 ADODB UTF-8 写入
   WriteUtf8File probe, "ok"
 
   If Err.Number <> 0 Then
@@ -540,7 +547,9 @@ Function IsDirWritable(ByVal dirPath)
     Exit Function
   End If
 
-  fso.DeleteFile probe, True
+  If fso.FileExists(probe) Then
+    fso.DeleteFile probe, True
+  End If
 
   IsDirWritable = (Err.Number = 0)
 

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.18",
-  "catalogVersion": "2026.09.25.18",
-  "generatedAt": "2026-09-25T05:11:57.961Z",
+  "releaseVersion": "2026.09.25.19",
+  "catalogVersion": "2026.09.25.19",
+  "generatedAt": "2026-09-25T05:20:59.345Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -266,7 +266,7 @@
     "assets/js/file-query-parser.js",
     "api/transit-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.17",
+  "previousReleaseVersion": "2026.09.25.18",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -807,7 +807,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "24316253bd068db727b0a802218881b2de049a17e715d79bfe2526bb312520da",
+      "sha256": "c3ae3caa554bc865d6a87a3d70e37f95ee26c256f874de572180a5e162441cd0",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1115,8 +1115,8 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "d2ea2d245f4a3f5ac32f023d6aadcd5db049ae491c0421baa8ede2fbebeee39e",
-      "size": 16439
+      "sha256": "bb3f9392dd554ab6214abc2fea32c4ff7f038c149e0c73e224558d89e9b9e9d8",
+      "size": 16440
     },
     "assets/css/navigation.css": {
       "sha256": "797631b1dd31d11db3c1fd64032662f72736bc258239c33ced0c9a9162d9a72c",
@@ -1194,8 +1194,8 @@
       "size": 14755
     },
     "assets/js/transit-providers.js": {
-      "sha256": "0872f4bd8064486196d57b2f9f1d7d585a1861048bbb53bb719cd8c9fa1796f2",
-      "size": 84483
+      "sha256": "8cc5b815724893c892fede46b411e7b52f418b5714a2d0e3183cb9707722e2fd",
+      "size": 84999
     },
     "admin_api/adminAuth.asp": {
       "sha256": "41c614fa90bc382446229dc7a2801b38ad5e38e481afe79659e55f8ad64952e0",
@@ -1298,11 +1298,9 @@
       "size": 10155
     }
   },
-  "releaseScope": "wendao-vehicle-icon-train-and-coach",
+  "releaseScope": "wendao-gtfs-route-type-merge",
   "uploadFiles": [
     "assets/js/transit-providers.js",
-    "assets/js/transit-app.js",
-    "assets/css/navigation.css",
     "road.html",
     "sysinfo.html",
     "assets/js/sysinfo.js",

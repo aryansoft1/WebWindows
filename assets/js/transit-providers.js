@@ -1558,6 +1558,24 @@
               : null;
         }
 
+        /*
+         * 车型判定（高铁/普通火车/大巴）依赖 route_type，但 Transitland 的
+         * **trip 详情响应里 route 是空对象**（实测 keys=[]），
+         * route_type / route_short_name 只在 departures 列表里。
+         * 这里合并两处：trip 优先、缺失字段用列表补齐——
+         * 否则海外巴士会被当成轨道，标题与地图标记都显示成普通火车。
+         */
+        const listRoute =
+          departure?.trip?.route || {};
+
+        const detailRoute =
+          trip?.route || {};
+
+        const routeMeta = {
+          ...listRoute,
+          ...detailRoute
+        };
+
         return {
           provider:
             "transitland",
@@ -1568,24 +1586,21 @@
 
           routeId:
             text(
-              trip
-                ?.route
+              routeMeta
                 ?.route_id
             ),
 
           operator: {
             id:
               text(
-                trip
-                  ?.route
+                routeMeta
                   ?.agency
                   ?.onestop_id
               ),
 
             name:
               text(
-                trip
-                  ?.route
+                routeMeta
                   ?.agency
                   ?.agency_name
               )
@@ -1594,15 +1609,13 @@
           route: {
             onestopId:
               text(
-                trip
-                  ?.route
+                routeMeta
                   ?.onestop_id
               ),
 
             shortName:
               text(
-                trip
-                  ?.route
+                routeMeta
                   ?.route_short_name
               ) ||
               /*
@@ -1619,15 +1632,13 @@
 
             longName:
               text(
-                trip
-                  ?.route
+                routeMeta
                   ?.route_long_name
               ),
 
             type:
               number(
-                trip
-                  ?.route
+                routeMeta
                   ?.route_type
               )
           },

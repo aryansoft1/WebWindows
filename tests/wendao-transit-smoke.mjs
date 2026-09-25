@@ -302,10 +302,10 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-9/);
+assert.match(html, /transit-providers\.js\?v=20260925-10/);
 assert.match(html, /transit-app\.js\?v=20260925-12/);
 assert.match(html, /navigation\.css\?v=20260925-4/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-8/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-9/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260925-11/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
@@ -2004,4 +2004,25 @@ assert.doesNotMatch(
   providerSource,
   /value >= 700 && value < 800\) \{\s*\n?\s*return "🚲";/,
   "the bicycle mis-mapping for bus route types must be gone"
+);
+/*
+ * 车型判定的数据前提：Transitland 的 trip 详情响应里 route 是**空对象**
+ * （实测 keys=[]），route_type / route_short_name 只存在于 departures 列表。
+ * 不合并两处 route 元数据，journey.route.type 就是 null，
+ * 海外巴士会被当成轨道、显示成普通火车图标（实测 routeType=null）。
+ */
+assert.match(
+  providerSource,
+  /const listRoute\s*=\s*\n?\s*departure\?\.trip\?\.route/,
+  "route metadata must fall back to the departures payload"
+);
+assert.match(
+  providerSource,
+  /const routeMeta = \{\s*\n\s*\.\.\.listRoute,\s*\n\s*\.\.\.detailRoute/,
+  "trip + departures route metadata must be merged"
+);
+assert.match(
+  providerSource,
+  /type:\s*\n\s*number\(\s*\n\s*routeMeta/,
+  "journey.route.type must come from the merged route metadata"
 );

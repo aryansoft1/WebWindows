@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.6",
+  "releaseVersion": "2026.09.26.7",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-25T17:41:14.163Z",
+  "generatedAt": "2026-09-25T17:51:44.286Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.5",
+  "previousReleaseVersion": "2026.09.26.6",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -767,20 +767,20 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "9602edc7cb010a3a35d006f8bfb8b4dd81c3b3d2163b0832030a03d98211b349",
-      "size": 1902
+      "sha256": "893522d905c13993d34a1bf39385b5ef6302733071ccae8aa4609c989aaaf76c",
+      "size": 3723
     },
     "cloud/browser/files.asp": {
-      "sha256": "de11b60e92253ebaab30e93285af862ad345920f19af1eae22651b51a1a999e4",
-      "size": 27685
+      "sha256": "367bba6ba373a22497b74ab9ca1f4f2376e87086cb7570dec0939a55d7425939",
+      "size": 27695
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "e7944d85acf7ef7986cc16f33cf98d2b57392ac939ba449e1565821d0a564bbb",
-      "size": 37290
+      "sha256": "08855f4c53ce9c126b1247b88cfec68e7b62759db384b903c2527730643ea4ff",
+      "size": 37300
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -791,8 +791,8 @@
       "size": 25629
     },
     "cloud/browser/search-ui.js": {
-      "sha256": "4e066d4765f15720ac939217c9de85b6bc63fd4470f1dccf9ddf816fc28e5e8f",
-      "size": 11253
+      "sha256": "990877e345788eee2a76e22f5c5e49108304ef13915e7a7b8055c8d54b4811ba",
+      "size": 11273
     },
     "cloud/browser/search.asp": {
       "sha256": "86e893bd1558211e5ca76dcddf9f33e4221283a6a1042b8019d8c3149b9df2c7",
@@ -1310,9 +1310,12 @@
       "size": 902
     }
   },
-  "releaseScope": "catalog-static-fallback",
+  "releaseScope": "cloud-file-search-submit",
   "uploadFiles": [
-    "api/function-catalog.asp",
+    "cloud/browser/search-ui.js",
+    "cloud/browser/file-search.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/private-files.asp",
     "deploy/ftp-manifest.json"
   ]
 }

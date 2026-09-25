@@ -96,6 +96,15 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "visitor analytics fix releases must upload only the admin shell and reporting presentation slice");
+} else if (manifest.releaseScope === "cloud-layout-hotfix") {
+  assert.deepEqual(uploadFiles, [
+    "cloud/browser/file-search.css",
+    "cloud/browser/styles.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/private-files.asp",
+    "data/apps/system-apps.json",
+    "deploy/ftp-manifest.json",
+  ], "cloud layout hotfix releases must upload only the cloud browser presentation slice");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

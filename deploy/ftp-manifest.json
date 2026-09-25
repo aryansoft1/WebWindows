@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.28",
-  "catalogVersion": "2026.09.25.28",
-  "generatedAt": "2026-09-25T09:10:38.678Z",
+  "releaseVersion": "2026.09.26.1",
+  "catalogVersion": "2026.09.26.1",
+  "generatedAt": "2026-09-25T15:29:08.451Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -268,7 +268,7 @@
     "api/longdistance-proxy.asp",
     "inc/trust-schema.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.27",
+  "previousReleaseVersion": "2026.09.25.28",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -767,20 +767,20 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "96b635b094b32c8fc606aa93542c8624e9826d2a47fd78acc771da08084ccd5f",
-      "size": 1742
+      "sha256": "bb73e90f72f2cd15471806a4be3e7f8ff0614eb48364f9ce7f56593ecc7d772b",
+      "size": 3059
     },
     "cloud/browser/files.asp": {
-      "sha256": "045705d18b86b02b848598158e48be98900962af184d99e530fe252f4bd42a4a",
-      "size": 24887
+      "sha256": "46a252ff60a1c5a08632110f57a030457801f042f1031e49837b1dc1ed96ece2",
+      "size": 22308
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "5acc4b19dc547316255794ea5153de3e86317e5680f285b35c7be63cde3db753",
-      "size": 45274
+      "sha256": "6b709c3ce0ac3d901efe542da0a05cbe20f5f4984a38daa60ab44035ede43dd3",
+      "size": 34598
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -799,8 +799,8 @@
       "size": 15940
     },
     "cloud/browser/styles.css": {
-      "sha256": "441a90d5abb78d260113f02a0be0d25c6a14e3d8bf67df95c3fc1e737bcb6b3a",
-      "size": 13738
+      "sha256": "0c4e4fb70dc11c512686beb4788f8c31df2ced090bd6964d7e6c5d8594dbcebd",
+      "size": 13811
     },
     "cloud/browser/toolbar.js": {
       "sha256": "c904d57f6d38a1b9d0b0ff856388fa8f129005ce49762205cf50849587fab978",
@@ -811,8 +811,8 @@
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "86d91d4a285904fe4ab16d9e9c86db2c52013880279453d0cd136ab1ecb33bee",
-      "size": 14412
+      "sha256": "1296a2c5ce23cf8d2b46cb7c8319f82ae5334659bdf991077164581b18fffbdc",
+      "size": 14411
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -1310,15 +1310,13 @@
       "size": 902
     }
   },
-  "releaseScope": "wendao-overseas-scope-dedupe",
+  "releaseScope": "cloud-layout-hotfix",
   "uploadFiles": [
-    "assets/js/transit-providers.js",
-    "road.html",
+    "cloud/browser/file-search.css",
+    "cloud/browser/styles.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/private-files.asp",
     "data/apps/system-apps.json",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
     "deploy/ftp-manifest.json"
   ]
 }

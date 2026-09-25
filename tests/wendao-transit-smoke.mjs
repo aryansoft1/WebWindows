@@ -303,11 +303,11 @@ assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
 assert.match(html, /transit-providers\.js\?v=20260925-5/);
-assert.match(html, /transit-app\.js\?v=20260925-7/);
-assert.match(html, /navigation\.css\?v=20260925-2/);
+assert.match(html, /transit-app\.js\?v=20260925-8/);
+assert.match(html, /navigation\.css\?v=20260925-3/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-4/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-6/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-7/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -528,6 +528,56 @@ assert.match(
   transitAppSource,
   /function keepVehicleInView\(/,
   "a vehicle outside the viewport must pull the camera to it"
+);
+
+/*
+ * 车辆图标设计（用户要求：高铁/动车=火箭头，普通车=普通火车，
+ * 且车头必须朝向目的地方向）。
+ */
+assert.match(
+  transitAppSource,
+  /const BULLET_PREFIXES\s*=\s*\["G",\s*"D",\s*"C"\]/,
+  "G/D/C prefixes must select the bullet-train icon"
+);
+assert.match(
+  transitAppSource,
+  /function vehicleKind\(\)[\s\S]{0,900}?provider\s*!==\s*\n?\s*"china-rail"[\s\S]{0,200}?return "train"/,
+  "overseas transit must fall back to the ordinary train icon"
+);
+assert.match(
+  transitAppSource,
+  /const VEHICLE_SVG\s*=\s*\{[\s\S]{0,400}?bullet:\s*\[/,
+  "a bullet-train (rocket nose) SVG must exist"
+);
+assert.match(
+  transitAppSource,
+  /train:\s*\[/,
+  "an ordinary train SVG must exist"
+);
+assert.match(
+  transitAppSource,
+  /function vehicleBearing\(\)/,
+  "the vehicle glyph must be rotated toward its direction of travel"
+);
+assert.match(
+  transitAppSource,
+  /function vehicleBearing\(\)[\s\S]{0,1200}?currentSegment[\s\S]{0,1200}?Math\.atan2/,
+  "bearing must point from the current position toward the next stop (destination direction)"
+);
+assert.match(
+  transitAppSource,
+  /function applyVehicleLook\([\s\S]{0,1600}?transit-vehicle-glyph[\s\S]{0,1600}?rotate\(/,
+  "rotation must be applied to the inner glyph, not MapLibre's marker element"
+);
+assert.match(
+  transitAppSource,
+  /new DOMParser\(\)/,
+  "SVG must be built without innerHTML (project rule)"
+);
+assert.match(
+  cssSource,
+  /\.transit-vehicle-glyph\s*\{[^}]*transform-origin/,
+  "glyph rotation must pivot on its center"
 );
 assert.match(
   transitAppSource,

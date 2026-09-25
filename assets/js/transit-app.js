@@ -486,6 +486,200 @@
     );
   }
 
+  /*
+   * 车辆图标的两种形态（2026-09-25 按用户要求重做设计）：
+   *   bullet —— 高铁/动车（G/D/C 头），火箭头造型，车头是流线型尖鼻；
+   *   train  —— 普通列车（K/Z/T 头，以及所有海外普通火车），常规车头造型。
+   * 判定只看车次字头，海外一律按普通火车处理。
+   */
+  const BULLET_PREFIXES = ["G", "D", "C"];
+
+  function vehicleKind() {
+    const journey =
+      state.journey;
+
+    if (
+      journey?.provider !==
+      "china-rail"
+    ) {
+      return "train";
+    }
+
+    const code = [
+      journey.route?.shortName,
+      journey.route?.longName,
+      journey.trainNo
+    ]
+      .map(
+        value =>
+          String(
+            value ?? ""
+          )
+            .trim()
+      )
+      .find(Boolean) ||
+      "";
+
+    const head =
+      code
+        .toUpperCase()
+        .charAt(0);
+
+    return BULLET_PREFIXES.includes(
+      head
+    )
+      ? "bullet"
+      : "train";
+  }
+
+  /*
+   * 车头朝向：从当前位置指向「下一站」的方位角。
+   *
+   * 为什么要「指向下一站」而不是起点：车辆在运行中位于上一站与下一站之间，
+   * 位置估算就是在这两点间插值得到的，所以 position → 下一站的方向正是
+   * 真实行进方向，也天然等于「目的地方向」（下一站不可用时退到终点站）。
+   * 地图为北向上，rotate(bearing) 让图标车头正好指向行进方向。
+   */
+  function vehicleBearing() {
+    const position =
+      state.resolved
+        ?.position;
+
+    if (
+      !position ||
+      !window
+        .WebWindowsTransitPosition
+        .validPoint(
+          position
+        )
+    ) {
+      return null;
+    }
+
+    const described =
+      state.described;
+
+    const stops =
+      Array.isArray(described?.stops)
+        ? described.stops
+        : [];
+
+    const nextIndex =
+      Number.isInteger(
+        described?.nextIndex
+      ) && described.nextIndex >= 0
+        ? described.nextIndex
+        : stops.findIndex(
+            stop =>
+              stop?.status ===
+                "next" ||
+              stop?.status ===
+                "upcoming"
+          );
+
+    const next =
+      described?.currentSegment
+        ?.to ||
+      stops[nextIndex] ||
+      stops[stops.length - 1] ||
+      null;
+
+    if (
+      !next ||
+      !Number.isFinite(
+        Number(next.longitude)
+      ) ||
+      !Number.isFinite(
+        Number(next.latitude)
+      )
+    ) {
+      return null;
+    }
+
+    const fromLng = Number(position.longitude);
+    const fromLat = Number(position.latitude);
+    const toLng = Number(next.longitude);
+    const toLat = Number(next.latitude);
+
+    if (fromLng === toLng && fromLat === toLat) {
+      return null;
+    }
+
+    const phi1 = (fromLat * Math.PI) / 180;
+    const phi2 = (toLat * Math.PI) / 180;
+    const deltaLng = ((toLng - fromLng) * Math.PI) / 180;
+
+    const y = Math.sin(deltaLng) * Math.cos(phi2);
+    const x =
+      Math.cos(phi1) * Math.sin(phi2) -
+      Math.sin(phi1) *
+        Math.cos(phi2) *
+        Math.cos(deltaLng);
+
+    const bearing =
+      (Math.atan2(y, x) * 180) / Math.PI;
+
+    return Number.isFinite(bearing)
+      ? (bearing + 360) % 360
+      : null;
+  }
+
+  const VEHICLE_SVG = {
+    /*
+     * 火箭头（高铁/动车）：侧视为流线尖鼻 + 深色风挡带 + 底部裙板，
+     * 车头朝右（0°），由外层 rotate 指向行进方向。
+     */
+    bullet: [
+      '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">',
+      '<defs>',
+      '<linearGradient id="tvk-bullet" x1="0" y1="0" x2="1" y2="1">',
+      '<stop offset="0" stop-color="#3f8bff"/>',
+      '<stop offset="1" stop-color="#1246c8"/>',
+      "</linearGradient>",
+      "</defs>",
+      '<circle cx="16" cy="16" r="15" fill="url(#tvk-bullet)"/>',
+      '<circle cx="16" cy="16" r="14" fill="none" stroke="#fff" stroke-width="1.6"/>',
+      // 车身：左侧方、右侧尖鼻
+      '<path d="M8 10.5h9.5c3.6 0 6.2 2 7.8 5.2 1.5 3 1.5 3 1.5 3H8z" fill="#fff"/>',
+      // 风挡带
+      '<path d="M12.4 12.2h5.6c2.2 0 3.7 1 4.8 2.6H12.4z" fill="#123a86"/>',
+      // 裙板与轮位
+      '<rect x="8" y="19.2" width="17.2" height="1.9" rx="0.95" fill="#0d2f6b"/>',
+      '<circle cx="11.4" cy="22.6" r="1.5" fill="#e8f0ff"/>',
+      '<circle cx="19.4" cy="22.6" r="1.5" fill="#e8f0ff"/>',
+      "</svg>"
+    ].join(""),
+
+    /*
+     * 普通火车：方正车头 + 双风挡 + 前照灯 + 受电弓暗示，
+     * 车头同样朝右（0°）。
+     */
+    train: [
+      '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">',
+      '<defs>',
+      '<linearGradient id="tvk-train" x1="0" y1="0" x2="1" y2="1">',
+      '<stop offset="0" stop-color="#5b6b7c"/>',
+      '<stop offset="1" stop-color="#2b3743"/>',
+      "</linearGradient>",
+      "</defs>",
+      '<circle cx="16" cy="16" r="15" fill="url(#tvk-train)"/>',
+      '<circle cx="16" cy="16" r="14" fill="none" stroke="#fff" stroke-width="1.6"/>',
+      // 车头（略带圆角方正轮廓）
+      '<rect x="7.5" y="9" width="15" height="14" rx="3.4" fill="#f2f5f8"/>',
+      // 双风挡
+      '<rect x="9.4" y="11" width="5" height="4.2" rx="1.2" fill="#2b3743"/>',
+      '<rect x="15.4" y="11" width="5" height="4.2" rx="1.2" fill="#2b3743"/>',
+      // 前照灯
+      '<circle cx="10.6" cy="18.6" r="1.5" fill="#ffd75e"/>',
+      '<circle cx="19.4" cy="18.6" r="1.5" fill="#ffd75e"/>',
+      // 底部裙板
+      '<rect x="8.6" y="21" width="12.8" height="1.6" rx="0.8" fill="#c3ccd6"/>',
+      // 受电弓（普通列车特征）
+      '<path d="M13 7.4h6M15.2 7.4l2.4-2.6" stroke="#f2f5f8" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
+      "</svg>"
+    ].join("")
+  };
+
   function createVehicleMarker() {
     const element =
       document.createElement(
@@ -497,14 +691,79 @@
      * 一来给 CSS 做绝对定位（MapLibre 只写 transform，
      * 元素自身必须是 absolute 才会精确落在投影点上），
      * 二来用来清理历史事故留下的半残标记（见 purgeStrayVehicleMarkers）。
+     *
+     * 注意：MapLibre 会**独占** marker 元素的 style.transform（用于投影
+     * 定位），所以车头朝向的 rotate 必须落在内层 .transit-vehicle-glyph 上，
+     * 否则会与 MapLibre 的定位 transform 互相覆盖（历史上 fitBounds 抢
+     * transform 的教训）。
      */
     element.className =
-      "airport-marker transit-vehicle-marker";
+      "transit-vehicle-marker";
 
-    element.textContent =
-      vehicleIcon();
+    const glyph =
+      document.createElement(
+        "span"
+      );
+
+    glyph.className =
+      "transit-vehicle-glyph";
+
+    element.appendChild(glyph);
 
     return element;
+  }
+
+  function applyVehicleLook(
+    element
+  ) {
+    if (!element) {
+      return;
+    }
+
+    const glyph =
+      element.querySelector(
+        ".transit-vehicle-glyph"
+      );
+
+    if (!glyph) {
+      return;
+    }
+
+    const kind = vehicleKind();
+
+    if (
+      glyph.dataset.kind !== kind
+    ) {
+      glyph.dataset.kind = kind;
+
+      /*
+       * 用 DOMParser 而不是 innerHTML：项目规则禁止 innerHTML 赋值
+       * （tests/wendao-transit-smoke.mjs 有断言），而这里的内容是
+       * 模块内静态常量模板、不含任何用户数据，但仍走无 innerHTML 的路径。
+       */
+      const markup =
+        VEHICLE_SVG[kind] ||
+        VEHICLE_SVG.train;
+
+      const parsed =
+        new DOMParser()
+          .parseFromString(
+            markup,
+            "image/svg+xml"
+          );
+
+      glyph.replaceChildren(
+        parsed.documentElement
+      );
+    }
+
+    const bearing =
+      vehicleBearing();
+
+    glyph.style.transform =
+      Number.isFinite(bearing)
+        ? `rotate(${bearing.toFixed(1)}deg)`
+        : "";
   }
 
   /*
@@ -639,13 +898,18 @@
       }
     } else {
       state.vehicleMarker
-        .getElement()
-        .textContent =
-          vehicleIcon();
-
-      state.vehicleMarker
         .setLngLat(lngLat);
     }
+
+    /*
+     * 图标形态与车头朝向每次渲染都刷新：定时轮询会更新位置，
+     * 行进方向（指向下一站）随之变化，车头必须跟着转。
+     */
+    applyVehicleLook(
+      state.vehicleMarker
+        ?.getElement?.() ||
+      null
+    );
 
     purgeStrayVehicleMarkers();
   }

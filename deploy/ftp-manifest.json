@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.13",
-  "catalogVersion": "2026.09.25.13",
-  "generatedAt": "2026-09-25T03:38:32.630Z",
+  "releaseVersion": "2026.09.25.14",
+  "catalogVersion": "2026.09.25.14",
+  "generatedAt": "2026-09-25T03:58:06.653Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -266,7 +266,7 @@
     "assets/js/file-query-parser.js",
     "api/transit-proxy.asp"
   ],
-  "previousReleaseVersion": "2026.09.25.12",
+  "previousReleaseVersion": "2026.09.25.13",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "15473f9a2e6eae2c4c45c6746efb3740a24f6d0ec33d02e6d9531697179d6276",
@@ -807,7 +807,7 @@
       "size": 327
     },
     "data/apps/system-apps.json": {
-      "sha256": "691655d2cab9b6d05ffae7eb27b3c54c434ff8d0f61e29ac1e4290bbf2c947c5",
+      "sha256": "b5607bcf12fe1a7716685685e64703dea96cdbacfb46e25d05dc5b28b10b44c1",
       "size": 14412
     },
     "data/sdk/capability-broker-errors-v1.json": {
@@ -1115,12 +1115,12 @@
       "size": 1297
     },
     "road.html": {
-      "sha256": "68f150bfcbad85f68eb3306546e1fc48144af04abda1a5a9a9bc169512863983",
+      "sha256": "db3e71a7137f1927a78dbff6b1a0bd740f6f6dc56ee44717961fe1608e4f7f2d",
       "size": 16438
     },
     "assets/css/navigation.css": {
-      "sha256": "a492d61313fe5bbf03e92671f0b81170db8a13ec89d9969a3b29917670af70f4",
-      "size": 26795
+      "sha256": "b649e49ede16510c3f7923c56b49989d412ee7a22e97d46bd719be6d22ca4c46",
+      "size": 27551
     },
     "assets/icons/navigation.svg": {
       "sha256": "ed2ba06cbb1d45a8e5bb08a18d241a6a48ce3e038f7b8260acb6e91d4dac9ed2"
@@ -1186,8 +1186,8 @@
       "size": 4186
     },
     "assets/js/transit-app.js": {
-      "sha256": "87b5f07f28f0c6d0b50314772797af7bb57cf03da81f5f932f52dd13976ea272",
-      "size": 59675
+      "sha256": "bdcc887a66be675d0f40bb08249fdf1ef3d3ce2dfe685c6b60e876dc1053c89f",
+      "size": 67096
     },
     "assets/js/transit-position.js": {
       "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
@@ -1298,22 +1298,16 @@
       "size": 10155
     }
   },
-  "releaseScope": "t006-merge-content",
+  "releaseScope": "wendao-vehicle-icon-design",
   "uploadFiles": [
-    "assets/js/settings.js",
-    "assets/js/app-registry.js",
-    "assets/js/main.js",
-    "assets/css/settings.css",
-    "settings.html",
-    "assets/js/device-api.js",
-    "assets/js/login.js",
-    "SystemManager/index.html",
+    "assets/js/transit-app.js",
+    "assets/css/navigation.css",
+    "road.html",
     "sysinfo.html",
     "assets/js/sysinfo.js",
     "api/release-version.asp",
     "api/mobile-version.asp",
     "data/apps/system-apps.json",
-    "index.html",
     "deploy/ftp-manifest.json"
   ]
 }

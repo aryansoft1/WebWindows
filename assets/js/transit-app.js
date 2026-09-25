@@ -2170,6 +2170,27 @@
       return T("errGtfsUnavailable");
     }
 
+    /*
+     * 海外「两源都没有」时要说清是**覆盖问题**而不是服务故障：
+     * GTFS 侧结论是 direct_trip_not_found（确实取到过经停表、只是没有
+     * 一班到终点），12306 侧是 station_not_found（海外站名不在中国铁路
+     * 站表里）。此时沿用 errGtfsUnavailable 会让用户以为服务坏了，
+     * 反复重试毫无意义——如实说明「当前数据源未覆盖这条线路」。
+     */
+    if (
+      String(fallbackCode || "") ===
+        "direct_trip_not_found" &&
+      railMissed
+    ) {
+      return (
+        String(
+          error?.message || ""
+        )
+          .trim() ||
+        T("errGtfsUnavailable")
+      );
+    }
+
     if (gtfsMissed && railMissed) {
       return T("errNotCovered", {
         origin:

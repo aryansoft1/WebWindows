@@ -16,7 +16,13 @@
       transitRequest: 10000,
       geocoderRequest: 6000,
       railRequest: 15000,
-      gtfsStage: 8000,
+      /*
+       * 海外阶段预算：原来 8 秒，而「按线路去重」之前的实现要对
+       * 同一线路同一 stop pattern 连发 11 次 trip 详情（实测 8.6 秒），
+       * 必然撞穿预算 → 被判 transit_timeout → 回落 12306 → 对海外线路
+       * 显示成「上游故障」。去重后典型 1~2 秒，这里放宽到 14 秒作为余量。
+       */
+      gtfsStage: 14000,
       railStage: 30000
     },
     global.__WENDAO_TRANSIT_TIMEOUTS__ || {}
@@ -28,6 +34,118 @@
    * 无经停数据——逐个有界回退，全部失败才报 schedule_* 错误。
    */
   const RAIL_SCHEDULE_MAX_ATTEMPTS = 5;
+
+  /*
+   * 海外（GTFS）候选班次取样上限：
+   *  - GTFS_TRIP_PER_ROUTE：同一条线路最多取几个不同 stop_pattern；
+   *  - GTFS_TRIP_CANDIDATE_LIMIT：总共最多取几趟去重后的班次去查经停表。
+   * 取值依据实测：单次 trip 详情约 0.4~0.7 秒，去重后典型 1~3 趟，
+   * 阶段耗时 1~2 秒；即使最坏 8 趟也在 14 秒预算内。
+   */
+  const GTFS_TRIP_PER_ROUTE = 2;
+  const GTFS_TRIP_CANDIDATE_LIMIT = 8;
+
+  /* 起点发车扫描上限：单次请求，供跨线路取样使用。 */
+  const GTFS_DEPARTURE_SCAN_LIMIT = 30;
+
+  /*
+   * 出发站发车列表 → 候选班次（按 route + stop_pattern 去重，跨线路轮转）。
+   *
+   * 同一 route + stop_pattern 的班次共用同一份 stop_times，逐班取详情
+   * 纯属浪费：实测「東京」站 40 班全属丸ノ内線同一 pattern，
+   * 原实现连发 11 次相同请求、耗时 8.6 秒，撞穿 8 秒阶段预算后
+   * 被判「上游超时」，把「数据源没这条直达线路」误报成「上游故障」。
+   * 去重后请求数降到 1~3，且因为跨线路轮取，线路覆盖面反而更广。
+   */
+  function diversifyTripCandidates(
+    departures
+  ) {
+    const seenPatterns = new Set();
+    const byRoute = new Map();
+
+    for (
+      const departure
+      of departures
+    ) {
+      const trip = departure?.trip;
+      const route = routeKey(trip?.route);
+
+      if (!trip || !route) {
+        continue;
+      }
+
+      const patternKey =
+        [
+          route,
+          text(trip.stop_pattern_id) ||
+            text(trip.direction_id) ||
+            text(trip.trip_headsign)
+        ].join("|");
+
+      if (seenPatterns.has(patternKey)) {
+        continue;
+      }
+
+      seenPatterns.add(patternKey);
+
+      if (!byRoute.has(route)) {
+        byRoute.set(
+          route,
+          []
+        );
+      }
+
+      byRoute
+        .get(route)
+        .push(departure);
+    }
+
+    /*
+     * 轮转取样：先取每条线路的第 1 个 pattern，再取每条第 2 个……
+     * 保证在总数上限内覆盖尽可能多的线路（原先按时间顺序取，
+     * 前 N 班很可能全落在同一条线路上）。
+     */
+    const result = [];
+    const usedPerRoute = new Map();
+    let round = 0;
+
+    while (result.length < GTFS_TRIP_CANDIDATE_LIMIT) {
+      let added = false;
+
+      for (
+        const [route, list]
+        of byRoute.entries()
+      ) {
+        if (result.length >= GTFS_TRIP_CANDIDATE_LIMIT) {
+          break;
+        }
+
+        const used = usedPerRoute.get(route) || 0;
+
+        if (
+          used >= GTFS_TRIP_PER_ROUTE ||
+          !list[used]
+        ) {
+          continue;
+        }
+
+        result.push(list[used]);
+        usedPerRoute.set(
+          route,
+          used + 1
+        );
+        added = true;
+      }
+
+      if (!added) {
+        break;
+      }
+
+      round++;
+    }
+
+    return result;
+  }
 
   /*
    * 「运行中/已通过」车次的展示配额（仅当查询日 = 北京当天时生效）：
@@ -1208,8 +1326,13 @@
       /*
        * 记录「班次详情取不到」与「确实没有匹配路线」的区别：
        * 上游 trip 接口整体故障时，不能误报成「无直达班次」。
+       * tripDetailOk 表示**至少有一趟**成功取到并解析了经停表——
+       * 只要有过一次成功，就应该报「没有直达线路」而不是「上游故障」
+       * （线上事故：東京→名古屋 其实 11 次 trip 请求全部 200 且各有 23~25 个
+       *  经停，只因其中一次失败就把「无直达」说成「上游暂时无法提供」）。
        */
       let tripDetailFailed = false;
+      let tripDetailOk = false;
 
       for (
         const candidate of originCandidates.slice(
@@ -1243,14 +1366,41 @@
 
         if (list.length) {
           originStop = candidate;
-          departures = list.slice(0, 12);
+
+          /*
+           * 取较多发车用于跨线路取样（单次请求，不额外耗时）：
+           * 只看前 12 班时可能整段都落在同一条线路上。
+           */
+          departures = list.slice(
+            0,
+            GTFS_DEPARTURE_SCAN_LIMIT
+          );
           break;
         }
       }
 
+      /*
+       * 出发站发车列表 → 候选班次。
+       *
+       * 关键：同一 route + stop_pattern 的班次**共用同一份经停表**，
+       * 逐班取 trip 详情是纯浪费。实测「東京」站 40 班全是丸ノ内線同一
+       * pattern，于是发了 11 次完全相同的请求、耗时 8.6 秒，直接撞穿
+       * 原 8s 的阶段预算 → 被判 transit_timeout → 回落到 12306 →
+       * 界面显示「上游故障」，而真实结论是「这些数据源没有这条直达线路」。
+       *
+       * 所以这里按 (route, stop_pattern) 去重，并且**跨线路轮转**取样：
+       * 每条线路最多 GTFS_TRIP_PER_ROUTE 个 pattern、总数不超过
+       * GTFS_TRIP_CANDIDATE_LIMIT，既把耗时压到 1~2 秒，又让线路覆盖面
+       * 反而更广（原先只看前 12 班，很可能全落在一条线路上）。
+       */
+      const tripCandidates =
+        diversifyTripCandidates(
+          departures
+        );
+
       for (
         const departure
-        of departures
+        of tripCandidates
       ) {
         const departureTrip =
           departure?.trip;
@@ -1321,6 +1471,8 @@
         ) {
           continue;
         }
+
+        tripDetailOk = true;
 
         const originIndex =
           trip.stop_times
@@ -1583,13 +1735,49 @@
         };
       }
 
+      /*
+       * 错误归因：
+       *  - 一趟都没解析成功，且确实有请求失败 → 上游故障（gtfs_trip_unavailable）
+       *  - 否则（拿到过经停表，只是没有一班到终点）→ 如实说「没有直达线路」，
+       *    并列出已检查的线路，让用户知道这是数据覆盖问题而不是服务故障。
+       */
+      const routeNames =
+        tripCandidates
+          .map(
+            candidate =>
+              text(
+                candidate
+                  ?.trip
+                  ?.route
+                  ?.route_short_name
+              ) ||
+              text(
+                candidate
+                  ?.trip
+                  ?.route
+                  ?.route_long_name
+              )
+          )
+          .filter(Boolean);
+
+      const uniqueRouteNames = [
+        ...new Set(routeNames)
+      ];
+
+      const inspected =
+        uniqueRouteNames
+          .slice(0, 4)
+          .join("、");
+
       throw providerError(
-        tripDetailFailed
+        !tripDetailOk && tripDetailFailed
           ? "gtfs_trip_unavailable"
           : "direct_trip_not_found",
-        tripDetailFailed
+        !tripDetailOk && tripDetailFailed
           ? "公共交通上游暂时无法提供班次详情，请稍后重试。"
-          : "当前仅支持无需换乘的直达行程，未找到可用直达班次。"
+          : `当前数据源未覆盖这条直达线路（已检查 ${
+              inspected || "相关线路"
+            }，共 ${uniqueRouteNames.length} 条；仅支持无需换乘的直达行程）。`
       );
     }
   }

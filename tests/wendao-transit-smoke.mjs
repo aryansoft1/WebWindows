@@ -302,12 +302,12 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-5/);
-assert.match(html, /transit-app\.js\?v=20260925-8/);
+assert.match(html, /transit-providers\.js\?v=20260925-6/);
+assert.match(html, /transit-app\.js\?v=20260925-9/);
 assert.match(html, /navigation\.css\?v=20260925-3/);
-assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-4/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-5/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
-assert.doesNotMatch(html, /transit-app\.js\?v=20260925-7/);
+assert.doesNotMatch(html, /transit-app\.js\?v=20260925-8/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260923-2/);
 
@@ -578,6 +578,58 @@ assert.match(
   cssSource,
   /\.transit-vehicle-glyph\s*\{[^}]*transform-origin/,
   "glyph rotation must pivot on its center"
+);
+
+/*
+ * 海外「有数据却报错」事故回归（真实浏览器 + 网络面板取证）：
+ * 東京→名古屋 报错「公共交通上游暂时无法提供班次详情」，但
+ *   1) 11 次 trip 详情请求**全部 200**、各有 23~25 个经停（并非上游故障）；
+ *   2) 11 次请求全部来自**同一条线路同一 stop_pattern**（丸ノ内線），
+ *      即重复取同一份经停表 11 次，耗时 8.6 秒；
+ *   3) 阶段预算 gtfsStage 只有 8 秒 → 被判 transit_timeout → 回落 12306
+ *      → 界面显示「上游故障」，而真实结论是「这些数据源没有这条直达线路」。
+ * 修复：按 (route, stop_pattern) 去重 + 跨线路轮转取样、预算放宽、
+ *      「至少成功解析过一趟」即报无直达（而非上游故障）、文案列出已查线路。
+ */
+assert.match(
+  providerSource,
+  /function diversifyTripCandidates\(/,
+  "trip candidates must be de-duplicated per route+stop_pattern"
+);
+assert.match(
+  providerSource,
+  /const GTFS_TRIP_PER_ROUTE = 2;/,
+  "per-route pattern sampling must be bounded"
+);
+assert.match(
+  providerSource,
+  /const GTFS_TRIP_CANDIDATE_LIMIT = 8;/,
+  "total trip detail calls must be bounded"
+);
+assert.match(
+  providerSource,
+  /gtfsStage:\s*14000/,
+  "GTFS stage budget must exceed the deduplicated worst case"
+);
+assert.match(
+  providerSource,
+  /let tripDetailOk = false;/,
+  "must track whether any trip was parsed successfully"
+);
+assert.match(
+  providerSource,
+  /!tripDetailOk && tripDetailFailed\s*\?\s*"gtfs_trip_unavailable"/,
+  "upstream failure must only be reported when nothing could be parsed"
+);
+assert.match(
+  providerSource,
+  /当前数据源未覆盖这条直达线路/,
+  "the no-direct message must state it is a coverage gap, not an outage"
+);
+assert.match(
+  transitAppSource,
+  /"direct_trip_not_found"[\s\S]{0,200}?railMissed/,
+  "app must not label a coverage gap as an upstream outage"
 );
 assert.match(
   transitAppSource,

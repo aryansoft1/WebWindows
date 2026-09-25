@@ -42,6 +42,105 @@
   /* 12306 时刻为 UTC+8；判定运行中状态时必须用中国标准时间比较。 */
   const RAIL_TIMEZONE_OFFSET_MINUTES = 480;
 
+  /*
+   * 当日车次本地累积（客户端快照）。
+   *
+   * 为什么必须有：12306 对「当天」只返回尚未发车的车次（北京 10:31 只剩
+   * 10:42 之后的 77 趟），所以「运行中/已通过」车次只能靠「早些时候抓到过
+   * 的列表」。而服务端快照在本托管上无法落盘（实测应用池对 data/、
+   * cloud/file/、logs/ 均无写权限），只能活在 Application 内存里，
+   * 应用池一回收就丢。这里在浏览器侧按「日期+区间」持久化已见车次。
+   */
+  const RAIL_LOCAL_SNAPSHOT_PREFIX =
+    "webwindows.transit.rail.v1.";
+
+  const RAIL_LOCAL_SNAPSHOT_MAX_TRAINS = 400;
+
+  function railSnapshotKey(
+    date,
+    fromCode,
+    toCode
+  ) {
+    return (
+      RAIL_LOCAL_SNAPSHOT_PREFIX +
+      date +
+      "." +
+      fromCode +
+      "." +
+      toCode
+    );
+  }
+
+  function readLocalSnapshot(
+    key
+  ) {
+    try {
+      const raw =
+        window.localStorage.getItem(
+          key
+        );
+
+      if (!raw) {
+        return [];
+      }
+
+      const parsed = JSON.parse(raw);
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function writeLocalSnapshot(
+    key,
+    trains
+  ) {
+    try {
+      window.localStorage.setItem(
+        key,
+        JSON.stringify(
+          trains.slice(
+            0,
+            RAIL_LOCAL_SNAPSHOT_MAX_TRAINS
+          )
+        )
+      );
+    } catch {
+      // 存储不可用或已满时忽略，不影响当次查询
+    }
+  }
+
+  function mergeRailSnapshots(
+    fresh,
+    cached
+  ) {
+    const byTrainNo = new Map();
+
+    for (const train of cached) {
+      const no = text(train?.trainNo).trim();
+
+      if (no) {
+        byTrainNo.set(no, train);
+      }
+    }
+
+    for (const train of fresh) {
+      const no = text(train?.trainNo).trim();
+
+      if (no) {
+        byTrainNo.set(no, train);
+      }
+    }
+
+    return [...byTrainNo.values()].slice(
+      0,
+      RAIL_LOCAL_SNAPSHOT_MAX_TRAINS
+    );
+  }
+
   function text(value) {
     return value === null || value === undefined
       ? ""
@@ -2519,18 +2618,49 @@
         );
       }
 
-      return trains.map(train => ({
-        ...train,
+      const serviceDate =
+        text(payload?.date).trim() ||
+        date;
 
-        /*
-         * 状态判定需要知道这趟车属于哪一天：
-         * 代理的快照可能把不同查询日的数据混在一起（仅过去日期），
-         * 故按返回体里的 date 为准，缺失时回落到请求日期。
-         */
-        serviceDate:
-          text(payload?.date).trim() ||
-          date
-      }));
+      const withDate = trains.map(
+        train => ({
+          ...train,
+
+          /*
+           * 状态判定需要知道这趟车属于哪一天：
+           * 代理的快照可能把不同查询日的数据混在一起（仅过去日期），
+           * 故按返回体里的 date 为准，缺失时回落到请求日期。
+           */
+          serviceDate
+        })
+      );
+
+      /*
+       * 与本地累积列表合并：服务端快照只存在于 Application 内存，
+       * 本托管的应用池对 data/、cloud/file/、logs/ 均无写权限
+       * （action=__diag_snapshot_dir 实测全部 writable=False），
+       * 应用池一回收快照即丢——用户侧表现为「运行中车次仍然不会出」。
+       * 浏览器这份按「日期+区间」持久化，刷新/回收/换会话都不丢。
+       */
+      const snapshotKey = railSnapshotKey(
+        serviceDate,
+        from.code,
+        to.code
+      );
+
+      const merged = mergeRailSnapshots(
+        withDate,
+        readLocalSnapshot(snapshotKey)
+      );
+
+      if (merged.length) {
+        writeLocalSnapshot(
+          snapshotKey,
+          merged
+        );
+      }
+
+      return merged;
     }
 
     /*

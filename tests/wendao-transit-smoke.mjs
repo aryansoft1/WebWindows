@@ -302,9 +302,10 @@ assert.match(html, /id="transit-candidate-list"/);
 assert.match(html, /id="transit-source-pill"/);
 assert.match(html, /id="transit-service-state"/);
 assert.match(html, /data-i18n="tabTransit"/);
-assert.match(html, /transit-providers\.js\?v=20260925-3/);
+assert.match(html, /transit-providers\.js\?v=20260925-4/);
 assert.match(html, /transit-app\.js\?v=20260925-4/);
 assert.match(html, /navigation\.css\?v=20260925-1/);
+assert.doesNotMatch(html, /transit-providers\.js\?v=20260925-3/);
 assert.doesNotMatch(html, /transit-providers\.js\?v=20260924-6/);
 assert.doesNotMatch(html, /transit-app\.js\?v=20260925-2/);
 assert.doesNotMatch(html, /navigation\.css\?v=20260923-1/);
@@ -339,20 +340,25 @@ assert.doesNotMatch(
  * 北京 10:31 的查询只剩「10:42 之后的 80 趟」，运行中/已通过车次全部消失，
  * 且响应不再带 snapshot 标记。快照需写站点内文件（服务器已有写盘先例）。
  */
+/*
+ * 服务端落盘已被线上事实否决：应用池对 data/、cloud/file/、logs/ 均无写权限
+ * （FSO + ADODB.Stream 逐个探测，建子目录与既有目录直写两种形态都失败），
+ * 因此「跨应用池回收持久化」必须由客户端 localStorage 承担。
+ */
 assert.match(
-  railwayProxySource,
-  /Function SnapshotReadFile\(/,
-  "snapshot must survive app-pool recycle via a file fallback"
+  providerSource,
+  /function mergeRailSnapshots\(/,
+  "client must merge locally cached trains so running trains survive server recycles"
 );
 assert.match(
-  railwayProxySource,
-  /Sub SnapshotWriteFile\(/,
-  "snapshot must be persisted to disk"
+  providerSource,
+  /webwindows\.transit\.rail\.v1\./,
+  "local snapshot key must be namespaced and auditable"
 );
-assert.match(
+assert.doesNotMatch(
   railwayProxySource,
-  /\.rail-snapshot/,
-  "snapshot file location must be explicit and auditable"
+  /SnapshotWriteFile|SnapshotReadFile/,
+  "dead file-persistence code must be removed once the host denies writes"
 );
 
 /* 客户端预热：记住上次线路（含电报码）并在打开页面时预热当天一次 */

@@ -59,12 +59,6 @@ Select Case gAction
     SendLeftTicket
   Case "schedule"
     SendSchedule
-  Case "__diag_snapshot_dir"
-    '
-    ' 一次性诊断：报告快照落盘目录探测结果（只读，不写业务数据）。
-    ' 用于确认宿主实际允许应用池写入的位置；确认后应移除本 action。
-    '
-    SendSnapshotDirDiagnostic
   Case Else
     SendError "400 Bad Request", "unsupported_action", "不支持的 action，可用值：stations、leftTicket、schedule。"
 End Select
@@ -74,50 +68,6 @@ Response.End
 ' ---------------------------------------------------------------------------
 ' 车站电报码表
 ' ---------------------------------------------------------------------------
-
-' 快照落盘目录诊断（只写探针文件并立即删除；用于确认宿主权限）
-Sub SendSnapshotDirDiagnostic()
-  Dim rows
-  rows = ""
-
-  Dim dataDir, cloudDir, logsDir
-  dataDir = Server.MapPath("../data")
-  cloudDir = Server.MapPath("../cloud/file")
-  logsDir = Server.MapPath("../logs")
-
-  Dim candidates()
-  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES * 2 - 1)
-  candidates(0) = dataDir & "\.rail-snapshot"
-  candidates(1) = dataDir
-  candidates(2) = cloudDir & "\.rail-snapshot"
-  candidates(3) = cloudDir
-  candidates(4) = logsDir & "\.rail-snapshot"
-  candidates(5) = logsDir
-  candidates(6) = ""
-  candidates(7) = ""
-
-  Dim i
-  For i = 0 To UBound(candidates)
-    Dim path
-    path = CStr(candidates(i))
-    Dim writable
-    If Len(path) = 0 Then
-      writable = "n/a"
-    Else
-      writable = CStr(IsDirWritable(path))
-    End If
-
-    If i > 0 Then rows = rows & ","
-    rows = rows & "{""index"":" & CStr(i) & _
-      ",""path"":""" & JsonEscape(path) & """" & _
-      ",""writable"":""" & writable & """}"
-  Next
-
-  Dim resolved
-  resolved = CStr(CachedSnapshotDir())
-
-  Response.Write "{""cached"":""" & JsonEscape(resolved) & """,""candidates"":[" & rows & "]}"
-End Sub
 
 Sub SendStations()
   Dim payload
@@ -386,25 +336,21 @@ Function ComposeLeftTicketJson(ByVal travelDate, ByVal fromCode, ByVal toCode, B
 End Function
 
 ' ---------------------------------------------------------------------------
-' 当日快照
+' 当日快照（仅 Application 内存）
 ' ---------------------------------------------------------------------------
 '
-' 存储分两层：
-'   1) Application 内存（快，但应用池回收即丢——线上事故：回收后
-'      includeElapsed 不再返回 snapshot 标记，10:31 的查询里
-'      80 趟全是 10:42 之后的「未发车」，运行中/已过站车次全部消失）；
-'   2) 站点内文件（../data/.rail-snapshot/，随站点持久化）。
-'   服务器已有写盘先例（api/dt_fetch_links.asp 用 FSO 写删 ../data，
-'   api/storage-quota.asp 遍历 ../cloud/file/），故复用该目录。
-'   读取顺序：内存 → 文件；写入：两层都写。
+' 只放内存是**被线上事实逼出来的**：本托管的应用池对 data/、cloud/file/、
+' logs/ 都没有写权限——用 FSO + ADODB.Stream 逐个探测过（建子目录与在既有
+' 目录直接写两种形态都失败），所以「落盘持久化」在此主机不可行。
+' 快照随应用池回收丢失的后果（当天运行中/已通过车次消失）改由**客户端**
+' localStorage 累积兜底（见 transit-providers.js 的 mergeRailSnapshots）。
+'
+' 内存快照仍有价值：同一应用池生命周期内，所有用户都能查到当天早些时候
+' 的车次，且不增加任何上游请求。
 '
 Function SnapshotRead(ByVal key)
   Dim value
   value = CacheRead(key, RAIL_SNAPSHOT_TTL_SECONDS)
-
-  If Len(value) = 0 Then
-    value = SnapshotReadFile(SnapshotFilePath(key))
-  End If
 
   If Len(value) = 0 Then
     ' 过期条目顺手清掉，避免 Application 随查询组合无限增长
@@ -419,241 +365,7 @@ End Function
 
 Sub SnapshotWrite(ByVal key, ByVal value)
   CacheWrite key, value
-  SnapshotWriteFile SnapshotFilePath(key), value
 End Sub
-
-Function SnapshotFilePath(ByVal key)
-  ' key 形如 webwindows.railway.snap.2026-09-25.ICW.EAY
-  Dim safeName
-  safeName = Replace(CStr(key), ".", "_")
-
-  Dim dirPath
-  dirPath = ResolveSnapshotDir()
-
-  If Len(dirPath) = 0 Then
-    SnapshotFilePath = ""
-    Exit Function
-  End If
-
-  SnapshotFilePath = dirPath & "\" & safeName & ".json"
-End Function
-
-'
-' 快照落盘目录探测。
-'
-' 线上实测：Server.MapPath("../data/.rail-snapshot/") 写不进去（快照文件 404），
-' 说明应用池对 data/ 没有建目录权限——而 api/dt_fetch_links.asp 能写 ../data，
-' 说明不同目录的权限不一致。与其猜，不如启动时按候选顺序实测「能否建目录 +
-' 写探针文件」，把第一个可写目录缓存下来；都不行就退化为纯内存快照
-' （功能不受影响，只是不再跨应用池回收持久）。
-'
-Const RAIL_SNAPSHOT_DIR_CANDIDATES = 4
-
-'
-' 快照文件路径解析：按候选顺序实测「能否真正写入」，取第一个可用的。
-'
-' 线上实测（2026-09-25）：该托管的应用池**不能新建目录**
-' （data/、cloud/file/、logs/ 下 CreateFolder 均失败），但在既有目录里
-' 直接写文件可能可行，所以候选同时包含「子目录」与「扁平文件」两种形态。
-' 都不可写时返回空串，快照自动退化为纯内存（功能不受影响）。
-'
-Function SnapshotFilePath(ByVal key)
-  SnapshotFilePath = ""
-
-  Dim safeName
-  safeName = Replace(CStr(key), ".", "_")
-
-  Dim cachedDir
-  cachedDir = CachedSnapshotDir()
-
-  If Len(cachedDir) > 0 Then
-    SnapshotFilePath = cachedDir & "\" & safeName & ".json"
-    Exit Function
-  End If
-
-  Dim candidates()
-  ReDim candidates(RAIL_SNAPSHOT_DIR_CANDIDATES * 2 - 1)
-  Dim dataDir, cloudDir, logsDir
-  dataDir = Server.MapPath("../data")
-  cloudDir = Server.MapPath("../cloud/file")
-  logsDir = Server.MapPath("../logs")
-
-  candidates(0) = dataDir & "\.rail-snapshot"
-  candidates(1) = dataDir
-  candidates(2) = cloudDir & "\.rail-snapshot"
-  candidates(3) = cloudDir
-  candidates(4) = logsDir & "\.rail-snapshot"
-  candidates(5) = logsDir
-  candidates(6) = ""
-  candidates(7) = ""
-
-  Dim i
-  Dim chosen
-  chosen = ""
-  For i = 0 To UBound(candidates)
-    If Len(candidates(i)) > 0 Then
-      If IsDirWritable(candidates(i)) Then
-        chosen = candidates(i)
-        Exit For
-      End If
-    End If
-  Next
-
-  On Error Resume Next
-  Application.Lock
-  Application("webwindows.railway.snapdir") = chosen
-  Application.UnLock
-  On Error GoTo 0
-
-  If Len(chosen) = 0 Then Exit Function
-
-  SnapshotFilePath = chosen & "\" & safeName & ".json"
-End Function
-
-Function CachedSnapshotDir()
-  CachedSnapshotDir = ""
-  On Error Resume Next
-  CachedSnapshotDir = CStr(Application("webwindows.railway.snapdir") & "")
-  On Error GoTo 0
-End Function
-
-' 能否在该目录写入（注意：ASP 引擎没有 Dir()，只能用 FSO；
-' CreateTextFile 不接受第 4 个参数，统一走 ADODB UTF-8 写入）
-Function IsDirWritable(ByVal dirPath)
-  IsDirWritable = False
-
-  On Error Resume Next
-  Dim fso
-  Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  If Err.Number <> 0 Then
-    Err.Clear
-    Exit Function
-  End If
-
-  ' 子目录不存在时尝试创建；失败不致命——候选里还有「既有目录直接写」形态
-  If Not fso.FolderExists(dirPath) Then
-    fso.CreateFolder(dirPath)
-    Err.Clear
-  End If
-
-  Dim probe
-  probe = fso.BuildPath(dirPath & "\.railprobe.tmp")
-
-  WriteUtf8File probe, "ok"
-
-  If Err.Number <> 0 Then
-    Err.Clear
-    Set fso = Nothing
-    Exit Function
-  End If
-
-  If fso.FileExists(probe) Then
-    fso.DeleteFile probe, True
-  End If
-
-  IsDirWritable = (Err.Number = 0)
-
-  Set fso = Nothing
-  On Error GoTo 0
-End Function
-
-Function SnapshotReadFile(ByVal path)
-  SnapshotReadFile = ""
-  If Len(CStr(path)) = 0 Then Exit Function
-
-  On Error Resume Next
-  Dim fso
-  Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  If Err.Number <> 0 Then
-    Err.Clear
-    Set fso = Nothing
-    Exit Function
-  End If
-
-  If Not fso.FileExists(path) Then
-    Set fso = Nothing
-    Exit Function
-  End If
-
-  ' 过期即视为不存在
-  If DateDiff("s", fso.GetFile(path).DateLastModified, Now()) > RAIL_SNAPSHOT_TTL_SECONDS Then
-    Set fso = Nothing
-    Exit Function
-  End If
-  Set fso = Nothing
-
-  SnapshotReadFile = ReadUtf8File(path)
-
-  On Error GoTo 0
-End Function
-
-Sub SnapshotWriteFile(ByVal path, ByVal value)
-  If Len(CStr(path)) = 0 Then Exit Sub
-
-  On Error Resume Next
-  Dim fso
-  Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  If Err.Number <> 0 Then
-    Err.Clear
-    Set fso = Nothing
-    Exit Sub
-  End If
-
-  Dim folder
-  folder = fso.GetParentFolderName(path)
-  If Not fso.FolderExists(folder) Then
-    fso.CreateFolder(folder)
-  End If
-  Set fso = Nothing
-
-  ' 先写临时文件再覆盖，避免中断留下半截 JSON（线上事故的根因之一）
-  Dim tempPath
-  tempPath = path & ".tmp"
-  WriteUtf8File tempPath, CStr(value)
-
-  Dim fso2
-  Set fso2 = Server.CreateObject("Scripting.FileSystemObject")
-  If fso2.FileExists(path) Then
-    fso2.DeleteFile path, True
-  End If
-  fso2.MoveFile tempPath, path
-  Set fso2 = Nothing
-
-  On Error GoTo 0
-End Sub
-
-'
-' UTF-8 文件读写。
-'
-' 线上踩坑记录：FileSystemObject 的 CreateTextFile **不支持第 4 个参数**
-' （传 -65001 报「错误的参数个数或无效的参数属性值」450），OpenTextFile 传
-' -65001 报「无效的过程调用或参数」5。两者都会让写入/读取静默失败——
-' 曾因此误判「快照目录不可写」。ADODB.Stream 的 charset 参数才是正解。
-'
-Sub WriteUtf8File(ByVal path, ByVal content)
-  Dim stream
-  Set stream = Server.CreateObject("ADODB.Stream")
-  stream.Type = 2                  ' adTypeText
-  stream.Charset = "utf-8"
-  stream.Open
-  stream.WriteText CStr(content)
-  stream.SaveToFile CStr(path), 2  ' adSaveCreateOverWriteFile
-  stream.Close
-  Set stream = Nothing
-End Sub
-
-Function ReadUtf8File(ByVal path)
-  ReadUtf8File = ""
-  Dim stream
-  Set stream = Server.CreateObject("ADODB.Stream")
-  stream.Type = 2
-  stream.Charset = "utf-8"
-  stream.Open
-  stream.LoadFromFile CStr(path)
-  ReadUtf8File = CStr(stream.ReadText)
-  stream.Close
-  Set stream = Nothing
-End Function
 
 '
 ' 把新抓到的车次并入快照，返回合并后的行数组。

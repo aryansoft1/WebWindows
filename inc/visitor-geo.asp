@@ -80,7 +80,17 @@ Function GeoJsonFieldValue(ByVal payload, ByVal aliasCsv, ByVal maximum)
   Set matcher = New RegExp
   matcher.Global = False
   matcher.IgnoreCase = True
-  matcher.Pattern = """(" & aliasCsv & ")\s*:\s*""([^""]*)"""
+  '
+  ' 键名后面必须再补一个引号：q & ")" 只会输出一个右括号（字符串字面量里不含引号），
+  ' 少它就变成 "country_code: "JP"，真实响应却是 "country_code": "JP" —— 每个字段
+  ' 都取不到，外部接口返回 200 也永远解析不出地区（2026-09-26 线上事故）。
+  ' 用 Chr(34) 拼引号而不是连续双写 "" ，双写时数错一个就会变成编译期语法错误，
+  ' 或者更糟：语法合法但正则悄悄少一个字符。
+  '
+  Dim quoteMark
+  quoteMark = Chr(34)
+  matcher.Pattern = quoteMark & "(" & aliasCsv & ")" & quoteMark & "\s*:\s*" & quoteMark & _
+    "([^" & quoteMark & "]*)" & quoteMark
   Set matches = matcher.Execute(CStr(payload))
   If matches.Count > 0 Then
     GeoJsonFieldValue = Cut(matches(0).SubMatches(1), maximum)
@@ -160,10 +170,14 @@ Function GeoLoadApiConfig()
   If Err.Number <> 0 Then
     Err.Clear
     Set fso = Nothing
+    ' 每个提前返回都要复位错误处理：漏掉 On Error GoTo 0 会让 Resume Next
+    ' 泄漏到本次请求的余下所有代码，把后面的真实错误悄悄吞掉。
+    On Error GoTo 0
     Exit Function
   End If
   If Not fso.FileExists(configPath) Then
     Set fso = Nothing
+    On Error GoTo 0
     Exit Function
   End If
   ' OpenTextFile 不支持 UTF-8 参数（线上踩过「无效的过程调用或参数」5），用 ADODB.Stream。
@@ -183,20 +197,26 @@ Function GeoLoadApiConfig()
   Set matcher = New RegExp
   matcher.Global = False
   matcher.IgnoreCase = True
+  '
+  ' 下面三条配置解析的正则各自只有**一个**捕获组，而 SubMatches 是从 0 开始索引的
+  ' —— 写成 SubMatches(1) 会抛「无效的过程调用或参数」，配置永远读不出来，
+  ' 外部解析一次都没真正发起过（2026-09-26 线上事故）。
+  ' GeoJsonFieldValue 用 SubMatches(1) 是对的：那条正则有两个组（字段名 + 值）。
+  '
   matcher.Pattern = "GeoApiBase\s*=\s*""([^""]*)"""
   Set matches = matcher.Execute(CStr(content))
-  If matches.Count > 0 Then GeoApiBase = Trim(CStr(matches(0).SubMatches(1)))
+  If matches.Count > 0 Then GeoApiBase = Trim(CStr(matches(0).SubMatches(0)))
   Set matches = Nothing
 
   matcher.Pattern = "GeoApiKey\s*=\s*""([^""]*)"""
   Set matches = matcher.Execute(CStr(content))
-  If matches.Count > 0 Then GeoApiKey = Trim(CStr(matches(0).SubMatches(1)))
+  If matches.Count > 0 Then GeoApiKey = Trim(CStr(matches(0).SubMatches(0)))
   Set matches = Nothing
 
   matcher.Pattern = "GeoDailyCap\s*=\s*""?([0-9]{1,6})""?"
   Set matches = matcher.Execute(CStr(content))
   If matches.Count > 0 Then
-    If IsNumeric(matches(0).SubMatches(1)) Then GeoDailyCap = CLng(matches(0).SubMatches(1))
+    If IsNumeric(matches(0).SubMatches(0)) Then GeoDailyCap = CLng(matches(0).SubMatches(0))
   End If
   Set matches = Nothing
   Set matcher = Nothing
@@ -415,25 +435,45 @@ End Sub
 Sub GeoDiagnoseSelf()
   Dim address, index, template
   GeoResetDebug
+  '
+  ' 全程 On Error Resume Next：诊断是运维入口，绝不能因为它自己出错而把公开的
+  ' 采集接口打成 500（fail-open 与本模块其它部分保持一致）。出错时最后一个阶段
+  ' 标记就是断点位置，日志因此可以自己指出「卡在哪一步」，不必再靠线上试探。
+  '
+  On Error Resume Next
   address = GeoSafeAddress(Request.ServerVariables("REMOTE_ADDR"))
+  If Err.Number <> 0 Then
+    Err.Clear
+    GeoAddDebug "stage-1", 0, 0, "client-address-read-failed"
+  Else
+    GeoAddDebug "stage-1", 0, 0, "client-address-ok"
+  End If
   If address = "" Then
-    GeoAddDebug "-", 0, 0, "no-client-address"
+    GeoAddDebug "result", 0, 0, "no-client-address"
+    On Error GoTo 0
     Exit Sub
   End If
   GeoAddDebug "client", 0, 0, address
+  GeoAddDebug "stage-2", 0, 0, "safe-address-accepted"
   If Not GeoIsPublicAddress(address) Then
-    GeoAddDebug "-", 0, 0, "private-address-not-sent"
+    GeoAddDebug "result", 0, 0, "private-address-not-sent"
+    On Error GoTo 0
     Exit Sub
   End If
+  GeoAddDebug "stage-3", 0, 0, "public-address-ok"
   If Not GeoLoadApiConfig() Then
-    GeoAddDebug "-", 0, 0, "geo-not-configured"
+    GeoAddDebug "result", 0, 0, "geo-not-configured"
+    On Error GoTo 0
     Exit Sub
   End If
-  GeoAddDebug "-", 0, 0, "endpoints=" & CStr(GeoApiEndpointCount())
+  Err.Clear
+  GeoAddDebug "stage-4", 0, 0, "config-loaded endpoints=" & CStr(GeoApiEndpointCount())
   If Not GeoApiBudgetAvailable() Then
-    GeoAddDebug "-", 0, 0, "daily-budget-exhausted"
+    GeoAddDebug "result", 0, 0, "daily-budget-exhausted"
+    On Error GoTo 0
     Exit Sub
   End If
+  Err.Clear
   GeoResetResult
   For index = 0 To GeoApiEndpointCount() - 1
     template = GeoApiEndpointTemplate(index)
@@ -442,10 +482,16 @@ Sub GeoDiagnoseSelf()
     GeoResetResult
   Next
   If GeoResolvedBy = "external-api" Then
-    GeoAddDebug "resolved", 200, 0, GeoCountryCode & " " & GeoCountryName & " " & GeoRegionName & " " & GeoCityName
+    GeoAddDebug "result", 200, 0, GeoCountryCode & " " & GeoCountryName & " " & GeoRegionName & " " & GeoCityName
   Else
-    GeoAddDebug "resolved", 0, 0, "none"
+    GeoAddDebug "result", 0, 0, "none"
   End If
+  If Err.Number <> 0 Then
+    GeoAddDebug "stage-error", Err.Number, 0, CStr(Err.Description)
+    Err.Clear
+  End If
+  GeoAddDebug "stage-end", 0, 0, "done"
+  On Error GoTo 0
 End Sub
 
 Sub GeoResolve(ByVal rawAddress)
@@ -458,7 +504,15 @@ Sub GeoResolve(ByVal rawAddress)
   address = GeoSafeAddress(rawAddress)
   If address = "" Then Exit Sub
 
-  If EnvironmentFlag("WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO") Then
+  '
+  ' 这里原本调的是 EnvironmentFlag(...) —— 一个**在本仓库任何地方都没有定义**的
+  ' 全局过程（inc/conn.asp 里也没有，服务器上那份未入库的 conn.asp 里同样没有）。
+  ' 线上之所以没炸，只是因为未知全局的存在与否取决于站点环境，属于定时炸弹：
+  ' 换到干净部署上，GeoResolve 一旦真的走到这一行就会「未定义过程」直接把
+  ' action=start 打成 500。改用本模块自带的 GeoIisTrusted()（同一份环境变量
+  ' WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO，读法见该函数），模块自给自足。
+  '
+  If GeoIisTrusted() Then
     GeoCountryCode = ServerGeo("GEOIP_COUNTRY_CODE")
     GeoCountryName = ServerGeo("GEOIP_COUNTRY_NAME")
     GeoRegionName = ServerGeo("GEOIP_REGION_NAME")

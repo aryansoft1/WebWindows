@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.20",
+  "releaseVersion": "2026.09.26.21",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T06:43:21.860Z",
+  "generatedAt": "2026-09-26T07:06:01.562Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -274,7 +274,7 @@
     "SystemManager/assets/js/visitor-analytics-charts.js",
     "inc/visitor-geo.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.19",
+  "previousReleaseVersion": "2026.09.26.20",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1336,14 +1336,13 @@
       "size": 20522
     },
     "inc/visitor-geo.asp": {
-      "sha256": "fae2810c722fd595e67187252e862aeed37fd32d2e5fae7aae1dccfdaf7f9978",
-      "size": 18836
+      "sha256": "39b72bff6f266955f90160f73a4028df4f9e922aadd1e1550918d4a4cacb76a2",
+      "size": 21614
     }
   },
-  "releaseScope": "visitor-geo-provider-fallback",
+  "releaseScope": "visitor-geo-parse-fixes",
   "uploadFiles": [
     "inc/visitor-geo.asp",
-    "api/visitor-analytics.asp",
     "deploy/ftp-manifest.json"
   ]
 }

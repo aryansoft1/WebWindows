@@ -82,6 +82,25 @@ assert.match(geoInclude, /visitor-analytics\.config\.asp/);
 assert.match(geoInclude, /Function GeoIisTrusted/);
 assert.match(geoInclude, /Function GeoExternalConfigured/);
 
+// 2026-09-26 同一批查出的四个「静默失效」缺陷，全部锁死。
+// 行为层面的验证在 tests/visitor-geo-runtime-smoke.mjs（那里真的把 VBScript 跑起来），
+// 这里只负责防止把明显的错误写法再写回去。
+assert.match(geoInclude, /If GeoIisTrusted\(\) Then/,
+  "GeoResolve must read the IIS GeoIP switch through the module's own helper");
+assert.doesNotMatch(geoInclude, /SubMatches\(2\)/, "no pattern here has three capture groups");
+assert.match(geoInclude, /quoteMark & "\(" & aliasCsv & "\)" & quoteMark/,
+  "the JSON field pattern must keep the key's closing quote (a missing one parses nothing while still returning 200)");
+for (const stage of ["stage-1", "stage-2", "stage-3", "stage-4", "stage-end"]) {
+  assert.ok(geoInclude.includes(`"${stage}"`),
+    `the self-diagnosing log must record ${stage} so a production stall points at itself`);
+}
+assert.match(geoInclude, /On Error Resume Next[\s\S]{0,400}Sub GeoDiagnoseSelf|Sub GeoDiagnoseSelf[\s\S]{0,400}On Error Resume Next/,
+  "the diagnostic must fail open: it can never turn the public collector into a 500");
+const loadExits = (geoInclude.match(/Exit Function/g) || []).length;
+const loadResets = (geoInclude.match(/On Error GoTo 0/g) || []).length;
+assert.ok(loadResets >= loadExits - 1,
+  `every early exit in GeoLoadApiConfig must restore error handling (exits=${loadExits}, resets=${loadResets}); a leaked On Error Resume Next silently swallows later failures`);
+
 // 多供应商降级链：单个供应商可能因出口网络/限流不可用
 assert.match(geoInclude, /Function GeoApiEndpointCount/);
 assert.match(geoInclude, /Function GeoApiEndpointTemplate/);
@@ -106,6 +125,11 @@ assert.match(collectorApi, /""geoDebug""/);
 assert.match(geoInclude, /Sub GeoConfigureSub/);
 assert.match(geoInclude, /configPath = GeoConfigPath/);
 const geoIncludeCode = geoInclude.split(/\r?\n/).filter((line) => !line.trim().startsWith("'")).join("\n");
+// 只看可执行代码：注释里会刻意写出被禁用的写法（说明为什么禁用），不算命中。
+assert.doesNotMatch(geoIncludeCode, /EnvironmentFlag/,
+  "EnvironmentFlag is defined neither in the repository nor on the server; the module must use its own GeoIisTrusted()");
+assert.equal((geoIncludeCode.match(/SubMatches\(1\)/g) || []).length, 1,
+  "only GeoJsonFieldValue (whose pattern has two capture groups) may index SubMatches(1); the single-group config patterns must use SubMatches(0) or they throw and the config is never read");
 assert.doesNotMatch(geoIncludeCode, /Server\.MapPath\("visitor-analytics\.config\.asp"\)/,
   "the shared module must not resolve the config path itself; callers pass the resolved path");
 assert.match(collectorApi, /GeoConfigureSub Server\.MapPath\("visitor-analytics\.config\.asp"\)/);

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.16",
+  "releaseVersion": "2026.09.26.17",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T05:57:22.894Z",
+  "generatedAt": "2026-09-26T06:05:01.701Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -274,7 +274,7 @@
     "SystemManager/assets/js/visitor-analytics-charts.js",
     "inc/visitor-geo.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.15",
+  "previousReleaseVersion": "2026.09.26.16",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1336,8 +1336,8 @@
       "size": 20522
     },
     "inc/visitor-geo.asp": {
-      "sha256": "62df27f14f4ae8653ada57337ed5a3f0e1c297477e5ba7e0a04db67693c9a39a",
-      "size": 12406
+      "sha256": "dcde8272c6c228fa8cc41747d5648e4360527838f486122be3d99883b231c1a4",
+      "size": 12861
     }
   },
   "releaseScope": "visitor-geo-enable",

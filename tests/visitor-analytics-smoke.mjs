@@ -123,7 +123,7 @@ assert.match(geoIncludeCode, /startedAt = Timer[\s\S]{0,200}>= GeoTotalBudgetMs 
 assert.match(geoInclude, /Sub GeoRepairPending/);
 assert.match(geoIncludeCode, /- lastRun < 20 Then/,
   "the automatic repair must be rate-limited, otherwise every page view would hammer the provider");
-assert.match(geoIncludeCode, /If attempted >= 3 Then|Or attempted >= 3/,
+assert.match(geoIncludeCode, /Or attempted >= GeoRepairBatchMax/,
   "the automatic repair must stay bounded per run");
 assert.match(geoIncludeCode, /Sub GeoRepairPending[\s\S]{0,900}GeoApiBudgetAvailable\(\)/,
   "the automatic repair must consume the same daily budget as every other lookup");
@@ -161,6 +161,14 @@ assert.ok(flushAt > 0 && repairAt > flushAt,
   "the repair must run after Response.Flush so a visitor never waits for external lookups");
 assert.match(collectorApi, /GeoRepairPending/);
 // GET 自诊断：只用自己的地址，不能变成 IP 查询代理
+assert.match(collectorApi, /And Not isGetDiag Then/,
+  "GET must be allowed only for the self-diagnosis, and only when debugGeo=1");
+assert.match(collectorApi, /If isGetDiag Then[\s\S]{0,1200}GeoDiagnoseSelf/,
+  "the GET self-diagnosis must run the diagnosis");
+assert.match(collectorApi, /If isGetDiag Then[\s\S]{0,2400}Response\.End/,
+  "the GET self-diagnosis must answer and stop before any session is written");
+assert.match(geoInclude, /GeoRepairBatchMax = 6/);
+assert.match(geoIncludeCode, /Or attempted >= GeoRepairBatchMax/);
 assert.match(collectorApi, /Request\.QueryString\("debugGeo"\)/);
 assert.doesNotMatch(collectorApi, /Request\.(QueryString|Form)\("(ip|target|addr|address)"\)/,
   "the collector must never accept a caller-supplied address to resolve");

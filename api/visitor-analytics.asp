@@ -78,7 +78,15 @@ Function TableReady(ByVal tableName)
   Set cmd = Nothing
 End Function
 
-If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "POST" Then Fail "405 Method Not Allowed", "METHOD_NOT_ALLOWED"
+' GET 只为自诊断放行：只解析调用者自己的地址、不写任何会话、不接受目标地址参数。
+Dim isGetDiag
+isGetDiag = False
+If UCase(Request.ServerVariables("REQUEST_METHOD")) = "GET" Then
+  isGetDiag = (LCase(Cut(Request.QueryString("debugGeo"), 10)) = "1")
+End If
+If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "POST" And Not isGetDiag Then
+  Fail "405 Method Not Allowed", "METHOD_NOT_ALLOWED"
+End If
 If Request.TotalBytes > 8192 Then Fail "413 Payload Too Large", "PAYLOAD_TOO_LARGE"
 Dim fetchSite
 fetchSite = LCase(Cut(Request.ServerVariables("HTTP_SEC_FETCH_SITE"), 20))
@@ -157,6 +165,20 @@ ipAddress = Cut(Request.ServerVariables("REMOTE_ADDR"), 45)
 ' 配置路径由本页面（位于 /api/）自己解析后交给共享模块 —— 共享模块里的相对
 ' MapPath 会解析到 /inc/，那是 2026-09-26 地图一直空着的真正原因。
 GeoConfigureSub Server.MapPath("visitor-analytics.config.asp")
+If isGetDiag Then
+  ' 只回显「调用者自己 IP」的解析过程与最近一次自愈的结果（不含任何地址）
+  GeoResetResult
+  GeoDiagnoseSelf
+  Response.Write "{" & Chr(34) & "ok" & Chr(34) & ":" & Chr(34) & "true" & Chr(34) & "," & Chr(34) & "geoDebug" & Chr(34) & ":{" & _
+    Chr(34) & "source" & Chr(34) & ":" & Chr(34) & GeoResolvedBy & Chr(34) & "," & _
+    Chr(34) & "country" & Chr(34) & ":" & Chr(34) & GeoJsonText(GeoCountryCode) & Chr(34) & "," & _
+    Chr(34) & "countryName" & Chr(34) & ":" & Chr(34) & GeoJsonText(GeoCountryName) & Chr(34) & "," & _
+    Chr(34) & "region" & Chr(34) & ":" & Chr(34) & GeoJsonText(GeoRegionName) & Chr(34) & "," & _
+    Chr(34) & "city" & Chr(34) & ":" & Chr(34) & GeoJsonText(GeoCityName) & Chr(34) & "," & _
+    Chr(34) & "repair" & Chr(34) & ":" & Chr(34) & GeoJsonText(GeoRepairLastReport()) & Chr(34) & "," & _
+    Chr(34) & "log" & Chr(34) & ":" & GeoDebugLog & "}}"
+  Response.End
+End If
 GeoResolve ipAddress
 countryCode = GeoCountryCode
 countryName = GeoCountryName

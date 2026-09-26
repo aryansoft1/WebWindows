@@ -57,6 +57,11 @@ Dim GeoDebugLog
 Dim GeoTotalBudgetMs
 GeoTotalBudgetMs = 4000
 
+' 每轮自愈最多修几个地址。3 个太慢（17 个待修要两小时以上），
+' 6 个配合 20 分钟一轮 ≈ 1 小时清完，同时远低于每日额度上限。
+Dim GeoRepairBatchMax
+GeoRepairBatchMax = 6
+
 ' JSON 字符串转义（共享模块自带，避免与调用方的同名函数冲突）
 Function GeoJsonText(ByVal value)
   Dim text
@@ -693,7 +698,7 @@ Sub GeoRepairPending()
   updatedCount = 0
   unresolvedCount = 0
   reasonText = ""
-  Do Until queryRs.EOF Or attempted >= 3
+  Do Until queryRs.EOF Or attempted >= GeoRepairBatchMax
     targetAddress = CStr(queryRs("ip_address"))
     Err.Clear
     If Not GeoIsPublicAddress(targetAddress) Then

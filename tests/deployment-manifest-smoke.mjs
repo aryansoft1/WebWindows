@@ -120,6 +120,14 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "the visitor geolocation release must upload only the collector, the admin aggregate API, the analytics page chain and the manifest last");
+} else if (manifest.releaseScope === "visitor-window-dwell") {
+  assert.deepEqual(uploadFiles, [
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "SystemManager/assets/css/visitor-analytics.css",
+    "deploy/ftp-manifest.json",
+  ], "the per-window dwell release must upload only the analytics page chain and the manifest last");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

@@ -129,8 +129,62 @@
     }, true);
   }
 
-  function renderTrend(daily) {
-    const instance = chart("trendChart");
+  /*
+   * 每个窗口（功能）停留时间：横向条形图，按累计活跃停留倒序取前 12 个。
+   * 用累计秒数而不是格式化字符串做数值轴，tooltip 里再换算成人类可读时间。
+   */
+  function renderFeatureDwell(features) {
+    const instance = chart("featureChart");
+    if (!instance) return 0;
+    const items = (features || [])
+      .map((item) => ({
+        key: item.key,
+        name: item.name || item.key || "未命名窗口",
+        seconds: Math.max(0, Number(item.activeSeconds) || 0),
+        opens: Math.max(0, Number(item.opens) || 0),
+        sessions: Math.max(0, Number(item.sessions) || 0)
+      }))
+      .sort((left, right) => right.seconds - left.seconds)
+      .slice(0, 12)
+      .reverse();
+    instance.setOption({
+      tooltip: {
+        trigger: "item",
+        formatter: (params) => {
+          const row = items[params.dataIndex] || {};
+          const perOpen = row.opens ? Math.round(row.seconds / row.opens) : 0;
+          return `${row.name}<br/>累计停留：${secondsLabel(row.seconds)}`
+            + `<br/>打开次数：${row.opens}<br/>会话数：${row.sessions}`
+            + `<br/>平均每次：${secondsLabel(perOpen)}`;
+        }
+      },
+      grid: { left: 8, right: 72, top: 8, bottom: 8, containLabel: true },
+      xAxis: { type: "value", show: false, max: (value) => value.max * 1.18 },
+      yAxis: {
+        type: "category",
+        data: items.map((item) => item.name),
+        axisLabel: { fontSize: 12, color: "#374151", width: 120, overflow: "truncate" },
+        axisTick: { show: false },
+        axisLine: { show: false }
+      },
+      series: [{
+        type: "bar",
+        barMaxWidth: 20,
+        itemStyle: { color: "#0ea5e9", borderRadius: [0, 6, 6, 0] },
+        label: {
+          show: true,
+          position: "right",
+          fontSize: 11,
+          color: "#4b5563",
+          formatter: (params) => secondsLabel(params.value)
+        },
+        data: items.map((item) => item.seconds)
+      }]
+    }, true);
+    return items.length;
+  }
+
+  function renderTrend(daily) {    const instance = chart("trendChart");
     if (!instance) return;
     const items = daily || [];
     instance.setOption({
@@ -420,6 +474,16 @@
     renderDevices(state.payload.devices);
     renderDwell(state.payload.dwell);
     renderTrend(state.payload.daily);
+    const featureCount = renderFeatureDwell(state.payload.features);
+    const featureSummary = document.getElementById("featureSummary");
+    if (featureSummary) {
+      const total = (state.payload.features || []).reduce(
+        (sum, item) => sum + (Number(item.activeSeconds) || 0), 0
+      );
+      featureSummary.textContent = (state.payload.features || []).length
+        ? `共 ${(state.payload.features || []).length} 个功能窗口有记录，图表按累计停留展示前 ${featureCount} 个，合计 ${secondsLabel(total)}。`
+        : "当前范围内还没有功能窗口的停留记录。";
+    }
     state.level = "world";
     state.frames = [{ level: "world", title: "世界" }];
     paint();

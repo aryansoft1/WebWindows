@@ -100,6 +100,26 @@ assert.match(adminPage, /id="geoBreadcrumb"/);
 assert.match(adminPage, /id="deviceChart"/);
 assert.match(adminPage, /id="dwellChart"/);
 assert.match(adminPage, /id="trendChart"/);
+
+// 每个窗口停留时间：必须是 KPI 之后的第一块，而不是被地图和图表挤到页面末尾
+// （2026-09-26 用户反馈「每个窗口的停留时间看不到了」的根因就是区块顺序）。
+assert.match(adminPage, /id="featureChart"/);
+assert.match(adminPage, /id="featureSummary"/);
+assert.match(adminPage, /每个窗口停留时间/);
+assert.match(adminPage, /<th class="p-3">平均每次<\/th>/);
+assert.match(adminPage, /<th class="p-3">停留占比<\/th>/);
+assert.ok(adminPage.indexOf('id="featureChart"') < adminPage.indexOf('id="geoMap"'),
+  "the per-window dwell section must stay above the map section");
+assert.equal(adminPage.match(/id="featureRows"/g).length, 1,
+  "the per-window dwell table must exist exactly once");
+assert.match(adminCharts, /function renderFeatureDwell/);
+assert.match(adminCharts, /\.slice\(0, 12\)/);
+assert.match(adminCharts, /平均每次/);
+assert.match(adminScript, /平均每次|perOpen/);
+assert.match(adminScript, /停留占比|share/);
+assert.match(adminCss, /\.h-feature \{/);
+assert.match(adminCss, /\.h-2 \{/);
+assert.match(adminCss, /\.bg-sky-500 \{/);
 assert.match(adminPage, /echarts@5\.5\.1\/dist\/echarts\.min\.js/);
 assert.match(adminPage, /visitor-analytics-charts\.js/);
 assert.match(adminPage, /访客地区分布/);

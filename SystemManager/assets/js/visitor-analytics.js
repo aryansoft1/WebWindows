@@ -72,18 +72,38 @@
   function renderFeatures(features) {
     const body = document.getElementById("featureRows");
     body.replaceChildren();
+    const totalSeconds = (features || []).reduce(
+      (sum, item) => sum + (Number(item.activeSeconds) || 0), 0
+    );
     for (const item of features || []) {
+      const seconds = Math.max(0, Number(item.activeSeconds) || 0);
+      const opens = Math.max(0, Number(item.opens) || 0);
+      const perOpen = opens ? Math.round(seconds / opens) : 0;
+      const share = totalSeconds ? Math.round((seconds / totalSeconds) * 100) : 0;
       const row = document.createElement("tr");
       cell(row, item.name || item.key);
       cell(row, item.opens);
       cell(row, item.sessions);
-      cell(row, duration(item.activeSeconds));
+      cell(row, duration(seconds));
+      cell(row, opens ? duration(perOpen) : "—");
+      const shareCell = document.createElement("td");
+      shareCell.className = "p-3 border-t";
+      const label = document.createElement("span");
+      label.textContent = `${share}%`;
+      const track = document.createElement("div");
+      track.className = "h-2 mt-1 bg-gray-100 rounded overflow-hidden";
+      const bar = document.createElement("div");
+      bar.className = "h-full bg-sky-500";
+      bar.style.width = `${share}%`;
+      track.appendChild(bar);
+      shareCell.append(label, track);
+      row.appendChild(shareCell);
       body.appendChild(row);
     }
     if (!body.children.length) {
       const row = document.createElement("tr");
       const empty = document.createElement("td");
-      empty.colSpan = 4;
+      empty.colSpan = 6;
       empty.className = "p-6 text-center text-gray-500";
       empty.textContent = "当前范围内还没有功能使用记录。";
       row.appendChild(empty);

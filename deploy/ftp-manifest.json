@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.14",
+  "releaseVersion": "2026.09.26.15",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T05:14:51.928Z",
+  "generatedAt": "2026-09-26T05:42:49.135Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -273,7 +273,7 @@
     "SystemManager/login.html",
     "SystemManager/assets/js/visitor-analytics-charts.js"
   ],
-  "previousReleaseVersion": "2026.09.26.13",
+  "previousReleaseVersion": "2026.09.26.14",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1152,12 +1152,12 @@
       "size": 5549
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "cf568a2d57b62544e2913b050dd5224b599f1bc3998cb1048e9cc245409595ab",
-      "size": 5985
+      "sha256": "bbdad0717ab368c087f11d0a037a356bcbf031cf401f1d3d6b8d7f60fef46031",
+      "size": 6558
     },
     "SystemManager/assets/js/visitor-analytics.js": {
-      "sha256": "4e6a861d9a421b29a869445c92a99308a296fecbffb17e08f0522e9aa9b37c87",
-      "size": 7168
+      "sha256": "9525a24b79bfb004d087276b238d25b7cc0c8c285b1f7924fca961c0568e5fe9",
+      "size": 8145
     },
     "assets/css/tailwind.min.css": {
       "sha256": "0729906a529caf8b5dbe648cbc3952833afe118a25a841c8ae27e1cd1a8ac14c",
@@ -1180,8 +1180,8 @@
       "size": 2626
     },
     "SystemManager/assets/css/visitor-analytics.css": {
-      "sha256": "f298c41212b197f13745ca57c4e6a54d504403c759f97090845d78decf7bb1ea",
-      "size": 3804
+      "sha256": "1af53f63ced8c7b4b4e038a18f61b8881670a1fbe14bc1d377ec69d823892a75",
+      "size": 3895
     },
     "assets/js/flight-position.js": {
       "sha256": "a4dfac38195cbcd8ca006507f8b11468da7ad8e446e9bd8632dc061a74760b75"
@@ -1331,14 +1331,12 @@
       "size": 1638
     },
     "SystemManager/assets/js/visitor-analytics-charts.js": {
-      "sha256": "3805d26f6cfc76999ab799173fbc3ce6022afb20c7c24fd8d6e43ff9d1d8b88b",
-      "size": 17842
+      "sha256": "69812fbd0cf7244c8f0b5f9e1788b2b3f659e02746639219bbe6ed17475e8177",
+      "size": 20522
     }
   },
-  "releaseScope": "visitor-geo-map",
+  "releaseScope": "visitor-window-dwell",
   "uploadFiles": [
-    "admin_api/visitorAnalytics.asp",
-    "api/visitor-analytics.asp",
     "SystemManager/visitor-analytics.html",
     "SystemManager/assets/js/visitor-analytics.js",
     "SystemManager/assets/js/visitor-analytics-charts.js",

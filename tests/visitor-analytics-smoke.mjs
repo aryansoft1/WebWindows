@@ -278,17 +278,34 @@ assert.ok(adminPage.indexOf('id="featureChart"') < adminPage.indexOf('id="geoMap
 assert.equal(adminPage.match(/id="featureRows"/g).length, 1,
   "the per-window dwell table must exist exactly once");
 // 国家名只做**显示层**覆盖：ISO 代码、统计口径、下钻判定一律不动。
-assert.match(adminCharts, /const COUNTRY_DISPLAY_NAMES = \{ CN: "ROC", TW: "ROC-TW" \}/,
-  "CN must display as ROC and TW as ROC-TW");
+const displayMap = /const COUNTRY_DISPLAY_NAMES = \{([^}]*)\}/.exec(adminCharts)?.[1] || "";
+const displayEntries = [...displayMap.matchAll(/\b([A-Z]{2}):\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]);
+assert.deepEqual(displayEntries, [["CN", "ROC"], ["TW", "ROC-TW"], ["MN", "ROC-MN"]],
+  "the display overrides must be exactly CN→ROC, TW→ROC-TW, MN→ROC-MN");
+assert.equal(displayMap.replace(/\b[A-Z]{2}:\s*"[^"]+"/g, "").replace(/[\s,]/g, ""), "",
+  "the override table must not contain anything but the listed codes");
 assert.match(adminCharts, /override \|\| item\.name \|\| code/,
   "the override must win over the provider name in the tooltip only");
 assert.doesNotMatch(adminCharts, /COUNTRY_DISPLAY_NAMES\[[^\]]*\]\s*=\s*"/,
   "the display override must never be written back into the data (it is presentational only)");
 assert.match(adminCharts, /params\.name !== "CN"/,
   "the China drill-down must keep matching on the ISO code, not on the display name");
-// 第三方边界数据不能带 Referer：DataV 边缘节点防盗链，带了直接 403（实测）。
-assert.match(adminCharts, /referrerPolicy: "no-referrer"/,
-  "boundary GeoJSON must be fetched without a Referer or DataV answers 403");
+// 边界数据必须走**同源代理**：第三方边缘节点按 Referer 防盗链（响应头
+// X-Tengine-Error: denied by Referer ACL），只要请求带 Referer 就 403。
+// 让功能依赖「客户端一定正确设置请求头 / 没有代理扩展重发」是不可靠的。
+assert.match(adminCharts, /const DATAV_BASE = "\/api\/region-geo\.asp\?adcode="/,
+  "boundary GeoJSON must be fetched through the same-origin proxy");
+assert.doesNotMatch(adminCharts, /https:\/\/geo\.datav\.aliyun\.com/,
+   "the charts script must not call the third-party boundary host directly");
+assert.doesNotMatch(adminCharts, /force-cache/,
+   "force-cache can pin a failed response in the browser HTTP cache; the proxy already sends max-age");
+assert.match(adminCharts, /credentials: "same-origin"/);
+// 悬停标签用显示名，且 emphasis 里 label 只能出现一次（重复键会静默覆盖 formatter）
+assert.match(adminCharts, /emphasis: \{[\s\S]{0,600}label: \{[\s\S]{0,300}formatter: \(item\) => \(mapMeta\.get\(item\.name\) \|\| \{\}\)\.display \|\| item\.name/,
+   "the hover label must show the display name (ROC / ROC-TW), not the ISO code");
+const emphasisBlock = /emphasis: \{[\s\S]*?\n        \},/.exec(adminCharts)?.[0] || "";
+assert.equal((emphasisBlock.match(/label: \{/g) || []).length, 1,
+  "emphasis.label must be declared exactly once — a duplicate key silently drops the formatter");
 assert.match(adminCharts, /function renderFeatureDwell/);
 assert.match(adminCharts, /\.slice\(0, 12\)/);
 assert.match(adminCharts, /平均每次/);
@@ -301,7 +318,6 @@ assert.match(adminPage, /echarts@5\.5\.1\/dist\/echarts\.min\.js/);
 assert.match(adminPage, /visitor-analytics-charts\.js/);
 assert.match(adminPage, /访客地区分布/);
 assert.match(adminCharts, /natural-earth-vector/);
-assert.match(adminCharts, /geo\.datav\.aliyun\.com\/areas_v3\/bound\//);
 assert.match(adminCharts, /ISO_A2_EH/);
 assert.match(adminCharts, /echarts\.registerMap/);
 assert.match(adminCharts, /normalizePlace/);

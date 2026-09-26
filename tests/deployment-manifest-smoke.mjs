@@ -145,6 +145,14 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/visitorAnalytics.asp",
     "deploy/ftp-manifest.json",
   ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
+} else if (manifest.releaseScope === "visitor-map-geo-proxy") {
+  assert.deepEqual(uploadFiles, [
+    "api/region-geo.asp",
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "deploy/ftp-manifest.json",
+  ], "the proxy release must upload the new endpoint, the charts script that calls it, and the manifest last");
+  assert.ok(manifest.requiredFiles.includes("api/region-geo.asp"),
+    "the new same-origin proxy endpoint must be tracked in the manifest");
 } else if (manifest.releaseScope === "visitor-map-labels-and-referrer") {
   assert.deepEqual(uploadFiles, [
     "SystemManager/assets/js/visitor-analytics-charts.js",

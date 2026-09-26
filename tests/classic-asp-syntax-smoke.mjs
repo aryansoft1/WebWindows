@@ -19,7 +19,8 @@ const files = [
   "api/function-package.asp",
   "api/runtime-release.asp",
   "api/railway-proxy.asp",
-  "api/visitor-analytics.asp"
+  "api/visitor-analytics.asp",
+  "api/region-geo.asp"
 ];
 
 for (const relative of files) {

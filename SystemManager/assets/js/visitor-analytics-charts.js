@@ -16,7 +16,12 @@
 
   const WORLD_GEOJSON =
     "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@v5.1.0/geojson/ne_110m_admin_0_countries.geojson";
-  const DATAV_BASE = "https://geo.datav.aliyun.com/areas_v3/bound/";
+  // 边界数据走**同源代理** /api/region-geo.asp?adcode=…。
+  // 原先直连 geo.datav.aliyun.com，而该边缘节点带防盗链：只要请求带 Referer 就
+  // 403（响应头 X-Tengine-Error: denied by Referer ACL），浏览器跨域 fetch 默认带，
+  // 于是点中国下钻必然失败。服务器发起（MSXML 不带 Referer）就没有这个问题，
+  // 第三方再改策略也影响不到页面。
+  const DATAV_BASE = "/api/region-geo.asp?adcode=";
   const CHINA_ADCODE = 100000;
 
   const PLACE_SUFFIXES = [
@@ -27,7 +32,7 @@
   // 仅显示层的名称覆盖：**不改统计口径、不改 ISO 代码、不改任何查询**。
   // 键是 ISO A2 代码（与 Natural Earth 的 ISO_A2_EH 对齐，地图着色与下钻判定都靠它），
   // 值只出现在地图悬停提示里。
-  const COUNTRY_DISPLAY_NAMES = { CN: "ROC", TW: "ROC-TW" };
+  const COUNTRY_DISPLAY_NAMES = { CN: "ROC", TW: "ROC-TW", MN: "ROC-MN" };
   const DEVICE_LABELS = { desktop: "电脑", mobile: "手机", tablet: "平板" };
   const geoJsonCache = new Map();
   const chartCache = new Map();
@@ -58,9 +63,7 @@
 
   function fetchJson(url) {
     if (geoJsonCache.has(url)) return Promise.resolve(geoJsonCache.get(url));
-    // referrerPolicy: 第三方边界数据不需要知道我们是谁；DataV 边缘节点会因
-    // 跨域 Referer 直接返回 403（实测：不带 200 / 带 403），点地图下钻因此加载不出来。
-    return fetch(url, { credentials: "omit", cache: "force-cache", referrerPolicy: "no-referrer" })
+    return fetch(url, { credentials: "same-origin", cache: "default" })
       .then((response) => {
         if (!response.ok) throw new Error(`边界数据加载失败（HTTP ${response.status}）`);
         return response.json();
@@ -328,7 +331,14 @@
         scaleLimit: { min: 0.8, max: 12 },
         label: { show: false },
         emphasis: {
-          label: { show: true, fontSize: 11 },
+          // 悬停标签用**显示名**（CN → ROC、TW → ROC-TW）：ECharts 默认把区域名
+          // （= ISO 代码）印在地图上。区域名本身不变，下钻判定 params.name !== "CN"
+          // 因此不受影响。label 必须只出现一次 —— 重复键会被后者覆盖，formatter 静默失效。
+          label: {
+            show: true,
+            fontSize: 11,
+            formatter: (item) => (mapMeta.get(item.name) || {}).display || item.name
+          },
           itemStyle: { areaColor: "#f59e0b" }
         },
         itemStyle: { borderColor: "#ffffff", borderWidth: 0.6 },

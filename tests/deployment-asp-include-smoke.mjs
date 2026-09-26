@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -85,4 +85,35 @@ assert.equal(createHash("sha256").update(Buffer.from(adminSecurity, "utf8")).dig
   manifest.integrity["inc/admin-security.asp"].sha256,
   "the managed admin security include must be the tracked repository copy, not a hand-edited variant");
 
-console.log(`deployment ASP include smoke test passed: ${audited} ASP endpoints audited, admin login stack managed`);
+/*
+ * inc/admin-security.asp 自带中文字符串却没有 <%@ Language %> 声明（与
+ * inc/conn.asp、inc/trust-schema.asp 一致，都是纯 include 片段）。
+ * 它依赖宿主页面声明 CodePage=65001：IIS 按系统 ANSI（本机 936）读取无 BOM 的
+ * UTF-8 源文件会把中文多字节拆坏，编译期报「未结束的字符串常量」（同 T-032
+ * longdistance-proxy 事故）。因此这里钉住「每个 includer 都必须显式声明码页」。
+ */
+const includers = [];
+const skipDirectories = new Set(["node_modules", "dist", "deploy"]);
+async function collectAspFiles(directory) {
+  const found = [];
+  for (const entry of await readdir(directory, { withFileTypes: true })) {
+    if (entry.name.startsWith(".") || skipDirectories.has(entry.name)) continue;
+    const full = path.join(directory, entry.name);
+    if (entry.isDirectory()) found.push(...await collectAspFiles(full));
+    else if (entry.name.toLowerCase().endsWith(".asp")) found.push(full);
+  }
+  return found;
+}
+for (const file of await collectAspFiles(root)) {
+  const relative = path.relative(root, file).split(path.sep).join("/");
+  const source = await readFile(file, "utf8");
+  if (!/<!--#include\s+file="\.\.\/inc\/admin-security\.asp"\s*-->/i.test(source)) continue;
+  includers.push(relative);
+  const [directive] = source.split(/\r?\n/);
+  assert.match(directive, /CodePage\s*=\s*"?65001"?/i,
+    `${relative} includes inc/admin-security.asp and must declare CodePage=65001 on its first line`);
+}
+assert.ok(includers.length >= 7, `expected the full admin endpoint set, found ${includers.length}: ${includers.join(", ")}`);
+
+console.log(`deployment ASP include smoke test passed: ${audited} ASP endpoints audited, ` +
+  `${includers.length} admin endpoints keep the CodePage=65001 codepage precondition`);

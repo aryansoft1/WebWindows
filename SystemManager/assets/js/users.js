@@ -4,7 +4,9 @@ let dcLoadPromise;
 // 页面加载时加载用户列表和数据中心列表
 document.addEventListener("DOMContentLoaded", () => {
   fetchUsers();
-  fetchDataCenters();
+  fetchDataCenters().catch(() => {
+    document.getElementById("userStatus").textContent = "数据中心加载失败，请刷新重试。";
+  });
 });
 
 // 加载所有用户数据
@@ -32,6 +34,12 @@ function renderUsers(data) {
     }
     const actions = document.createElement("td");
     actions.className = "p-2 border";
+    if (String(user.username).toLowerCase() === "admin") {
+      actions.textContent = "请在系统设置中管理";
+      row.appendChild(actions);
+      tbody.appendChild(row);
+      return;
+    }
     const edit = document.createElement("button");
     edit.type = "button";
     edit.className = "text-blue-600 hover:underline mr-2";
@@ -68,6 +76,7 @@ function fetchDataCenters() {
 
 // 编辑用户（填充表单）
 async function editUser(id) {
+  try {
   const form = document.getElementById("user-add-form");
   const modal = document.getElementById("userFormModal");
   modal.dataset.mode = "edit";
@@ -100,6 +109,9 @@ async function editUser(id) {
   }
 
   modal.classList.remove("hidden");
+  } catch (error) {
+    document.getElementById("userStatus").textContent = `用户详情加载失败：${error.message}`;
+  }
 }
 
 
@@ -120,6 +132,8 @@ async function deleteUser(id) {
       } else {
         alert("删除失败：" + resp.error);
       }
+    }).catch(error => {
+      document.getElementById("userStatus").textContent = `删除失败：${error.message}`;
     });
 }
 
@@ -148,11 +162,19 @@ async function submitUserForm(e) {
     } else {
       alert("保存失败：" + resp.error);
     }
+  }).catch(error => {
+    document.getElementById("userStatus").textContent = `保存失败：${error.message}`;
   });
 }
 
 // 打开用户表单弹窗（用于添加新用户）
-function openUserForm() {
+async function openUserForm() {
+  try {
+    await fetchDataCenters();
+  } catch (error) {
+    document.getElementById("userStatus").textContent = `数据中心加载失败：${error.message}`;
+    return;
+  }
   const modal = document.getElementById("userFormModal");
   modal.dataset.mode = "add";
   document.getElementById("userFormTitle").textContent = "添加用户";

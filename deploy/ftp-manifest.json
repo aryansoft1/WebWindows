@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.32",
+  "releaseVersion": "2026.09.26.33",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T11:55:29.426Z",
+  "generatedAt": "2026-09-26T13:49:12.763Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -273,21 +273,50 @@
     "SystemManager/login.html",
     "SystemManager/assets/js/visitor-analytics-charts.js",
     "inc/visitor-geo.asp",
-    "api/region-geo.asp"
+    "api/region-geo.asp",
+    "admin_api/checkDatacenter.asp",
+    "admin_api/dashboardStats.asp",
+    "admin_api/deleteUser.asp",
+    "admin_api/developerContent.asp",
+    "admin_api/feedback.asp",
+    "admin_api/getUserById.asp",
+    "admin_api/getUsers.asp",
+    "admin_api/news.asp",
+    "admin_api/saveUser.asp",
+    "admin_api/settings.asp",
+    "api/feedback.asp",
+    "assets/css/developer-center.css",
+    "assets/js/developer-content.js",
+    "developer_content.asp",
+    "developer-samples/hello-webwindows.zip",
+    "developer.html",
+    "getNews.asp",
+    "getNewsById.asp",
+    "getPrevNextNews.asp",
+    "SystemManager/assets/css/admin-utilities.css",
+    "SystemManager/assets/js/developer-content-admin.js",
+    "SystemManager/assets/js/feedback.js",
+    "SystemManager/assets/js/files.js",
+    "SystemManager/assets/js/page-guard.js",
+    "SystemManager/assets/js/settings.js",
+    "SystemManager/layout.html",
+    "assets/js/developer-center.js",
+    "developer-samples/hello-webwindows/index.html",
+    "developer-samples/hello-webwindows/manifest.json"
   ],
-  "previousReleaseVersion": "2026.09.26.31",
+  "previousReleaseVersion": "2026.09.26.32",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
-      "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
-      "size": 809
+      "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
+      "size": 868
     },
     "admin_api/getDatacenters.asp": {
-      "sha256": "4a1e3d68cde99fdccd90961f98faf9a53253262c21ba8540a234c32bbfe81baa",
-      "size": 2360
+      "sha256": "8f439d102e1a47f7b7b4cff1e077df75a6f0dde18b3f13e078e439466d07aa11",
+      "size": 1547
     },
     "admin_api/saveDatacenter.asp": {
-      "sha256": "35d4654e6334c860d0897b979b95c889d1119319827c5b45fd2a769af490a9b2",
-      "size": 2063
+      "sha256": "bf7cdb721ba9b733dca433d97801c8caed7b1f72ea9c16e1999d60e2438ddec7",
+      "size": 4126
     },
     "api/dt_fetch_links.asp": {
       "sha256": "787b24649aa1a04d4365bb24030a2e0766a91221752fb7c62dec6ee3bd463c28",
@@ -610,8 +639,8 @@
       "size": 22042
     },
     "assets/js/news_view.js": {
-      "sha256": "5cc92f5088ccca212eb9d7c704f5c71023ac61a9524f59f9100095699181e4da",
-      "size": 2766
+      "sha256": "3961fe287df898423f87ff37b9b371c1e989ab88e13d8234bb518819b9bdf343",
+      "size": 3045
     },
     "assets/js/news.js": {
       "sha256": "ca996cc0322cf1062eb70bf5a4ecd8ea793e9389fe91bf5acb7e9a5ba3dc9d77",
@@ -814,8 +843,8 @@
       "size": 29127
     },
     "contact.html": {
-      "sha256": "ec47be1087559454951490bef685a43806feeb8feba2232d8ad019c9d20881ea",
-      "size": 405
+      "sha256": "2b69822ba45ffbd6866f0cc59c4fd275f86bb5d0e47c9a0e88a1b9acb859de8d",
+      "size": 2908
     },
     "data/apps/system-apps.json": {
       "sha256": "1296a2c5ce23cf8d2b46cb7c8319f82ae5334659bdf991077164581b18fffbdc",
@@ -962,12 +991,12 @@
       "size": 1504
     },
     "SystemManager/assets/js/datacenter.js": {
-      "sha256": "fd3d85963e28f7f628be72e60656ef6c4d79cb5e85e70ac94bf226f390f6b6a0",
-      "size": 7341
+      "sha256": "6d16bf2b6ee8e5607669867401f8c6237d2f508543a5626c281c458266f3633b",
+      "size": 4775
     },
     "SystemManager/datacenter.html": {
-      "sha256": "210eafd54ab091fc758f25823076c6561201ca26b64ec210e189946cea910ec2",
-      "size": 4493
+      "sha256": "5bbd5af3bc9f379693362ca5676efd73d3e5dfb340b54073d2d248f4fe880f76",
+      "size": 3275
     },
     "web.html": {
       "sha256": "f1ad19cad845e7ec575fbfe027aaf2c1608f343b60bd2b4fff077fbcae95e2cd",
@@ -1154,8 +1183,8 @@
       "size": 5549
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "8a4952a24bd10fad1ad11e356d9fb4ef7b53c39a4a5fd45b4244ee63b1bb3211",
-      "size": 6910
+      "sha256": "a4756dc4794895fde4c31ed89a9a92b42be6a45825e7daf851ca5ff47176c9aa",
+      "size": 6967
     },
     "SystemManager/assets/js/visitor-analytics.js": {
       "sha256": "ab15a14998b312bf7f38d46ce24847e667dcb12fb46c1cc8a9eb4653ff4a5d04",
@@ -1178,8 +1207,8 @@
       "size": 5767
     },
     "SystemManager/index.html": {
-      "sha256": "bd013c22860ee171be75e89fb0951e13ca2f737e0093f82ba71479b198e43788",
-      "size": 2626
+      "sha256": "4f773008eee52b4f1c3e04dfef1faf2cc15d2d94aaf9ff873f5395b0dc4f0e7d",
+      "size": 2657
     },
     "SystemManager/assets/css/visitor-analytics.css": {
       "sha256": "54832075333533f1120252edeb4457967cf091fb878832f8e928aae5b1ffa182",
@@ -1189,8 +1218,8 @@
       "sha256": "a4dfac38195cbcd8ca006507f8b11468da7ad8e446e9bd8632dc061a74760b75"
     },
     "SystemManager/assets/js/admin-security.js": {
-      "sha256": "1e5aebf0095af136205fdf446f5c77567fc94c5a13d48269889e6b6b3c12c140",
-      "size": 1422
+      "sha256": "d8ce5d540f4921c2fab970ecc7a3f8d9f95cf3e88ca856a07f21f1653d276300",
+      "size": 2439
     },
     "assets/js/flight-track.js": {
       "sha256": "3a3f493ca1be99be1282c880e80f7bdb64c40e10e8d8d5a559734b106e61ecb4",
@@ -1209,56 +1238,56 @@
       "size": 124043
     },
     "admin_api/adminAuth.asp": {
-      "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d",
-      "size": 6434
+      "sha256": "4feb4b18cca1555954e3a26c4dab787e2f9d3f6b9da14d2f1a3ede62fa4e2cf8",
+      "size": 6906
     },
     "SystemManager/assets/js/admin-shell.js": {
       "sha256": "6330c35a3290aaa826f60d0c15ad6437f7a7b19ab8c4081ddf524d9ab1e1c3b3",
       "size": 837
     },
     "SystemManager/dashboard.html": {
-      "sha256": "2e5e7d1bbb131a9f89bbce53088d73f0da2f6f85c6cd2996b4629de4fbee426d",
-      "size": 3421
+      "sha256": "cfeb62116764e1b470a23db36bcc7ba8021bbbe02bde98d2f26fab4d93cd14b2",
+      "size": 2124
     },
     "SystemManager/developer-platform.html": {
-      "sha256": "8a8ca422b69136e33e7ea3eb05afd2884967f09a6e3e111e910f6284cb3516d6",
-      "size": 2526
+      "sha256": "8010946fe4bf81fb22eba393e7c2cbedf242c61a3f100cff06d12d8b633a4ade",
+      "size": 4162
     },
     "SystemManager/feedback.html": {
-      "sha256": "3d96d393b93aef06d9068786740d213637101d1ed1634e8baee6ad6327217c43",
-      "size": 5689
+      "sha256": "ff5026269a9461e4d2f3acc80de06d330c98f056838cb4f0b9bde17b1280c012",
+      "size": 4266
     },
     "SystemManager/files.html": {
-      "sha256": "0817b61c97fdec6d4c846b5b0f2a65302f0a739a013335da5d049a64516b89d7",
-      "size": 953
+      "sha256": "f5ec75cbe5e58013faf4863637463409f93dc37d6480f437d563acd881c550a3",
+      "size": 1503
     },
     "SystemManager/functions.html": {
-      "sha256": "5aa990ebfb8ab59f2b192a91b426709cf8d26c38bb6e230393912a4a8cfbfc2d",
-      "size": 6234
+      "sha256": "b4b047619848bf26a7aba5f0de9684afa944023ff513a066ed30943876db5697",
+      "size": 6294
     },
     "SystemManager/news.html": {
-      "sha256": "6194833f0dacb488144432a303b8f709bb6a8b767605654028977114dd15bf36",
-      "size": 6405
+      "sha256": "d9a5c53b902d6a6ebfd61dd2a1368c3e0e2544ff0c234ca00fbce2bcfc39e856",
+      "size": 3852
     },
     "SystemManager/settings.html": {
-      "sha256": "3d305b941f591b32e8b72d08653443d59f6f0f8efb33de34da56cdf72f0cdb09",
-      "size": 2137
+      "sha256": "a66a5e97b2c152871d41e277c28cc4a1040a39e636848fa699278e0b054a9458",
+      "size": 2705
     },
     "SystemManager/users.html": {
-      "sha256": "eae6577d735c69e46d9622f612b55206a24c3a9df65fac1948b1cfd04e1b7340",
-      "size": 3409
+      "sha256": "c2a2236056223d8fce753651b74636ae06aa388ca20c28007d5278627a7180f5",
+      "size": 3477
     },
     "SystemManager/assets/css/developer-platform-admin.css": {
-      "sha256": "a1267d674dce9cc676620ac7bd35629dac3eef4e40db403013b25ff02cae3a33",
-      "size": 2717
+      "sha256": "5096356dd005a9a0a046cb732173b3a9dc448ee0586b2ebfdd7ab373e34753b6",
+      "size": 2978
     },
     "SystemManager/assets/css/function-catalog-admin.css": {
       "sha256": "107c46599038aad93f28961b284fc51040465ac08b362bc47b3c5696b0f8c98f",
       "size": 5893
     },
     "SystemManager/assets/js/dashboard.js": {
-      "sha256": "1fcf55b05b4d7f55c8932bcac2c86c509c3fb974fae5f8228b14255d4f20a409",
-      "size": 1391
+      "sha256": "c137331eba6616f8c1a82c6016314a5cc88979d8a1ca28774fd29f44eee31bf4",
+      "size": 1576
     },
     "SystemManager/assets/js/developer-platform-admin.js": {
       "sha256": "a64c3f1317591eb54ba25a6f53b006888aa4b725a8e9e682677d65ab2eeebad3",
@@ -1269,16 +1298,16 @@
       "size": 19031
     },
     "SystemManager/assets/js/news.js": {
-      "sha256": "e80bea1e20d0e7c2821f2ce27a3231a4661d273462ccb5b5aba9d6c2d6b29858",
-      "size": 2429
+      "sha256": "43ff3ab379f193606feadaac027a4bc4d874aa50bfbe8176e4a41b3eb4b5eaa5",
+      "size": 5290
     },
     "SystemManager/assets/js/news_categories.js": {
       "sha256": "d2e83103e805f0f6d47dc1c0e4941866b3eb865f8d00e5ad29f68c2857348fc9",
       "size": 839
     },
     "SystemManager/assets/js/users.js": {
-      "sha256": "d97eb67a94b112cd538733657b7e58bff1758d2dc49ece3c6f6287341d653b61",
-      "size": 5481
+      "sha256": "fec1cbdd1b98f5633a1a61f58e2660c57e2cde8955c4504216f086b618c8fe8c",
+      "size": 6873
     },
     "cloud/browser/manage.html": {
       "sha256": "a27e57ed320cd426474d520f5c14c73530656f40dacd924c26665e3fc91632cf",
@@ -1317,20 +1346,20 @@
       "size": 902
     },
     "inc/admin-security.asp": {
-      "sha256": "29862e816d9765bc842a28a23e06dc353e2cd64059cd44013a2a6b8d959bf5b5",
-      "size": 10648
+      "sha256": "a831f90ff5e62035ba7298fec4841c8b5d25a970d472c1bc4c03d594bc60092a",
+      "size": 12833
     },
     "SystemManager/assets/js/admin-login.js": {
-      "sha256": "ee077ea001cbb191c5596ddb4f594edbb8fd7f4c571820d2afcdc9dee470f5d3",
-      "size": 3798
+      "sha256": "687083c99927217b96418a590596f7aae074286cfe861e7fea9352ab6a2cdf95",
+      "size": 3638
     },
     "SystemManager/assets/css/admin-login.css": {
       "sha256": "42e2ace34b77af214165a21681a43332211e91568b6e544bac12bcd59d0f068e",
       "size": 2115
     },
     "SystemManager/login.html": {
-      "sha256": "f2676dd291dcee9e89e9477576fc1764a33050e082a0d71dd4e2b5df8db8db29",
-      "size": 1638
+      "sha256": "e2029b9f2698f7d71f95ce65cc524c6d9031e289822bbc8fa98da28c574768a1",
+      "size": 1434
     },
     "SystemManager/assets/js/visitor-analytics-charts.js": {
       "sha256": "fdcded2a51029a43c6c28bf317aae8ab394f738701bf4f52302588869b75c481",
@@ -1343,11 +1372,185 @@
     "api/region-geo.asp": {
       "sha256": "d780f0813534eae9b8168dc6584db3581061bd50b3db1dadc0f00fc063761af2",
       "size": 7079
+    },
+    "admin_api/checkDatacenter.asp": {
+      "sha256": "d1c66404c56de86e078198242779e19f8b15edfc787841d8120a0d271dddd0f6",
+      "size": 4227
+    },
+    "admin_api/dashboardStats.asp": {
+      "sha256": "e8379e93deb2a9a8a1e804c19aae385b8f9e68d8fce5956271f362f0a8182cd1",
+      "size": 3421
+    },
+    "admin_api/deleteUser.asp": {
+      "sha256": "b99fb98b4846abfbd259705d58167c019453cb72e4e37f3b86c78058acaf6bd4",
+      "size": 1932
+    },
+    "admin_api/developerContent.asp": {
+      "sha256": "19cbf02cc7734f3f128aeb6ae493b18f5888c86443ed382b67b3bca6c2838aca",
+      "size": 11245
+    },
+    "admin_api/feedback.asp": {
+      "sha256": "10a3ebd5b98b5713f9654f0881d9ce6a26c985ed4591acf5930b80cd03fb2ee2",
+      "size": 9811
+    },
+    "admin_api/getUserById.asp": {
+      "sha256": "cae218d8cace4d948914b7aabfecd358828f295a2dfd8637bdbce6c7401b3024",
+      "size": 1812
+    },
+    "admin_api/getUsers.asp": {
+      "sha256": "80e107c46b2f23bfc1c51381e4b0bceacf312b1958b73602805c53c919165bbe",
+      "size": 1192
+    },
+    "admin_api/news.asp": {
+      "sha256": "cf78e7c1e76233c95f58218d77988e49e52ba2dae2a4bf6d1310be8ea61e7735",
+      "size": 8353
+    },
+    "admin_api/saveUser.asp": {
+      "sha256": "cb6135708c597f2cb49260daafdc45be1206486c3c440aa1671b5178b24d8ced",
+      "size": 5076
+    },
+    "admin_api/settings.asp": {
+      "sha256": "0e6f6791caada7fc9699de46561356425de76287b05418fdc6b3413cd73923ea",
+      "size": 6833
+    },
+    "api/feedback.asp": {
+      "sha256": "aa8607095e66cc0883f737231dd460781ded8144d71d9b434dc7c93cc7535466",
+      "size": 3771
+    },
+    "assets/css/developer-center.css": {
+      "sha256": "509564a7d476e545e2f12d83adb7cfd48ee694aed3791fb064b17feb81f6f6a9",
+      "size": 10227
+    },
+    "assets/js/developer-center.js": {
+      "sha256": "58e7a05f18bdee3a07f0b060881a52ea22dd4ad0c449ef00ddcec141e3e22f4a",
+      "size": 15201
+    },
+    "assets/js/developer-content.js": {
+      "sha256": "24c8caeba050afd7e8f41f4fdb9ae03083ace86a0d6d4fd28697f3b855fc946d",
+      "size": 1866
+    },
+    "developer_content.asp": {
+      "sha256": "a343c33786441f1f73e1e08aaf0bd4d0f68e2cafd807754010a931c831dc980c",
+      "size": 1358
+    },
+    "developer-samples/hello-webwindows.zip": {
+      "sha256": "53cea2a2fa4ca4859c4bd3297d852cd9cdb3ef9ff47cfdb4dd4e216d0e3afec3",
+      "size": 2338
+    },
+    "developer-samples/hello-webwindows/index.html": {
+      "sha256": "512682a675ac57723bd46dc9c77e7291202b7970e03205d27703315e50c26d96",
+      "size": 1449
+    },
+    "developer-samples/hello-webwindows/manifest.json": {
+      "sha256": "ea29732dd4e9be745d9c3a41c004177278ef69a8b86a2314dc2b1103710d1021",
+      "size": 645
+    },
+    "developer.html": {
+      "sha256": "22be7ac361025f48b2fac0920d6c863be8c471bb0a31123d5b97be6579751ecc",
+      "size": 12723
+    },
+    "getNews.asp": {
+      "sha256": "684fea43a8a7e5ef2e12b7f2de66e232be25e3726b4d7e303630478db30c9220",
+      "size": 1164
+    },
+    "getNewsById.asp": {
+      "sha256": "69d50fb44578f873272e13b597bf0da33f96de04567f25b7b6f43ec1843042f8",
+      "size": 1911
+    },
+    "getPrevNextNews.asp": {
+      "sha256": "83e804c1795599e8092a9b68bef259874684d76ddab4721b0860ab9f43d09ee9",
+      "size": 1712
+    },
+    "SystemManager/assets/css/admin-utilities.css": {
+      "sha256": "89fefc7b416726b124a634074c083048322981f8b95e458d4fc3fe13f6913980",
+      "size": 3495
+    },
+    "SystemManager/assets/js/developer-content-admin.js": {
+      "sha256": "3534b7788c9af52b113359a946d45a3b1b792ef1dbbef3332da4c43857c338c2",
+      "size": 5123
+    },
+    "SystemManager/assets/js/feedback.js": {
+      "sha256": "b04459331419189a44bf9eab127602e81d81fe02362f5cdcb27a36ab92a35826",
+      "size": 5345
+    },
+    "SystemManager/assets/js/files.js": {
+      "sha256": "e597e7db15df664823da270f1ef6607550836027fd3f001b52b2d40a7a55cc75",
+      "size": 1543
+    },
+    "SystemManager/assets/js/page-guard.js": {
+      "sha256": "914e6a25d5b6804f9406ceb05ff551b847559b39900b59080f449fadc545fd21",
+      "size": 403
+    },
+    "SystemManager/assets/js/settings.js": {
+      "sha256": "23b62254784d46c86c837d3eec6560a1259f3a5cb368ddfbf8d660bb0b48accc",
+      "size": 2710
+    },
+    "SystemManager/layout.html": {
+      "sha256": "7eea4a1941bae59c45fc23ae5459f7115adbb567de759471028ad00b5c38863b",
+      "size": 1496
     }
   },
-  "releaseScope": "visitor-map-label-scope",
+  "releaseScope": "systemmanager-completion",
   "uploadFiles": [
-    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "admin_api/adminAuth.asp",
+    "admin_api/checkDatacenter.asp",
+    "admin_api/dashboardStats.asp",
+    "admin_api/deleteDatacenter.asp",
+    "admin_api/deleteUser.asp",
+    "admin_api/developerContent.asp",
+    "admin_api/feedback.asp",
+    "admin_api/getDatacenters.asp",
+    "admin_api/getUserById.asp",
+    "admin_api/getUsers.asp",
+    "admin_api/news.asp",
+    "admin_api/saveDatacenter.asp",
+    "admin_api/saveUser.asp",
+    "admin_api/settings.asp",
+    "api/feedback.asp",
+    "api/mobile-version.asp",
+    "api/release-version.asp",
+    "assets/css/developer-center.css",
+    "assets/js/developer-center.js",
+    "assets/js/developer-content.js",
+    "assets/js/news_view.js",
+    "assets/js/sysinfo.js",
+    "contact.html",
+    "data/apps/system-apps.json",
+    "developer_content.asp",
+    "developer-samples/hello-webwindows.zip",
+    "developer-samples/hello-webwindows/index.html",
+    "developer-samples/hello-webwindows/manifest.json",
+    "developer.html",
+    "getNews.asp",
+    "getNewsById.asp",
+    "getPrevNextNews.asp",
+    "inc/admin-security.asp",
+    "sysinfo.html",
+    "SystemManager/assets/css/admin-utilities.css",
+    "SystemManager/assets/css/developer-platform-admin.css",
+    "SystemManager/assets/js/admin-login.js",
+    "SystemManager/assets/js/admin-security.js",
+    "SystemManager/assets/js/dashboard.js",
+    "SystemManager/assets/js/datacenter.js",
+    "SystemManager/assets/js/developer-content-admin.js",
+    "SystemManager/assets/js/feedback.js",
+    "SystemManager/assets/js/files.js",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/assets/js/page-guard.js",
+    "SystemManager/assets/js/settings.js",
+    "SystemManager/assets/js/users.js",
+    "SystemManager/dashboard.html",
+    "SystemManager/datacenter.html",
+    "SystemManager/developer-platform.html",
+    "SystemManager/feedback.html",
+    "SystemManager/files.html",
+    "SystemManager/functions.html",
+    "SystemManager/index.html",
+    "SystemManager/layout.html",
+    "SystemManager/login.html",
+    "SystemManager/news.html",
+    "SystemManager/settings.html",
+    "SystemManager/users.html",
     "SystemManager/visitor-analytics.html",
     "deploy/ftp-manifest.json"
   ]

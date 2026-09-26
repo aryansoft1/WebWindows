@@ -153,6 +153,7 @@ If action = "add-category" And method = "POST" Then
     AdminSecurityFail 400, "CATEGORY_EXISTS", "分类已存在或保存失败。", "valid", "same-origin"
   End If
   On Error GoTo 0
+  AdminSecurityAudit "category-add", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""success"":true}"
   Response.End
 End If
@@ -183,6 +184,7 @@ If action = "delete-category" And method = "POST" Then
   cmd.CommandText = "DELETE FROM webwindows_news_categories WHERE id=?"
   cmd.Parameters.Append cmd.CreateParameter("id", 3, 1, , newsId)
   cmd.Execute
+  AdminSecurityAudit "category-delete", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""success"":true}"
   Response.End
 End If

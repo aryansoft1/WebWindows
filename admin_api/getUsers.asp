@@ -9,7 +9,7 @@ AdminSecurityRequireRead "system-manager", "get-users"
 Dim rs, json, centerId
 Set rs = conn.Execute("SELECT u.id,u.username,u.nickname,u.avatar,u.email,u.data_center_id," & _
   "d.name AS data_center_name FROM webwindows_users u " & _
-  "LEFT JOIN webwindows_datacenters d ON u.data_center_id=d.id ORDER BY u.id DESC LIMIT 1000")
+  "LEFT JOIN webwindows_datacenters d ON u.data_center_id=d.id ORDER BY u.id DESC")
 json = "["
 Do Until rs.EOF
   centerId = 0

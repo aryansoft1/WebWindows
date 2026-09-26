@@ -96,6 +96,14 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "visitor analytics fix releases must upload only the admin shell and reporting presentation slice");
+} else if (manifest.releaseScope === "admin-login-security-repair") {
+  assert.deepEqual(uploadFiles, [
+    "inc/admin-security.asp",
+    "SystemManager/assets/js/admin-login.js",
+    "SystemManager/assets/css/admin-login.css",
+    "SystemManager/login.html",
+    "deploy/ftp-manifest.json",
+  ], "admin login repairs must upload the missing security include, the CSRF-aware client, the login page that cache-stamps it, and the manifest last");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

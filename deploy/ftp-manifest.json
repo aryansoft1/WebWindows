@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.25.28",
-  "catalogVersion": "2026.09.25.28",
-  "generatedAt": "2026-09-25T09:10:38.678Z",
+  "releaseVersion": "2026.09.26.12",
+  "catalogVersion": "2026.09.26.1",
+  "generatedAt": "2026-09-26T04:04:27.936Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -266,9 +266,13 @@
     "assets/js/file-query-parser.js",
     "api/transit-proxy.asp",
     "api/longdistance-proxy.asp",
-    "inc/trust-schema.asp"
+    "inc/trust-schema.asp",
+    "inc/admin-security.asp",
+    "SystemManager/assets/js/admin-login.js",
+    "SystemManager/assets/css/admin-login.css",
+    "SystemManager/login.html"
   ],
-  "previousReleaseVersion": "2026.09.25.27",
+  "previousReleaseVersion": "2026.09.26.11",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -291,8 +295,8 @@
       "size": 7498
     },
     "api/function-catalog.asp": {
-      "sha256": "e2085137dee5ef3d823db550f635bf92baa3ca8b3b04e657f272d255365321ea",
-      "size": 10181
+      "sha256": "55f822aebe7ee33ec8ce00670d7ad1652b8fa8787cf7a2e5131182857ad5ea79",
+      "size": 10911
     },
     "api/mobile-version.asp": {
       "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
@@ -551,8 +555,8 @@
       "size": 1897
     },
     "assets/js/desktalk.js": {
-      "sha256": "a005879d0f5f4683fa46c48a5f5e7b2f1f0c5d00df7be9a4c6ea19c465c86d71",
-      "size": 98736
+      "sha256": "4da495c5da584accce57a20aa1f2825e26fe430966a5aaef0e8d4e2603c75cb2",
+      "size": 108572
     },
     "assets/js/desktop-functions.js": {
       "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
@@ -571,8 +575,8 @@
       "size": 21102
     },
     "assets/js/file-search.js": {
-      "sha256": "c276f15ad557ca63780d71fd002d33f25b3941dda19b6dd69d85632e69ed03ac",
-      "size": 15080
+      "sha256": "a289179fa8e184d68cd054419df8403c5bb5d28bda587ab7e898eec66f902092",
+      "size": 16610
     },
     "assets/js/function-center.js": {
       "sha256": "fe3d31b1e11aff7a82fb9312d4e32e9e5262dc0cfa3c22c82e6ab63e87fafbf0",
@@ -767,20 +771,20 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "96b635b094b32c8fc606aa93542c8624e9826d2a47fd78acc771da08084ccd5f",
-      "size": 1742
+      "sha256": "c90d12da7210e9124c74c29988f827cd08ba016422c666b2b0067c816b2c5a8f",
+      "size": 3529
     },
     "cloud/browser/files.asp": {
-      "sha256": "045705d18b86b02b848598158e48be98900962af184d99e530fe252f4bd42a4a",
-      "size": 24887
+      "sha256": "e8c538b70fd9fd85a0ec3e70b57803bf30ebd8cfa522aa647a31702a7070a5f6",
+      "size": 27709
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "5acc4b19dc547316255794ea5153de3e86317e5680f285b35c7be63cde3db753",
-      "size": 45274
+      "sha256": "aa061245652dc42ba9c10181342a1478a945c940058305b81288d0cd5ad4e8b3",
+      "size": 37373
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -791,28 +795,28 @@
       "size": 25629
     },
     "cloud/browser/search-ui.js": {
-      "sha256": "4e066d4765f15720ac939217c9de85b6bc63fd4470f1dccf9ddf816fc28e5e8f",
-      "size": 11253
+      "sha256": "b7e6de2453e94036e3956e05ed9f2fa7aae979b4a1a80e221015d926849829e4",
+      "size": 14606
     },
     "cloud/browser/search.asp": {
       "sha256": "86e893bd1558211e5ca76dcddf9f33e4221283a6a1042b8019d8c3149b9df2c7",
       "size": 15940
     },
     "cloud/browser/styles.css": {
-      "sha256": "441a90d5abb78d260113f02a0be0d25c6a14e3d8bf67df95c3fc1e737bcb6b3a",
-      "size": 13738
+      "sha256": "442ef96e421d25ed88b7c79c804baf516ee47d8b68985ac3442bc51a8ef351fc",
+      "size": 14315
     },
     "cloud/browser/toolbar.js": {
-      "sha256": "c904d57f6d38a1b9d0b0ff856388fa8f129005ce49762205cf50849587fab978",
-      "size": 28856
+      "sha256": "7adf8797d7b2f29285c4f8bef35cce752ce65d698c7983cc290564dd767eb3dc",
+      "size": 29127
     },
     "contact.html": {
       "sha256": "ec47be1087559454951490bef685a43806feeb8feba2232d8ad019c9d20881ea",
       "size": 405
     },
     "data/apps/system-apps.json": {
-      "sha256": "86d91d4a285904fe4ab16d9e9c86db2c52013880279453d0cd136ab1ecb33bee",
-      "size": 14412
+      "sha256": "1296a2c5ce23cf8d2b46cb7c8319f82ae5334659bdf991077164581b18fffbdc",
+      "size": 14411
     },
     "data/sdk/capability-broker-errors-v1.json": {
       "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
@@ -915,7 +919,7 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "3bb04ddcfc2efb0c467eb80b711bdac4ccef386446345c6bf54c4d5505f45b98",
+      "sha256": "bbb2173e267a03bdd7161408279e9d7d862e54e55e03f9f7f63875e16b07d19d",
       "size": 33244
     },
     "japan.html": {
@@ -1290,12 +1294,12 @@
       "size": 4654
     },
     "assets/js/ai-file-tools.js": {
-      "sha256": "51bb624a4181e70504bacfa121a16b1d8556f3d23be8a918e942493d04dd6656",
-      "size": 10216
+      "sha256": "ee7e7758b2f4bb2149583f1ab036e3fe46bdb00366c99187834b35eb3dd3b82f",
+      "size": 10765
     },
     "assets/js/file-query-parser.js": {
-      "sha256": "acaebfca552365a348824aaf3e08f9a9eddcf962fd049b5b26793c961a60a378",
-      "size": 20023
+      "sha256": "6275d3b1f5eff167e241a1a9e66ee4116aee2ba3c6b75e9260c2396bfed672fb",
+      "size": 20217
     },
     "api/transit-proxy.asp": {
       "sha256": "9307bba8d54712d0a8d62d030ec2c0c6b2989ab3b2da88e9aa2680753532815b",
@@ -1308,17 +1312,30 @@
     "inc/trust-schema.asp": {
       "sha256": "5a525e4edf83a3710a5f3d1794735884aca8d3148a6cef5a03878782733c571e",
       "size": 902
+    },
+    "inc/admin-security.asp": {
+      "sha256": "29862e816d9765bc842a28a23e06dc353e2cd64059cd44013a2a6b8d959bf5b5",
+      "size": 10648
+    },
+    "SystemManager/assets/js/admin-login.js": {
+      "sha256": "ee077ea001cbb191c5596ddb4f594edbb8fd7f4c571820d2afcdc9dee470f5d3",
+      "size": 3798
+    },
+    "SystemManager/assets/css/admin-login.css": {
+      "sha256": "42e2ace34b77af214165a21681a43332211e91568b6e544bac12bcd59d0f068e",
+      "size": 2115
+    },
+    "SystemManager/login.html": {
+      "sha256": "f2676dd291dcee9e89e9477576fc1764a33050e082a0d71dd4e2b5df8db8db29",
+      "size": 1638
     }
   },
-  "releaseScope": "wendao-overseas-scope-dedupe",
+  "releaseScope": "admin-login-security-repair",
   "uploadFiles": [
-    "assets/js/transit-providers.js",
-    "road.html",
-    "data/apps/system-apps.json",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
+    "inc/admin-security.asp",
+    "SystemManager/assets/js/admin-login.js",
+    "SystemManager/assets/css/admin-login.css",
+    "SystemManager/login.html",
     "deploy/ftp-manifest.json"
   ]
 }

@@ -16,6 +16,8 @@ function addReference(value, owner = "index.html") {
     ? original.replace(/^\/+/, "")
     : posix.join(posix.dirname(owner), original);
   const relative = posix.normalize(clean);
+  // href="/" / src="./" 之类指向站点根的引用即入口页本身，不是需要单独纳管的文件。
+  if (relative === ".") return;
   if (!relative.startsWith("../")) dependencies.add(relative);
 }
 

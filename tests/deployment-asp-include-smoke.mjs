@@ -1,0 +1,88 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+/*
+ * 事故回归：2026-09-26 线上 adminAuth.asp?action=captcha 恒 500（ASP 0126
+ * 「找不到包含文件 ../inc/admin-security.asp」），而 inc/admin-security.asp
+ * 从未进入 requiredFiles、从未上传；登录页又把 IIS 的 HTML 错误页当 JSON 解析，
+ * 于是用户只看到 "Unexpected token '<'"。同类事故此前已发生过一次
+ * （inc/trust-schema.asp 漏登记，见 T-031），因此把「已部署 ASP 的每一个
+ * SHTML include 目标都必须被清单纳管」固化成门禁。
+ */
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const manifest = JSON.parse(await readFile(path.join(root, "deploy/ftp-manifest.json"), "utf8"));
+const managed = new Set(manifest.requiredFiles);
+
+/*
+ * 服务端配置由主机本地创建、带真实凭据，既不允许从仓库上传（T-033：
+ * 生产 web.config / inc/conn.asp 含真实 DB 凭据，仓库副本是占位版），
+ * 也不在仓库里存在（*.config.asp 被 .gitignore 覆盖，只入库 example 模板）。
+ * 它们可以合法地被 include，但必须逐个显式列出，不允许通配豁免整个 inc/。
+ */
+const serverSideConfig = [
+  "inc/conn.asp",
+  "inc/validator-deployment-config.asp"
+];
+const isServerSideConfig = (relative) =>
+  serverSideConfig.includes(relative) || relative.endsWith(".config.asp");
+
+const unmanagedIncludes = [];
+let audited = 0;
+for (const relative of manifest.requiredFiles) {
+  if (!relative.endsWith(".asp")) continue;
+  let source;
+  try {
+    source = await readFile(path.join(root, ...relative.split("/")), "utf8");
+  } catch {
+    continue; // 线上比本分支更新的文件（记录侧漂移）由清单对账负责，不在此处断言
+  }
+  audited += 1;
+  for (const [, target] of source.matchAll(/<!--#include\s+file="([^"]+)"\s*-->/gi)) {
+    const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(relative), target));
+    if (managed.has(resolved) || isServerSideConfig(resolved)) continue;
+    unmanagedIncludes.push(`${relative} -> ${resolved}`);
+  }
+}
+assert.ok(audited > 0, "deployment manifest must list classic ASP endpoints");
+assert.deepEqual(unmanagedIncludes, [],
+  `every SHTML include of a deployed ASP must be recorded in the deployment manifest: ${unmanagedIncludes.join("; ")}`);
+
+// 后台登录整条链（服务端 include + 登录页 + 客户端 + 样式）必须成套纳管。
+for (const relative of [
+  "admin_api/adminAuth.asp",
+  "inc/admin-security.asp",
+  "SystemManager/login.html",
+  "SystemManager/assets/js/admin-login.js",
+  "SystemManager/assets/css/admin-login.css"
+]) {
+  assert.ok(managed.has(relative), `admin login stack must remain managed: ${relative}`);
+  assert.ok(manifest.integrity?.[relative]?.sha256, `admin login stack needs an integrity record: ${relative}`);
+}
+
+const [authApi, loginPage, loginClient] = await Promise.all([
+  readFile(path.join(root, "admin_api/adminAuth.asp"), "utf8"),
+  readFile(path.join(root, "SystemManager/login.html"), "utf8"),
+  readFile(path.join(root, "SystemManager/assets/js/admin-login.js"), "utf8")
+]);
+
+assert.match(authApi, /include file="\.\.\/inc\/admin-security\.asp"/);
+assert.match(authApi, /AdminSecurityRequirePreAuthMutation "admin-auth", "login"/);
+assert.match(loginPage, /id="adminLoginForm"/);
+assert.match(loginPage, /assets\/js\/admin-login\.js\?v=/,
+  "the login page must cache-stamp the login client so a fix is not shadowed by a stale script");
+assert.match(loginClient, /payload\.csrfToken/);
+assert.match(loginClient, /"X-WebWindows-CSRF": csrfToken/);
+// 非 JSON 响应（IIS HTML 错误页、网关错误页）必须变成可读中文提示，而不是 SyntaxError。
+assert.match(loginClient, /readJsonPayload/);
+assert.doesNotMatch(loginClient, /await response\.json\(\)/);
+assert.match(loginClient, /ADMIN_RESPONSE_NOT_JSON/);
+
+const adminSecurity = await readFile(path.join(root, "inc/admin-security.asp"), "utf8");
+assert.equal(createHash("sha256").update(Buffer.from(adminSecurity, "utf8")).digest("hex"),
+  manifest.integrity["inc/admin-security.asp"].sha256,
+  "the managed admin security include must be the tracked repository copy, not a hand-edited variant");
+
+console.log(`deployment ASP include smoke test passed: ${audited} ASP endpoints audited, admin login stack managed`);

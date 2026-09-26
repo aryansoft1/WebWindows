@@ -15,6 +15,7 @@ const scopeIndex = args.indexOf("--scope");
 const excludeIndex = args.indexOf("--exclude");
 const prunePrefixIndex = args.indexOf("--prune-prefix");
 const reconcileIndex = args.indexOf("--reconcile-directory");
+const preserveCatalogVersion = args.includes("--preserve-catalog-version");
 const productionSource = productionIndex >= 0 ? args[productionIndex + 1] : "";
 const observedSource = observedIndex >= 0 ? args[observedIndex + 1] : "";
 const excludedFiles = excludeIndex >= 0
@@ -75,9 +76,9 @@ if (releaseVersion) {
   if (manifest.releaseVersion !== releaseVersion) {
     manifest.previousReleaseVersion = manifest.releaseVersion;
     manifest.releaseVersion = releaseVersion;
-    manifest.catalogVersion = reconcileDirectory ? priorCatalogVersion : releaseVersion;
+    manifest.catalogVersion = (reconcileDirectory || preserveCatalogVersion) ? priorCatalogVersion : releaseVersion;
   }
-  if (!reconcileDirectory) manifest.catalogVersion = releaseVersion;
+  if (!reconcileDirectory && !preserveCatalogVersion) manifest.catalogVersion = releaseVersion;
 }
 
 let integrity = {};
@@ -108,6 +109,15 @@ if (reconcileDirectory) {
   }
   manifest.previousReleaseVersion = production.releaseVersion;
   manifest.root = production.root || manifest.root;
+  /*
+   * --preserve-catalog-version：本次发布不改编排（未上传 data/apps/system-apps.json），
+   * 目录版本必须取线上真相，否则会把线上 .26.1 记回本分支的陈值。
+   * 本地 system-apps.json 需已反向同步到线上字节，
+   * 否则 deployment-manifest-smoke 的 catalogVersion 断言会失败。
+   */
+  if (preserveCatalogVersion && production.catalogVersion) {
+    manifest.catalogVersion = production.catalogVersion;
+  }
   manifest.requiredFiles = [...new Set([
     ...(production.requiredFiles || []).filter((relative) => !isPruned(relative)),
     ...(manifest.requiredFiles || []).filter((relative) => !isPruned(relative)),

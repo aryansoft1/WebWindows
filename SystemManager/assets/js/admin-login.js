@@ -10,6 +10,19 @@
     status.className = `login-status${kind ? ` ${kind}` : ""}`;
   }
 
+  async function readJsonPayload(response) {
+    const raw = await response.text();
+    try {
+      return JSON.parse(raw);
+    } catch {
+      const error = new Error(response.ok
+        ? "服务器返回了非预期的响应，请稍后重试。"
+        : `服务器返回了 HTTP ${response.status} 的非 JSON 响应，后台接口暂不可用，请稍后重试。`);
+      error.code = "ADMIN_RESPONSE_NOT_JSON";
+      throw error;
+    }
+  }
+
   async function request(action, options) {
     const mutationHeaders = options?.method === "POST"
       ? { "X-WebWindows-CSRF": csrfToken }
@@ -18,7 +31,7 @@
       credentials: "same-origin", cache: "no-store", ...options,
       headers: { ...HEADERS, ...mutationHeaders, ...(options?.headers || {}) }
     });
-    const payload = await response.json();
+    const payload = await readJsonPayload(response);
     if (!response.ok || payload?.ok === false) {
       const error = new Error(payload?.message || `请求失败（${response.status}）。`);
       error.code = payload?.code || "";

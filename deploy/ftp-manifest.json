@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.26.33",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T13:49:12.763Z",
+  "generatedAt": "2026-09-26T17:49:59.143Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -995,8 +995,8 @@
       "size": 4775
     },
     "SystemManager/datacenter.html": {
-      "sha256": "5bbd5af3bc9f379693362ca5676efd73d3e5dfb340b54073d2d248f4fe880f76",
-      "size": 3275
+      "sha256": "bc49c21604aee11867ba2fca2874051c0f84da7166890c534ccab3df5f526090",
+      "size": 3272
     },
     "web.html": {
       "sha256": "f1ad19cad845e7ec575fbfe027aaf2c1608f343b60bd2b4fff077fbcae95e2cd",
@@ -1183,8 +1183,8 @@
       "size": 5549
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "a4756dc4794895fde4c31ed89a9a92b42be6a45825e7daf851ca5ff47176c9aa",
-      "size": 6967
+      "sha256": "9d8fe172622014a1ec430a1d3f36b4217b4b1e1a54a0cf95cd0bb0de25211589",
+      "size": 6964
     },
     "SystemManager/assets/js/visitor-analytics.js": {
       "sha256": "ab15a14998b312bf7f38d46ce24847e667dcb12fb46c1cc8a9eb4653ff4a5d04",
@@ -1250,20 +1250,20 @@
       "size": 2124
     },
     "SystemManager/developer-platform.html": {
-      "sha256": "8010946fe4bf81fb22eba393e7c2cbedf242c61a3f100cff06d12d8b633a4ade",
-      "size": 4162
+      "sha256": "72ea8621a29082dfc47adbe28da3ca8d0ced8b699696481ca1e698d641fa563e",
+      "size": 4159
     },
     "SystemManager/feedback.html": {
       "sha256": "ff5026269a9461e4d2f3acc80de06d330c98f056838cb4f0b9bde17b1280c012",
       "size": 4266
     },
     "SystemManager/files.html": {
-      "sha256": "f5ec75cbe5e58013faf4863637463409f93dc37d6480f437d563acd881c550a3",
-      "size": 1503
+      "sha256": "005035d9912e7cb09a5f25059928b35ba81ace12d5c717913b6ea3a4f54e7769",
+      "size": 1501
     },
     "SystemManager/functions.html": {
-      "sha256": "b4b047619848bf26a7aba5f0de9684afa944023ff513a066ed30943876db5697",
-      "size": 6294
+      "sha256": "7a945e4b5860aa67a7842e1c05b785371f299cbf55c62de649a7916b779624f6",
+      "size": 6291
     },
     "SystemManager/news.html": {
       "sha256": "d9a5c53b902d6a6ebfd61dd2a1368c3e0e2544ff0c234ca00fbce2bcfc39e856",
@@ -1274,8 +1274,8 @@
       "size": 2705
     },
     "SystemManager/users.html": {
-      "sha256": "c2a2236056223d8fce753651b74636ae06aa388ca20c28007d5278627a7180f5",
-      "size": 3477
+      "sha256": "a8c4c2cdf029050afdd7821c7ef04498d6356fb9a69241514faef2b6ec8d01b4",
+      "size": 3474
     },
     "SystemManager/assets/css/developer-platform-admin.css": {
       "sha256": "5096356dd005a9a0a046cb732173b3a9dc448ee0586b2ebfdd7ab373e34753b6",
@@ -1486,8 +1486,8 @@
       "size": 2710
     },
     "SystemManager/layout.html": {
-      "sha256": "7eea4a1941bae59c45fc23ae5459f7115adbb567de759471028ad00b5c38863b",
-      "size": 1496
+      "sha256": "8ad3f25b2e16c9c92ea623f380fb8a04beae6da2c9d9dd82b26f2c81921243f2",
+      "size": 1493
     }
   },
   "releaseScope": "systemmanager-completion",

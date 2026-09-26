@@ -70,24 +70,51 @@ Function CacheKey(ByVal adcode)
   CacheKey = "webwindows_region_geo_" & adcode
 End Function
 
+' 纯判断：缓存是否仍然新鲜。**刻意不做日期字符串运算** —— 2026-09-26 上线后
+' 缓存命中路径直接 500，因为 CStr(Now()) 是本地化格式的字符串，
+' Now() - "2026-09-26 19:51:50" 在非 en-US 区域抛类型不匹配。
+' 这里只用「日序 + 当日分钟数」两个整数比较，任何 locale 都不会出错，
+' 而且这个函数不碰 Application，可以在门禁里用真实样本直接验证。
+Function GeoCacheFresh(ByVal dayNo, ByVal minuteNo, ByVal ttlMinutes)
+  Dim nowMinute
+  GeoCacheFresh = False
+  If Not IsNumeric(dayNo) Or Not IsNumeric(minuteNo) Then Exit Function
+  If CLng(dayNo) <> CLng(Day(Now())) Then Exit Function
+  nowMinute = CLng(Hour(Now())) * 60 + CLng(Minute(Now()))
+  GeoCacheFresh = ((nowMinute - CLng(minuteNo)) < CLng(ttlMinutes))
+End Function
+
 Sub ReadCache(ByVal adcode, ByRef payload, ByRef hit)
-  Dim stored, stamp
+  Dim stored, dayNo, minuteNo
   payload = ""
   hit = False
+  ' 任何异常都必须走「未命中」—— 这个接口是公开的，绝不能因为缓存出问题而 500。
   On Error Resume Next
   Err.Clear
   stored = Application(CacheKey(adcode))
-  stamp = Application(CacheKey(adcode) & "_at")
+  dayNo = Application(CacheKey(adcode) & "_day")
+  minuteNo = Application(CacheKey(adcode) & "_min")
   If Err.Number <> 0 Then
     Err.Clear
     stored = ""
-    stamp = 0
   End If
   On Error GoTo 0
   If Len(CStr(stored & "")) = 0 Then Exit Sub
-  If Now() - CStr(stamp) > CACHE_TTL_MINUTES / 1440 Then Exit Sub
+  If Not GeoCacheFresh(dayNo, minuteNo, CACHE_TTL_MINUTES) Then Exit Sub
   payload = CStr(stored)
   hit = True
+End Sub
+
+Sub WriteCache(ByVal adcode, ByVal payload)
+  ' 只存整数：日序 + 当日分钟数。存 Date 再用字符串比较是本文件踩过的坑。
+  On Error Resume Next
+  Application.Lock
+  Application(CacheKey(adcode)) = payload
+  Application(CacheKey(adcode) & "_day") = CLng(Day(Now()))
+  Application(CacheKey(adcode) & "_min") = CLng(Hour(Now())) * 60 + CLng(Minute(Now()))
+  Application.UnLock
+  Err.Clear
+  On Error GoTo 0
 End Sub
 
 Sub WriteCache(ByVal adcode, ByVal payload)

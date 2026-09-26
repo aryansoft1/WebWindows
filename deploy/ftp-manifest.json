@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.30",
+  "releaseVersion": "2026.09.26.31",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T10:50:47.895Z",
+  "generatedAt": "2026-09-26T10:54:18.752Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -275,7 +275,7 @@
     "inc/visitor-geo.asp",
     "api/region-geo.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.29",
+  "previousReleaseVersion": "2026.09.26.30",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1341,13 +1341,13 @@
       "size": 32665
     },
     "api/region-geo.asp": {
-      "sha256": "9f842dd3a419a11254bb5a84a6479f1d125fff12dabcb31661bde7f2def7e6bb",
-      "size": 5632
+      "sha256": "d780f0813534eae9b8168dc6584db3581061bd50b3db1dadc0f00fc063761af2",
+      "size": 7079
     }
   },
-  "releaseScope": "visitor-map-cache-stamp",
+  "releaseScope": "visitor-map-geo-proxy",
   "uploadFiles": [
-    "SystemManager/visitor-analytics.html",
+    "api/region-geo.asp",
     "deploy/ftp-manifest.json"
   ]
 }

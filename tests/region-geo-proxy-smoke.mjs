@@ -66,6 +66,12 @@ assert.match(body, /UPSTREAM_BASE & adcode & "_full\.json"/,
   "the upstream URL must be built from the validated adcode only");
 assert.match(body, /InStr\(1, body, """features""", vbTextCompare\) = 0 Then Exit Function/,
   "a non-GeoJSON upstream answer must be rejected instead of relayed to the page");
+// 日期运算陷阱：CStr(Now()) 是本地化字符串，Now() - 字符串 在非 en-US 区域抛类型不匹配，
+// 缓存命中路径会直接 500（2026-09-26 上线后立刻暴露）。只允许整数比较。
+assert.doesNotMatch(body, /Now\(\)\s*-\s*CStr|CStr\(stamp\)|CDate\(/,
+  "never do date arithmetic on localized date strings; compare integers instead");
+assert.match(body, /Function GeoCacheFresh/);
+assert.match(body, /CLng\(dayNo\) <> CLng\(Day\(Now\(\)\)\) Then Exit Function/);
 assert.match(body, /Fail "502 Bad Gateway", "UPSTREAM_UNAVAILABLE"/,
   "upstream failures must surface as an explicit error code");
 
@@ -149,6 +155,14 @@ Say "escape_newline", JsonEscape("a" & vbCrLf & "b")
 Say "escape_plain", JsonEscape("plain")
 Say "escape_quote_then_backslash", JsonEscape(Chr(34) & "\\")
 
+' ---- 缓存新鲜度：纯整数比较，不能依赖日期字符串 ----
+Request.Adcode = "100000"
+Say "cache_fresh_now", CStr(GeoCacheFresh(Day(Now()), CLng(Hour(Now())) * 60 + CLng(Minute(Now())), 10080))
+Say "cache_fresh_60min", CStr(GeoCacheFresh(Day(Now()), (CLng(Hour(Now())) * 60 + CLng(Minute(Now()))) - 60, 10080))
+Say "cache_stale_20000min", CStr(GeoCacheFresh(Day(Now()), (CLng(Hour(Now())) * 60 + CLng(Minute(Now()))) - 20000, 10080))
+Say "cache_other_day", CStr(GeoCacheFresh(Day(Now()) - 1, CLng(Hour(Now())) * 60 + CLng(Minute(Now())), 10080))
+Say "cache_garbage_stamp", CStr(GeoCacheFresh("x", "y", 10080))
+
 WScript.Echo Report
 `;
 const scriptPath = path.join(scratch, "region-geo.vbs");
@@ -183,6 +197,12 @@ for (const key of [
 }
 
 // JSON 转义：这是本轮真实踩过的坑（引号数错 → 字符串未闭合 → 整段代码被吞）
+assert.equal(values.get("cache_fresh_now"), "True", "a stamp from this minute must be fresh");
+assert.equal(values.get("cache_fresh_60min"), "True", "an hour-old stamp is still fresh with a 7-day TTL");
+assert.equal(values.get("cache_stale_20000min"), "False", "a stamp older than the TTL must be stale");
+assert.equal(values.get("cache_other_day"), "False", "a stamp from another day must be stale");
+assert.equal(values.get("cache_garbage_stamp"), "False", "a non-numeric stamp must be treated as stale, not throw");
+
 const bs = String.fromCharCode(92);
 const dq = String.fromCharCode(34);
 assert.equal(values.get("escape_quote"), `a${bs}${dq}b`, "a double quote must become backslash + quote");

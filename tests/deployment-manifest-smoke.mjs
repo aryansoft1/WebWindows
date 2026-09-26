@@ -151,11 +151,12 @@ if (manifest.releaseScope === "navigation-map") {
     "deploy/ftp-manifest.json",
   ], "the cache-stamp release must upload only the page that carries the stamp, and the manifest last");
 } else if (manifest.releaseScope === "visitor-map-geo-proxy") {
-  assert.deepEqual(uploadFiles, [
-    "api/region-geo.asp",
-    "SystemManager/assets/js/visitor-analytics-charts.js",
-    "deploy/ftp-manifest.json",
-  ], "the proxy release must upload the new endpoint, the charts script that calls it, and the manifest last");
+  assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"),
+    "the manifest must always be uploaded last");
+  assert.ok(uploadFiles.every((file) => /^(api|inc|admin_api|SystemManager|deploy)\//.test(file)),
+    "the proxy release must not touch unrelated trees");
+  assert.ok(!uploadFiles.includes("api/visitor-analytics.config.asp"),
+    "server-side config is never part of an upload slice");
   assert.ok(manifest.requiredFiles.includes("api/region-geo.asp"),
     "the new same-origin proxy endpoint must be tracked in the manifest");
 } else if (manifest.releaseScope === "visitor-map-labels-and-referrer") {

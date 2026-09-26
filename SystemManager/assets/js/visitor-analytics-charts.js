@@ -24,6 +24,10 @@
     "自治州", "地区", "盟", "省", "市", "区", "县", "旗"
   ];
 
+  // 仅显示层的名称覆盖：**不改统计口径、不改 ISO 代码、不改任何查询**。
+  // 键是 ISO A2 代码（与 Natural Earth 的 ISO_A2_EH 对齐，地图着色与下钻判定都靠它），
+  // 值只出现在地图悬停提示里。
+  const COUNTRY_DISPLAY_NAMES = { CN: "ROC", TW: "ROC-TW" };
   const DEVICE_LABELS = { desktop: "电脑", mobile: "手机", tablet: "平板" };
   const geoJsonCache = new Map();
   const chartCache = new Map();
@@ -54,7 +58,9 @@
 
   function fetchJson(url) {
     if (geoJsonCache.has(url)) return Promise.resolve(geoJsonCache.get(url));
-    return fetch(url, { credentials: "omit", cache: "force-cache" })
+    // referrerPolicy: 第三方边界数据不需要知道我们是谁；DataV 边缘节点会因
+    // 跨域 Referer 直接返回 403（实测：不带 200 / 带 403），点地图下钻因此加载不出来。
+    return fetch(url, { credentials: "omit", cache: "force-cache", referrerPolicy: "no-referrer" })
       .then((response) => {
         if (!response.ok) throw new Error(`边界数据加载失败（HTTP ${response.status}）`);
         return response.json();
@@ -223,10 +229,14 @@
     for (const item of state.payload.countries || []) {
       const code = String(item.code || "").trim().toUpperCase();
       if (!/^[A-Z]{2}$/.test(code)) continue;
-      const current = values.get(code) || { value: 0, visitors: 0, display: item.name || code };
+      // 有覆盖名时供应商返回的名字不参与展示，避免两条记录显示成两个名字
+      const override = Object.prototype.hasOwnProperty.call(COUNTRY_DISPLAY_NAMES, code)
+        ? COUNTRY_DISPLAY_NAMES[code]
+        : "";
+      const current = values.get(code) || { value: 0, visitors: 0, display: override || item.name || code };
       current.value += Number(item.sessions) || 0;
       current.visitors += Number(item.visitors) || 0;
-      if (item.name) current.display = item.name;
+      if (!override && item.name) current.display = item.name;
       values.set(code, current);
     }
     return values;

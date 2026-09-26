@@ -145,6 +145,12 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/visitorAnalytics.asp",
     "deploy/ftp-manifest.json",
   ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
+} else if (manifest.releaseScope === "visitor-map-labels-and-referrer") {
+  assert.deepEqual(uploadFiles, [
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "SystemManager/visitor-analytics.html",
+    "deploy/ftp-manifest.json",
+  ], "the label/referrer release must upload only the charts script, the page that stamps it, and the manifest last");
 } else if (manifest.releaseScope === "visitor-geo-repair-tick") {
   assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"),
     "the manifest must always be uploaded last");

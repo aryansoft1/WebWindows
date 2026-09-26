@@ -277,6 +277,18 @@ assert.ok(adminPage.indexOf('id="featureChart"') < adminPage.indexOf('id="geoMap
   "the per-window dwell section must stay above the map section");
 assert.equal(adminPage.match(/id="featureRows"/g).length, 1,
   "the per-window dwell table must exist exactly once");
+// 国家名只做**显示层**覆盖：ISO 代码、统计口径、下钻判定一律不动。
+assert.match(adminCharts, /const COUNTRY_DISPLAY_NAMES = \{ CN: "ROC", TW: "ROC-TW" \}/,
+  "CN must display as ROC and TW as ROC-TW");
+assert.match(adminCharts, /override \|\| item\.name \|\| code/,
+  "the override must win over the provider name in the tooltip only");
+assert.doesNotMatch(adminCharts, /COUNTRY_DISPLAY_NAMES\[[^\]]*\]\s*=\s*"/,
+  "the display override must never be written back into the data (it is presentational only)");
+assert.match(adminCharts, /params\.name !== "CN"/,
+  "the China drill-down must keep matching on the ISO code, not on the display name");
+// 第三方边界数据不能带 Referer：DataV 边缘节点防盗链，带了直接 403（实测）。
+assert.match(adminCharts, /referrerPolicy: "no-referrer"/,
+  "boundary GeoJSON must be fetched without a Referer or DataV answers 403");
 assert.match(adminCharts, /function renderFeatureDwell/);
 assert.match(adminCharts, /\.slice\(0, 12\)/);
 assert.match(adminCharts, /平均每次/);

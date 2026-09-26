@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.27",
+  "releaseVersion": "2026.09.26.28",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T10:04:12.418Z",
+  "generatedAt": "2026-09-26T10:18:34.189Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -274,7 +274,7 @@
     "SystemManager/assets/js/visitor-analytics-charts.js",
     "inc/visitor-geo.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.26",
+  "previousReleaseVersion": "2026.09.26.27",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1153,7 +1153,7 @@
       "size": 5549
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "386123b333ac879f6cff60180e24d1e3ff584577e0c13626092a89141e5ba103",
+      "sha256": "6415d372a80e35dbb82e9ac26283d9746b3443862c98ba4b834a4ecd6d06922d",
       "size": 6910
     },
     "SystemManager/assets/js/visitor-analytics.js": {
@@ -1332,17 +1332,18 @@
       "size": 1638
     },
     "SystemManager/assets/js/visitor-analytics-charts.js": {
-      "sha256": "69812fbd0cf7244c8f0b5f9e1788b2b3f659e02746639219bbe6ed17475e8177",
-      "size": 20522
+      "sha256": "da4794e55c5d91cde2c151fcd4016801a8d41e75556abf4b1a06d90fc3bab99e",
+      "size": 21360
     },
     "inc/visitor-geo.asp": {
       "sha256": "05e4522dc01deec830fed957c4c775eed184f538c76dc798243f8b34b00f6ead",
       "size": 32665
     }
   },
-  "releaseScope": "visitor-geo-repair-tick",
+  "releaseScope": "visitor-map-labels-and-referrer",
   "uploadFiles": [
-    "api/visitor-analytics.asp",
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "SystemManager/visitor-analytics.html",
     "deploy/ftp-manifest.json"
   ]
 }

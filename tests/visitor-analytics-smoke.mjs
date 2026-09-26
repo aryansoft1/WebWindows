@@ -306,6 +306,9 @@ assert.match(adminCharts, /emphasis: \{[\s\S]{0,600}label: \{[\s\S]{0,300}format
 const emphasisBlock = /emphasis: \{[\s\S]*?\n        \},/.exec(adminCharts)?.[0] || "";
 assert.equal((emphasisBlock.match(/label: \{/g) || []).length, 1,
   "emphasis.label must be declared exactly once — a duplicate key silently drops the formatter");
+// 缓存戳：charts.js 每次改动都必须递增，否则浏览器复用旧副本（T-011 已发生过）。
+const chartsStamp = /visitor-analytics-charts\.js\?v=([0-9-]+)/.exec(adminPage)?.[1] || "";
+assert.match(chartsStamp, /^20260926-\d+$/, "the charts script must carry a dated cache stamp");
 assert.match(adminCharts, /function renderFeatureDwell/);
 assert.match(adminCharts, /\.slice\(0, 12\)/);
 assert.match(adminCharts, /平均每次/);

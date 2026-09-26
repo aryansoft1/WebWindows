@@ -145,6 +145,11 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/visitorAnalytics.asp",
     "deploy/ftp-manifest.json",
   ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
+} else if (manifest.releaseScope === "visitor-geo-cache-probe") {
+  assert.deepEqual(uploadFiles, [
+    "inc/visitor-geo.asp",
+    "deploy/ftp-manifest.json",
+  ], "the cache-probe release must upload only the shared resolver and the manifest last");
 } else if (manifest.releaseScope === "visitor-geo-parse-fixes") {
   assert.deepEqual(uploadFiles, [
     "inc/visitor-geo.asp",

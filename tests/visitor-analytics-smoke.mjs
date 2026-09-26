@@ -90,6 +90,10 @@ assert.match(geoInclude, /If GeoIisTrusted\(\) Then/,
 assert.doesNotMatch(geoInclude, /SubMatches\(2\)/, "no pattern here has three capture groups");
 assert.match(geoInclude, /quoteMark & "\(" & aliasCsv & "\)" & quoteMark/,
   "the JSON field pattern must keep the key's closing quote (a missing one parses nothing while still returning 200)");
+assert.match(geoInclude, /GeoAddDebug "cache"/,
+  "the diagnostic must probe the same-IP session cache (a read-only SELECT, no budget) so we can tell \"resolved\" from \"actually persisted\"");
+assert.match(geoInclude, /GeoAddDebug "budget"/,
+  "the diagnostic must report the remaining daily budget");
 for (const stage of ["stage-1", "stage-2", "stage-3", "stage-4", "stage-end"]) {
   assert.ok(geoInclude.includes(`"${stage}"`),
     `the self-diagnosing log must record ${stage} so a production stall points at itself`);

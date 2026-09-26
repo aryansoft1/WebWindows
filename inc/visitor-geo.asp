@@ -468,6 +468,20 @@ Sub GeoDiagnoseSelf()
   End If
   Err.Clear
   GeoAddDebug "stage-4", 0, 0, "config-loaded endpoints=" & CStr(GeoApiEndpointCount())
+
+  ' 零副作用探针：只读一次同 IP 的历史会话，看**已经落库的**地区是否存在。
+  ' 这一步不发任何外部请求、不消耗额度（纯 SELECT），却能回答「解析出来的地区到底
+  ' 有没有真的写进数据库」—— 之前几轮就是因为只验证到「解析成功」就以为写进去了。
+  GeoResetResult
+  GeoApplyCached address
+  If GeoResolvedBy = "cache" Then
+    GeoAddDebug "cache", 200, 0, GeoCountryCode & " " & GeoCountryName & " " & GeoRegionName & " " & GeoCityName
+  Else
+    GeoAddDebug "cache", 0, 0, "miss"
+  End If
+  GeoResetResult
+  Err.Clear
+  GeoAddDebug "budget", 0, 0, "remaining=" & CStr(GeoApiBudgetRemaining())
   If Not GeoApiBudgetAvailable() Then
     GeoAddDebug "result", 0, 0, "daily-budget-exhausted"
     On Error GoTo 0

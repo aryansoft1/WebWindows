@@ -333,7 +333,7 @@ VList.prototype.setData=function(arr){
 }
 VList.prototype.onScroll=function(force){
   if(!this.el || !this.scrollEl) return;
-  var topOffset = this.el.offsetTop - this.scrollEl.offsetTop;
+  var topOffset = this.el === this.scrollEl ? 0 : this.el.offsetTop - this.scrollEl.offsetTop;
   var y = this.scrollEl.scrollTop - topOffset;
   var viewH=this.scrollEl.clientHeight;
   var start=Math.max(0, Math.floor(Math.max(0,y)/this.rowH)-this.overscan);
@@ -347,8 +347,8 @@ VList.prototype.onScroll=function(force){
 
 /* ===== 实例化 ===== */
 var scroller=$('#sheet-inner');
-var vReco = new VList($('#reco-list'), scroller, 62, 10, personRow);
-var vFriends = new VList($('#friends-list'), scroller, 62, 10, personRow);
+var vReco = new VList($('#reco-list'), $('#reco-list'), 62, 10, personRow);
+var vFriends = new VList($('#friends-list'), $('#friends-list'), 62, 10, personRow);
 
 /* ===== 过滤/渲染 ===== */
 function renderReco(){
@@ -393,9 +393,9 @@ var activeTab='reco';
 function switchTab(t){
   activeTab = t;
   var a=$('#tab-reco'), b=$('#tab-friends'), c=$('#tab-ai'), d=$('#tab-mailbox');
-  if(a) a.style.display = (t==='reco') ? 'block' : 'none';
-  if(b) b.style.display = (t==='friends') ? 'block' : 'none';
-  if(c) c.style.display = (t==='ai') ? 'block' : 'none';
+  if(a) a.style.display = (t==='reco') ? 'flex' : 'none';
+  if(b) b.style.display = (t==='friends') ? 'flex' : 'none';
+  if(c) c.style.display = (t==='ai') ? 'flex' : 'none';
   if(d) d.style.display = (t==='mailbox') ? 'block' : 'none';
 
   var btns=[tabBtnReco,tabBtnFriends,tabBtnAI,tabBtnMailbox];
@@ -463,6 +463,9 @@ document.addEventListener('click', function(e){
 }, true);
 
 if(scroller) scroller.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
+[vReco.scrollEl, vFriends.scrollEl].forEach(function(el){
+  if(el) el.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
+});
 
 var dndToggle=$('#dnd-toggle'); var DND=true;
 if(dndToggle) dndToggle.addEventListener('change',function(){

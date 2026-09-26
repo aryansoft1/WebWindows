@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.13",
+  "releaseVersion": "2026.09.26.14",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T04:34:43.829Z",
+  "generatedAt": "2026-09-26T05:11:11.028Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -270,9 +270,10 @@
     "inc/admin-security.asp",
     "SystemManager/assets/js/admin-login.js",
     "SystemManager/assets/css/admin-login.css",
-    "SystemManager/login.html"
+    "SystemManager/login.html",
+    "SystemManager/assets/js/visitor-analytics-charts.js"
   ],
-  "previousReleaseVersion": "2026.09.26.12",
+  "previousReleaseVersion": "2026.09.26.13",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1151,24 +1152,24 @@
       "size": 5549
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "f599505cd7c6e5b8344adfe57fed5c7ad5da8ca1573d1636d3f0cbdd523da481",
-      "size": 4275
+      "sha256": "cf568a2d57b62544e2913b050dd5224b599f1bc3998cb1048e9cc245409595ab",
+      "size": 5985
     },
     "SystemManager/assets/js/visitor-analytics.js": {
-      "sha256": "ce47ec655293a86f6a4b7b01b84c18e5e917699546b4418c8a1c54e597450902",
-      "size": 6835
+      "sha256": "4e6a861d9a421b29a869445c92a99308a296fecbffb17e08f0522e9aa9b37c87",
+      "size": 7168
     },
     "assets/css/tailwind.min.css": {
       "sha256": "0729906a529caf8b5dbe648cbc3952833afe118a25a841c8ae27e1cd1a8ac14c",
       "size": 201
     },
     "admin_api/visitorAnalytics.asp": {
-      "sha256": "c78661bbbee9ec46419d4ea410542548a504200ed0eff006ac6c4cad6c2d7cba",
-      "size": 8418
+      "sha256": "6dfc95fb28a9352f7d9ec991448b3ee9f3f1883e6c3e39436a714a02ba5e1460",
+      "size": 15933
     },
     "api/visitor-analytics.asp": {
-      "sha256": "895db988c97253bd7f16586f4a7a436adbcc1e45a4d565a17e1f9830d9e3e2e2",
-      "size": 11786
+      "sha256": "359d91c24aa4723405808162f070f8ccc2ff4a5206e00fd000be22c72fdd7f29",
+      "size": 20886
     },
     "assets/js/visitor-analytics.js": {
       "sha256": "38d433c4e2592c0a2ab8e2730bc343c851cf11c7c902830407433475e359caa1",
@@ -1179,8 +1180,8 @@
       "size": 2626
     },
     "SystemManager/assets/css/visitor-analytics.css": {
-      "sha256": "b382a3c3547a7158c815630ca2cb3d34568deca6050c72ff8dca67db7930faae",
-      "size": 3693
+      "sha256": "f298c41212b197f13745ca57c4e6a54d504403c759f97090845d78decf7bb1ea",
+      "size": 3804
     },
     "assets/js/flight-position.js": {
       "sha256": "a4dfac38195cbcd8ca006507f8b11468da7ad8e446e9bd8632dc061a74760b75"
@@ -1328,12 +1329,20 @@
     "SystemManager/login.html": {
       "sha256": "f2676dd291dcee9e89e9477576fc1764a33050e082a0d71dd4e2b5df8db8db29",
       "size": 1638
+    },
+    "SystemManager/assets/js/visitor-analytics-charts.js": {
+      "sha256": "74a0966bdc4417265fac320ef72549a14b181d9633265c40f9623aaf0af8e63b",
+      "size": 17868
     }
   },
-  "releaseScope": "admin-console-tailwind",
+  "releaseScope": "visitor-geo-map",
   "uploadFiles": [
-    "SystemManager/index.html",
-    "SystemManager/datacenter.html",
+    "admin_api/visitorAnalytics.asp",
+    "api/visitor-analytics.asp",
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json"
   ]
 }

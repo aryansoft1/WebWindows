@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adminIndex, home, environmentConfigText] = await Promise.all([
+const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adminIndex, home, environmentConfigText,
+  adminCharts, adminCss, geoConfigExample] = await Promise.all([
   read("database/migrations/002_webwindows_visitor_analytics.sql"),
   read("api/visitor-analytics.asp"),
   read("assets/js/visitor-analytics.js"),
@@ -11,7 +12,10 @@ const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adm
   read("SystemManager/assets/js/visitor-analytics.js"),
   read("SystemManager/index.html"),
   read("index.html"),
-  read("data/deploy/production-environment-config-v1.json")
+  read("data/deploy/production-environment-config-v1.json"),
+  read("SystemManager/assets/js/visitor-analytics-charts.js"),
+  read("SystemManager/assets/css/visitor-analytics.css"),
+  read("api/visitor-analytics.config.example.asp")
 ]);
 const environmentConfig = JSON.parse(environmentConfigText);
 
@@ -54,5 +58,63 @@ assert.match(adminIndex, /visitor-analytics\.html/);
 assert.match(home, /assets\/js\/visitor-analytics\.js/);
 assert.equal(environmentConfig.forwardedHeadersTrustedByApplication, false);
 assert.ok(environmentConfig.settings.some((setting) => setting.name === "WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO"));
+
+// 地区解析：IIS GeoIP 优先，其次同 IP 历史缓存，最后才是外部 API。
+assert.match(collectorApi, /Sub ResolveVisitorGeo/);
+assert.match(collectorApi, /ResolveVisitorGeo ipAddress/);
+assert.match(collectorApi, /Function IsPublicAddress/);
+assert.match(collectorApi, /If Left\(address, 3\) = "10\." Then Exit Function/);
+assert.match(collectorApi, /If Left\(address, 8\) = "192\.168\." Then Exit Function/);
+assert.match(collectorApi, /secondOctet >= 16 And secondOctet <= 31/);
+assert.match(collectorApi, /Sub ApplyCachedGeo/);
+assert.match(collectorApi, /WHERE ip_address=\? AND \(country_code<>'' OR city_name<>''\)/);
+assert.match(collectorApi, /Function GeoApiBudgetAvailable/);
+assert.match(collectorApi, /geoDailyCap/);
+assert.match(collectorApi, /MSXML2\.ServerXMLHTTP\.6\.0/);
+assert.match(collectorApi, /http\.setTimeouts 2500, 2500, 3000, 3000/);
+assert.match(collectorApi, /LCase\(Left\(geoApiBase, 8\)\) <> "https:\/\/"/);
+assert.match(collectorApi, /If LCase\(Left\(geoApiBase, 8\)\) <> "https:\/\/" Then geoApiBase = ""/);
+assert.match(collectorApi, /geoResolvedBy = "external-api"/);
+assert.match(collectorApi, /visitor-analytics\.config\.asp/);
+assert.doesNotMatch(collectorApi, /ipwho\.is|ipapi\.co|db-ip/,
+  "provider endpoints belong in the server-side config file, never in tracked source");
+
+// 管理端聚合：地区来源 + 设备 + 停留时间 + 每日趋势 + 国家 + 中国省市
+assert.match(adminApi, /""geo"":\{""source""/);
+assert.match(adminApi, /SUM\(\(country_code<>'' OR city_name<>''\)\)/);
+assert.match(adminApi, /GROUP BY device_type/);
+assert.match(adminApi, /active_seconds<30/);
+assert.match(adminApi, /DATE_FORMAT\(started_at,'%Y-%m-%d'\)/);
+assert.match(adminApi, /GROUP BY country_code,country_name/);
+assert.match(adminApi, /GROUP BY region_name,city_name/);
+assert.match(adminApi, /country_code='CN' OR country_name='中国'/);
+assert.match(adminApi, /""devices"":/);
+assert.match(adminApi, /""dwell"":/);
+assert.match(adminApi, /""daily"":/);
+assert.match(adminApi, /""countries"":/);
+assert.match(adminApi, /""chinaRegions"":/);
+
+// 页面与图表：世界地图 + 中国下钻 + 设备/停留/趋势
+assert.match(adminPage, /id="geoMap"/);
+assert.match(adminPage, /id="geoBreadcrumb"/);
+assert.match(adminPage, /id="deviceChart"/);
+assert.match(adminPage, /id="dwellChart"/);
+assert.match(adminPage, /id="trendChart"/);
+assert.match(adminPage, /echarts@5\.5\.1\/dist\/echarts\.min\.js/);
+assert.match(adminPage, /visitor-analytics-charts\.js/);
+assert.match(adminPage, /访客地区分布/);
+assert.match(adminCharts, /natural-earth-vector/);
+assert.match(adminCharts, /geo\.datav\.aliyun\.com\/areas_v3\/bound\//);
+assert.match(adminCharts, /ISO_A2_EH/);
+assert.match(adminCharts, /echarts\.registerMap/);
+assert.match(adminCharts, /normalizePlace/);
+assert.doesNotMatch(adminCharts, /innerHTML\s*=/, "charts must not assign innerHTML");
+assert.match(adminCharts, /textContent/);
+assert.match(adminScript, /WebWindowsVisitorCharts/);
+assert.match(adminScript, /地区来源/);
+assert.match(adminCss, /\.h-map \{/);
+assert.match(geoConfigExample, /geoApiBase = "https/);
+assert.match(geoConfigExample, /geoDailyCap/);
+assert.match(geoConfigExample, /\{IP\}/);
 
 console.log("visitor analytics smoke test passed");

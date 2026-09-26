@@ -113,6 +113,211 @@ hourRs.Close
 Set hourRs = Nothing
 result = result & "]"
 
+'
+' 地区来源与解析覆盖率。诚实展示：哪些会话真的解析出了地区、当前用的是哪个来源，
+' 避免"地图空着但看不出原因"。
+'
+Function EnvironmentFlagEnabled(ByVal name)
+  Dim shell, environment, value
+  value = ""
+  On Error Resume Next
+  Set shell = Server.CreateObject("WScript.Shell")
+  Set environment = shell.Environment("PROCESS")
+  value = LCase(Trim(CStr(environment(name))))
+  Set environment = Nothing
+  Set shell = Nothing
+  Err.Clear
+  On Error GoTo 0
+  EnvironmentFlagEnabled = (value = "1" Or value = "true" Or value = "yes")
+End Function
+
+Function ExternalGeoConfigured()
+  Dim configPath, content, matcher, matches, baseUrl
+  ExternalGeoConfigured = False
+  baseUrl = ""
+  configPath = Server.MapPath("../api/visitor-analytics.config.asp")
+  If Len(configPath) = 0 Then Exit Function
+  On Error Resume Next
+  Dim fso
+  Set fso = Server.CreateObject("Scripting.FileSystemObject")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set fso = Nothing
+    Exit Function
+  End If
+  If Not fso.FileExists(configPath) Then
+    Set fso = Nothing
+    Exit Function
+  End If
+  Dim stream
+  Set stream = Server.CreateObject("ADODB.Stream")
+  stream.Type = 2
+  stream.Charset = "utf-8"
+  stream.Open
+  stream.LoadFromFile configPath
+  content = stream.ReadText
+  stream.Close
+  Set stream = Nothing
+  Set fso = Nothing
+  Err.Clear
+  On Error GoTo 0
+  Set matcher = New RegExp
+  matcher.Global = False
+  matcher.IgnoreCase = True
+  matcher.Pattern = "geoApiBase\s*=\s*""([^""]*)"""
+  Set matches = matcher.Execute(CStr(content))
+  If matches.Count > 0 Then baseUrl = Trim(CStr(matches(0).SubMatches(1)))
+  Set matches = Nothing
+  Set matcher = Nothing
+  ExternalGeoConfigured = (Len(baseUrl) > 8 And LCase(Left(baseUrl, 8)) = "https://")
+End Function
+
+Dim geoRs, geoResolved, geoTotal, geoSource
+geoResolved = 0
+geoTotal = 0
+Set geoRs = conn.Execute("SELECT COALESCE(SUM((country_code<>'' OR city_name<>'')),0) AS resolved," & _
+  "COUNT(*) AS total FROM webwindows_visitor_sessions WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY)")
+If Not geoRs.EOF Then
+  geoResolved = CLng(geoRs("resolved"))
+  geoTotal = CLng(geoRs("total"))
+End If
+geoRs.Close
+Set geoRs = Nothing
+If EnvironmentFlagEnabled("WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO") Then
+  geoSource = "iis-geoip"
+ElseIf ExternalGeoConfigured() Then
+  geoSource = "external-api"
+Else
+  geoSource = "none"
+End If
+result = result & ",""geo"":{""source"":""" & geoSource & """,""resolvedSessions"":" & geoResolved & _
+  ",""totalSessions"":" & geoTotal & "}"
+
+'
+' 设备分布
+'
+Dim deviceRs
+result = result & ",""devices"": ["
+first = True
+Set deviceRs = conn.Execute("SELECT device_type,COUNT(*) AS sessions,COUNT(DISTINCT visitor_key) AS visitors," & _
+  "COALESCE(ROUND(AVG(active_seconds)),0) AS avg_active FROM webwindows_visitor_sessions " & _
+  "WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY) GROUP BY device_type ORDER BY sessions DESC")
+Do Until deviceRs.EOF
+  If Not first Then result = result & ","
+  first = False
+  result = result & "{""type"":""" & JsonText(deviceRs("device_type")) & _
+    """,""sessions"":" & CLng(deviceRs("sessions")) & _
+    ",""visitors"":" & CLng(deviceRs("visitors")) & _
+    ",""averageActiveSeconds"":" & CLng(deviceRs("avg_active")) & "}"
+  deviceRs.MoveNext
+Loop
+deviceRs.Close
+Set deviceRs = Nothing
+result = result & "]"
+
+'
+' 停留时间分布（6 档直方图，一次查询取回）
+'
+Dim dwellRs
+Set dwellRs = conn.Execute("SELECT COALESCE(SUM(active_seconds<30),0) AS b1," & _
+  "COALESCE(SUM(active_seconds>=30 AND active_seconds<120),0) AS b2," & _
+  "COALESCE(SUM(active_seconds>=120 AND active_seconds<600),0) AS b3," & _
+  "COALESCE(SUM(active_seconds>=600 AND active_seconds<1800),0) AS b4," & _
+  "COALESCE(SUM(active_seconds>=1800 AND active_seconds<3600),0) AS b5," & _
+  "COALESCE(SUM(active_seconds>=3600),0) AS b6 FROM webwindows_visitor_sessions " & _
+  "WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY)")
+Dim dwellValues, dwellLabels, dwellIndex
+dwellValues = Array(0, 0, 0, 0, 0, 0)
+If Not dwellRs.EOF Then
+  dwellValues(0) = CLng(dwellRs("b1"))
+  dwellValues(1) = CLng(dwellRs("b2"))
+  dwellValues(2) = CLng(dwellRs("b3"))
+  dwellValues(3) = CLng(dwellRs("b4"))
+  dwellValues(4) = CLng(dwellRs("b5"))
+  dwellValues(5) = CLng(dwellRs("b6"))
+End If
+dwellRs.Close
+Set dwellRs = Nothing
+dwellLabels = Array("30 秒内", "30 秒–2 分", "2–10 分", "10–30 分", "30–60 分", "1 小时以上")
+result = result & ",""dwell"": ["
+For dwellIndex = 0 To 5
+  If dwellIndex > 0 Then result = result & ","
+  result = result & "{""label"":""" & JsonText(dwellLabels(dwellIndex)) & _
+    """,""sessions"":" & CLng(dwellValues(dwellIndex)) & "}"
+Next
+result = result & "]"
+
+'
+' 每日趋势
+'
+Dim dailyRs
+result = result & ",""daily"": ["
+first = True
+Set dailyRs = conn.Execute("SELECT DATE_FORMAT(started_at,'%Y-%m-%d') AS visit_day,COUNT(*) AS sessions," & _
+  "COUNT(DISTINCT visitor_key) AS visitors,COALESCE(SUM(active_seconds),0) AS active_seconds " & _
+  "FROM webwindows_visitor_sessions WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY) " & _
+  "GROUP BY visit_day ORDER BY visit_day")
+Do Until dailyRs.EOF
+  If Not first Then result = result & ","
+  first = False
+  result = result & "{""day"":""" & JsonText(dailyRs("visit_day")) & _
+    """,""sessions"":" & CLng(dailyRs("sessions")) & _
+    ",""visitors"":" & CLng(dailyRs("visitors")) & _
+    ",""activeSeconds"":" & CLng(dailyRs("active_seconds")) & "}"
+  dailyRs.MoveNext
+Loop
+dailyRs.Close
+Set dailyRs = Nothing
+result = result & "]"
+
+'
+' 世界地图数据：按国家聚合（country_code 是 ISO 3166-1 alpha-2）
+'
+Dim countryRs
+result = result & ",""countries"": ["
+first = True
+Set countryRs = conn.Execute("SELECT COALESCE(country_code,'') AS country_code," & _
+  "COALESCE(country_name,'') AS country_name,COUNT(*) AS sessions,COUNT(DISTINCT visitor_key) AS visitors " & _
+  "FROM webwindows_visitor_sessions WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY) " & _
+  "GROUP BY country_code,country_name HAVING country_code<>'' OR country_name<>'' " & _
+  "ORDER BY sessions DESC LIMIT 60")
+Do Until countryRs.EOF
+  If Not first Then result = result & ","
+  first = False
+  result = result & "{""code"":""" & JsonText(countryRs("country_code")) & _
+    """,""name"":""" & JsonText(countryRs("country_name")) & _
+    """,""sessions"":" & CLng(countryRs("sessions")) & _
+    ",""visitors"":" & CLng(countryRs("visitors")) & "}"
+  countryRs.MoveNext
+Loop
+countryRs.Close
+Set countryRs = Nothing
+result = result & "]"
+
+'
+' 中国下钻数据：省 + 市
+'
+Dim chinaRs
+result = result & ",""chinaRegions"": ["
+first = True
+Set chinaRs = conn.Execute("SELECT COALESCE(region_name,'') AS region_name," & _
+  "COALESCE(city_name,'') AS city_name,COUNT(*) AS sessions,COUNT(DISTINCT visitor_key) AS visitors " & _
+  "FROM webwindows_visitor_sessions WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY) " & _
+  "AND (country_code='CN' OR country_name='中国') " & _
+  "GROUP BY region_name,city_name ORDER BY sessions DESC LIMIT 200")
+Do Until chinaRs.EOF
+  If Not first Then result = result & ","
+  first = False
+  result = result & "{""region"":""" & JsonText(chinaRs("region_name")) & _
+    """,""city"":""" & JsonText(chinaRs("city_name")) & _
+    """,""sessions"":" & CLng(chinaRs("sessions")) & _
+    ",""visitors"":" & CLng(chinaRs("visitors")) & "}"
+  chinaRs.MoveNext
+Loop
+chinaRs.Close
+Set chinaRs = Nothing
+result = result & "]"
+
 Dim featureRs
 Set featureRs = conn.Execute("SELECT f.feature_key,MAX(f.feature_name) AS feature_name,SUM(f.open_count) AS open_count," & _
   "SUM(f.active_seconds) AS active_seconds,COUNT(DISTINCT f.visitor_session_id) AS sessions " & _

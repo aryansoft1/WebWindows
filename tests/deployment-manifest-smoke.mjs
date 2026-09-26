@@ -110,6 +110,16 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/datacenter.html",
     "deploy/ftp-manifest.json",
   ], "the admin console stylesheet repair must upload only the two pages that pointed at the Tailwind stub, plus the manifest last");
+} else if (manifest.releaseScope === "visitor-geo-map") {
+  assert.deepEqual(uploadFiles, [
+    "admin_api/visitorAnalytics.asp",
+    "api/visitor-analytics.asp",
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "SystemManager/assets/css/visitor-analytics.css",
+    "deploy/ftp-manifest.json",
+  ], "the visitor geolocation release must upload only the collector, the admin aggregate API, the analytics page chain and the manifest last");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

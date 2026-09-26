@@ -115,6 +115,12 @@
     }
   }
 
+  const GEO_SOURCE_LABELS = {
+    "iis-geoip": "本机 IIS GeoIP 模块",
+    "external-api": "外部解析 API",
+    none: "未启用"
+  };
+
   async function load() {
     const status = document.getElementById("analyticsStatus");
     status.textContent = "正在读取统计数据……";
@@ -139,7 +145,12 @@
       renderTypes(payload.visitorTypes, summary.sessions || 0);
       renderFeatures(payload.features);
       renderSessions(payload.sessions, payload.sessionFeatures);
-      status.textContent = `统计已更新 · 最近 ${payload.days} 天 · 活跃停留仅计算页面可见且用户未空闲的时间`;
+      if (window.WebWindowsVisitorCharts) window.WebWindowsVisitorCharts.render(payload);
+      const geo = payload.geo || {};
+      const geoSource = GEO_SOURCE_LABELS[geo.source] || GEO_SOURCE_LABELS.none;
+      status.textContent = `统计已更新 · 最近 ${payload.days} 天 · 地区来源：${geoSource}`
+        + `（已解析 ${geo.resolvedSessions || 0}/${geo.totalSessions || 0} 个会话）`
+        + " · 活跃停留仅计算页面可见且用户未空闲的时间";
       status.className = "rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800";
     } catch (error) {
       status.textContent = `统计读取失败：${error.message || error}`;

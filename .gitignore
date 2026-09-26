@@ -21,6 +21,14 @@ logs/
 *.log
 *.tmp
 
+# Local git worktrees of parallel agent sessions
+.worktrees/
+.codex-worktrees/
+
+# Local deployment backups (may contain production copies incl. credentials)
+.deployment-backups/
+deploy/production-backups/
+
 # Generated build output (existing tracked dist files remain tracked)
 build/
 **/bin/

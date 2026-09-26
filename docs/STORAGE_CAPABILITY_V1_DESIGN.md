@@ -742,3 +742,101 @@ result remains `{ metadata, data: ArrayBuffer }`. Base64 must be canonical
 reading and the Web decoder enforce a raw maximum of `8 * 1024 * 1024` bytes.
 When metadata size is known it must equal the actual payload size. Storage v1
 remains whole-file and read-only, with no streaming, range, or write operation.
+
+## 18. Phase 3 picker and volume lifecycle freeze decision record
+
+This section turns the Phase 3 bullets into the implementation contract. It
+does not change Native Bridge v1 envelopes or add a public method.
+
+### 18.1 Authoritative interactive operation
+
+For each Dreama Runtime Activity/window, Native owns exactly one optional
+`StoragePickerOperation`:
+
+```text
+{ token, requestId, origin, navigationGeneration, replaceVolumeId,
+  state: active | invalidated | expired }
+```
+
+`token` is Native-private, freshly generated per `ACTION_OPEN_DOCUMENT_TREE`
+launch, and is carried only in Runtime state needed to match the activity
+result. The operation captures the already accepted exact source origin and
+navigation generation. The fixed activity request code is not itself a
+correlation identifier.
+
+Native must install this operation before launching the Android picker. A
+second `storagePickDirectory` while any operation exists (`active`,
+`invalidated`, or `expired`) fails with `picker-busy`. The public provider
+normalizes the legacy Native code `storage-picker-busy` to `picker-busy`.
+
+### 18.2 Completion and cancellation
+
+When an activity result arrives, Native first matches it to the current
+operation token and consumes that operation exactly once. It must then clear
+the operation before any page reply. A successful result may persist or replace
+a grant only if the operation is still `active` and its origin and navigation
+generation still match the live trusted document.
+
+- A user cancel returns `user-cancelled`; neither a volume nor a grant mapping
+  is created or modified.
+- A successful new selection creates an opaque ID only after persisted read
+  permission has been acquired and the private origin-scoped record is written.
+- A successful replacement updates only the existing record whose `(origin,
+  id)` matches `replaceVolumeId`; it preserves the ID. An unknown or
+  foreign-origin replacement fails `storage-volume-not-found` before launch.
+- Any failure after selection, including unavailable read permission or a
+  persistence failure, returns a structured Storage error and leaves the old
+  replacement record intact.
+
+### 18.3 Navigation, close, and timeout
+
+On top-level navigation, pagehide, Runtime close, or bridge destruction, Native
+must advance `navigationGeneration`, mark an active picker `invalidated`, and
+discard its reply proxy. It must retain the operation as a tombstone until the
+corresponding Android callback is consumed. The callback for an invalidated
+operation only clears the tombstone: it must not take a grant, write a volume
+record, or send a JavaScript response.
+
+The 120-second page-side picker timeout is coordinated by marking the matching
+Native operation `expired`. It remains a tombstone and blocks another picker
+until its callback is consumed or the Activity is conclusively destroyed. Its
+late result follows the same discard-only path. Thus a timed-out or navigated
+page can never create a silent future grant.
+
+Activity destruction clears a tombstone only after the OS picker can no longer
+return to that Activity. It does not carry an operation into a replacement
+Activity or document.
+
+### 18.4 Volume identity and migration
+
+Native persistence is keyed by `(exactOrigin, opaqueVolumeId)`, never solely by
+the volume ID. Existing unpartitioned records are read only for a one-time,
+explicit migration: the Runtime may adopt a record only after it verifies that
+the persisted grant is valid and writes it into the current exact-origin
+namespace. If ownership cannot be proven, it leaves the legacy record
+unavailable rather than sharing it across origins.
+
+Browser `pickDirectory({ replaceVolumeId })` must load IndexedDB records before
+checking whether the replacement ID exists. Browser and Native both preserve an
+ID on valid same-origin reauthorization and never expose platform URIs,
+filesystem paths, handles, document IDs, or migration keys.
+
+### 18.5 Required verification before Frozen
+
+The Phase 3 implementation is accepted only when automated tests demonstrate:
+
+1. one active picker returns `picker-busy` for every later request;
+2. cancellation returns exactly `user-cancelled` and changes no record;
+3. navigation and timeout retain a tombstone, and a late success neither
+   persists a grant nor replies to a subsequent page;
+4. valid same-origin replacement keeps the opaque ID, while unknown and
+   foreign-origin replacement is rejected before the picker opens;
+5. an Android restart restores only records for the requesting exact origin;
+6. a Browser restart loads IndexedDB before replacement-ID validation; and
+7. picker failure remains isolated from Runtime identity, `device.ready()`,
+   Battery, Network, Display, and Audio.
+
+Final adjudication accepted Storage Capability v1 as **Frozen** with the four
+validation-environment limitations preserved in the real-device validation
+record. Those limitations remain opportunities for future evidence and are not
+rewritten as Pass or treated as reproduced defects.

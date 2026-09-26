@@ -128,6 +128,16 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "the per-window dwell release must upload only the analytics page chain and the manifest last");
+} else if (manifest.releaseScope === "visitor-geo-enable") {
+  assert.deepEqual(uploadFiles, [
+    "inc/visitor-geo.asp",
+    "api/visitor-analytics.asp",
+    "admin_api/visitorAnalytics.asp",
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "SystemManager/assets/css/visitor-analytics.css",
+    "deploy/ftp-manifest.json",
+  ], "the geolocation enablement must upload the shared resolver, both callers, the admin page chain and the manifest last");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

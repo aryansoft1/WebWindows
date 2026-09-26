@@ -141,6 +141,42 @@
     none: "未启用"
   };
 
+  // 地区解析是显式启用的：启用之前产生的会话没有地区，世界地图自然是空的。
+  // 这里给管理员一个按需回填入口（走与其它后台写操作同一套 CSRF 门禁）。
+  async function backfillGeo() {
+    const button = document.getElementById("geoBackfill");
+    const status = document.getElementById("geoBackfillStatus");
+    if (!button || !status) return;
+    button.disabled = true;
+    status.dataset.touched = "1";
+    status.className = "text-xs text-gray-500";
+    status.textContent = "正在补全历史地区，请稍候……";
+    try {
+      if (!window.WebWindowsAdminSecurity) throw new Error("安全模块未加载，请刷新页面重试。");
+      const body = new URLSearchParams();
+      body.set("limit", "200");
+      const options = await window.WebWindowsAdminSecurity.authorize({
+        body,
+        headers: { "X-WebWindows-Admin-Request": "visitor-analytics" }
+      });
+      const response = await fetch("/admin_api/visitorAnalytics.asp?action=backfill-geo", options);
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.message || payload.code || `HTTP ${response.status}`);
+      const remaining = Number(payload.remainingBudget) || 0;
+      status.textContent = `已扫描 ${payload.scanned} 个地址，补全 ${payload.resolved} 个`
+        + (payload.skippedPrivate ? `，跳过内网地址 ${payload.skippedPrivate} 个` : "")
+        + (payload.failed ? `，失败 ${payload.failed} 个` : "")
+        + `。今日外部解析额度还剩 ${remaining} 次。`;
+      status.className = "text-xs text-green-600";
+      await load();
+    } catch (error) {
+      status.textContent = `补全失败：${error.message || error}`;
+      status.className = "text-xs text-red-800";
+    } finally {
+      button.disabled = false;
+    }
+  }
+
   async function load() {
     const status = document.getElementById("analyticsStatus");
     status.textContent = "正在读取统计数据……";
@@ -172,6 +208,19 @@
         + `（已解析 ${geo.resolvedSessions || 0}/${geo.totalSessions || 0} 个会话）`
         + " · 活跃停留仅计算页面可见且用户未空闲的时间";
       status.className = "rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800";
+      // 地图空着时必须让人一眼看出原因，而不是让人猜
+      const hint = document.getElementById("geoBackfillStatus");
+      if (hint && !hint.dataset.touched) {
+        if (geo.source === "none") {
+          hint.textContent = "地区解析未启用：服务器缺少 api/visitor-analytics.config.asp，也没有开启本机 IIS GeoIP，"
+            + "因此已有记录都没有地区、地图不会着色。";
+          hint.className = "text-xs text-red-800";
+        } else if (geo.pendingAddresses > 0) {
+          hint.textContent = `还有 ${geo.pendingAddresses} 个访客地址没有地区，`
+            + "点「补全历史地区」回填（受每日外部解析额度限制，可多次点击）。";
+          hint.className = "text-xs text-amber-800";
+        }
+      }
     } catch (error) {
       status.textContent = `统计读取失败：${error.message || error}`;
       status.className = "rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800";
@@ -180,6 +229,8 @@
 
   addEventListener("DOMContentLoaded", () => {
     document.getElementById("analyticsDays").addEventListener("change", load);
+    const backfill = document.getElementById("geoBackfill");
+    if (backfill) backfill.addEventListener("click", backfillGeo);
     load();
   });
 })();

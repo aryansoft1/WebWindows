@@ -1,6 +1,7 @@
 <%@LANGUAGE="VBScript" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
 <!--#include file="../inc/admin-security.asp"-->
+<!--#include file="../inc/visitor-geo.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -50,11 +51,103 @@ If Session("webwindows_admin") <> True Or _
    Not AdminSecurityTokenShape(Session("webwindows_admin_authority")) Then
   Fail "401 Unauthorized", "ADMIN_LOGIN_REQUIRED", "请先登录 WebWindows 管理后台。"
 End If
-If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "GET" Then
-  Fail "405 Method Not Allowed", "METHOD_NOT_ALLOWED", "该接口仅支持读取。"
-End If
+Dim actionName
+actionName = LCase(Trim(CStr(Request.QueryString("action"))))
+If actionName = "" Then actionName = "summary"
+
 If Not TableReady("webwindows_visitor_sessions") Or Not TableReady("webwindows_visitor_feature_stats") Then
   Fail "503 Service Unavailable", "ANALYTICS_SCHEMA_REQUIRED", "访客统计数据库迁移尚未应用。"
+End If
+
+'
+' 补全历史地区：地区解析是显式启用的，启用之前产生的会话地区四列是空的，
+' 世界地图自然没有颜色。这里让管理员按需回填，而不是等新访客慢慢积累。
+' 写操作走与其它后台端点同一套 CSRF 门禁，并复用采集端的解析实现与每日额度。
+'
+If actionName = "backfill-geo" Then
+  If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "POST" Then
+    Fail "405 Method Not Allowed", "METHOD_NOT_ALLOWED", "补全历史地区仅支持 POST。"
+  End If
+  AdminSecurityRequireMutation "visitor-analytics", "visitor-geo-backfill"
+  If Not GeoIisTrusted() And Not GeoExternalConfigured() Then
+    Fail "503 Service Unavailable", "GEO_NOT_CONFIGURED", _
+      "尚未启用地区解析：服务器缺少 api/visitor-analytics.config.asp，也没有开启本机 IIS GeoIP。"
+  End If
+
+  Dim backfillLimit
+  backfillLimit = 200
+  If IsNumeric(Request.Form("limit")) Then backfillLimit = CLng(Request.Form("limit"))
+  If backfillLimit < 1 Then backfillLimit = 1
+  If backfillLimit > 500 Then backfillLimit = 500
+
+  Dim addressList(0), addressCount, index, targetAddress
+  Dim pendingRs, scanned, resolvedCount, skipped, failed
+  addressCount = 0
+  scanned = 0
+  resolvedCount = 0
+  skipped = 0
+  failed = 0
+  Set pendingRs = conn.Execute("SELECT ip_address,COUNT(*) AS sessions FROM webwindows_visitor_sessions " & _
+    "WHERE ip_address<>'' AND (country_code='' OR country_name='' OR city_name='') " & _
+    "GROUP BY ip_address ORDER BY sessions DESC LIMIT " & backfillLimit)
+  Do Until pendingRs.EOF
+    ReDim Preserve addressList(addressCount)
+    addressList(addressCount) = CStr(pendingRs("ip_address"))
+    addressCount = addressCount + 1
+    pendingRs.MoveNext
+  Loop
+  pendingRs.Close
+  Set pendingRs = Nothing
+
+  Dim updateCmd
+  For index = 0 To addressCount - 1
+    targetAddress = addressList(index)
+    scanned = scanned + 1
+    If Not GeoIsPublicAddress(targetAddress) Then
+      skipped = skipped + 1
+    Else
+      GeoResolve targetAddress
+      If GeoCountryCode <> "" Or GeoCountryName <> "" Or GeoCityName <> "" Then
+        On Error Resume Next
+        Set updateCmd = Server.CreateObject("ADODB.Command")
+        With updateCmd
+          .ActiveConnection = conn
+          .CommandType = 1
+          .CommandText = "UPDATE webwindows_visitor_sessions SET country_code=?,country_name=?,region_name=?,city_name=? " & _
+            "WHERE ip_address=? AND (country_code='' OR country_name='' OR city_name='')"
+          .Parameters.Append .CreateParameter("", 200, 1, 8, GeoCountryCode)
+          .Parameters.Append .CreateParameter("", 200, 1, 80, GeoCountryName)
+          .Parameters.Append .CreateParameter("", 200, 1, 120, GeoRegionName)
+          .Parameters.Append .CreateParameter("", 200, 1, 120, GeoCityName)
+          .Parameters.Append .CreateParameter("", 200, 1, 45, targetAddress)
+          .Execute
+        End With
+        Set updateCmd = Nothing
+        If Err.Number <> 0 Then
+          Err.Clear
+          failed = failed + 1
+        Else
+          resolvedCount = resolvedCount + 1
+        End If
+        On Error GoTo 0
+      Else
+        failed = failed + 1
+      End If
+    End If
+  Next
+
+  Response.Write "{""ok"":true,""scanned"":" & scanned & _
+    ",""resolved"":" & resolvedCount & _
+    ",""skippedPrivate"":" & skipped & _
+    ",""failed"":" & failed & _
+    ",""remainingBudget"":" & GeoApiBudgetRemaining() & "}"
+  conn.Close
+  Set conn = Nothing
+  Response.End
+End If
+
+If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "GET" Then
+  Fail "405 Method Not Allowed", "METHOD_NOT_ALLOWED", "该接口仅支持读取。"
 End If
 
 Dim days, limitRows
@@ -115,63 +208,8 @@ result = result & "]"
 
 '
 ' 地区来源与解析覆盖率。诚实展示：哪些会话真的解析出了地区、当前用的是哪个来源，
-' 避免"地图空着但看不出原因"。
+' 避免"地图空着但看不出原因"。解析实现与采集端共用 inc/visitor-geo.asp。
 '
-Function EnvironmentFlagEnabled(ByVal name)
-  Dim shell, environment, value
-  value = ""
-  On Error Resume Next
-  Set shell = Server.CreateObject("WScript.Shell")
-  Set environment = shell.Environment("PROCESS")
-  value = LCase(Trim(CStr(environment(name))))
-  Set environment = Nothing
-  Set shell = Nothing
-  Err.Clear
-  On Error GoTo 0
-  EnvironmentFlagEnabled = (value = "1" Or value = "true" Or value = "yes")
-End Function
-
-Function ExternalGeoConfigured()
-  Dim configPath, content, matcher, matches, baseUrl
-  ExternalGeoConfigured = False
-  baseUrl = ""
-  configPath = Server.MapPath("../api/visitor-analytics.config.asp")
-  If Len(configPath) = 0 Then Exit Function
-  On Error Resume Next
-  Dim fso
-  Set fso = Server.CreateObject("Scripting.FileSystemObject")
-  If Err.Number <> 0 Then
-    Err.Clear
-    Set fso = Nothing
-    Exit Function
-  End If
-  If Not fso.FileExists(configPath) Then
-    Set fso = Nothing
-    Exit Function
-  End If
-  Dim stream
-  Set stream = Server.CreateObject("ADODB.Stream")
-  stream.Type = 2
-  stream.Charset = "utf-8"
-  stream.Open
-  stream.LoadFromFile configPath
-  content = stream.ReadText
-  stream.Close
-  Set stream = Nothing
-  Set fso = Nothing
-  Err.Clear
-  On Error GoTo 0
-  Set matcher = New RegExp
-  matcher.Global = False
-  matcher.IgnoreCase = True
-  matcher.Pattern = "geoApiBase\s*=\s*""([^""]*)"""
-  Set matches = matcher.Execute(CStr(content))
-  If matches.Count > 0 Then baseUrl = Trim(CStr(matches(0).SubMatches(1)))
-  Set matches = Nothing
-  Set matcher = Nothing
-  ExternalGeoConfigured = (Len(baseUrl) > 8 And LCase(Left(baseUrl, 8)) = "https://")
-End Function
-
 Dim geoRs, geoResolved, geoTotal, geoSource
 geoResolved = 0
 geoTotal = 0
@@ -183,15 +221,23 @@ If Not geoRs.EOF Then
 End If
 geoRs.Close
 Set geoRs = Nothing
-If EnvironmentFlagEnabled("WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO") Then
+If GeoIisTrusted() Then
   geoSource = "iis-geoip"
-ElseIf ExternalGeoConfigured() Then
+ElseIf GeoExternalConfigured() Then
   geoSource = "external-api"
 Else
   geoSource = "none"
 End If
+Dim geoUnresolvedAddresses
+geoUnresolvedAddresses = 0
+Set geoRs = conn.Execute("SELECT COUNT(DISTINCT ip_address) AS pending FROM webwindows_visitor_sessions " & _
+  "WHERE started_at>=DATE_SUB(NOW(),INTERVAL " & days & " DAY) AND ip_address<>'' " & _
+  "AND (country_code='' OR country_name='' OR city_name='')")
+If Not geoRs.EOF Then geoUnresolvedAddresses = CLng(geoRs("pending"))
+geoRs.Close
+Set geoRs = Nothing
 result = result & ",""geo"":{""source"":""" & geoSource & """,""resolvedSessions"":" & geoResolved & _
-  ",""totalSessions"":" & geoTotal & "}"
+  ",""totalSessions"":" & geoTotal & ",""pendingAddresses"":" & geoUnresolvedAddresses & "}"
 
 '
 ' 设备分布

@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adminIndex, home, environmentConfigText,
-  adminCharts, adminCss, geoConfigExample] = await Promise.all([
+  adminCharts, adminCss, geoConfigExample, geoInclude] = await Promise.all([
   read("database/migrations/002_webwindows_visitor_analytics.sql"),
   read("api/visitor-analytics.asp"),
   read("assets/js/visitor-analytics.js"),
@@ -15,7 +15,8 @@ const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adm
   read("data/deploy/production-environment-config-v1.json"),
   read("SystemManager/assets/js/visitor-analytics-charts.js"),
   read("SystemManager/assets/css/visitor-analytics.css"),
-  read("api/visitor-analytics.config.example.asp")
+  read("api/visitor-analytics.config.example.asp"),
+  read("inc/visitor-geo.asp")
 ]);
 const environmentConfig = JSON.parse(environmentConfigText);
 
@@ -25,7 +26,6 @@ assert.match(migration, /UNIQUE KEY uk_visitor_session_key/);
 assert.match(migration, /FOREIGN KEY \(visitor_session_id\)/);
 
 assert.match(collectorApi, /Request\.ServerVariables\("REMOTE_ADDR"\)/);
-assert.match(collectorApi, /WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO/);
 assert.match(collectorApi, /Session\("webwindows_user_id"\)/);
 assert.match(collectorApi, /webwindows_developers WHERE user_id=\? AND status='approved'/);
 assert.match(collectorApi, /ON DUPLICATE KEY UPDATE/);
@@ -59,25 +59,50 @@ assert.match(home, /assets\/js\/visitor-analytics\.js/);
 assert.equal(environmentConfig.forwardedHeadersTrustedByApplication, false);
 assert.ok(environmentConfig.settings.some((setting) => setting.name === "WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO"));
 
-// 地区解析：IIS GeoIP 优先，其次同 IP 历史缓存，最后才是外部 API。
-assert.match(collectorApi, /Sub ResolveVisitorGeo/);
-assert.match(collectorApi, /ResolveVisitorGeo ipAddress/);
-assert.match(collectorApi, /Function IsPublicAddress/);
-assert.match(collectorApi, /If Left\(address, 3\) = "10\." Then Exit Function/);
-assert.match(collectorApi, /If Left\(address, 8\) = "192\.168\." Then Exit Function/);
-assert.match(collectorApi, /secondOctet >= 16 And secondOctet <= 31/);
-assert.match(collectorApi, /Sub ApplyCachedGeo/);
-assert.match(collectorApi, /WHERE ip_address=\? AND \(country_code<>'' OR city_name<>''\)/);
-assert.match(collectorApi, /Function GeoApiBudgetAvailable/);
-assert.match(collectorApi, /geoDailyCap/);
-assert.match(collectorApi, /MSXML2\.ServerXMLHTTP\.6\.0/);
-assert.match(collectorApi, /http\.setTimeouts 2500, 2500, 3000, 3000/);
-assert.match(collectorApi, /LCase\(Left\(geoApiBase, 8\)\) <> "https:\/\/"/);
-assert.match(collectorApi, /If LCase\(Left\(geoApiBase, 8\)\) <> "https:\/\/" Then geoApiBase = ""/);
-assert.match(collectorApi, /geoResolvedBy = "external-api"/);
-assert.match(collectorApi, /visitor-analytics\.config\.asp/);
-assert.doesNotMatch(collectorApi, /ipwho\.is|ipapi\.co|db-ip/,
+// 地区解析：实现抽到共享 include（采集端 + 管理端补全历史地区共用，避免两份漂移）
+assert.match(collectorApi, /include file="\.\.\/inc\/visitor-geo\.asp"/);
+assert.match(adminApi, /include file="\.\.\/inc\/visitor-geo\.asp"/);
+assert.match(collectorApi, /GeoResolve ipAddress/);
+assert.match(geoInclude, /Sub ResolveVisitorGeo|Sub GeoResolve/);
+assert.match(geoInclude, /WEBWINDOWS_ANALYTICS_TRUST_IIS_GEO/);
+assert.match(geoInclude, /Function GeoIsPublicAddress/);
+assert.match(geoInclude, /If Left\(address, 3\) = "10\." Then Exit Function/);
+assert.match(geoInclude, /If Left\(address, 8\) = "192\.168\." Then Exit Function/);
+assert.match(geoInclude, /secondOctet >= 16 And secondOctet <= 31/);
+assert.match(geoInclude, /Sub GeoApplyCached/);
+assert.match(geoInclude, /WHERE ip_address=\? AND \(country_code<>'' OR city_name<>''\)/);
+assert.match(geoInclude, /Function GeoApiBudgetAvailable/);
+assert.match(geoInclude, /Function GeoApiBudgetRemaining/);
+assert.match(geoInclude, /GeoDailyCap/);
+assert.match(geoInclude, /MSXML2\.ServerXMLHTTP\.6\.0/);
+assert.match(geoInclude, /\.setTimeouts 2500, 2500, 3000, 3000/);
+assert.match(geoInclude, /If LCase\(Left\(GeoApiBase, 8\)\) <> "https:\/\/" Then GeoApiBase = ""/);
+assert.match(geoInclude, /GeoResolvedBy = "external-api"/);
+assert.match(geoInclude, /visitor-analytics\.config\.asp/);
+assert.match(geoInclude, /Function GeoIisTrusted/);
+assert.match(geoInclude, /Function GeoExternalConfigured/);
+assert.doesNotMatch(geoInclude, /ipwho\.is|ipapi\.co|db-ip/,
   "provider endpoints belong in the server-side config file, never in tracked source");
+assert.doesNotMatch(geoInclude, /HTTP_X_FORWARDED_FOR|HTTP_FORWARDED|HTTP_CF_|HTTP_X_GEO/i,
+  "geolocation must never trust forwarded headers");
+
+// 补全历史地区：管理员一键回填，让启用之前产生的会话也能上地图
+assert.match(adminApi, /actionName = "backfill-geo"/);
+assert.match(adminApi, /补全历史地区仅支持 POST/);
+assert.match(adminApi, /AdminSecurityRequireMutation "visitor-analytics", "visitor-geo-backfill"/);
+assert.match(adminApi, /GEO_NOT_CONFIGURED/);
+assert.match(adminApi, /GROUP BY ip_address ORDER BY sessions DESC LIMIT/);
+assert.match(adminApi, /UPDATE webwindows_visitor_sessions SET country_code=\?/);
+assert.match(adminApi, /WHERE ip_address=\? AND \(country_code='' OR country_name='' OR city_name=''\)/);
+assert.match(adminApi, /GeoApiBudgetRemaining\(\)/);
+assert.match(adminApi, /""pendingAddresses""/);
+assert.match(adminPage, /id="geoBackfill"/);
+assert.match(adminPage, /id="geoBackfillStatus"/);
+assert.match(adminPage, /admin-security\.js/);
+assert.match(adminScript, /backfill-geo/);
+assert.match(adminScript, /WebWindowsAdminSecurity\.authorize/);
+assert.match(adminScript, /text-amber-800/);
+assert.match(adminCss, /\.text-amber-800 \{/);
 
 // 管理端聚合：地区来源 + 设备 + 停留时间 + 每日趋势 + 国家 + 中国省市
 assert.match(adminApi, /""geo"":\{""source""/);

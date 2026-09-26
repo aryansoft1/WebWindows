@@ -1,59 +1,47 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>系统设置</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
+  <style>
+    body { margin:0; padding:24px; background:#f3f4f6; color:#1f2937; font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:850px; margin:auto; } section { background:white; border-radius:10px; padding:20px; margin:16px 0; box-shadow:0 2px 8px #0001; }
+    label { display:block; margin:12px 0 4px; } input { box-sizing:border-box; display:block; width:100%; max-width:450px; border:1px solid #cbd5e1; border-radius:6px; padding:8px; font:inherit; }
+    button { border:0; border-radius:6px; padding:9px 14px; margin-top:12px; background:#2563eb; color:white; cursor:pointer; }
+    table { width:100%; border-collapse:collapse; } th,td { border-bottom:1px solid #e5e7eb; padding:8px; text-align:left; }
+    #settingsStatus { min-height:22px; } .muted { color:#64748b; }
+  </style>
 </head>
-<body class="bg-gray-100 text-sm text-gray-800">
-  <div class="p-6 space-y-10">
-    <div>
-      <h1 class="text-2xl font-bold mb-4">⚙️ 系统设置</h1>
-      <p class="text-gray-600 mb-6">配置后台系统的基础行为与管理员账号信息。</p>
-    </div>
-
-    <!-- 管理员账户 -->
-    <div class="bg-white rounded shadow p-4">
-      <h2 class="text-lg font-semibold mb-3">👤 后台管理员账号</h2>
-      <table class="w-full table-auto">
-        <thead class="bg-gray-100 text-left">
-          <tr>
-            <th class="p-3">昵称</th>
-            <th class="p-3">账号</th>
-            <th class="p-3">最后登录</th>
-            <th class="p-3">操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="border-t">
-            <td class="p-3">系统管理员</td>
-            <td class="p-3">admin</td>
-            <td class="p-3">2025-07-21 12:43</td>
-            <td class="p-3 space-x-2">
-              <button class="text-blue-600 hover:underline">修改密码</button>
-              <button class="text-red-600 hover:underline">删除</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 系统配置 -->
-    <div class="bg-white rounded shadow p-4">
-      <h2 class="text-lg font-semibold mb-3">🛠️ 系统参数配置</h2>
-      <ul class="space-y-2 text-gray-700">
-        <li><strong>系统名称：</strong>WebWindows 管理后台</li>
-        <li><strong>默认接口前缀：</strong>https://admin.webwindows.com/api/</li>
-        <li><strong>多因素登录：</strong>已启用</li>
-        <li><strong>自动登出时间：</strong>30 分钟</li>
-      </ul>
-    </div>
-
-    <!-- 日志管理（占位） -->
-    <div class="bg-white rounded shadow p-4">
-      <h2 class="text-lg font-semibold mb-3">📜 系统日志（预留）</h2>
-      <p class="text-gray-500">该区域用于未来扩展日志记录与行为追踪。</p>
-    </div>
-  </div>
+<body>
+  <main>
+    <h1>系统设置</h1>
+    <p id="settingsStatus" role="status">正在加载设置…</p>
+    <section>
+      <h2>管理员资料与系统参数</h2>
+      <p>账号 <strong id="adminUsername">admin</strong>。管理员账号不能在这里删除。</p>
+      <form id="settingsForm">
+        <label for="adminNickname">管理员昵称</label><input id="adminNickname" maxlength="100" required>
+        <label for="systemName">系统名称</label><input id="systemName" maxlength="100" required>
+        <label for="idleMinutes">自动登出时间（分钟，5–120）</label><input id="idleMinutes" type="number" min="5" max="120" required>
+        <button type="submit">保存设置</button>
+      </form>
+    </section>
+    <section>
+      <h2>修改管理员密码</h2>
+      <form id="passwordForm">
+        <label for="oldPassword">当前密码</label><input id="oldPassword" type="password" autocomplete="current-password" required>
+        <label for="newPassword">新密码（至少 8 字符）</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required>
+        <button type="submit">更新密码</button>
+      </form>
+    </section>
+    <section>
+      <h2>近期管理日志</h2>
+      <p class="muted">显示最近 100 条已记录的管理操作。</p>
+      <table><thead><tr><th>时间</th><th>操作</th><th>结果</th><th>管理员 ID</th></tr></thead><tbody id="auditRows"></tbody></table>
+    </section>
+  </main>
+  <script src="assets/js/settings.js?v=20260926-1"></script>
 </body>
 </html>

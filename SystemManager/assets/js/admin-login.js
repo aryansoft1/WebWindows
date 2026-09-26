@@ -69,10 +69,6 @@
       setStatus("请填写账号、密码和验证码。", "error");
       return;
     }
-    if (typeof window.md5 !== "function") {
-      setStatus("密码加密组件未加载，请刷新页面重试。", "error");
-      return;
-    }
     const button = document.getElementById("adminLoginButton");
     button.disabled = true;
     setStatus("正在验证管理员身份……");
@@ -80,7 +76,7 @@
       if (!csrfToken) throw new Error("后台安全令牌不可用，请刷新验证码。");
       const body = new URLSearchParams();
       body.set("username", username);
-      body.set("password", window.md5(passwordRaw));
+      body.set("password", passwordRaw);
       body.set("captcha", captcha);
       await request("login", { method: "POST", body });
       setStatus("登录成功，正在进入后台……", "success");

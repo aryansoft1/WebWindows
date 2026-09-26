@@ -284,8 +284,14 @@ assert.deepEqual(displayEntries, [["CN", "ROC"], ["TW", "ROC-TW"], ["MN", "ROC-M
   "the display overrides must be exactly CN→ROC, TW→ROC-TW, MN→ROC-MN");
 assert.equal(displayMap.replace(/\b[A-Z]{2}:\s*"[^"]+"/g, "").replace(/[\s,]/g, ""), "",
   "the override table must not contain anything but the listed codes");
-assert.match(adminCharts, /override \|\| item\.name \|\| code/,
-  "the override must win over the provider name in the tooltip only");
+// 覆盖名现在只在 toSeriesData 里解析（与「有没有访客数据」无关），
+// 详细行为验证在 tests/visitor-map-label-runtime-smoke.mjs（那里真的跑真实场景）。
+assert.match(adminCharts, /display: override \|\| \(hit && hit\.display\)/,
+  "the override must win over both the provider name and the GeoJSON fallback name");
+assert.match(adminCharts, /toSeriesData\(aggregateWorld\(\), features, null, COUNTRY_DISPLAY_NAMES\)/,
+  "the world map must pass the override table into toSeriesData");
+assert.doesNotMatch(adminCharts, /function aggregateWorld\(\)[\s\S]{0,600}COUNTRY_DISPLAY_NAMES/,
+  "the override must not be duplicated in aggregateWorld — two places will drift apart");
 assert.doesNotMatch(adminCharts, /COUNTRY_DISPLAY_NAMES\[[^\]]*\]\s*=\s*"/,
   "the display override must never be written back into the data (it is presentational only)");
 assert.match(adminCharts, /params\.name !== "CN"/,

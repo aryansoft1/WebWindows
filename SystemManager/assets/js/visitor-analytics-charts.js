@@ -232,14 +232,10 @@
     for (const item of state.payload.countries || []) {
       const code = String(item.code || "").trim().toUpperCase();
       if (!/^[A-Z]{2}$/.test(code)) continue;
-      // 有覆盖名时供应商返回的名字不参与展示，避免两条记录显示成两个名字
-      const override = Object.prototype.hasOwnProperty.call(COUNTRY_DISPLAY_NAMES, code)
-        ? COUNTRY_DISPLAY_NAMES[code]
-        : "";
-      const current = values.get(code) || { value: 0, visitors: 0, display: override || item.name || code };
+      const current = values.get(code) || { value: 0, visitors: 0, display: item.name || code };
       current.value += Number(item.sessions) || 0;
       current.visitors += Number(item.visitors) || 0;
-      if (!override && item.name) current.display = item.name;
+      if (item.name) current.display = item.name;
       values.set(code, current);
     }
     return values;
@@ -278,8 +274,10 @@
    */
   const mapMeta = new Map();
 
-  function toSeriesData(collection, features, normalizeKey) {
+  // overrides 只在世界地图传入（键是 ISO A2 代码）；中国下钻的键是中文区划名，不传。
+  function toSeriesData(collection, features, normalizeKey, overrides) {
     const series = [];
+    const table = overrides || null;
     mapMeta.clear();
     let covered = 0;
     for (const feature of features) {
@@ -288,9 +286,12 @@
       const hit = collection.get(hitKey);
       const visitors = hit ? hit.visitors : 0;
       if (hit && hit.value > 0) covered += 1;
+      // 覆盖名**与有没有访客数据无关**：只有命中的国家才用覆盖名时，没记录的国家会
+      // 回退成 GeoJSON 的英文名（MN 就是这样显示成 Mongolia 的）。
+      const override = table ? table[key] : "";
       mapMeta.set(key, {
         visitors,
-        display: (hit && hit.display) || feature.properties.NAME || key
+        display: override || (hit && hit.display) || feature.properties.NAME || key
       });
       series.push({ name: key, value: hit ? hit.value : 0 });
     }
@@ -391,7 +392,7 @@
       geojson.features = features;
       if (!window.echarts.getMap("ww-world")) window.echarts.registerMap("ww-world", geojson);
       const known = new Set(features.map((feature) => feature.properties.name));
-      const { series, covered } = toSeriesData(aggregateWorld(), features, null);
+      const { series, covered } = toSeriesData(aggregateWorld(), features, null, COUNTRY_DISPLAY_NAMES);
       paintGeoMap({ mapName: "ww-world", series, zoom: 1.1, layoutSize: "118%", covered });
       // 110m 比例尺下香港/澳门/新加坡等微型地区没有独立边界要素，
       // 不能让这些访客数据悄悄消失，因此单独列出来。

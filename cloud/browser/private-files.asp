@@ -200,7 +200,7 @@ End If
   <script defer src="../../assets/js/file-search.js?v=20260811-query-v2-3"></script>
   <script defer src="search-ui.js?v=20260810-query-v2-2"></script>
   <link rel="stylesheet" href="file-search.css?v=20260810-query-v2-2">
-  <link rel="stylesheet" href="private-files.css?v=20260810-layout-1">
+  <link rel="stylesheet" href="private-files.css?v=20260926-folder-icons-1">
   <style>
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}
@@ -289,7 +289,7 @@ End If
          If LCase(childFolder.Name) <> "_system" Then
            childPath = childFolder.Name
            If relativePath <> "" Then childPath = relativePath & "/" & childFolder.Name %>
-      <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(childPath))%>"><%=Html(PrivateFolderDisplayName(childFolder.Name))%></a></li>
+      <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(childPath))%>"><img src="assets/folder.svg" alt="" aria-hidden="true"><span><%=Html(PrivateFolderDisplayName(childFolder.Name))%></span></a></li>
     <%   End If
        Next %>
     </ul></aside>

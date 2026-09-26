@@ -231,7 +231,14 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "folder-label";
-    button.textContent = folder.displayName || directoryDisplayName(folder.name);
+    const icon = document.createElement("img");
+    icon.className = "folder-tree-icon";
+    icon.src = "assets/folder.svg";
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.textContent = folder.displayName || directoryDisplayName(folder.name);
+    button.append(icon, label);
     button.addEventListener("click", () => navigateToResourcePath(folder.path));
     item.appendChild(button);
 

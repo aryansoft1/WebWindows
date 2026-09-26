@@ -90,12 +90,23 @@ Function GeoJsonFieldValue(ByVal payload, ByVal aliasCsv, ByVal maximum)
 End Function
 
 Function GeoSafeAddress(ByVal value)
-  Dim matcher
+  Dim matcher, text
   GeoSafeAddress = ""
+  text = Trim(CStr(value & ""))
+  If Len(text) < 3 Or Len(text) > 45 Then Exit Function
   Set matcher = New RegExp
-  matcher.Pattern = "^[0-9a-f:]{3,45}$"
+  matcher.Global = False
   matcher.IgnoreCase = False
-  If matcher.Test(CStr(value & "")) Then GeoSafeAddress = LCase(Trim(CStr(value)))
+  '
+  ' 必须是「真正的地址形状」，不能只是「由少数字符组成」：
+  '   ① 写成 ^[0-9a-f:]{3,45}$ 会漏掉小数点 → 每一个 IPv4 都被判非法，
+  '      地区解析在读配置之前就退出（2026-09-26 线上事故，靠 debugGeo=1 的
+  '      no-client-address 才暴露）；
+  '   ② 只放宽字符集又会把 "abc"、"deadbeef" 这类垃圾文本当成地址。
+  ' 因此这里分两支：四段十进制（IPv4），或纯十六进制+冒号且至少两段（IPv6）。
+  '
+  matcher.Pattern = "^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|[0-9a-f]*(:[0-9a-f]*){2,7})$"
+  If matcher.Test(text) Then GeoSafeAddress = LCase(text)
   Set matcher = Nothing
 End Function
 

@@ -112,6 +112,10 @@ assert.ok(loadResets >= loadExits - 1,
 
 // 多供应商降级链：单个供应商可能因出口网络/限流不可用
 assert.match(geoInclude, /Function GeoApiEndpointCount/);
+// 降级链必须有时间总预算：逐端点 2.5–3s 超时叠加起来会让访客等 8 秒以上
+assert.match(geoInclude, /GeoTotalBudgetMs = 4000/);
+assert.match(geoIncludeCode, /startedAt = Timer[\s\S]{0,200}>= GeoTotalBudgetMs Then Exit For/,
+  "GeoResolve must stop walking the fallback chain once the total time budget is spent");
 
 // 自愈式修复历史地址：IP 一直有记录，地区是后加的字段，地图不该依赖管理员记得点按钮。
 // 三条硬约束：限频（20 分钟）、限量（3 个）、走同一份每日额度，且全程 fail-open。

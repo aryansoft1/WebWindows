@@ -49,6 +49,13 @@
 Dim GeoApiBase, GeoApiKey, GeoDailyCap, GeoConfigPath
 Dim GeoCountryCode, GeoCountryName, GeoRegionName, GeoCityName, GeoResolvedBy
 Dim GeoDebugLog
+'
+' 单次解析的总时长上限（毫秒）。逐个端点各有 2.5–3s 超时，供应商变慢时三个端点
+' 累加起来会让访客的上报请求等到 8 秒以上 —— 地区只是附加信息，绝不能拖慢页面。
+' 超过总预算就停手，地区留空（fail-open）。
+'
+Dim GeoTotalBudgetMs
+GeoTotalBudgetMs = 4000
 
 ' JSON 字符串转义（共享模块自带，避免与调用方的同名函数冲突）
 Function GeoJsonText(ByVal value)
@@ -579,9 +586,12 @@ Sub GeoResolve(ByVal rawAddress)
 
   If Not GeoApiBudgetAvailable() Then Exit Sub
 
-  Dim index, template
+  Dim index, template, startedAt
   GeoResetResult
+  startedAt = Timer
   For index = 0 To GeoApiEndpointCount() - 1
+    ' 总预算用完就不再试下一个端点（见 GeoTotalBudgetMs）
+    If (Timer - startedAt) * 1000 >= GeoTotalBudgetMs Then Exit For
     template = GeoApiEndpointTemplate(index)
     GeoApiAttempt template, address
     If GeoResolvedBy = "external-api" Then Exit For

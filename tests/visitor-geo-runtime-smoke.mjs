@@ -190,6 +190,16 @@ GeoResetResult
 GeoResolve "192.168.1.1"
 Say "resolve_private_log", Replace(Replace(GeoDebugLog, vbCrLf, " "), vbLf, " ")
 
+' 总时长上限必须真的生效：把预算设成 0，一个端点都不该发起
+' （逐端点 2.5-3s 超时叠加起来会让访客等 8 秒以上）。
+GeoTotalBudgetMs = 0
+GeoResetDebug
+GeoResetResult
+GeoResolve "8.8.8.8"
+Say "budget_capped_log", Replace(Replace(GeoDebugLog, vbCrLf, " "), vbLf, " ")
+Say "budget_capped_by", GeoResolvedBy
+GeoTotalBudgetMs = 4000
+
 Say "budget_remaining", CStr(GeoApiBudgetRemaining())
 WScript.Echo Report
 `;
@@ -248,6 +258,12 @@ assert.ok(/no-client-address|private-address-not-sent|geo-not-configured|http-er
   `diagnose must reach the endpoint stage: ${diagnoseLog}`);
 assert.ok(!diagnoseLog.includes("no-client-address"),
   `the address must not be rejected as a client address: ${diagnoseLog}`);
+
+// 总时长上限：预算为 0 时必须一个端点都不发起（否则访客要等 2.5-3s × 端点数）
+assert.equal((values.get("budget_capped_log") || "").replace(/[[\]]/g, ""), "",
+  `no provider request may be attempted once the total time budget is spent: ${values.get("budget_capped_log")}`);
+assert.notEqual(values.get("budget_capped_by"), "external-api",
+  "a capped resolve must not report a provider result");
 
 // 失败摘要必须能从真实日志里读出「哪个端点、什么状态、多久」——
 // 管理端只拿到一个失败计数的话，等于让人猜。

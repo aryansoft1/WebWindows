@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>开发者平台管理</title>
   <link rel="stylesheet" href="assets/css/developer-platform-admin.css?v=20260830-1">
-  <script defer src="assets/js/admin-security.js?v=20260831-1"></script>
   <script defer src="assets/js/developer-platform-admin.js?v=20260830-2"></script>
+  <script defer src="assets/js/developer-content-admin.js?v=20260926-1"></script>
 </head>
 <body>
   <main>
@@ -28,8 +30,19 @@
       <ul>
         <li>当前稳定基线：<code>/data/developer/content-v1.json</code></li>
         <li>当前官方样例：<code>/developer-samples/hello-webwindows.zip</code></li>
-        <li>下一阶段：在此接入内容草稿、预览、发布、回滚和下线操作。</li>
+        <li>在下方维护文档、样例和公告的草稿、预览、版本、发布、回滚与下线。</li>
       </ul>
+      <div id="developerContentStatus" class="status" role="status">正在读取内容版本…</div>
+      <form id="developerContentForm" style="display:grid;gap:8px;max-width:760px">
+        <h3 id="contentFormTitle">新建内容草稿</h3>
+        <label>类型 <select id="contentType"><option value="document">开发者文档</option><option value="sample">样例</option><option value="announcement">公告</option></select></label>
+        <label>标识 <input id="contentSlug" pattern="[a-z0-9][a-z0-9-]*" maxlength="80" required placeholder="getting-started"></label>
+        <label>标题 <input id="contentTitle" maxlength="200" required></label>
+        <label>样例 ZIP 地址（仅样例） <input id="contentSampleUrl" maxlength="500" placeholder="developer-samples/hello-webwindows.zip"></label>
+        <label>正文 <textarea id="contentBody" rows="8" maxlength="30000" required></textarea></label>
+        <div><button class="primary" type="submit">保存草稿</button> <button id="newContentDraft" type="button">新建草稿</button></div>
+      </form>
+      <div class="table-scroll"><table><thead><tr><th>类型 / 标识</th><th>标题</th><th>版本</th><th>状态</th><th>操作</th></tr></thead><tbody id="contentVersionRows"></tbody></table></div>
     </section>
     <section>
       <div class="section-title">
@@ -65,5 +78,6 @@
       <footer><button value="close">关闭</button></footer>
     </form>
   </dialog>
+  <dialog id="contentPreviewDialog"><form method="dialog"><h2 id="contentPreviewTitle">预览</h2><pre id="contentPreviewBody"></pre><footer><button value="close">关闭</button></footer></form></dialog>
 </body>
 </html>

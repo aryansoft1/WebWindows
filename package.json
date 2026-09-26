@@ -6,9 +6,12 @@
     "build:developer-studio:validator": "node tools/build-developer-studio-validator.mjs",
     "build:developer-studio": "npm run build:developer-studio:validator && vite build --config webwindows-vue/vite.developer-studio.config.js",
     "build:production-broker": "npm run build:developer-studio:validator && vite build --config webwindows-vue/vite.production-broker.config.js",
-    "build:production-rehearsal-manifest": "node tools/build-production-rehearsal-manifest.mjs"
+    "build:production-rehearsal-manifest": "node tools/build-production-rehearsal-manifest.mjs",
+    "test:e2e": "playwright test",
+    "serve:static": "node tools/static-server.mjs"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@vitejs/plugin-vue": "^6.0.1",
     "@vue/cli-service": "^5.0.9",
     "@vue/compiler-sfc": "^3.5.19",

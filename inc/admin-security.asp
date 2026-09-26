@@ -160,7 +160,7 @@ Function AdminSecurityFormContentType()
 End Function
 
 Sub AdminSecurityAudit(ByVal actionName, ByVal resultName, ByVal csrfCategory, ByVal originCategory)
-  Dim safeAction, safeResult, actorIdentity, csrfCode, originCode
+  Dim safeAction, safeResult, actorIdentity, csrfCode, originCode, auditCmd, actorId
   safeAction = Replace(Replace(Left(CStr(actionName), 24), "&", "_"), "=", "_")
   safeResult = Replace(Replace(Left(CStr(resultName), 10), "&", "_"), "=", "_")
   actorIdentity = "anon"
@@ -177,6 +177,22 @@ Sub AdminSecurityAudit(ByVal actionName, ByVal resultName, ByVal csrfCategory, B
     "&wu=" & Server.URLEncode(actorIdentity) & _
     "&wc=" & Server.URLEncode(csrfCode) & _
     "&wo=" & Server.URLEncode(originCode)
+  If safeResult = "success" And IsObject(conn) Then
+    actorId = Null
+    If IsNumeric(Session("user_id")) Then actorId = CLng(Session("user_id"))
+    On Error Resume Next
+    Set auditCmd = Server.CreateObject("ADODB.Command")
+    Set auditCmd.ActiveConnection = conn
+    auditCmd.CommandType = 1
+    auditCmd.CommandText = "INSERT INTO webwindows_admin_audit(actor_id,action_name,result_name) VALUES (?,?,?)"
+    auditCmd.Parameters.Append auditCmd.CreateParameter("actor", 3, 1, , actorId)
+    auditCmd.Parameters.Append auditCmd.CreateParameter("action", 200, 1, 64, safeAction)
+    auditCmd.Parameters.Append auditCmd.CreateParameter("result", 200, 1, 24, safeResult)
+    auditCmd.Execute
+    Set auditCmd = Nothing
+    Err.Clear
+    On Error GoTo 0
+  End If
 End Sub
 
 Sub AdminSecurityFail(ByVal statusCode, ByVal code, ByVal message, ByVal csrfCategory, ByVal originCategory)
@@ -254,6 +270,31 @@ End Sub
 
 Sub AdminSecurityRequireMutation(ByVal expectedRequestHeader, ByVal actionName)
   AdminSecurityRequireProof True, expectedRequestHeader, actionName
+End Sub
+
+Sub AdminSecurityRequireRead(ByVal expectedRequestHeader, ByVal actionName)
+  Dim method, requestHeader, fetchSite
+  method = UCase(Trim(CStr(Request.ServerVariables("REQUEST_METHOD"))))
+  If method <> "GET" Then
+    Response.AddHeader "Allow", "GET"
+    AdminSecurityFail 405, "ADMIN_READ_GET_REQUIRED", "后台读取只允许 GET。", "not-checked", "not-checked"
+  End If
+  If Session("webwindows_admin") <> True Or _
+     LCase(Trim(CStr(Session("username")))) <> "admin" Or _
+     Not AdminSecurityTokenShape(Session("webwindows_admin_authority")) Then
+    AdminSecurityFail 401, "ADMIN_LOGIN_REQUIRED", "请先登录 WebWindows 管理后台。", "not-checked", "not-checked"
+  End If
+  requestHeader = LCase(Trim(CStr(Request.ServerVariables("HTTP_X_WEBWINDOWS_ADMIN_REQUEST"))))
+  If requestHeader <> LCase(CStr(expectedRequestHeader)) Then
+    AdminSecurityFail 403, "ADMIN_REQUEST_REQUIRED", "无效的后台管理请求。", "not-checked", "not-checked"
+  End If
+  fetchSite = LCase(Trim(CStr(Request.ServerVariables("HTTP_SEC_FETCH_SITE"))))
+  If fetchSite <> "" And fetchSite <> "same-origin" Then
+    AdminSecurityFail 403, "ADMIN_FETCH_CONTEXT_INVALID", "后台请求上下文无效。", "not-checked", "not-checked"
+  End If
+  Response.CacheControl = "no-cache"
+  Response.AddHeader "Pragma", "no-cache"
+  AdminSecurityAudit actionName, "eligible", "not-needed", "same-origin"
 End Sub
 
 Sub AdminSecurityRequirePreAuthMutation(ByVal expectedRequestHeader, ByVal actionName)

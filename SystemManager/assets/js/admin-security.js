@@ -38,12 +38,38 @@
     };
   }
 
+  async function read(url, requestScope = "system-manager") {
+    await ready;
+    const response = await fetch(url, {
+      method: "GET", credentials: "same-origin", cache: "no-store",
+      headers: { [ADMIN_HEADER]: requestScope }
+    });
+    if (response.status === 401) {
+      invalidate();
+      window.top.location.replace("/SystemManager/login.html");
+      throw new Error("ADMIN_LOGIN_REQUIRED");
+    }
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return response;
+  }
+
   function invalidate() {
     csrfToken = "";
   }
 
+  const nativeFetch = window.fetch.bind(window);
+  window.fetch = async function adminAwareFetch(input, init) {
+    const response = await nativeFetch(input, init);
+    const url = new URL(typeof input === "string" || input instanceof URL ? input : input.url, location.href);
+    if (url.origin === location.origin && url.pathname.startsWith("/admin_api/") && response.status === 401) {
+      invalidate();
+      window.top.location.replace("/SystemManager/login.html");
+    }
+    return response;
+  };
+
   Object.defineProperty(window, "WebWindowsAdminSecurity", {
-    value: Object.freeze({ ready, authorize, invalidate }),
+    value: Object.freeze({ ready, authorize, read, invalidate }),
     configurable: false,
     enumerable: false,
     writable: false

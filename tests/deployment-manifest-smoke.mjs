@@ -210,6 +210,24 @@ if (manifest.releaseScope === "navigation-map") {
   ], "the provider fallback release must upload only the shared resolver, the collector and the manifest last");
   assert.ok(!manifest.requiredFiles.includes("api/visitor-analytics.config.example.asp"),
     "the config template is tracked but must never be deployed, matching the other proxy config examples");
+} else if (manifest.releaseScope === "systemmanager-completion") {
+  assert.equal(uploadFiles.length, 53, "SystemManager release must use the approved 53-file scope");
+  for (const required of [
+    "SystemManager/assets/css/admin-utilities.css",
+    "developer-samples/hello-webwindows.zip",
+    "deploy/ftp-manifest.json"
+  ]) {
+    assert.ok(uploadFiles.includes(required), `SystemManager release is missing ${required}`);
+  }
+  for (const alreadyManaged of [
+    "assets/js/developer-center.js",
+    "developer-samples/hello-webwindows/index.html",
+    "developer-samples/hello-webwindows/manifest.json",
+    ...onlineReleaseFiles
+  ]) {
+    assert.ok(!uploadFiles.includes(alreadyManaged),
+      `SystemManager release must not re-upload unchanged dependency ${alreadyManaged}`);
+  }
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

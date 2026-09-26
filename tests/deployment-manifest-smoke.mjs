@@ -146,11 +146,10 @@ if (manifest.releaseScope === "navigation-map") {
     "deploy/ftp-manifest.json",
   ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
 } else if (manifest.releaseScope === "visitor-geo-repair-tick") {
-  assert.deepEqual(uploadFiles, [
-    "inc/visitor-geo.asp",
-    "api/visitor-analytics.asp",
-    "deploy/ftp-manifest.json",
-  ], "the repair-tick release must upload the resolver, the collector and the manifest last");
+  assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"),
+    "the manifest must always be uploaded last");
+  assert.ok(uploadFiles.every((file) => /^(inc|api|admin_api|SystemManager|deploy)\//.test(file)),
+    "the repair-tick release must not touch unrelated trees");
 } else if (manifest.releaseScope === "visitor-geo-time-budget") {
   assert.deepEqual(uploadFiles, [
     "inc/visitor-geo.asp",

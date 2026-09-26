@@ -161,6 +161,12 @@ assert.ok(flushAt > 0 && repairAt > flushAt,
   "the repair must run after Response.Flush so a visitor never waits for external lookups");
 assert.match(collectorApi, /GeoRepairPending/);
 // GET 自诊断：只用自己的地址，不能变成 IP 查询代理
+const getDiagAt = collectorApi.indexOf("If isGetDiag Then");
+const actionGuardAt = collectorApi.indexOf("ACTION_INVALID");
+assert.ok(getDiagAt > 0 && getDiagAt < actionGuardAt,
+  "the GET self-diagnosis must run before the action validation, or it is rejected with ACTION_INVALID");
+assert.match(collectorApi, /If isGetDiag Then[\s\S]{0,200}GeoConfigureSub/,
+  "the GET self-diagnosis must configure the config path itself (the POST path does it later, after the early exit)");
 assert.match(collectorApi, /And Not isGetDiag Then/,
   "GET must be allowed only for the self-diagnosis, and only when debugGeo=1");
 assert.match(collectorApi, /If isGetDiag Then[\s\S]{0,1200}GeoDiagnoseSelf/,

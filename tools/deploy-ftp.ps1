@@ -62,14 +62,16 @@ function Invoke-FtpDownload([string]$relative, [string]$destination, [switch]$Al
   $parent = Split-Path -Parent $destination
   if ($parent) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
   $url = "ftp://" + $ftpHost + "/wwwroot/" + $relative
-  & curl.exe --silent --show-error --fail --noproxy "*" --retry 5 --retry-all-errors --retry-delay 1 `
+  $retryOptions = if ($AllowMissing) { @('--retry', '0') } else { @('--retry', '5', '--retry-all-errors', '--retry-delay', '1') }
+  & curl.exe --silent --show-error --fail --noproxy "*" @retryOptions `
     --output $destination --user "${ftpUser}:${ftpPassword}" $url
-  if ($LASTEXITCODE -ne 0) {
-    if ($AllowMissing) {
+  $curlExit = $LASTEXITCODE
+  if ($curlExit -ne 0) {
+    if ($AllowMissing -and $curlExit -eq 78) {
       if (Test-Path -LiteralPath $destination) { Remove-Item -LiteralPath $destination -Force }
       return $false
     }
-    throw "Unable to back up production file: $relative"
+    throw "Unable to back up production file: $relative (curl exit $curlExit)"
   }
   return $true
 }

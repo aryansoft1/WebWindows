@@ -210,6 +210,11 @@ if (manifest.releaseScope === "navigation-map") {
   ], "the provider fallback release must upload only the shared resolver, the collector and the manifest last");
   assert.ok(!manifest.requiredFiles.includes("api/visitor-analytics.config.example.asp"),
     "the config template is tracked but must never be deployed, matching the other proxy config examples");
+} else if (manifest.releaseScope === "systemmanager-dashboard-json-fix") {
+  assert.deepEqual(uploadFiles, [
+    "admin_api/dashboardStats.asp",
+    "deploy/ftp-manifest.json"
+  ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
 } else if (manifest.releaseScope === "systemmanager-completion") {
   assert.equal(uploadFiles.length, 53, "SystemManager release must use the approved 53-file scope");
   for (const required of [

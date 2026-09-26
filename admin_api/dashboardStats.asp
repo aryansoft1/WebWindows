@@ -68,6 +68,7 @@ Do Until activityRs.EOF
   activityRs.MoveNext
 Loop
 activityRs.Close
+activityJson = activityJson & "]"
 tipsJson = "[]"
 If unhealthyCount > 0 Then
   tipsJson = "[""有 " & unhealthyCount & " 个启用中的数据中心最近检测异常，请查看数据中心页面。""]"

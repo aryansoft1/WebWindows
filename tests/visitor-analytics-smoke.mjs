@@ -118,21 +118,52 @@ assert.match(geoIncludeCode, /startedAt = Timer[\s\S]{0,200}>= GeoTotalBudgetMs 
   "GeoResolve must stop walking the fallback chain once the total time budget is spent");
 
 // 自愈式修复历史地址：IP 一直有记录，地区是后加的字段，地图不该依赖管理员记得点按钮。
-// 三条硬约束：限频（20 分钟）、限量（3 个）、走同一份每日额度，且全程 fail-open。
+// 硬约束：限频（20 分钟）、限量（3 个）、走同一份每日额度、fail-open，
+// 以及 2026-09-26 补上的三条现实约束：单进程触发（web garden）、坏地址冷却、内网跳过。
 assert.match(geoInclude, /Sub GeoRepairPending/);
 assert.match(geoIncludeCode, /- lastRun < 20 Then/,
   "the automatic repair must be rate-limited, otherwise every page view would hammer the provider");
-assert.match(geoIncludeCode, /If repaired >= 3 Then Exit Do/,
+assert.match(geoIncludeCode, /If attempted >= 3 Then|Or attempted >= 3/,
   "the automatic repair must stay bounded per run");
-assert.match(geoIncludeCode, /Sub GeoRepairPending[\s\S]{0,600}GeoApiBudgetAvailable\(\)/,
+assert.match(geoIncludeCode, /Sub GeoRepairPending[\s\S]{0,900}GeoApiBudgetAvailable\(\)/,
   "the automatic repair must consume the same daily budget as every other lookup");
 assert.match(geoIncludeCode, /Sub GeoRepairPending[\s\S]{0,400}On Error Resume Next/,
   "the automatic repair must be fail-open");
+// web garden：每个工作进程各有 Application 变量表，只判重不锁内复查会按进程数重复消耗额度
+assert.match(geoIncludeCode, /Application\.Lock[\s\S]{0,400}Application\(slotKey\) = nowMinutes[\s\S]{0,120}Application\.UnLock/,
+  "the repair tick must be claimed under Application.Lock and re-checked inside the lock, or every worker process repairs");
+// 坏地址冷却：解析不出来的地址不能每 20 分钟重试一次，否则真正的历史地址永远轮不到
+assert.match(geoInclude, /Function GeoAddressOnCooldown/);
+assert.match(geoIncludeCode, /nowMinutes - touchedAt < 360 Then/,
+  "an address the provider cannot resolve must cool down for hours, not be retried every tick");
+assert.match(geoIncludeCode, /GeoAddressTouched targetAddress/);
+// 内网地址永远解析不出成功，不该每轮白占名额
+assert.match(geoInclude, /Sub GeoSkipAddress/);
+assert.match(geoIncludeCode, /Not GeoIsPublicAddress\(targetAddress\) Then\s*\n\s*GeoSkipAddress targetAddress/);
+// 候选要多取一些，否则跳过内网/冷却后凑不满 3 个
+assert.match(geoIncludeCode, /LIMIT 40/);
+// 时间陷阱：VBScript 的 Date() 不含时间部分，Hour(Date()) 恒为 0。
+// 2026-09-26 因此让「20 分钟闸门」变成永真 —— 自愈一次都没跑，
+// 而闸门之前的额度检查每次页面访问白扣 1 次，额度就这样漏光。
+assert.doesNotMatch(geoIncludeCode, /Hour\(Date\(\)\)|Minute\(Date\(\)\)/,
+  "never take the time of day from Date(): it carries no time part, so a rate limit built on it is always true");
+assert.match(geoInclude, /Function GeoMinuteOfDay/);
+assert.match(geoIncludeCode, /Function GeoMinuteOfDay[\s\S]{0,200}Hour\(Now\(\)\)/);
+// 诊断要能看到自愈结果，但**绝不能带地址**（诊断回显在公开接口上）
+assert.match(geoInclude, /Function GeoRepairLastReport/);
+assert.match(collectorApi, /GeoRepairLastReport\(\)/);
+assert.doesNotMatch(geoInclude, /Sub GeoRepairReport[\s\S]{0,1200}?targetAddress/,
+  "the repair report must never contain a visitor address");
+assert.match(geoIncludeCode, /repaired-candidates=/);
 const flushAt = collectorApi.indexOf("Response.Flush");
 const repairAt = collectorApi.indexOf("GeoRepairPending");
 assert.ok(flushAt > 0 && repairAt > flushAt,
   "the repair must run after Response.Flush so a visitor never waits for external lookups");
 assert.match(collectorApi, /GeoRepairPending/);
+// GET 自诊断：只用自己的地址，不能变成 IP 查询代理
+assert.match(collectorApi, /Request\.QueryString\("debugGeo"\)/);
+assert.doesNotMatch(collectorApi, /Request\.(QueryString|Form)\("(ip|target|addr|address)"\)/,
+  "the collector must never accept a caller-supplied address to resolve");
 
 // 补全失败必须逐条回报原因：只给「失败 N 个」等于让人猜。
 assert.match(geoInclude, /Function GeoFailureSummary/);

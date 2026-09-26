@@ -624,79 +624,88 @@ End Function
 ' 背景：IP 一直有记录，地区是后来才加的字段 —— 修复上线之前写入的历史行地区为空，
 ' 而外部解析有每日额度，不可能在每个访客上报时把所有历史行重算一遍。于是出现了
 ' 「补全历史地区」这个手动按钮。但手动步骤意味着：**只要没人点，地图就永远是空的**。
-' 这里让采集端在正常上报之外，顺带把少量待补全的历史地址修好：
-'   * 每 20 分钟最多触发一次（Application 计数，进程重启也不会失效）；
-'   * 每次最多修 3 个地址，且仍然走同一份每日额度；
-'   * 全程 On Error Resume Next，绝不影响访客上报本身（fail-open）；
-'   * 调用方在 Response.Flush 之后才调用它，因此不占用访客的等待时间。
+' 这里让采集端在正常上报之外顺带修复，调用方在 Response.Flush 之后才调用它，
+' 访客不为外部解析的耗时买单。
+'
+' 三个必须处理的现实问题（2026-09-26 上线后从额度消耗与页面表现反推出来的）：
+'   1) **多进程重复触发**：IIS 应用程序池是 web garden，每个工作进程各有自己的
+'      Application 变量表。只用「分钟数」判重会让 N 个进程各修一遍，额度按 N 倍
+'      消耗 —— 必须 Application.Lock + 锁内复查。
+'   2) **坏地址堵死进度**：解析不出来的地址（数据库不认、运营商 CGNAT 等）永远排在
+'      待补全队列最前面，每轮都重试它，真正的历史地址永远轮不到。加 6 小时冷却。
+'   3) **内网地址白占名额**：内网地址永远解析不出成功，却每轮占掉 3 个名额里的一个。
+'      用 Application 里的跳过名单挡住（没有数据库迁移可用，记忆放内存即可）。
+'
+' 其余约束：每次最多修 3 个、仍然走同一份每日额度、全程 On Error Resume Next。
 ' 按钮保留：管理员想立刻补完时仍然可以点。
 ' ---------------------------------------------------------------------------
 Sub GeoRepairPending()
-  Dim slotKey, lastRun, repaired, queryRs, targetAddress, updateCmd
+  Dim slotKey, lastRun, attempted, resolvedCount, updatedCount, unresolvedCount
+  Dim queryRs, targetAddress, updateCmd, reasonText, nowMinutes
 
   On Error Resume Next
   If Not GeoExternalConfigured() Then
     On Error GoTo 0
     Exit Sub
   End If
-  If Not GeoApiBudgetAvailable() Then
-    On Error GoTo 0
-    Exit Sub
-  End If
 
-  ' 每 20 分钟一次：lastRun 存的是那一天的累计分钟数，跨天自动重置。
-  slotKey = "webwindows_geo_repair_" & CStr(Year(Date())) & "_" & _
-    Right("0" & CStr(Month(Date())), 2) & "_" & Right("0" & CStr(Day(Date())), 2)
+  slotKey = GeoDayKey("webwindows_geo_repair_")
+  nowMinutes = GeoMinuteOfDay()
+
+  ' 锁内复查：web garden 里只有第一个进来的进程会真的修
+  Application.Lock
+  Err.Clear
   lastRun = -1
   lastRun = CLng(Application(slotKey))
   If Err.Number <> 0 Then
     Err.Clear
     lastRun = -1
   End If
-  If lastRun >= 0 Then
-    If (CLng(Hour(Date())) * 60 + CLng(Minute(Date()))) - lastRun < 20 Then
-      On Error GoTo 0
-      Exit Sub
-    End If
+  If lastRun >= 0 And nowMinutes - lastRun < 20 Then
+    Application.UnLock
+    On Error GoTo 0
+    Exit Sub
   End If
-  Application(slotKey) = CLng(Hour(Date())) * 60 + CLng(Minute(Date()))
+  Application(slotKey) = nowMinutes
+  Application.UnLock
 
-  Err.Clear
-  Set queryRs = conn.Execute("SELECT ip_address FROM webwindows_visitor_sessions " & _
-    "WHERE ip_address<>'' AND (country_code='' OR country_name='' OR city_name='') " & _
-    "GROUP BY ip_address ORDER BY MAX(id) DESC LIMIT 3")
-  If Err.Number <> 0 Then
-    Err.Clear
-    Set queryRs = Nothing
+  If Not GeoApiBudgetAvailable() Then
+    GeoRepairReport slotKey, 0, 0, 0, 0, "today budget exhausted"
     On Error GoTo 0
     Exit Sub
   End If
 
-  repaired = 0
-  Do Until queryRs.EOF
+  ' 多取候选：跳过内网与冷却中的地址后，仍能凑够 3 个可修的
+  Err.Clear
+  Set queryRs = conn.Execute("SELECT ip_address FROM webwindows_visitor_sessions " & _
+    "WHERE ip_address<>'' AND (country_code='' OR country_name='' OR city_name='') " & _
+    "GROUP BY ip_address ORDER BY MAX(id) DESC LIMIT 40")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set queryRs = Nothing
+    GeoRepairReport slotKey, 0, 0, 0, 0, "pending query failed: " & CStr(Err.Number)
+    On Error GoTo 0
+    Exit Sub
+  End If
+
+  attempted = 0
+  resolvedCount = 0
+  updatedCount = 0
+  unresolvedCount = 0
+  reasonText = ""
+  Do Until queryRs.EOF Or attempted >= 3
     targetAddress = CStr(queryRs("ip_address"))
-    queryRs.MoveNext
+    Err.Clear
     If Not GeoIsPublicAddress(targetAddress) Then
-      ' 内网地址永远不会解析成功，直接标记跳过，免得每次都白扫一遍
-      On Error Resume Next
-      Set updateCmd = Server.CreateObject("ADODB.Command")
-      With updateCmd
-        .ActiveConnection = conn
-        .CommandType = 1
-        .CommandText = "UPDATE webwindows_visitor_sessions SET region_name=region_name " & _
-          "WHERE ip_address=? AND (country_code='' OR country_name='' OR city_name='')"
-        .Parameters.Append .CreateParameter("", 200, 1, 45, targetAddress)
-        .Execute
-      End With
-      Set updateCmd = Nothing
-      Err.Clear
-      On Error GoTo 0
-    Else
+      GeoSkipAddress targetAddress
+    ElseIf Not GeoAddressOnCooldown(targetAddress) Then
+      attempted = attempted + 1
       GeoResetResult
       GeoResetDebug
       GeoResolve targetAddress
       If GeoCountryCode <> "" Or GeoCountryName <> "" Or GeoCityName <> "" Then
-        On Error Resume Next
+        resolvedCount = resolvedCount + 1
+        Err.Clear
         Set updateCmd = Server.CreateObject("ADODB.Command")
         With updateCmd
           .ActiveConnection = conn
@@ -711,16 +720,102 @@ Sub GeoRepairPending()
           .Execute
         End With
         Set updateCmd = Nothing
-        Err.Clear
-        On Error GoTo 0
-        repaired = repaired + 1
+        If Err.Number = 0 Then
+          updatedCount = updatedCount + 1
+        Else
+          Err.Clear
+        End If
+      Else
+        unresolvedCount = unresolvedCount + 1
+        GeoAddressTouched targetAddress
+        If reasonText = "" Then reasonText = GeoFailureSummary()
       End If
       GeoResetResult
     End If
-    If repaired >= 3 Then Exit Do
+    Err.Clear
+    queryRs.MoveNext
   Loop
   queryRs.Close
   Set queryRs = Nothing
+
+  GeoRepairReport slotKey, attempted, resolvedCount, updatedCount, unresolvedCount, reasonText
   On Error GoTo 0
 End Sub
+
+' 当天的第几分钟（0..1439）。
+' **必须用 Now() 而不是 Date()**：VBScript 的 Date() 不含时间部分，
+' Hour(Date()) 恒为 0 —— 2026-09-26 就是这么把「20 分钟闸门」变成永真的，
+' 自愈一次都没跑，而闸门之前的额度检查每次页面访问都扣 1 次，额度就这样漏光。
+Function GeoMinuteOfDay()
+  GeoMinuteOfDay = CLng(Hour(Now())) * 60 + CLng(Minute(Now()))
+End Function
+
+' 统一的「按天」键前缀：额度、自愈时间戳、自愈报告都用它，跨天自动错开
+Function GeoDayKey(ByVal prefix)
+  GeoDayKey = prefix & CStr(Year(Date())) & "_" & _
+    Right("0" & CStr(Month(Date())), 2) & "_" & Right("0" & CStr(Day(Date())), 2)
+End Function
+
+' 该地址 6 小时内不再重试：解析不出来是常态，不该每 20 分钟烧一次额度
+Function GeoAddressOnCooldown(ByVal address)
+  Dim touchedAt, nowMinutes
+  GeoAddressOnCooldown = False
+  nowMinutes = GeoMinuteOfDay()
+  On Error Resume Next
+  Err.Clear
+  touchedAt = CLng(Application("webwindows_geo_seen_" & address))
+  If Err.Number <> 0 Then
+    Err.Clear
+    touchedAt = 0
+  End If
+  On Error GoTo 0
+  ' 跨天时 nowMinutes 会小于 touchedAt，此时视为冷却已过
+  If touchedAt > 0 And nowMinutes >= touchedAt And nowMinutes - touchedAt < 360 Then
+    GeoAddressOnCooldown = True
+  End If
+End Function
+
+Sub GeoAddressTouched(ByVal address)
+  On Error Resume Next
+  Application("webwindows_geo_seen_" & address) = GeoMinuteOfDay()
+  Err.Clear
+  On Error GoTo 0
+End Sub
+
+' 内网/回环地址永远解析不出成功，记下来跳过，免得每轮白占名额
+Sub GeoSkipAddress(ByVal address)
+  On Error Resume Next
+  Application("webwindows_geo_skip_" & address) = 1
+  Err.Clear
+  On Error GoTo 0
+End Sub
+
+' 把最近一次自愈的结果记在 Application 里供诊断回显。
+' **只含计数与原因，不含任何地址** —— 诊断回显在公开的采集接口上，不能泄露访客 IP。
+Sub GeoRepairReport(ByVal slotKey, ByVal attempted, ByVal resolvedCount, ByVal updatedCount, _
+    ByVal unresolvedCount, ByVal reasonText)
+  Dim text
+  On Error Resume Next
+  text = "repaired-candidates=" & CStr(attempted) & " resolved=" & CStr(resolvedCount) & _
+    " written=" & CStr(updatedCount) & " unresolved=" & CStr(unresolvedCount)
+  If Len(Trim(CStr(reasonText & ""))) > 0 Then text = text & " last-failure=" & CStr(reasonText)
+  Application("webwindows_geo_report_" & slotKey) = Cut(text, 400)
+  Err.Clear
+  On Error GoTo 0
+End Sub
+
+' 读取「今天最近一次自愈」的报告（只读，不消耗额度）
+Function GeoRepairLastReport()
+  Dim value
+  GeoRepairLastReport = ""
+  On Error Resume Next
+  Err.Clear
+  value = CStr(Application("webwindows_geo_report_" & GeoDayKey("webwindows_geo_repair_")))
+  If Err.Number <> 0 Then
+    Err.Clear
+    value = ""
+  End If
+  On Error GoTo 0
+  GeoRepairLastReport = Cut(value, 400)
+End Function
 %>

@@ -26,8 +26,11 @@ const raw = readFileSync(includePath, "utf8");
 
 assert.ok(!/^\s*<%@/.test(raw), "the include must not carry a Language directive");
 let code = raw.replace(/^<%/, "").replace(/%>\s*$/, "");
-code = code.replace(/Application\(([A-Za-z0-9_]+)\)\s*=\s*/g, "AppSet $1, ");
-code = code.replace(/Application\(([A-Za-z0-9_.()]+)\)/g, "AppGet($1)");
+// Application(...) 的机械变换：参数里可能有字符串拼接（Application("k_" & address)），
+// 也可能有一层嵌套（Application(GeoDayKey("x"))），所以不能只匹配标识符。
+const appArg = "((?:[^()]|\\([^()]*\\))*)";
+code = code.replace(new RegExp(`Application\\(${appArg}\\)\\s*=\\s*`, "g"), "AppSet $1, ");
+code = code.replace(new RegExp(`Application\\(${appArg}\\)`, "g"), "AppGet($1)");
 assert.ok(!/\bApplication\(/.test(code), "every Application reference must be transformable");
 
 /*
@@ -201,6 +204,14 @@ Say "budget_capped_by", GeoResolvedBy
 GeoTotalBudgetMs = 4000
 
 Say "budget_remaining", CStr(GeoApiBudgetRemaining())
+
+GeoResetDebug
+Say "cooldown_first", CStr(GeoAddressOnCooldown("203.0.113.77"))
+GeoAddressTouched "203.0.113.77"
+Say "cooldown_after_touch", CStr(GeoAddressOnCooldown("203.0.113.77"))
+Say "cooldown_other", CStr(GeoAddressOnCooldown("203.0.113.78"))
+GeoSkipAddress "10.0.0.9"
+Say "day_key", GeoDayKey("webwindows_geo_repair_")
 WScript.Echo Report
 `;
 
@@ -258,6 +269,11 @@ assert.ok(/no-client-address|private-address-not-sent|geo-not-configured|http-er
   `diagnose must reach the endpoint stage: ${diagnoseLog}`);
 assert.ok(!diagnoseLog.includes("no-client-address"),
   `the address must not be rejected as a client address: ${diagnoseLog}`);
+
+assert.equal(values.get("cooldown_first"), "False", "an address that was never tried must not be on cooldown");
+assert.equal(values.get("cooldown_after_touch"), "True", "a just-attempted address must go on cooldown");
+assert.equal(values.get("cooldown_other"), "False", "cooldown must be per address, not global");
+assert.match(values.get("day_key") || "", /^webwindows_geo_repair_\d{4}_\d{2}_\d{2}$/);
 
 // 总时长上限：预算为 0 时必须一个端点都不发起（否则访客要等 2.5-3s × 端点数）
 assert.equal((values.get("budget_capped_log") || "").replace(/[[\]]/g, ""), "",

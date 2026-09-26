@@ -255,6 +255,12 @@ Set featureCmd = Nothing
 
 Dim debugGeo, geoDebugSuffix
 debugGeo = (LCase(Cut(Request.Form("debugGeo"), 10)) = "1")
+If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "POST" Then
+  ' GET 只允许自诊断：解析「调用者自己」的地址，不接受任何目标地址参数，
+  ' 因此不能被当成「IP 查询代理」使用。方便管理员/访客在自己浏览器里直接
+  ' 打开 https://www.y0.hk/api/visitor-analytics.asp?debugGeo=1 看自己 IP 的解析结果。
+  debugGeo = (LCase(Cut(Request.QueryString("debugGeo"), 10)) = "1")
+End If
 geoDebugSuffix = ""
 If debugGeo Then
   ' 受限诊断：只回显「调用者自己 IP」的解析过程（状态码/耗时/解析结果），
@@ -266,6 +272,7 @@ If debugGeo Then
     """,""countryName"":""" & GeoJsonText(GeoCountryName) & _
     """,""region"":""" & GeoJsonText(GeoRegionName) & _
     """,""city"":""" & GeoJsonText(GeoCityName) & _
+    """,""repair"":""" & GeoJsonText(GeoRepairLastReport()) & _
     """,""log"":" & GeoDebugLog & "}"
 End If
 

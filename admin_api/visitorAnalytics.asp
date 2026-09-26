@@ -104,12 +104,18 @@ If actionName = "backfill-geo" Then
   Set pendingRs = Nothing
 
   Dim updateCmd
+  ' 失败原因必须回报给管理员：只给一个「失败 N 个」等于让人猜。逐个记录
+  ' 「哪个端点、什么状态、耗时多少」，最多回报 5 条（再多页面也读不完）。
+  Dim failureItems, failureCount, detailText
+  failureItems = ""
+  failureCount = 0
   For index = 0 To addressCount - 1
     targetAddress = addressList(index)
     scanned = scanned + 1
     If Not GeoIsPublicAddress(targetAddress) Then
       skipped = skipped + 1
     Else
+      GeoResetDebug
       GeoResolve targetAddress
       If GeoCountryCode <> "" Or GeoCountryName <> "" Or GeoCityName <> "" Then
         On Error Resume Next
@@ -130,13 +136,26 @@ If actionName = "backfill-geo" Then
         If Err.Number <> 0 Then
           Err.Clear
           failed = failed + 1
+          detailText = "UPDATE 写库失败"
+          If failureCount < 5 Then
+            failureItems = failureItems & ",""failure"":{" & _
+              """address"":""" & JsonText(targetAddress) & """,""reason"":""" & JsonText(detailText) & """}"
+            failureCount = failureCount + 1
+          End If
         Else
           resolvedCount = resolvedCount + 1
         End If
         On Error GoTo 0
       Else
         failed = failed + 1
+        detailText = GeoFailureSummary()
+        If failureCount < 5 Then
+          failureItems = failureItems & ",""failure"":{" & _
+            """address"":""" & JsonText(targetAddress) & """,""reason"":""" & JsonText(detailText) & """}"
+          failureCount = failureCount + 1
+        End If
       End If
+      GeoResetResult
     End If
   Next
 
@@ -144,7 +163,8 @@ If actionName = "backfill-geo" Then
     ",""resolved"":" & resolvedCount & _
     ",""skippedPrivate"":" & skipped & _
     ",""failed"":" & failed & _
-    ",""remainingBudget"":" & GeoApiBudgetRemaining() & "}"
+    ",""remainingBudget"":" & GeoApiBudgetRemaining() & _
+    ",""failures"":[" & Mid(failureItems, 2) & "]"
   conn.Close
   Set conn = Nothing
   Response.End

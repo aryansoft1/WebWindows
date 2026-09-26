@@ -145,6 +145,17 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/visitorAnalytics.asp",
     "deploy/ftp-manifest.json",
   ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
+} else if (manifest.releaseScope === "visitor-geo-selfrepair") {
+  assert.deepEqual(uploadFiles, [
+    "inc/visitor-geo.asp",
+    "api/visitor-analytics.asp",
+    "admin_api/visitorAnalytics.asp",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "SystemManager/visitor-analytics.html",
+    "deploy/ftp-manifest.json",
+  ], "the self-repair release must upload the resolver, both callers, the page and its script, with the manifest last");
+  assert.ok(!manifest.requiredFiles.includes("api/visitor-analytics.config.example.asp"),
+    "the config template is tracked but must never be deployed, matching the other proxy config examples");
 } else if (manifest.releaseScope === "visitor-geo-cache-probe") {
   assert.deepEqual(uploadFiles, [
     "inc/visitor-geo.asp",

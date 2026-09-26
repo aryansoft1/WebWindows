@@ -151,6 +151,7 @@
     status.dataset.touched = "1";
     status.className = "text-xs text-gray-500";
     status.textContent = "正在补全历史地区，请稍候……";
+    status.style.whiteSpace = "pre-line";
     try {
       if (!window.WebWindowsAdminSecurity) throw new Error("安全模块未加载，请刷新页面重试。");
       const body = new URLSearchParams();
@@ -163,11 +164,21 @@
       const payload = await response.json();
       if (!response.ok || !payload.ok) throw new Error(payload.message || payload.code || `HTTP ${response.status}`);
       const remaining = Number(payload.remainingBudget) || 0;
-      status.textContent = `已扫描 ${payload.scanned} 个地址，补全 ${payload.resolved} 个`
+      // 失败必须说到「哪个地址、哪个端点、什么状态」——只给一个失败计数等于让人猜。
+      const failures = Array.isArray(payload.failures) ? payload.failures : [];
+      let text = `已扫描 ${payload.scanned} 个地址，补全 ${payload.resolved} 个`
         + (payload.skippedPrivate ? `，跳过内网地址 ${payload.skippedPrivate} 个` : "")
         + (payload.failed ? `，失败 ${payload.failed} 个` : "")
         + `。今日外部解析额度还剩 ${remaining} 次。`;
-      status.className = "text-xs text-green-600";
+      failures.forEach((item) => {
+        text += `\n${item.address}：${item.reason || "未知原因"}`;
+      });
+      if (payload.failed && !failures.length) {
+        text += "\n（本次没有返回逐条原因，请把状态条发给我）";
+      }
+      status.textContent = text;
+      status.className = failures.length ? "text-xs text-amber-700" : "text-xs text-green-600";
+      status.style.whiteSpace = "pre-line";
       await load();
     } catch (error) {
       status.textContent = `补全失败：${error.message || error}`;

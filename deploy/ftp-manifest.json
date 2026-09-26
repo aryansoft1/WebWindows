@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.22",
+  "releaseVersion": "2026.09.26.23",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T07:09:21.844Z",
+  "generatedAt": "2026-09-26T07:24:57.732Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -274,7 +274,7 @@
     "SystemManager/assets/js/visitor-analytics-charts.js",
     "inc/visitor-geo.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.21",
+  "previousReleaseVersion": "2026.09.26.22",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1153,24 +1153,24 @@
       "size": 5549
     },
     "SystemManager/visitor-analytics.html": {
-      "sha256": "6e572350047142cde691d90b783cdbc28d9204937d476f52349f71e861a5e101",
+      "sha256": "386123b333ac879f6cff60180e24d1e3ff584577e0c13626092a89141e5ba103",
       "size": 6910
     },
     "SystemManager/assets/js/visitor-analytics.js": {
-      "sha256": "75e53497fb55cf1649d8124c5f3511dc6914a57c1a97f705c50cfd10a340a734",
-      "size": 10963
+      "sha256": "ab15a14998b312bf7f38d46ce24847e667dcb12fb46c1cc8a9eb4653ff4a5d04",
+      "size": 11579
     },
     "assets/css/tailwind.min.css": {
       "sha256": "0729906a529caf8b5dbe648cbc3952833afe118a25a841c8ae27e1cd1a8ac14c",
       "size": 201
     },
     "admin_api/visitorAnalytics.asp": {
-      "sha256": "73ca53a5803af67b8d89882f07e67db0c549579cf4d3d89864d16a7772245882",
-      "size": 18718
+      "sha256": "e9502b4d3d3e026e65d215e8d4dc0b912bb0468c833d5c4c6ca8fc54f0273c6c",
+      "size": 19715
     },
     "api/visitor-analytics.asp": {
-      "sha256": "ee71a25993eb4c8a90b7610cd431c7b68d9d351e6231b6e4f19d94a957207b96",
-      "size": 12141
+      "sha256": "0d709d22af4cbf54f5d51a62cc6d985d29601fd225dfb0b818c97817764b4187",
+      "size": 12514
     },
     "assets/js/visitor-analytics.js": {
       "sha256": "38d433c4e2592c0a2ab8e2730bc343c851cf11c7c902830407433475e359caa1",
@@ -1336,13 +1336,17 @@
       "size": 20522
     },
     "inc/visitor-geo.asp": {
-      "sha256": "3e2c2575c627b75cebfa2a79fbe397ea5200a28005c0dcd0fb269f9c9f291c18",
-      "size": 22308
+      "sha256": "9c1417aa8cf0319d633159e34025137936186798ab783a9be4fa4d0616693a61",
+      "size": 28201
     }
   },
-  "releaseScope": "visitor-geo-cache-probe",
+  "releaseScope": "visitor-geo-selfrepair",
   "uploadFiles": [
     "inc/visitor-geo.asp",
+    "api/visitor-analytics.asp",
+    "admin_api/visitorAnalytics.asp",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "SystemManager/visitor-analytics.html",
     "deploy/ftp-manifest.json"
   ]
 }

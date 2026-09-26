@@ -270,6 +270,14 @@ If debugGeo Then
 End If
 
 Response.Write "{""ok"":true" & geoDebugSuffix & "}"
+
+' 先把响应刷给访客，再做历史地址的自愈修复：
+'   * 修复是「锦上添花」，绝不能让访客等它（外部解析每次几百毫秒起步）；
+'   * 刷出之后再出错也已经影响不到任何人；
+'   * 这样地图不再依赖管理员记得点按钮 —— 每 20 分钟自动补最多 3 个地址。
+Response.Flush
+GeoRepairPending
+
 conn.Close
 Set conn = Nothing
 %>

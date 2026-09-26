@@ -85,9 +85,14 @@ assert.match(geoInclude, /Function GeoExternalConfigured/);
 // 2026-09-26 同一批查出的四个「静默失效」缺陷，全部锁死。
 // 行为层面的验证在 tests/visitor-geo-runtime-smoke.mjs（那里真的把 VBScript 跑起来），
 // 这里只负责防止把明显的错误写法再写回去。
+// 只看可执行代码：注释里会刻意写出被禁用的写法（说明为什么禁用），不算命中。
+const geoIncludeCode = geoInclude.split(/\r?\n/).filter((line) => !line.trim().startsWith("'")).join("\n");
 assert.match(geoInclude, /If GeoIisTrusted\(\) Then/,
   "GeoResolve must read the IIS GeoIP switch through the module's own helper");
-assert.doesNotMatch(geoInclude, /SubMatches\(2\)/, "no pattern here has three capture groups");
+assert.doesNotMatch(geoIncludeCode, /SubMatches\((?:[5-9]|\d{2,})\)/,
+  "no pattern in this module has more than four capture groups");
+assert.match(geoIncludeCode, /Function GeoFailureSummary[\s\S]{0,4000}SubMatches\(3\)/,
+  "GeoFailureSummary must read the result group too — that string is what the admin actually sees");
 assert.match(geoInclude, /quoteMark & "\(" & aliasCsv & "\)" & quoteMark/,
   "the JSON field pattern must keep the key's closing quote (a missing one parses nothing while still returning 200)");
 assert.match(geoInclude, /GeoAddDebug "cache"/,
@@ -107,14 +112,42 @@ assert.ok(loadResets >= loadExits - 1,
 
 // 多供应商降级链：单个供应商可能因出口网络/限流不可用
 assert.match(geoInclude, /Function GeoApiEndpointCount/);
+
+// 自愈式修复历史地址：IP 一直有记录，地区是后加的字段，地图不该依赖管理员记得点按钮。
+// 三条硬约束：限频（20 分钟）、限量（3 个）、走同一份每日额度，且全程 fail-open。
+assert.match(geoInclude, /Sub GeoRepairPending/);
+assert.match(geoIncludeCode, /- lastRun < 20 Then/,
+  "the automatic repair must be rate-limited, otherwise every page view would hammer the provider");
+assert.match(geoIncludeCode, /If repaired >= 3 Then Exit Do/,
+  "the automatic repair must stay bounded per run");
+assert.match(geoIncludeCode, /Sub GeoRepairPending[\s\S]{0,600}GeoApiBudgetAvailable\(\)/,
+  "the automatic repair must consume the same daily budget as every other lookup");
+assert.match(geoIncludeCode, /Sub GeoRepairPending[\s\S]{0,400}On Error Resume Next/,
+  "the automatic repair must be fail-open");
+const flushAt = collectorApi.indexOf("Response.Flush");
+const repairAt = collectorApi.indexOf("GeoRepairPending");
+assert.ok(flushAt > 0 && repairAt > flushAt,
+  "the repair must run after Response.Flush so a visitor never waits for external lookups");
+assert.match(collectorApi, /GeoRepairPending/);
+
+// 补全失败必须逐条回报原因：只给「失败 N 个」等于让人猜。
+assert.match(geoInclude, /Function GeoFailureSummary/);
+assert.match(adminApi, /GeoFailureSummary\(\)/);
+assert.match(adminApi, /""failures"":\[/);
+assert.match(adminApi, /If failureCount < 5 Then/,
+  "the backfill must cap how many per-address reasons it returns");
+assert.match(adminScript, /payload\.failures/,
+  "the analytics page must render the per-address failure reasons");
+assert.match(adminScript, /whiteSpace = "pre-line"/,
+  "the status line must be able to show one address per line");
 assert.match(geoInclude, /Function GeoApiEndpointTemplate/);
 assert.match(geoInclude, /Split\(GeoApiBase, ";"\)/);
 assert.match(geoInclude, /Sub GeoApiAttempt/);
 assert.match(geoInclude, /Sub GeoResetResult/);
 assert.match(geoExample, /geoApiBase = "https:[^"]*;https:/,
   "the shipped template must configure more than one endpoint so a single provider outage degrades instead of failing");
-assert.doesNotMatch(geoInclude, /ipwho\.is|ip-api|ipapi\.co|db-ip/,
-  "provider endpoints belong in the server-side config file, never in tracked source code");
+assert.doesNotMatch(geoIncludeCode, /ipwho\.is|ip-api|ipapi\.co|db-ip|ip\.sb|freeipapi/,
+  "provider endpoints belong in the server-side config file, never in tracked module code");
 
 // 受限诊断：只回显调用者自己 IP 的解析过程，且必须仍然消耗每日额度
 assert.match(geoInclude, /Sub GeoDiagnoseSelf/);
@@ -128,17 +161,18 @@ assert.match(collectorApi, /""geoDebug""/);
 // 解析到 /inc/ 而不是调用方目录，2026-09-26 因此导致外部解析从未发起。
 assert.match(geoInclude, /Sub GeoConfigureSub/);
 assert.match(geoInclude, /configPath = GeoConfigPath/);
-const geoIncludeCode = geoInclude.split(/\r?\n/).filter((line) => !line.trim().startsWith("'")).join("\n");
 // 只看可执行代码：注释里会刻意写出被禁用的写法（说明为什么禁用），不算命中。
 assert.doesNotMatch(geoIncludeCode, /EnvironmentFlag/,
   "EnvironmentFlag is defined neither in the repository nor on the server; the module must use its own GeoIisTrusted()");
-assert.equal((geoIncludeCode.match(/SubMatches\(1\)/g) || []).length, 1,
-  "only GeoJsonFieldValue (whose pattern has two capture groups) may index SubMatches(1); the single-group config patterns must use SubMatches(0) or they throw and the config is never read");
+const loadConfigBody = /Function GeoLoadApiConfig\(\)([\s\S]*?)\nEnd Function/.exec(geoIncludeCode)?.[1] ?? "";
+assert.ok(loadConfigBody.includes("GeoApiBase"), "GeoLoadApiConfig must be found for the capture-group guard");
+assert.doesNotMatch(loadConfigBody, /SubMatches\((?!0\))/,
+  "GeoLoadApiConfig's patterns each have a single capture group, so only SubMatches(0) is valid — SubMatches(1) throws and the config is never read");
 assert.doesNotMatch(geoIncludeCode, /Server\.MapPath\("visitor-analytics\.config\.asp"\)/,
   "the shared module must not resolve the config path itself; callers pass the resolved path");
 assert.match(collectorApi, /GeoConfigureSub Server\.MapPath\("visitor-analytics\.config\.asp"\)/);
 assert.match(adminApi, /GeoConfigureSub Server\.MapPath\("\.\.\/api\/visitor-analytics\.config\.asp"\)/);
-assert.doesNotMatch(geoInclude, /ipwho\.is|ipapi\.co|db-ip/,
+assert.doesNotMatch(geoIncludeCode, /ipwho\.is|ipapi\.co|db-ip/,
   "provider endpoints belong in the server-side config file, never in tracked source");
 assert.doesNotMatch(geoInclude, /HTTP_X_FORWARDED_FOR|HTTP_FORWARDED|HTTP_CF_|HTTP_X_GEO/i,
   "geolocation must never trust forwarded headers");

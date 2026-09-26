@@ -31,16 +31,21 @@ code = code.replace(/Application\(([A-Za-z0-9_.()]+)\)/g, "AppGet($1)");
 assert.ok(!/\bApplication\(/.test(code), "every Application reference must be transformable");
 
 /*
- * 整行注释剥离后再执行：这段代码里的中文全部只出现在注释里，剥掉之后脚本就是纯
- * ASCII，可以用最朴素的编码交给 cscript —— 本机 cscript 不接受 UTF-16LE+BOM
- * （会报莫名的「语句未结束」），项目现有的 tests/classic-asp-syntax-smoke.mjs 正是
- * 用 UTF-8 + CRLF 跑 cscript 的。若剥离后仍残留非 ASCII，说明有中文进了代码字面量，
- * 这里直接失败，强制改用别的编码方案，而不是悄悄写坏字节。
+ * 整行注释剥离后再执行，然后分两步处理非 ASCII：
+ *   1) 守卫：**代码部分**（剥掉字符串字面量之后）必须纯 ASCII。中文只允许出现在
+ *      注释和字符串字面量里 —— 否则 cscript 会按 ANSI 读成乱码，逻辑虽能跑但输出
+ *      无法断言，而这类问题在生产上表现为「界面显示乱码」而不是报错。
+ *   2) 交给 cscript 前把剩余非 ASCII 字符替换成 '?'：本机 cscript 不接受
+ *      UTF-16LE+BOM（会报莫名的「语句未结束」），项目现有的
+ *      tests/classic-asp-syntax-smoke.mjs 正是用 UTF-8 + CRLF 跑 cscript 的。
+ *      因此断言不能依赖中文字面量的具体内容。
  */
 code = code.split(/\r?\n/).filter((line) => !line.trim().startsWith("'")).join("\n");
-const nonAscii = code.match(/[^\x00-\x7F]/g);
-assert.equal(nonAscii, null,
-  `the geo include must keep non-ASCII text inside comments only, found: ${(nonAscii || []).join("")}`);
+const codeWithoutStrings = code.replace(/"(?:[^"]|"")*"/g, '""');
+const strayNonAscii = codeWithoutStrings.match(/[^\x00-\x7F]/g);
+assert.equal(strayNonAscii, null,
+  `non-ASCII text must stay inside comments and string literals, found in code: ${(strayNonAscii || []).join("")}`);
+const asciiCode = code.replace(/[^\x00-\x7F]/g, "?");
 
 /*
  * 共享模块依赖调用方页面里的 Cut / ServerGeo 两个小工具（它们定义在
@@ -139,7 +144,7 @@ End Function
 
 ${helpers}
 
-${code}
+${asciiCode}
 
 GeoConfigureSub Server.MapPath("visitor-analytics.config.asp")
 Dim probeFso
@@ -172,6 +177,7 @@ Say "endpoint_count", CStr(GeoApiEndpointCount())
 GeoResetDebug
 GeoDiagnoseSelf
 Say "diagnose_log", Replace(Replace(GeoDebugLog, vbCrLf, " "), vbLf, " ")
+Say "failure_summary", GeoFailureSummary()
 
 GeoResetDebug
 GeoResetResult
@@ -242,6 +248,14 @@ assert.ok(/no-client-address|private-address-not-sent|geo-not-configured|http-er
   `diagnose must reach the endpoint stage: ${diagnoseLog}`);
 assert.ok(!diagnoseLog.includes("no-client-address"),
   `the address must not be rejected as a client address: ${diagnoseLog}`);
+
+// 失败摘要必须能从真实日志里读出「哪个端点、什么状态、多久」——
+// 管理端只拿到一个失败计数的话，等于让人猜。
+const failureSummary = values.get("failure_summary") || "";
+assert.match(failureSummary, /^(外部解析未返回可识别的地区|[^;]*\d+\/\d+ms)/,
+  `GeoFailureSummary must summarise the endpoint attempts: ${failureSummary}`);
+assert.ok(!/stage-|"client"|"result"/.test(failureSummary),
+  `the summary must only list endpoint attempts: ${failureSummary}`);
 
 // 解析必须真的发起了 HTTP：解析来源要么拿到结果，要么在日志里留下失败痕迹
 const resolveLog = values.get("resolve_log") || "";

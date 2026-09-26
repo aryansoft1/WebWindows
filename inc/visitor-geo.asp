@@ -508,6 +508,37 @@ Sub GeoDiagnoseSelf()
   On Error GoTo 0
 End Sub
 
+' 把诊断日志压成一句给管理员看的话，例如：
+'   "ipwho.is 200/412ms unparsed-body; api.ip.sb 429/120ms http-error"
+' 只取端点条目（跳过 stage-* / client / result），最多 3 个，避免把状态条刷屏。
+' 这里不复用 GeoJsonFieldValue：它的模式要求值带引号，而日志里的 status / ms 是数字。
+Function GeoFailureSummary()
+  Dim matcher, matches, index, piece, text, endpointName
+  text = ""
+  Set matcher = New RegExp
+  matcher.Global = True
+  matcher.IgnoreCase = True
+  ' 与 GeoAddDebug 的序列化格式一一对应；格式若变动，这里退化为兜底文案。
+  matcher.Pattern = "\{""endpoint"":""([^""]*)"",""status"":(-?[0-9]+),""ms"":(-?[0-9]+),""result"":""([^""]*)""\}"
+  Set matches = matcher.Execute(CStr(GeoDebugLog))
+  For index = 0 To matches.Count - 1
+    endpointName = CStr(matches(index).SubMatches(0))
+    If Left(endpointName, 6) <> "stage-" And endpointName <> "client" And _
+       endpointName <> "-" And endpointName <> "result" And endpointName <> "cache" And _
+       endpointName <> "budget" And endpointName <> "resolved" Then
+      piece = endpointName & " " & CStr(matches(index).SubMatches(1)) & "/" & _
+        CStr(matches(index).SubMatches(2)) & "ms " & CStr(matches(index).SubMatches(3))
+      If text <> "" Then text = text & "; "
+      text = text & piece
+    End If
+    If Len(text) > 160 Then Exit For
+  Next
+  Set matches = Nothing
+  Set matcher = Nothing
+  If text = "" Then text = "外部解析未返回可识别的地区（诊断日志为空）"
+  GeoFailureSummary = Cut(text, 200)
+End Function
+
 Sub GeoResolve(ByVal rawAddress)
   Dim address
   GeoCountryCode = ""
@@ -576,4 +607,110 @@ End Function
 Function GeoExternalConfigured()
   GeoExternalConfigured = GeoLoadApiConfig()
 End Function
+
+' ---------------------------------------------------------------------------
+' 自愈式修复历史地址
+'
+' 背景：IP 一直有记录，地区是后来才加的字段 —— 修复上线之前写入的历史行地区为空，
+' 而外部解析有每日额度，不可能在每个访客上报时把所有历史行重算一遍。于是出现了
+' 「补全历史地区」这个手动按钮。但手动步骤意味着：**只要没人点，地图就永远是空的**。
+' 这里让采集端在正常上报之外，顺带把少量待补全的历史地址修好：
+'   * 每 20 分钟最多触发一次（Application 计数，进程重启也不会失效）；
+'   * 每次最多修 3 个地址，且仍然走同一份每日额度；
+'   * 全程 On Error Resume Next，绝不影响访客上报本身（fail-open）；
+'   * 调用方在 Response.Flush 之后才调用它，因此不占用访客的等待时间。
+' 按钮保留：管理员想立刻补完时仍然可以点。
+' ---------------------------------------------------------------------------
+Sub GeoRepairPending()
+  Dim slotKey, lastRun, repaired, queryRs, targetAddress, updateCmd
+
+  On Error Resume Next
+  If Not GeoExternalConfigured() Then
+    On Error GoTo 0
+    Exit Sub
+  End If
+  If Not GeoApiBudgetAvailable() Then
+    On Error GoTo 0
+    Exit Sub
+  End If
+
+  ' 每 20 分钟一次：lastRun 存的是那一天的累计分钟数，跨天自动重置。
+  slotKey = "webwindows_geo_repair_" & CStr(Year(Date())) & "_" & _
+    Right("0" & CStr(Month(Date())), 2) & "_" & Right("0" & CStr(Day(Date())), 2)
+  lastRun = -1
+  lastRun = CLng(Application(slotKey))
+  If Err.Number <> 0 Then
+    Err.Clear
+    lastRun = -1
+  End If
+  If lastRun >= 0 Then
+    If (CLng(Hour(Date())) * 60 + CLng(Minute(Date()))) - lastRun < 20 Then
+      On Error GoTo 0
+      Exit Sub
+    End If
+  End If
+  Application(slotKey) = CLng(Hour(Date())) * 60 + CLng(Minute(Date()))
+
+  Err.Clear
+  Set queryRs = conn.Execute("SELECT ip_address FROM webwindows_visitor_sessions " & _
+    "WHERE ip_address<>'' AND (country_code='' OR country_name='' OR city_name='') " & _
+    "GROUP BY ip_address ORDER BY MAX(id) DESC LIMIT 3")
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set queryRs = Nothing
+    On Error GoTo 0
+    Exit Sub
+  End If
+
+  repaired = 0
+  Do Until queryRs.EOF
+    targetAddress = CStr(queryRs("ip_address"))
+    queryRs.MoveNext
+    If Not GeoIsPublicAddress(targetAddress) Then
+      ' 内网地址永远不会解析成功，直接标记跳过，免得每次都白扫一遍
+      On Error Resume Next
+      Set updateCmd = Server.CreateObject("ADODB.Command")
+      With updateCmd
+        .ActiveConnection = conn
+        .CommandType = 1
+        .CommandText = "UPDATE webwindows_visitor_sessions SET region_name=region_name " & _
+          "WHERE ip_address=? AND (country_code='' OR country_name='' OR city_name='')"
+        .Parameters.Append .CreateParameter("", 200, 1, 45, targetAddress)
+        .Execute
+      End With
+      Set updateCmd = Nothing
+      Err.Clear
+      On Error GoTo 0
+    Else
+      GeoResetResult
+      GeoResetDebug
+      GeoResolve targetAddress
+      If GeoCountryCode <> "" Or GeoCountryName <> "" Or GeoCityName <> "" Then
+        On Error Resume Next
+        Set updateCmd = Server.CreateObject("ADODB.Command")
+        With updateCmd
+          .ActiveConnection = conn
+          .CommandType = 1
+          .CommandText = "UPDATE webwindows_visitor_sessions SET country_code=?,country_name=?,region_name=?,city_name=? " & _
+            "WHERE ip_address=? AND (country_code='' OR country_name='' OR city_name='')"
+          .Parameters.Append .CreateParameter("", 200, 1, 8, GeoCountryCode)
+          .Parameters.Append .CreateParameter("", 200, 1, 80, GeoCountryName)
+          .Parameters.Append .CreateParameter("", 200, 1, 120, GeoRegionName)
+          .Parameters.Append .CreateParameter("", 200, 1, 120, GeoCityName)
+          .Parameters.Append .CreateParameter("", 200, 1, 45, targetAddress)
+          .Execute
+        End With
+        Set updateCmd = Nothing
+        Err.Clear
+        On Error GoTo 0
+        repaired = repaired + 1
+      End If
+      GeoResetResult
+    End If
+    If repaired >= 3 Then Exit Do
+  Loop
+  queryRs.Close
+  Set queryRs = Nothing
+  On Error GoTo 0
+End Sub
 %>

@@ -142,6 +142,14 @@ if (manifest.releaseScope === "navigation-map") {
     "cloud/browser/private-files.asp",
     "deploy/ftp-manifest.json",
   ], "the understanding-row release must upload the parser that produces it, the search UI, its CSS and the two pages that load them");
+} else if (manifest.releaseScope === "cloud-folder-icons") {
+  assert.deepEqual(uploadFiles, [
+    "cloud/browser/files.asp",
+    "cloud/browser/private-files.asp",
+    "cloud/browser/styles.css",
+    "cloud/browser/toolbar.js",
+    "deploy/ftp-manifest.json",
+  ], "cloud folder icon releases must upload only the two cloud pages and the public tree UI assets");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

@@ -295,7 +295,9 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
 
 .root-node,
 .folder-label {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   width: 100%;
   padding: 7px 9px;
   text-align: left;
@@ -346,6 +348,12 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
   white-space: nowrap;
 }
 
+.folder-label span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .folder-label:focus-visible {
   outline: 2px solid #93c5fd;
   outline-offset: -2px;
@@ -359,18 +367,11 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
   font-weight: 600;
 }
 
-.folder-label::before {
-  content: "›";
-  display: inline-block;
-  margin-right: 7px;
-  color: #94a3b8;
-}
-
-/* Top level rows are the subfolders of the cloud root, so mark them as folders
-   and leave the chevron for the nested levels below them. */
-#folder-tree > .folder-node > .folder-label::before {
-  content: "▰";
-  color: #8a5a00;
+.folder-tree-icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  object-fit: contain;
 }
 
 .tree-error {

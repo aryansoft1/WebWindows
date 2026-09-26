@@ -228,7 +228,7 @@ End If
     a.private-tree-node{display:flex;align-items:center;gap:7px;padding:7px 8px;border-radius:7px;color:#334155;text-decoration:none}
     a.private-tree-node:hover{background:#eff6ff}
     a.private-tree-node.selected{color:#1d4ed8;background:#dbeafe;font-weight:600}
-    .private-tree-icon{flex:0 0 auto;color:#8a5a00;font-size:12px}
+    .private-tree-icon{width:17px;height:17px;flex:0 0 17px;object-fit:contain}
   </style>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
@@ -282,7 +282,7 @@ End If
         navParts = Split(relativePath, "/")
         navCurrent = (relativePath <> "")
       %>
-      <a class="private-tree-node<% If Not navCurrent Then Response.Write " selected"" aria-current=""page""" %>" href="<%=Html(PrivateFolderUrl(""))%>"><span class="private-tree-icon" aria-hidden="true">▣</span>我的文件</a>
+      <a class="private-tree-node<% If Not navCurrent Then Response.Write " selected"" aria-current=""page""" %>" href="<%=Html(PrivateFolderUrl(""))%>"><img class="private-tree-icon" src="assets/folder.svg" alt="" aria-hidden="true">我的文件</a>
       <ul class="private-folder-tree">
         <%
           For navIndex = 0 To UBound(navParts)
@@ -290,12 +290,12 @@ End If
               navPath = JoinPrefix(navParts, navIndex)
         %>
           <li>
-            <a class="private-tree-node<% If navIndex = UBound(navParts) Then Response.Write " selected"" aria-current=""page""" %>" href="<%=Html(PrivateFolderUrl(navPath))%>"><span class="private-tree-icon" aria-hidden="true">▰</span><%=Html(PrivateFolderDisplayName(navParts(navIndex)))%></a>
+            <a class="private-tree-node<% If navIndex = UBound(navParts) Then Response.Write " selected"" aria-current=""page""" %>" href="<%=Html(PrivateFolderUrl(navPath))%>"><img class="private-tree-icon" src="assets/folder.svg" alt="" aria-hidden="true"><%=Html(PrivateFolderDisplayName(navParts(navIndex)))%></a>
             <% If navIndex = UBound(navParts) Then %>
               <ul class="private-folder-children">
                 <% For Each navChild In folder.SubFolders %>
                   <% If LCase(navChild.Name) <> "_system" Then %>
-                <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(navPath & "/" & navChild.Name))%>"><span class="private-tree-icon" aria-hidden="true">▰</span><%=Html(PrivateFolderDisplayName(navChild.Name))%></a></li>
+                <li><a class="private-tree-node" href="<%=Html(PrivateFolderUrl(navPath & "/" & navChild.Name))%>"><img class="private-tree-icon" src="assets/folder.svg" alt="" aria-hidden="true"><%=Html(PrivateFolderDisplayName(navChild.Name))%></a></li>
                   <% End If %>
                 <% Next %>
               </ul>

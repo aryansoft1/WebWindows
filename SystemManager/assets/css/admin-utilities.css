@@ -23,4 +23,6 @@ body { margin:0; font-family:system-ui,"Microsoft YaHei",sans-serif; color:#1f29
 .table-auto { table-layout:auto; } .border-collapse { border-collapse:collapse; } .text-left { text-align:left; } .truncate { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .hover\:bg-gray-700:hover { background:#374151; } .hover\:bg-blue-700:hover { background:#1d4ed8; } .hover\:bg-gray-600:hover { background:#4b5563; }
 .hover\:text-white:hover { color:white; } .hover\:underline:hover { text-decoration:underline; }
+.admin-sidebar nav a { color:inherit; text-decoration:none; }
+.admin-sidebar nav a:focus-visible { outline:2px solid #93c5fd; outline-offset:2px; }
 button { cursor:pointer; } input,select,textarea { font:inherit; }

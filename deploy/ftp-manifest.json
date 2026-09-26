@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.27.2",
+  "releaseVersion": "2026.09.27.3",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T18:46:32.228Z",
+  "generatedAt": "2026-09-26T18:54:10.034Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -304,7 +304,7 @@
     "developer-samples/hello-webwindows/index.html",
     "developer-samples/hello-webwindows/manifest.json"
   ],
-  "previousReleaseVersion": "2026.09.27.1",
+  "previousReleaseVersion": "2026.09.27.2",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -1207,8 +1207,8 @@
       "size": 5767
     },
     "SystemManager/index.html": {
-      "sha256": "4f773008eee52b4f1c3e04dfef1faf2cc15d2d94aaf9ff873f5395b0dc4f0e7d",
-      "size": 2657
+      "sha256": "db8ffb1333be24ab3ebaea268391d1bc006c95c43c4f8ffed22087c674ce4b88",
+      "size": 2671
     },
     "SystemManager/assets/css/visitor-analytics.css": {
       "sha256": "54832075333533f1120252edeb4457967cf091fb878832f8e928aae5b1ffa182",
@@ -1462,8 +1462,8 @@
       "size": 1712
     },
     "SystemManager/assets/css/admin-utilities.css": {
-      "sha256": "89fefc7b416726b124a634074c083048322981f8b95e458d4fc3fe13f6913980",
-      "size": 3495
+      "sha256": "b5b5461d520e5f6e1249ac402905d6a8f282478928b82717c9a789634d1701d3",
+      "size": 3643
     },
     "SystemManager/assets/js/developer-content-admin.js": {
       "sha256": "3534b7788c9af52b113359a946d45a3b1b792ef1dbbef3332da4c43857c338c2",
@@ -1490,9 +1490,10 @@
       "size": 1493
     }
   },
-  "releaseScope": "systemmanager-dashboard-json-fix",
+  "releaseScope": "systemmanager-sidebar-css-fix",
   "uploadFiles": [
-    "admin_api/dashboardStats.asp",
+    "SystemManager/assets/css/admin-utilities.css",
+    "SystemManager/index.html",
     "deploy/ftp-manifest.json"
   ]
 }

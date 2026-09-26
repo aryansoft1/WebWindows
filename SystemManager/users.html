@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
   <meta charset="UTF-8">
   <title>用户管理</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="assets/css/admin-utilities.css?v=20260926-1" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/global.css">
   <link rel="stylesheet" href="assets/css/admin.css">
 </head>
@@ -13,6 +15,7 @@
       <h1 class="text-xl font-bold">用户管理</h1>
       <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded" onclick="openUserForm()">新建用户</button>
     </div>
+    <p id="userStatus" role="status" class="text-sm mb-3">正在加载用户…</p>
     <table class="w-full table-auto text-sm border">
       <thead class="bg-gray-100 text-left">
         <tr>
@@ -58,9 +61,8 @@
         </select>
       </div>
       <div>
-        <label class="block text-sm font-medium mb-1">头像</label>
-        <input type="file" name="avatar" accept="image/*" class="w-full">
-        <img id="avatar-preview" src="" alt="头像预览" class="mt-2 w-16 h-16 rounded-full object-cover hidden">
+        <label class="block text-sm font-medium mb-1">头像地址（HTTPS 或站内路径）</label>
+        <input type="text" name="avatar" class="w-full border rounded px-3 py-2" maxlength="500">
       </div>
       <div class="flex justify-end gap-3">
         <button type="button" onclick="closeUserForm()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-1 rounded">取消</button>
@@ -70,7 +72,7 @@
   </div>
 </div>
 
-<script src="assets/js/admin-security.js?v=20260831-1"></script>
+
 <script src="assets/js/users.js"></script>
 <script>
   if (window.lucide && typeof lucide.createIcons === "function") lucide.createIcons();

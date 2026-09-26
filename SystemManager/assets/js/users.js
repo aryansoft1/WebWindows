@@ -9,10 +9,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // 加载所有用户数据
 function fetchUsers() {
-  fetch("/admin_api/getUsers.asp")
+  document.getElementById("userStatus").textContent = "正在加载用户…";
+  window.WebWindowsAdminSecurity.read("/admin_api/getUsers.asp")
     .then(res => res.json())
-    .then(data => renderUsers(data))
-    .catch(err => console.error("用户加载失败", err));
+    .then(data => { renderUsers(data); document.getElementById("userStatus").textContent = data.length ? `共 ${data.length} 位用户` : "暂无用户"; })
+    .catch(() => { document.getElementById("userStatus").textContent = "用户加载失败，请刷新重试。"; });
 }
 
 // 渲染用户表格
@@ -50,18 +51,19 @@ function renderUsers(data) {
 // 加载数据中心列表，用于下拉菜单
 function fetchDataCenters() {
   if (dcLoadPromise) return dcLoadPromise;
-  fetch("/admin_api/getDatacenters.asp")
+  dcLoadPromise = window.WebWindowsAdminSecurity.read("/admin_api/getDatacenters.asp")
     .then(res => res.json())
     .then(data => {
       const select = document.querySelector("select[name='data_center_id']");
       select.innerHTML = "";
-      data.forEach(dc => {
+      data.filter(dc => dc.enabled).forEach(dc => {
         const opt = document.createElement("option");
         opt.value = dc.id;
         opt.textContent = dc.name;
         select.appendChild(opt);
       });
-    });
+    }).catch(error => { dcLoadPromise = null; throw error; });
+  return dcLoadPromise;
 }
 
 // 编辑用户（填充表单）
@@ -72,20 +74,21 @@ async function editUser(id) {
   document.getElementById("userFormTitle").textContent = "编辑用户";
 
   // 先取用户
-  const user = await fetch("/admin_api/getUserById.asp?id=" + id).then(res => res.json());
+  const user = await window.WebWindowsAdminSecurity.read("/admin_api/getUserById.asp?id=" + id).then(res => res.json());
 
   // 等数据中心列表加载完
   await fetchDataCenters();
 
   // 再统一赋值（包含隐藏 id）
-  form.id.value = user.id || "";
-  form.nickname.value = user.nickname || "";
-  form.username.value = user.username || "";
-  form.username.readOnly = true;
-  form.password.value = "";               // 不回显
-  form.email.value = user.email || "";
+  form.elements.namedItem("id").value = user.id || "";
+  form.elements.namedItem("nickname").value = user.nickname || "";
+  form.elements.namedItem("username").value = user.username || "";
+  form.elements.namedItem("username").readOnly = true;
+  form.elements.namedItem("password").value = "";
+  form.elements.namedItem("email").value = user.email || "";
+  form.elements.namedItem("avatar").value = user.avatar || "";
 
-  const sel = form.data_center_id;
+  const sel = form.elements.namedItem("data_center_id");
   const wanted = String(user.data_center_id || "");
   sel.value = wanted;
   if (sel.value !== wanted && wanted) {   // 该 DC 被删时兜底
@@ -127,7 +130,7 @@ async function submitUserForm(e) {
 
   // 不传文件，单独做上传接口
   const params = new URLSearchParams();
-  ["id","nickname","username","password","email","data_center_id","expired_at"].forEach(name => {
+  ["id","nickname","username","password","email","avatar","data_center_id"].forEach(name => {
     params.append(name, form.elements[name]?.value || "");
   });
 
@@ -156,9 +159,8 @@ function openUserForm() {
 
   const form = document.getElementById("user-add-form");
   form.reset();
-  form.id.value = "";  
-  form.username.readOnly = false;
-  document.getElementById("avatar-preview").classList.add("hidden");
+  form.elements.namedItem("id").value = "";
+  form.elements.namedItem("username").readOnly = false;
 
   modal.classList.remove("hidden");
 }
@@ -166,6 +168,5 @@ function openUserForm() {
 function closeUserForm() {
   document.getElementById("userFormModal").classList.add("hidden");
   document.getElementById("user-add-form").reset();
-  document.getElementById("user-add-form").username.readOnly = false;
+  document.getElementById("user-add-form").elements.namedItem("username").readOnly = false;
 }
-

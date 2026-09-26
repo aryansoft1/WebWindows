@@ -253,7 +253,23 @@ With featureCmd
 End With
 Set featureCmd = Nothing
 
-Response.Write "{""ok"":true}"
+Dim debugGeo, geoDebugSuffix
+debugGeo = (LCase(Cut(Request.Form("debugGeo"), 10)) = "1")
+geoDebugSuffix = ""
+If debugGeo Then
+  ' 受限诊断：只回显「调用者自己 IP」的解析过程（状态码/耗时/解析结果），
+  ' 不含任何其它访客数据；仍然消耗每日额度，因此不能被当成免费的 IP 查询代理。
+  ' 用途：服务器出口网络受限时，运维可以直接确认到底哪个供应商通、为什么不通。
+  GeoDiagnoseSelf
+  geoDebugSuffix = ",""geoDebug"":{""source"":""" & GeoResolvedBy & _
+    """,""country"":""" & GeoJsonText(GeoCountryCode) & _
+    """,""countryName"":""" & GeoJsonText(GeoCountryName) & _
+    """,""region"":""" & GeoJsonText(GeoRegionName) & _
+    """,""city"":""" & GeoJsonText(GeoCityName) & _
+    """,""log"":" & GeoDebugLog & "}"
+End If
+
+Response.Write "{""ok"":true" & geoDebugSuffix & "}"
 conn.Close
 Set conn = Nothing
 %>

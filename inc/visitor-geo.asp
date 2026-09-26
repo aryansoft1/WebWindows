@@ -48,6 +48,24 @@
 ' ---------------------------------------------------------------------------
 Dim GeoApiBase, GeoApiKey, GeoDailyCap, GeoConfigPath
 Dim GeoCountryCode, GeoCountryName, GeoRegionName, GeoCityName, GeoResolvedBy
+Dim GeoDebugLog
+
+' JSON 字符串转义（共享模块自带，避免与调用方的同名函数冲突）
+Function GeoJsonText(ByVal value)
+  Dim text
+  If IsNull(value) Then
+    text = ""
+  Else
+    text = CStr(value)
+  End If
+  text = Replace(text, "\", "\\")
+  text = Replace(text, Chr(34), "\" & Chr(34))
+  text = Replace(text, vbCrLf, " ")
+  text = Replace(text, vbCr, " ")
+  text = Replace(text, vbLf, " ")
+  text = Replace(text, vbTab, " ")
+  GeoJsonText = text
+End Function
 
 ' 调用方必须在使用地区解析之前调用一次，把配置文件的物理路径交进来。
 ' 采集端：GeoConfigureSub Server.MapPath("visitor-analytics.config.asp")        （/api/）
@@ -263,10 +281,70 @@ Function GeoApiBudgetAvailable()
   GeoApiBudgetAvailable = True
 End Function
 
-Function GeoApiLookup(ByVal address)
-  Dim http, requestUrl, payload
-  GeoApiLookup = False
-  requestUrl = Replace(GeoApiBase, "{IP}", Server.URLEncode(address))
+Function GeoApiEndpointCount()
+  Dim parts
+  If GeoApiBase = "" Then
+    GeoApiEndpointCount = 0
+    Exit Function
+  End If
+  parts = Split(GeoApiBase, ";")
+  GeoApiEndpointCount = UBound(parts) + 1
+End Function
+
+Function GeoApiEndpointTemplate(ByVal index)
+  Dim parts
+  If GeoApiBase = "" Then
+    GeoApiEndpointTemplate = ""
+    Exit Function
+  End If
+  parts = Split(GeoApiBase, ";")
+  If index < 0 Or index > UBound(parts) Then
+    GeoApiEndpointTemplate = ""
+  Else
+    GeoApiEndpointTemplate = Trim(CStr(parts(index)))
+  End If
+End Function
+
+Function GeoEndpointHost(ByVal requestUrl)
+  Dim rest, slashAt, colonAt
+  GeoEndpointHost = ""
+  rest = requestUrl
+  If InStr(rest, "://") > 0 Then rest = Mid(rest, InStr(rest, "://") + 3)
+  slashAt = InStr(rest, "/")
+  If slashAt > 0 Then rest = Left(rest, slashAt - 1)
+  colonAt = InStr(rest, ":")
+  If colonAt > 0 Then rest = Left(rest, colonAt - 1)
+  GeoEndpointHost = Trim(CStr(rest))
+End Function
+
+Sub GeoResetDebug()
+  GeoDebugLog = ""
+End Sub
+
+' 诊断记录只描述「调用者自己 IP」的解析过程，不包含任何其它访客数据。
+Sub GeoAddDebug(ByVal endpoint, ByVal status, ByVal elapsedMs, ByVal result)
+  Dim record
+  record = "{""endpoint"":""" & GeoJsonText(endpoint) & """,""status"":" & CStr(status) & _
+    ",""ms"":" & CStr(elapsedMs) & ",""result"":""" & GeoJsonText(result) & """}"
+  If GeoDebugLog = "" Then
+    GeoDebugLog = "[" & record & "]"
+  Else
+    GeoDebugLog = Left(GeoDebugLog, Len(GeoDebugLog) - 1) & "," & record & "]"
+  End If
+End Sub
+
+Sub GeoResetResult()
+  GeoCountryCode = ""
+  GeoCountryName = ""
+  GeoRegionName = ""
+  GeoCityName = ""
+  GeoResolvedBy = ""
+End Sub
+
+Sub GeoApiAttempt(ByVal template, ByVal address)
+  Dim http, requestUrl, payload, started, status, host
+  If template = "" Then Exit Sub
+  requestUrl = Replace(template, "{IP}", Server.URLEncode(address))
   If GeoApiKey <> "" Then
     If InStr(requestUrl, "?") > 0 Then
       requestUrl = requestUrl & "&key=" & Server.URLEncode(GeoApiKey)
@@ -274,6 +352,8 @@ Function GeoApiLookup(ByVal address)
       requestUrl = requestUrl & "?key=" & Server.URLEncode(GeoApiKey)
     End If
   End If
+  host = GeoEndpointHost(requestUrl)
+  started = Timer
 
   On Error Resume Next
   Set http = Server.CreateObject("MSXML2.ServerXMLHTTP.6.0")
@@ -281,24 +361,29 @@ Function GeoApiLookup(ByVal address)
     Err.Clear
     Set http = Nothing
     On Error GoTo 0
-    Exit Function
+    GeoAddDebug host, 0, CLng((Timer - started) * 1000), "client-create-failed"
+    Exit Sub
   End If
   http.setTimeouts 2500, 2500, 3000, 3000
   http.Open "GET", requestUrl, False
   http.setRequestHeader "Accept", "application/json"
   http.setRequestHeader "User-Agent", "WebWindows-Analytics/1.0"
   http.send
-  If CStr(http.Status) <> "200" Then
-    Err.Clear
-    Set http = Nothing
-    On Error GoTo 0
-    Exit Function
-  End If
-  payload = http.responseText
+  status = CStr(http.Status)
+  payload = ""
+  If status = "200" Then payload = http.responseText
   Set http = Nothing
   Err.Clear
   On Error GoTo 0
-  If Len(Trim(CStr(payload & ""))) = 0 Then Exit Function
+
+  If status <> "200" Then
+    GeoAddDebug host, CLng(status), CLng((Timer - started) * 1000), "http-error"
+    Exit Sub
+  End If
+  If Len(Trim(CStr(payload & ""))) = 0 Then
+    GeoAddDebug host, 200, CLng((Timer - started) * 1000), "empty-body"
+    Exit Sub
+  End If
 
   GeoCountryCode = LCase(GeoJsonFieldValue(payload, "country_code|countryCode|code", 8))
   GeoCountryName = GeoJsonFieldValue(payload, "country|country_name|countryName", 80)
@@ -306,9 +391,51 @@ Function GeoApiLookup(ByVal address)
   GeoCityName = GeoJsonFieldValue(payload, "city|city_name|cityName|district", 120)
   If GeoCountryCode <> "" Or GeoCountryName <> "" Or GeoCityName <> "" Then
     GeoResolvedBy = "external-api"
-    GeoApiLookup = True
+    GeoAddDebug host, 200, CLng((Timer - started) * 1000), _
+      "ok " & GeoCountryCode & " " & GeoCountryName & " " & GeoRegionName & " " & GeoCityName
+  Else
+    GeoAddDebug host, 200, CLng((Timer - started) * 1000), "unparsed-body"
   End If
-End Function
+End Sub
+
+' 诊断入口：只解析调用者自己的 REMOTE_ADDR，逐个端点回报状态与耗时。
+' 仍然消耗每日额度（不能被当成免费的 IP 查询代理），但不受同 IP 缓存影响，
+' 便于运维在服务器上直接确认「哪个供应商通、为什么不通」。
+Sub GeoDiagnoseSelf()
+  Dim address, index, template
+  GeoResetDebug
+  address = GeoSafeAddress(Request.ServerVariables("REMOTE_ADDR"))
+  If address = "" Then
+    GeoAddDebug "-", 0, 0, "no-client-address"
+    Exit Sub
+  End If
+  GeoAddDebug "client", 0, 0, address
+  If Not GeoIsPublicAddress(address) Then
+    GeoAddDebug "-", 0, 0, "private-address-not-sent"
+    Exit Sub
+  End If
+  If Not GeoLoadApiConfig() Then
+    GeoAddDebug "-", 0, 0, "geo-not-configured"
+    Exit Sub
+  End If
+  GeoAddDebug "-", 0, 0, "endpoints=" & CStr(GeoApiEndpointCount())
+  If Not GeoApiBudgetAvailable() Then
+    GeoAddDebug "-", 0, 0, "daily-budget-exhausted"
+    Exit Sub
+  End If
+  GeoResetResult
+  For index = 0 To GeoApiEndpointCount() - 1
+    template = GeoApiEndpointTemplate(index)
+    GeoApiAttempt template, address
+    If GeoResolvedBy = "external-api" Then Exit For
+    GeoResetResult
+  Next
+  If GeoResolvedBy = "external-api" Then
+    GeoAddDebug "resolved", 200, 0, GeoCountryCode & " " & GeoCountryName & " " & GeoRegionName & " " & GeoCityName
+  Else
+    GeoAddDebug "resolved", 0, 0, "none"
+  End If
+End Sub
 
 Sub GeoResolve(ByVal rawAddress)
   Dim address
@@ -342,10 +469,14 @@ Sub GeoResolve(ByVal rawAddress)
 
   If Not GeoApiBudgetAvailable() Then Exit Sub
 
-  On Error Resume Next
-  GeoApiLookup address
-  If Err.Number <> 0 Then Err.Clear
-  On Error GoTo 0
+  Dim index, template
+  GeoResetResult
+  For index = 0 To GeoApiEndpointCount() - 1
+    template = GeoApiEndpointTemplate(index)
+    GeoApiAttempt template, address
+    If GeoResolvedBy = "external-api" Then Exit For
+    GeoResetResult
+  Next
 End Sub
 
 Function GeoIisTrusted()

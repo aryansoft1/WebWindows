@@ -145,6 +145,14 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/visitorAnalytics.asp",
     "deploy/ftp-manifest.json",
   ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
+} else if (manifest.releaseScope === "visitor-geo-provider-fallback") {
+  assert.deepEqual(uploadFiles, [
+    "inc/visitor-geo.asp",
+    "api/visitor-analytics.asp",
+    "deploy/ftp-manifest.json",
+  ], "the provider fallback release must upload only the shared resolver, the collector and the manifest last");
+  assert.ok(!manifest.requiredFiles.includes("api/visitor-analytics.config.example.asp"),
+    "the config template is tracked but must never be deployed, matching the other proxy config examples");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

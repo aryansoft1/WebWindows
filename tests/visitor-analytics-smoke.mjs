@@ -3,8 +3,7 @@ import fs from "node:fs/promises";
 
 const read = (path) => fs.readFile(new URL(`../${path}`, import.meta.url), "utf8");
 const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adminIndex, home, environmentConfigText,
-  adminCharts, adminCss, geoConfigExample, geoInclude] = await Promise.all([
-  read("database/migrations/002_webwindows_visitor_analytics.sql"),
+  adminCharts, adminCss, geoConfigExample, geoInclude] = await Promise.all([  read("database/migrations/002_webwindows_visitor_analytics.sql"),
   read("api/visitor-analytics.asp"),
   read("assets/js/visitor-analytics.js"),
   read("admin_api/visitorAnalytics.asp"),
@@ -19,6 +18,7 @@ const [migration, collectorApi, collector, adminApi, adminPage, adminScript, adm
   read("inc/visitor-geo.asp")
 ]);
 const environmentConfig = JSON.parse(environmentConfigText);
+const geoExample = geoConfigExample;
 
 assert.match(migration, /CREATE TABLE IF NOT EXISTS webwindows_visitor_sessions/);
 assert.match(migration, /CREATE TABLE IF NOT EXISTS webwindows_visitor_feature_stats/);
@@ -81,6 +81,25 @@ assert.match(geoInclude, /GeoResolvedBy = "external-api"/);
 assert.match(geoInclude, /visitor-analytics\.config\.asp/);
 assert.match(geoInclude, /Function GeoIisTrusted/);
 assert.match(geoInclude, /Function GeoExternalConfigured/);
+
+// 多供应商降级链：单个供应商可能因出口网络/限流不可用
+assert.match(geoInclude, /Function GeoApiEndpointCount/);
+assert.match(geoInclude, /Function GeoApiEndpointTemplate/);
+assert.match(geoInclude, /Split\(GeoApiBase, ";"\)/);
+assert.match(geoInclude, /Sub GeoApiAttempt/);
+assert.match(geoInclude, /Sub GeoResetResult/);
+assert.match(geoExample, /geoApiBase = "https:[^"]*;https:/,
+  "the shipped template must configure more than one endpoint so a single provider outage degrades instead of failing");
+assert.doesNotMatch(geoInclude, /ipwho\.is|ip-api|ipapi\.co|db-ip/,
+  "provider endpoints belong in the server-side config file, never in tracked source code");
+
+// 受限诊断：只回显调用者自己 IP 的解析过程，且必须仍然消耗每日额度
+assert.match(geoInclude, /Sub GeoDiagnoseSelf/);
+assert.match(geoInclude, /Request\.ServerVariables\("REMOTE_ADDR"\)/);
+assert.match(geoInclude, /If Not GeoApiBudgetAvailable\(\) Then/);
+assert.match(collectorApi, /debugGeo/);
+assert.match(collectorApi, /GeoDiagnoseSelf/);
+assert.match(collectorApi, /""geoDebug""/);
 
 // 配置路径必须由调用方显式传入：Server.MapPath 的相对路径在 include 片段里
 // 解析到 /inc/ 而不是调用方目录，2026-09-26 因此导致外部解析从未发起。

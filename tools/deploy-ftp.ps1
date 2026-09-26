@@ -53,7 +53,7 @@ foreach ($relative in $AdoptChangedProductionFiles) {
   [void]$adoptChanged.Add($relative)
 }
 $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$backupRoot = Join-Path $repo ("deploy\backups\" + $stamp + "-" + [string]$production.releaseVersion)
+$backupRoot = Join-Path $repo (".deployment-backups\" + $stamp + "-" + [string]$production.releaseVersion)
 New-Item -ItemType Directory -Path $backupRoot -Force | Out-Null
 $auditChanged = [System.Collections.Generic.List[string]]::new()
 $auditNotRelease = [System.Collections.Generic.List[string]]::new()

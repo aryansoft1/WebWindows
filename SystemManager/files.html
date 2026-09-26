@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>公共资料管理</title>
@@ -17,9 +19,14 @@
   <div class="layout">
     <header>
       <h1>云资料管理 · 公共区域</h1>
-      <p>当前连接主云资源节点。其他节点将在数据中心路由接通后从这里切换。</p>
+      <p>选择已启用的数据中心管理公共资料。节点管理密钥在节点页面输入，后台不回显已保存的 API Key。</p>
+      <label for="fileCenter">数据中心</label>
+      <select id="fileCenter"><option value="">主云资源节点</option></select>
+      <button type="button" id="openNodeTab">在新标签打开当前节点</button>
+      <span id="fileCenterStatus" role="status"></span>
     </header>
-    <iframe src="../cloud/browser/manage.html" title="公共资料管理"></iframe>
+    <iframe id="fileManagerFrame" src="../cloud/browser/manage.html" title="公共资料管理" referrerpolicy="no-referrer"></iframe>
   </div>
+<script src="assets/js/files.js?v=20260926-1"></script>
 </body>
 </html>

@@ -154,6 +154,9 @@ End If
 Dim ipAddress, countryCode, countryName, regionName, cityName
 ipAddress = Cut(Request.ServerVariables("REMOTE_ADDR"), 45)
 ' 地区解析：IIS GeoIP 优先，其次同 IP 历史会话缓存，最后才是外部解析 API。
+' 配置路径由本页面（位于 /api/）自己解析后交给共享模块 —— 共享模块里的相对
+' MapPath 会解析到 /inc/，那是 2026-09-26 地图一直空着的真正原因。
+GeoConfigureSub Server.MapPath("visitor-analytics.config.asp")
 GeoResolve ipAddress
 countryCode = GeoCountryCode
 countryName = GeoCountryName

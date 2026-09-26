@@ -55,6 +55,10 @@ Dim actionName
 actionName = LCase(Trim(CStr(Request.QueryString("action"))))
 If actionName = "" Then actionName = "summary"
 
+' 共享模块里的相对 MapPath 会解析到 /inc/，配置必须由本页面（位于 /admin_api/）
+' 显式解析后传进去，否则地区来源会一直误报为「未启用」。
+GeoConfigureSub Server.MapPath("../api/visitor-analytics.config.asp")
+
 If Not TableReady("webwindows_visitor_sessions") Or Not TableReady("webwindows_visitor_feature_stats") Then
   Fail "503 Service Unavailable", "ANALYTICS_SCHEMA_REQUIRED", "访客统计数据库迁移尚未应用。"
 End If

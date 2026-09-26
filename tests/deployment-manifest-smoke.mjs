@@ -138,6 +138,13 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json",
   ], "the geolocation enablement must upload the shared resolver, both callers, the admin page chain and the manifest last");
+} else if (manifest.releaseScope === "visitor-geo-path-fix") {
+  assert.deepEqual(uploadFiles, [
+    "inc/visitor-geo.asp",
+    "api/visitor-analytics.asp",
+    "admin_api/visitorAnalytics.asp",
+    "deploy/ftp-manifest.json",
+  ], "the geolocation path fix must upload only the shared resolver, its two callers and the manifest last");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

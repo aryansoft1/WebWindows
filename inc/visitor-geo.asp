@@ -46,8 +46,15 @@
 ' api/*.config.asp），模板与可选供应商见 visitor-analytics.config.example.asp。
 ' 换供应商只改配置、不改代码：字段别名已兼容常见形状，且这里不写死任何供应商域名。
 ' ---------------------------------------------------------------------------
-Dim GeoApiBase, GeoApiKey, GeoDailyCap
+Dim GeoApiBase, GeoApiKey, GeoDailyCap, GeoConfigPath
 Dim GeoCountryCode, GeoCountryName, GeoRegionName, GeoCityName, GeoResolvedBy
+
+' 调用方必须在使用地区解析之前调用一次，把配置文件的物理路径交进来。
+' 采集端：GeoConfigureSub Server.MapPath("visitor-analytics.config.asp")        （/api/）
+' 管理端：GeoConfigureSub Server.MapPath("../api/visitor-analytics.config.asp") （/api/）
+Sub GeoConfigureSub(ByVal physicalPath)
+  GeoConfigPath = Trim(CStr(physicalPath & ""))
+End Sub
 
 Function GeoJsonFieldValue(ByVal payload, ByVal aliasCsv, ByVal maximum)
   Dim matcher, matches
@@ -105,7 +112,17 @@ Function GeoLoadApiConfig()
   GeoApiBase = ""
   GeoApiKey = ""
   GeoDailyCap = 800
-  configPath = Server.MapPath("visitor-analytics.config.asp")
+  '
+  ' 配置路径必须由调用方用 Server.MapPath 显式传进来（见 GeoConfigureSub）。
+  '
+  ' 2026-09-26 线上事故：这里原本写的是 Server.MapPath("visitor-analytics.config.asp")，
+  ' 而 Server.MapPath 的相对路径是相对**本 include 片段所在目录**（/inc/）解析的，
+  ' 不是调用方所在的 /api/ —— 于是配置文件明明就放在 api/ 下，每次却都判定
+  ' 「未配置」直接返回，外部解析从来没有真正发起过：用不可路由地址探测时请求
+  ' 恒为 ~550ms（既不超时、也从不写地区），把同一份配置放到 /inc/ 后立刻变成
+  ' 2174ms 的连接超时，路径问题由此被证实。
+  '
+  configPath = GeoConfigPath
   If Len(configPath) = 0 Then Exit Function
 
   On Error Resume Next

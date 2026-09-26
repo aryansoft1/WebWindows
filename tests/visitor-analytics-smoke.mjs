@@ -81,6 +81,16 @@ assert.match(geoInclude, /GeoResolvedBy = "external-api"/);
 assert.match(geoInclude, /visitor-analytics\.config\.asp/);
 assert.match(geoInclude, /Function GeoIisTrusted/);
 assert.match(geoInclude, /Function GeoExternalConfigured/);
+
+// 配置路径必须由调用方显式传入：Server.MapPath 的相对路径在 include 片段里
+// 解析到 /inc/ 而不是调用方目录，2026-09-26 因此导致外部解析从未发起。
+assert.match(geoInclude, /Sub GeoConfigureSub/);
+assert.match(geoInclude, /configPath = GeoConfigPath/);
+const geoIncludeCode = geoInclude.split(/\r?\n/).filter((line) => !line.trim().startsWith("'")).join("\n");
+assert.doesNotMatch(geoIncludeCode, /Server\.MapPath\("visitor-analytics\.config\.asp"\)/,
+  "the shared module must not resolve the config path itself; callers pass the resolved path");
+assert.match(collectorApi, /GeoConfigureSub Server\.MapPath\("visitor-analytics\.config\.asp"\)/);
+assert.match(adminApi, /GeoConfigureSub Server\.MapPath\("\.\.\/api\/visitor-analytics\.config\.asp"\)/);
 assert.doesNotMatch(geoInclude, /ipwho\.is|ipapi\.co|db-ip/,
   "provider endpoints belong in the server-side config file, never in tracked source");
 assert.doesNotMatch(geoInclude, /HTTP_X_FORWARDED_FOR|HTTP_FORWARDED|HTTP_CF_|HTTP_X_GEO/i,

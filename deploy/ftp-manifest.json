@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.17",
+  "releaseVersion": "2026.09.26.18",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T06:05:01.701Z",
+  "generatedAt": "2026-09-26T06:21:34.495Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -274,7 +274,7 @@
     "SystemManager/assets/js/visitor-analytics-charts.js",
     "inc/visitor-geo.asp"
   ],
-  "previousReleaseVersion": "2026.09.26.16",
+  "previousReleaseVersion": "2026.09.26.17",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -1165,12 +1165,12 @@
       "size": 201
     },
     "admin_api/visitorAnalytics.asp": {
-      "sha256": "55fb522d43248773e7fbbde01527645ec1f80d25ebfdaab7e090137202925bf8",
-      "size": 18458
+      "sha256": "73ca53a5803af67b8d89882f07e67db0c549579cf4d3d89864d16a7772245882",
+      "size": 18718
     },
     "api/visitor-analytics.asp": {
-      "sha256": "8b46db13775f9e1c7b033cf267f0f06c7c571f85ae52911977e7319360323b88",
-      "size": 11036
+      "sha256": "2f916ba00d9c665e7fedec7652e8b1de92e5771bbee1299d3a7f265c0b50be5b",
+      "size": 11295
     },
     "assets/js/visitor-analytics.js": {
       "sha256": "38d433c4e2592c0a2ab8e2730bc343c851cf11c7c902830407433475e359caa1",
@@ -1336,18 +1336,15 @@
       "size": 20522
     },
     "inc/visitor-geo.asp": {
-      "sha256": "dcde8272c6c228fa8cc41747d5648e4360527838f486122be3d99883b231c1a4",
-      "size": 12861
+      "sha256": "55aa5472a4eb8dfa882bed26eb27ddc00951464b32ceafc9f5ab214bce5de122",
+      "size": 13935
     }
   },
-  "releaseScope": "visitor-geo-enable",
+  "releaseScope": "visitor-geo-path-fix",
   "uploadFiles": [
     "inc/visitor-geo.asp",
     "api/visitor-analytics.asp",
     "admin_api/visitorAnalytics.asp",
-    "SystemManager/visitor-analytics.html",
-    "SystemManager/assets/js/visitor-analytics.js",
-    "SystemManager/assets/css/visitor-analytics.css",
     "deploy/ftp-manifest.json"
   ]
 }

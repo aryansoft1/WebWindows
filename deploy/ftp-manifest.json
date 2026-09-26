@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.26.12",
+  "releaseVersion": "2026.09.26.13",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T04:04:27.936Z",
+  "generatedAt": "2026-09-26T04:34:43.829Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -272,7 +272,7 @@
     "SystemManager/assets/css/admin-login.css",
     "SystemManager/login.html"
   ],
-  "previousReleaseVersion": "2026.09.26.11",
+  "previousReleaseVersion": "2026.09.26.12",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "4240d622f8d4d59e846c8aae3898ef7f893c3845bd43898ac987dc2f733e275d",
@@ -963,8 +963,8 @@
       "size": 7341
     },
     "SystemManager/datacenter.html": {
-      "sha256": "60177b6e60b0f38de4f0d1de1bdf03ffa47cacfd88b3c880b832b04d271586d8",
-      "size": 4454
+      "sha256": "210eafd54ab091fc758f25823076c6561201ca26b64ec210e189946cea910ec2",
+      "size": 4493
     },
     "web.html": {
       "sha256": "f1ad19cad845e7ec575fbfe027aaf2c1608f343b60bd2b4fff077fbcae95e2cd",
@@ -1175,8 +1175,8 @@
       "size": 5767
     },
     "SystemManager/index.html": {
-      "sha256": "acc62eaed953020d730eecbcf3a6582cd02809902e8454da03a90a7b1b1f411a",
-      "size": 2587
+      "sha256": "bd013c22860ee171be75e89fb0951e13ca2f737e0093f82ba71479b198e43788",
+      "size": 2626
     },
     "SystemManager/assets/css/visitor-analytics.css": {
       "sha256": "b382a3c3547a7158c815630ca2cb3d34568deca6050c72ff8dca67db7930faae",
@@ -1330,12 +1330,10 @@
       "size": 1638
     }
   },
-  "releaseScope": "admin-login-security-repair",
+  "releaseScope": "admin-console-tailwind",
   "uploadFiles": [
-    "inc/admin-security.asp",
-    "SystemManager/assets/js/admin-login.js",
-    "SystemManager/assets/css/admin-login.css",
-    "SystemManager/login.html",
+    "SystemManager/index.html",
+    "SystemManager/datacenter.html",
     "deploy/ftp-manifest.json"
   ]
 }

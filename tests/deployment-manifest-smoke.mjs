@@ -104,6 +104,12 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/login.html",
     "deploy/ftp-manifest.json",
   ], "admin login repairs must upload the missing security include, the CSRF-aware client, the login page that cache-stamps it, and the manifest last");
+} else if (manifest.releaseScope === "admin-console-tailwind") {
+  assert.deepEqual(uploadFiles, [
+    "SystemManager/index.html",
+    "SystemManager/datacenter.html",
+    "deploy/ftp-manifest.json",
+  ], "the admin console stylesheet repair must upload only the two pages that pointed at the Tailwind stub, plus the manifest last");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

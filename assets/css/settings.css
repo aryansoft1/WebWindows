@@ -116,6 +116,10 @@ body {
   font-size: 15px;
 }
 
+.cursor-preview { display: flex; flex-wrap: wrap; gap: 10px; }
+.cursor-preview > * { min-width: 95px; min-height: 42px; display: grid; place-items: center; box-sizing: border-box; padding: 8px; border: 1px solid #d5dfed; border-radius: 9px; background: #f5f9ff; }
+.cursor-preview > input { width: 150px; }
+
 .settings-range-row { display: grid; grid-template-columns: minmax(0,1fr) 54px; align-items: center; gap: 12px; }
 .settings-range-row input[type="range"] {
   -webkit-appearance: none;

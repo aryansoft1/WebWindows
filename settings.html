@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="assets/css/settings.css?v=20260923-startup-1" />
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
+    <script src="assets/js/cursor-themes.js?v=1"></script>
     <script defer src="assets/js/tw.js?v=20260925-settings-apps-i18n-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
@@ -22,6 +23,7 @@
             <ul>
                 <li class="active"><button type="button" data-settings-tab="langTab" onclick="switchTab(this, 'langTab')"><img class="settings-nav-icon" src="assets/icons/settings-language.svg" alt=""><span>语言与区域</span></button></li>
                 <li><button type="button" data-settings-tab="wallpaperTab" onclick="switchTab(this, 'wallpaperTab')"><img class="settings-nav-icon" src="assets/icons/settings-wallpaper.svg" alt=""><span>桌面壁纸</span></button></li>
+                <li><button type="button" data-settings-tab="cursorTab" onclick="switchTab(this, 'cursorTab')"><img class="settings-nav-icon" src="assets/icons/settings-display.svg" alt=""><span>鼠标指针</span></button></li>
                 <li><button type="button" data-settings-tab="displayTab" onclick="switchTab(this, 'displayTab')"><img class="settings-nav-icon" src="assets/icons/settings-display.svg" alt=""><span>显示设置</span></button></li>
                 <li><button type="button" data-settings-tab="soundTab" onclick="switchTab(this, 'soundTab')"><img class="settings-nav-icon" src="assets/icons/settings-sound.svg" alt=""><span>声音</span></button></li>
                 <li><button type="button" data-settings-tab="powerTab" onclick="switchTab(this, 'powerTab')"><img class="settings-nav-icon" src="assets/icons/settings-power.svg" alt=""><span>电源管理</span></button></li>
@@ -64,6 +66,38 @@
                 <section class="settings-section">
                     <h3>桌面壁纸</h3>
                     <div id="wallpaperThumbnails" class="wallpaper-grid"></div>
+                </section>
+            </div>
+
+            <div id="cursorTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>个性化 → 鼠标指针 → 指针主题</h3>
+                    <div class="settings-card">
+                        <label for="cursorThemeSelect">指针主题</label>
+                        <select id="cursorThemeSelect">
+                            <option value="dreama">Dreama</option>
+                            <option value="classic">Classic</option>
+                            <option value="soft">Soft</option>
+                            <option value="dark-pro">Dark Pro</option>
+                            <option value="mono">Mono</option>
+                        </select>
+                        <p class="settings-help">主题仅作用于 WebWindows 页面，选择会自动保存。</p>
+                    </div>
+                    <div class="settings-card cursor-preview">
+                        <div data-cursor-state="default">默认</div>
+                        <button type="button">按钮</button>
+                        <input type="text" aria-label="指针预览文本输入" placeholder="文本输入">
+                        <div data-cursor-state="move">移动</div>
+                        <div data-cursor-state="ew-resize">水平调整</div>
+                        <div data-cursor-state="ns-resize">垂直调整</div>
+                        <div data-cursor-state="nwse-resize">左上 / 右下</div>
+                        <div data-cursor-state="nesw-resize">右上 / 左下</div>
+                        <button type="button" disabled>禁用</button>
+                        <div data-cursor-state="wait">等待</div>
+                        <div data-cursor-state="progress">处理中</div>
+                        <div data-cursor-state="crosshair">精确选择</div>
+                        <div data-cursor-state="help">帮助</div>
+                    </div>
                 </section>
             </div>
 

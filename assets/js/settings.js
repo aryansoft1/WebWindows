@@ -16,6 +16,15 @@ function applyDesktopScale(scale) {
 scaleSelect.addEventListener("change", () => applyDesktopScale(scaleSelect.value));
 
 window.addEventListener("DOMContentLoaded", () => {
+    const cursorSelect = document.getElementById("cursorThemeSelect");
+    const cursorManager = getDesktopHost().WebWindows?.cursor || window.WebWindows?.cursor;
+    if (cursorSelect && cursorManager) {
+        cursorSelect.value = cursorManager.currentTheme;
+        cursorSelect.addEventListener("change", () => {
+            cursorManager.setTheme(cursorSelect.value);
+            window.WebWindows?.cursor?.setTheme(cursorSelect.value);
+        });
+    }
     const savedScale = localStorage.getItem("ui-scale") || 1;
 
     document.getElementById("scaleSelect").value = savedScale;

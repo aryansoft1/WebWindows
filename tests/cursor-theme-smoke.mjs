@@ -123,7 +123,7 @@ try {
     lateStyle.textContent = '.desktop { cursor: default !important; }';
     document.head.appendChild(lateStyle);
   });
-  await page.waitForFunction(() => document.head.lastElementChild?.id === 'ww-cursor-theme-style');
+  await page.waitForFunction(() => !!document.getElementById('ww-cursor-theme-style'));
   assert.match(await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor), /classic\/default\.png/, 'theme survives late styles');
   const dynamicCoverage = await page.evaluate(async () => {
     const samples = Object.fromEntries([
@@ -167,6 +167,24 @@ try {
     assert.match(dynamicCoverage[key], new RegExp(`classic/${state}\\.png`), key);
   }
   assert.equal(dynamicCoverage.tokens, true, 'all cursor tokens use theme assets');
+  let releaseFrame;
+  let frameRequestStarted;
+  const frameRequest = new Promise((resolve) => { frameRequestStarted = resolve; });
+  await page.route('**/cursor-pending-frame.html', (route) => {
+    releaseFrame = () => route.fulfill({ status: 200, contentType: 'text/html', body: '<button>loaded frame</button>' });
+    frameRequestStarted();
+  });
+  await page.evaluate(() => {
+    const frame = document.createElement('iframe');
+    frame.src = '/cursor-pending-frame.html';
+    document.body.appendChild(frame);
+  });
+  await frameRequest;
+  assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
+    frame.contentDocument?.getElementById('ww-cursor-theme-style') ?? null
+  ), null, 'pending iframe does not start cursor requests in its temporary about:blank document');
+  await releaseFrame();
+  await page.waitForFunction(() => !!document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.getElementById('ww-cursor-theme-style'));
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {

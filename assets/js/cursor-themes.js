@@ -100,7 +100,7 @@
             style.id = 'ww-cursor-theme-style';
             doc.head.appendChild(style);
         }
-        if (doc.head.lastElementChild !== style) doc.head.appendChild(style);
+        if (style.parentNode !== doc.head) doc.head.appendChild(style);
         const css = rules();
         if (style.textContent !== css) style.textContent = css;
         doc.documentElement.dataset.wwCursorTheme = currentTheme;
@@ -158,6 +158,11 @@
         try {
             const child = frame.contentDocument;
             if (!child) { frameLimitations.add(frame); return; }
+            const destination = frame.getAttribute('src')?.trim();
+            // A new iframe exposes an initial about:blank document before navigation.
+            // Styling it starts cursor-image requests that navigation immediately aborts.
+            if (child.URL === 'about:blank' && (frame.hasAttribute('srcdoc') ||
+                (destination && destination !== 'about:blank'))) return;
             applyToDocument(child);
             observeDocument(child);
             discover(child);
@@ -193,12 +198,9 @@
                 else for (const node of record.addedNodes) discover(node);
             }
         }).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
-        const headObserver = new MutationObserver((records) => {
+        const headObserver = new MutationObserver(() => {
             const style = doc.getElementById('ww-cursor-theme-style');
-            if (!style) { applyToDocument(doc); return; }
-            if (style !== doc.head.lastElementChild && records.some((record) =>
-                Array.from(record.addedNodes).some((node) => node.nodeType === 1 && ['LINK', 'STYLE'].includes(node.tagName))
-            )) doc.head.appendChild(style);
+            if (!style || style.parentNode !== doc.head) applyToDocument(doc);
         });
         headObserver.observe(doc.head, { childList: true });
     }

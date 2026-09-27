@@ -37,13 +37,21 @@ assert.doesNotMatch(index, />WebWindows能做什么</);
 assert.match(settings, /使用向导/);
 assert.match(main, /function openGuide\(topic\)/);
 assert.equal(content.release.homeTopic, "getting-started");
+assert.equal(content.release.registryVersion, manifest.repository.catalogVersion);
+assert.equal(
+  content.release.updatedAt,
+  content.articles.map((article) => article.lastVerified).sort().at(-1)
+);
 assert.ok(content.articles.length >= 18);
 assert.ok(content.articles.every((article) => article.lastVerified));
 assert.ok(content.articles.every((article) =>
   ["verified", "testing", "planned"].includes(article.status)
 ));
 assert.ok(content.articles.every((article) => article.media && article.mediaAlt && article.mediaCaption));
-assert.ok(content.articles.every((article) => /<ol>/.test(article.html)));
+assert.ok(content.articles.every((article) => {
+  const steps = article.html.match(/<h2>操作步骤<\/h2>\s*<ol>([\s\S]*?)<\/ol>/)?.[1] || "";
+  return (steps.match(/<li>/g) || []).length >= 4;
+}));
 assert.ok(content.articles.every((article) => /常见问题与权限提示/.test(article.html)));
 const covered = new Set(content.articles.flatMap((article) => article.covers));
 assert.deepEqual(
@@ -52,7 +60,18 @@ assert.deepEqual(
 );
 assert.equal(content.release.coverage.registeredApps, manifest.apps.length);
 assert.equal(content.release.coverage.coveredApps, covered.size);
-assert.match(script, /loading="lazy"/);
+assert.match(script, /loading="eager"/);
+assert.match(script, /versionedLocalUrl/);
+assert.match(script, /media\.naturalWidth/);
+assert.match(style, /\.guide-media-error/);
+assert.match(page, /20260927-1/);
+const navigation = content.articles.find((article) => article.id === "navigation");
+assert.match(navigation.searchText, /问地/);
+assert.match(navigation.searchText, /问天/);
+assert.match(navigation.searchText, /问乡/);
+assert.match(navigation.searchText, /12306/);
+const settingsGuide = content.articles.find((article) => article.id === "settings-device");
+assert.match(settingsGuide.searchText, /启动项/);
 assert.match(page, /id="guideMenuButton"/);
 
 console.log("guide smoke test passed");

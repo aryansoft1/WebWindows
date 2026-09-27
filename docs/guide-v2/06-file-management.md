@@ -7,7 +7,7 @@ category_order: 30
 order: 30
 status: verified
 product_version: 2026.09
-last_verified: 2026-09-15
+last_verified: 2026-09-27
 keywords: 上传,下载,新建文件夹,重命名,删除,备份,15MB
 open_url: cloud/browser/files.asp
 media: assets/guide/file-lifecycle.svg
@@ -27,10 +27,11 @@ tested_by: cloud/browser/private-files.asp,cloud/browser/addResource.ashx,cloud/
 
 ## 操作步骤
 
-1. 登录后进入云资料，选择“私人文件”并打开目标文件夹。
-2. 使用上传入口选择文件；单个文件不得超过 15 MB，等待成功提示后再离开页面。
-3. 右键或长按项目打开操作菜单，按需重命名、新建文件夹、刷新或删除。
-4. 下载时选择“下载”，并在浏览器下载列表中确认文件已完成。
+1. 正式登录后打开云资料，选择“私人文件”，再用面包屑进入准备保存内容的目标文件夹。
+2. 需要分类时选择“新建文件夹”，输入名称并确认；刷新列表后打开新文件夹。
+3. 选择“上传”，从设备选取不超过 15 MB 的文件，等待成功提示和列表出现文件名后再离开页面。
+4. 要整理现有项目时，右键或长按文件/文件夹，在菜单中选择“重命名”或“删除”，核对对象名称后确认。
+5. 需要设备副本时在项目菜单选择“下载”，并在浏览器下载列表中确认下载完成且文件可打开。
 
 ## 操作结果
 
@@ -41,4 +42,3 @@ tested_by: cloud/browser/private-files.asp,cloud/browser/addResource.ashx,cloud/
 - 上传失败：检查登录状态、15 MB 限制、文件名和网络；不要连续重复提交。
 - 找不到删除：公共文件不可由普通用户删除；先确认位于私人区域。
 - 删除不可撤销时应先下载备份；`.bak` 保护针对写入覆盖，不是通用回收站。
-

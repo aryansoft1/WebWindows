@@ -113,8 +113,9 @@ function parseDocument(source, file) {
     }
   });
   const steps = body.match(/^##[ \t]+操作步骤[ \t]*\r?\n([\s\S]*?)(?=^##[ \t]+|(?![\s\S]))/m)?.[1] || "";
-  if ((steps.match(/^\d+\.\s+/gm) || []).length < 2) {
-    throw new Error(`${file}: 操作步骤至少需要两个编号步骤`);
+  const stepItems = [...steps.matchAll(/^\d+\.\s+(.+)$/gm)].map((item) => item[1].trim());
+  if (stepItems.length < 4) {
+    throw new Error(`${file}: 操作步骤至少需要四个可执行的编号步骤`);
   }
   return {
     id: metadata.id,
@@ -193,12 +194,16 @@ for (const article of articles) {
   }
 }
 
+const updatedAt = articles.reduce(
+  (latest, article) => article.lastVerified > latest ? article.lastVerified : latest,
+  "0000-00-00"
+);
 const payload = {
   release: {
     schemaVersion: 2,
-    version: "2026.09.15.1",
+    version: `${updatedAt.replaceAll("-", ".")}.1`,
     generatedAt: new Date().toISOString(),
-    updatedAt: "2026-09-15",
+    updatedAt,
     homeTopic: "getting-started",
     registryVersion: registry.repository.catalogVersion,
     sourceDirectory: "docs/guide-v2",

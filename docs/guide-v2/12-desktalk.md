@@ -7,14 +7,14 @@ category_order: 50
 order: 10
 status: testing
 product_version: 2026.09
-last_verified: 2026-09-15
+last_verified: 2026-09-27
 keywords: DeskTalk,桌讯,聊天,联系人,好友,在线,AI,讯筒,邮件
 covers: webwindows.system.mailbox
 open_url: index.html
 media: assets/guide/desktalk-flow.svg
 media_alt: DeskTalk 推荐联系人、好友、文字会话、AI 助手和讯筒之间的示意图
 media_caption: 实线表示已实现的主要流程；语音、视频和发送文件目前不列为可用流程。
-tested_by: assets/js/desktalk.js,tests/desktalk-bigmodel-smoke.mjs,cloud/desktalk/README.md
+tested_by: assets/js/desktalk.js,tests/desktalk-bigmodel-smoke.mjs,api/dt_presence_mem.asp
 ---
 # DeskTalk 聊天、联系人、AI 与讯筒
 
@@ -30,14 +30,16 @@ DeskTalk 从任务栏打开，包含推荐联系人、好友、文字会话、AI
 
 ## 操作步骤
 
-1. 单击任务栏 DeskTalk 图标，进入“推荐”或“好友”；可按用户名搜索并筛选在线。
-2. 选择联系人，单击“加好友”，再在会话输入框输入文字；按发送或 `Ctrl+Enter`。
-3. 切换到 AI，输入问题并等待回复；遇到繁忙提示时让自动重试完成，不要重复发送。
-4. 打开“讯筒”后选择邮筒、写信或讯址设置，并根据界面状态确认数据保存在本机还是服务端。
+1. 单击任务栏 DeskTalk 图标，进入“推荐”或“好友”，输入用户名搜索；只想看当前可联系对象时启用在线筛选。
+2. 在推荐结果中选择联系人并单击“加好友”，随后从好友列表打开该联系人会话。
+3. 在会话输入框输入文字，单击发送或按 `Ctrl+Enter`；发送后检查消息是否出现在当前联系人名下。
+4. 切换到 AI 对话，输入问题后等待本次回复完成；出现繁忙或限流提示时按界面提示稍后重试，不要重复提交。
+5. 需要找文件时直接说明类型、日期和来源，查看受控搜索结果后再明确选择要打开的项目。
+6. 打开“讯筒”，选择邮筒、写信、邮送记录或讯址设置，并根据页面状态确认操作保存在本机还是已提交服务端。
 
 ## 操作结果
 
-文字消息会出现在当前会话，未读消息显示角标；联系人列表显示在线或离开；AI 回复显示在 AI 对话区。
+文字消息会出现在当前会话，未读消息显示角标；联系人列表按服务端会话显示在线或离开；AI 回复和文件搜索结果显示在 AI 对话区。
 
 ## 常见问题与权限提示
 
@@ -45,4 +47,3 @@ DeskTalk 从任务栏打开，包含推荐联系人、好友、文字会话、AI
 - “不被推荐”需要服务端支持；界面会显示同步状态，失败时不能假定隐私设置已生效。
 - AI 服务可能因凭据、额度或网络返回 503/429；稍后重试，且不要发送密码、授权码或私人文件内容。
 - 讯筒本机消息可能随浏览器数据清除而丢失；只有界面明确确认的服务端操作才算云端完成。
-

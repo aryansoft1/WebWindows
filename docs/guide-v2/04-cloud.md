@@ -7,8 +7,8 @@ category_order: 30
 order: 10
 status: verified
 product_version: 2026.09
-last_verified: 2026-09-15
-keywords: 云资料,公共资料,私人资料,此设备,本地位置,权限
+last_verified: 2026-09-27
+keywords: 云资料,公共资料,私人资料,此设备,本地位置,权限,排序,视图
 covers: webwindows.system.cloud-files
 open_url: cloud/browser/files.asp
 media: assets/guide/cloud-files.png
@@ -28,10 +28,11 @@ tested_by: cloud/browser/files.asp,cloud/browser/device-locations.js,tests/devic
 
 ## 操作步骤
 
-1. 从开始菜单打开“云资料”，先在左侧确认当前位置。
-2. 选择“公共区域”浏览共享内容；登录后单击“私人文件”进入个人空间。
-3. 如环境支持，在“此设备”选择“添加本地位置”，由浏览器或 WebWindows 客户端显示授权界面。
-4. 只授予任务所需目录；完成后通过面包屑、返回和上一级按钮导航。
+1. 从开始菜单打开“云资料”，在左侧选择“公共区域”“私人文件”或“此设备”，并在标题栏确认当前位置。
+2. 在公共或私人区域使用顶部搜索框查找名称，随后选择按名称、日期或大小排序，并用列表、紧凑或图标按钮切换视图。
+3. 打开文件夹后使用返回、上一级和面包屑逐层导航；单击文件可按类型交给预览器或对应应用。
+4. 需要读取本地目录时，在“此设备”选择“添加本地位置”，只在浏览器或客户端授权界面中选择本次任务所需目录。
+5. 完成设备文件操作后返回“此设备”检查位置状态；权限失效时重新选择原目录，不要扩大授权范围。
 
 ## 操作结果
 
@@ -42,4 +43,3 @@ tested_by: cloud/browser/files.asp,cloud/browser/device-locations.js,tests/devic
 - 私人文件入口不可用：先正式登录，并允许同源 Cookie。
 - “此设备”不出现：浏览器或客户端不支持目录授权；使用普通上传/云资料替代。
 - 设备位置授权失效：重新选择同一目录；系统不会静默扩大授权范围。
-

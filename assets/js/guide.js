@@ -18,6 +18,13 @@
     return /^[a-z0-9][a-z0-9./?&=_#%-]*$/i.test(value || "") && !String(value).includes("..") ? value : "";
   }
 
+  function versionedLocalUrl(value) {
+    const url = safeLocalUrl(value);
+    if (!url) return "";
+    const separator = url.includes("?") ? "&" : "?";
+    return `${url}${separator}v=${encodeURIComponent(state.release?.version || "guide")}`;
+  }
+
   function requestedTopic() {
     return new URL(location.href).searchParams.get("topic");
   }
@@ -60,7 +67,7 @@
     const article = articleById(id) || state.articles[0];
     if (!article) return;
     const openUrl = safeLocalUrl(article.openUrl);
-    const mediaUrl = safeLocalUrl(article.media);
+    const mediaUrl = versionedLocalUrl(article.media);
     state.current = article.id;
     sidebar.querySelectorAll(".guide-nav-link").forEach((link) => {
       link.classList.toggle("active", link.dataset.topic === article.id);
@@ -76,7 +83,8 @@
           <span class="guide-chip">最后核对 ${escapeHtml(article.lastVerified)}</span>
         </div>
         <figure class="guide-figure">
-          <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(article.mediaAlt)}" loading="lazy" decoding="async">
+          <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(article.mediaAlt)}" loading="eager" decoding="async">
+          <p class="guide-media-error" role="status" hidden>图片暂时无法显示。请检查网络后刷新；下方文字步骤仍可正常使用。</p>
           <figcaption>${escapeHtml(article.mediaCaption)}</figcaption>
         </figure>
         ${openUrl ? `<button class="guide-open-action" type="button" data-open-url="${escapeHtml(openUrl)}" data-app-id="${escapeHtml(article.openApp || article.covers[0] || "")}">打开该功能</button>` : ""}
@@ -86,6 +94,14 @@
     main.querySelector("[data-open-url]")?.addEventListener("click", (event) =>
       openFeature(event.currentTarget.dataset.openUrl, event.currentTarget.dataset.appId)
     );
+    const media = main.querySelector(".guide-figure img");
+    const mediaError = main.querySelector(".guide-media-error");
+    const showMediaError = () => {
+      media.hidden = true;
+      mediaError.hidden = false;
+    };
+    media?.addEventListener("error", showMediaError, { once: true });
+    if (media?.complete && !media.naturalWidth) showMediaError();
     if (!options?.skipHistory) {
       const url = new URL(location.href);
       url.searchParams.set("topic", article.id);
@@ -148,7 +164,7 @@
 
   async function initialize() {
     try {
-      const response = await fetch("assets/data/guide-content.json?v=20260915-1", { cache: "no-cache" });
+      const response = await fetch("assets/data/guide-content.json?v=20260927-1", { cache: "no-cache" });
       if (!response.ok) throw new Error(`内容请求失败（${response.status}）`);
       const payload = await response.json();
       state.release = payload.release;

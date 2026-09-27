@@ -28,14 +28,51 @@ Function AdminSecurityTrustedOrigin()
   AdminSecurityTrustedOrigin = LCase(trustedOrigin)
 End Function
 
+' 这个助手是所有后台接口拼 JSON 的唯一入口，而 IsNull 在这套宿主上挡不住实际
+' 交给 VBScript 的空值：CStr 抛「无效使用 Null」时整个请求 500。
+' 生产上已经因此挂掉过两个接口 —— adminAuth.asp?action=status（会话失效时
+' Session("username") 为空）和 news.asp?action=list。所以这里不赌判空，
+' 改成尝试转换：Null、Empty、对象、以及任何转不成字符串的取值一律降级为空串。
+' 宁可少一个字段，也不能让一个空字段把整个后台接口打挂。
 Function AdminSecurityJson(ByVal value)
-  Dim text
-  If IsNull(value) Then text = "" Else text = CStr(value)
+  Dim text, convertedCode
+  text = ""
+  If Not IsNull(value) And Not IsEmpty(value) Then
+    If VarType(value) = vbObject Then
+      ' DBNull 在 VBScript 里是对象：IsNull 认不出，CStr 会抛。
+    Else
+      On Error Resume Next
+      Err.Clear
+      text = CStr(value)
+      convertedCode = Err.Number
+      Err.Clear
+      On Error GoTo 0
+      If convertedCode <> 0 Then text = ""
+    End If
+  End If
   text = Replace(text, "\", "\\")
   text = Replace(text, Chr(34), "\" & Chr(34))
   text = Replace(text, vbCrLf, "\n")
   text = Replace(text, vbCr, "\n")
   text = Replace(text, vbLf, "\n")
+  ' JSON 规范禁止字符串里出现未转义的 0x00-0x1F 控制字符。原先只处理 CR/LF，
+  ' 于是任何带制表符、退格、纵向制表符等内容的行都会让整份 JSON 解析失败 ——
+  ' 前端只能看到 "Expected ',' or '}' after array element"，完全指不出是哪个字段。
+  text = Replace(text, vbTab, "\t")
+  text = Replace(text, Chr(8), "\b")
+  text = Replace(text, Chr(11), "\u000b")
+  text = Replace(text, Chr(12), "\f")
+  text = Replace(text, Chr(127), "")
+  Dim index, code
+  ' NUL 单独处理：它会截断 VBScript 里的 Replace 匹配，必须换成空格而不是删除，
+  ' 否则 "a" + NUL + "b" 变成 "a"，字符数都被改掉了。
+  text = Replace(text, Chr(0), " ")
+  For index = 1 To 31
+    code = index
+    If index <> 9 And index <> 10 And index <> 12 And index <> 13 Then
+      text = Replace(text, Chr(code), " ")
+    End If
+  Next
   AdminSecurityJson = text
 End Function
 

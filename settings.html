@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/css/settings.css?v=20260923-startup-1" />
+    <link rel="stylesheet" href="assets/css/settings.css?v=20260927-cursor-preview-1" />
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
-    <script src="assets/js/cursor-themes.js?v=1"></script>
-    <script defer src="assets/js/tw.js?v=20260925-settings-apps-i18n-1"></script>
+    <script src="assets/js/cursor-themes.js?v=2"></script>
+    <script defer src="assets/js/tw.js?v=20260927-cursor-preview-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/network-speed.js?v=20260913-camera-network-2"></script>
-    <script defer="True" src="assets/js/settings.js?v=20260923-startup-1"></script>
+    <script defer="True" src="assets/js/settings.js?v=20260927-cursor-preview-1"></script>
 </head>
 <body>
     <div class="settings-ipad-layout">
@@ -71,7 +71,7 @@
 
             <div id="cursorTab" class="tab-content" style="display: none;">
                 <section class="settings-section">
-                    <h3>个性化 → 鼠标指针 → 指针主题</h3>
+                    <h3>鼠标指针</h3>
                     <div class="settings-card">
                         <label for="cursorThemeSelect">指针主题</label>
                         <select id="cursorThemeSelect">
@@ -81,22 +81,25 @@
                             <option value="dark-pro">Dark Pro</option>
                             <option value="mono">Mono</option>
                         </select>
-                        <p class="settings-help">主题仅作用于 WebWindows 页面，选择会自动保存。</p>
+                        <p class="settings-help">选择主题后，可在下方查看指针外观。更改会自动保存，仅作用于 WebWindows 页面。</p>
                     </div>
                     <div class="settings-card cursor-preview">
-                        <div data-cursor-state="default">默认</div>
-                        <button type="button">按钮</button>
-                        <input type="text" aria-label="指针预览文本输入" placeholder="文本输入">
-                        <div data-cursor-state="move">移动</div>
-                        <div data-cursor-state="ew-resize">水平调整</div>
-                        <div data-cursor-state="ns-resize">垂直调整</div>
-                        <div data-cursor-state="nwse-resize">左上 / 右下</div>
-                        <div data-cursor-state="nesw-resize">右上 / 左下</div>
-                        <button type="button" disabled>禁用</button>
-                        <div data-cursor-state="wait">等待</div>
-                        <div data-cursor-state="progress">处理中</div>
-                        <div data-cursor-state="crosshair">精确选择</div>
-                        <div data-cursor-state="help">帮助</div>
+                        <h4>指针预览</h4>
+                        <div class="cursor-preview-grid">
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="default" alt=""></div><figcaption>默认</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="pointer" alt=""></div><figcaption>链接与按钮</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="text" alt=""></div><figcaption>文本输入</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="wait" alt=""></div><figcaption>等待</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="progress" alt=""></div><figcaption>处理中</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="move" alt=""></div><figcaption>移动</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="not-allowed" alt=""></div><figcaption>不可用</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="crosshair" alt=""></div><figcaption>精确选择</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="help" alt=""></div><figcaption>帮助</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="ew-resize" alt=""></div><figcaption>水平调整</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="ns-resize" alt=""></div><figcaption>垂直调整</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="nwse-resize" alt=""></div><figcaption>左上 / 右下</figcaption></figure>
+                            <figure><div class="cursor-preview-swatch"><img data-cursor-preview="nesw-resize" alt=""></div><figcaption>右上 / 左下</figcaption></figure>
+                        </div>
                     </div>
                 </section>
             </div>

@@ -17,12 +17,25 @@ scaleSelect.addEventListener("change", () => applyDesktopScale(scaleSelect.value
 
 window.addEventListener("DOMContentLoaded", () => {
     const cursorSelect = document.getElementById("cursorThemeSelect");
-    const cursorManager = getDesktopHost().WebWindows?.cursor || window.WebWindows?.cursor;
+    const cursorManager = window.WebWindows?.cursor;
     if (cursorSelect && cursorManager) {
+        const renderCursorPreview = (themeId) => {
+            document.querySelectorAll("[data-cursor-preview]").forEach((image) => {
+                image.src = cursorManager.getAsset(image.dataset.cursorPreview, themeId);
+            });
+        };
         cursorSelect.value = cursorManager.currentTheme;
+        renderCursorPreview(cursorSelect.value);
         cursorSelect.addEventListener("change", () => {
             cursorManager.setTheme(cursorSelect.value);
-            window.WebWindows?.cursor?.setTheme(cursorSelect.value);
+            const desktopCursor = getDesktopHost().WebWindows?.cursor;
+            if (desktopCursor && desktopCursor !== cursorManager) desktopCursor.setTheme(cursorSelect.value);
+            renderCursorPreview(cursorSelect.value);
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key !== "webwindows.cursor.theme" || !cursorManager.themes[event.newValue]) return;
+            cursorSelect.value = event.newValue;
+            renderCursorPreview(event.newValue);
         });
     }
     const savedScale = localStorage.getItem("ui-scale") || 1;

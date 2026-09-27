@@ -486,6 +486,29 @@ Object.assign(languageCatalog.tw, {
   " 启动延迟（毫秒）": " 啟動延遲（毫秒）"
 });
 
+// 设置 → 鼠标指针：标题、说明与图片标签使用同一语言目录。
+Object.assign(languageCatalog.tw, {
+  "鼠标指针": "滑鼠指標", "指针主题": "指標主題", "指针预览": "指標預覽",
+  "选择主题后，可在下方查看指针外观。更改会自动保存，仅作用于 WebWindows 页面。": "選擇主題後，可在下方查看指標外觀。變更會自動儲存，僅作用於 WebWindows 頁面。",
+  "默认": "預設", "链接与按钮": "連結與按鈕", "文本输入": "文字輸入", "等待": "等待", "处理中": "處理中",
+  "移动": "移動", "不可用": "不可用", "精确选择": "精確選取", "帮助": "說明", "水平调整": "水平調整",
+  "垂直调整": "垂直調整", "左上 / 右下": "左上 / 右下", "右上 / 左下": "右上 / 左下"
+});
+Object.assign(languageCatalog.en, {
+  "鼠标指针": "Mouse Pointer", "指针主题": "Pointer Theme", "指针预览": "Pointer Preview",
+  "选择主题后，可在下方查看指针外观。更改会自动保存，仅作用于 WebWindows 页面。": "Choose a theme to preview its pointers below. Changes save automatically and apply only within WebWindows.",
+  "默认": "Default", "链接与按钮": "Links & Buttons", "文本输入": "Text Input", "等待": "Wait", "处理中": "In Progress",
+  "移动": "Move", "不可用": "Unavailable", "精确选择": "Crosshair", "帮助": "Help", "水平调整": "Horizontal Resize",
+  "垂直调整": "Vertical Resize", "左上 / 右下": "Top Left / Bottom Right", "右上 / 左下": "Top Right / Bottom Left"
+});
+Object.assign(languageCatalog.jp, {
+  "鼠标指针": "マウスポインター", "指针主题": "ポインターのテーマ", "指针预览": "ポインターのプレビュー",
+  "选择主题后，可在下方查看指针外观。更改会自动保存，仅作用于 WebWindows 页面。": "テーマを選ぶと、下にポインターの画像が表示されます。変更は自動保存され、WebWindows 内だけに適用されます。",
+  "默认": "標準", "链接与按钮": "リンクとボタン", "文本输入": "文字入力", "等待": "待機", "处理中": "処理中",
+  "移动": "移動", "不可用": "使用不可", "精确选择": "精密選択", "帮助": "ヘルプ", "水平调整": "横方向のサイズ変更",
+  "垂直调整": "縦方向のサイズ変更", "左上 / 右下": "左上 / 右下", "右上 / 左下": "右上 / 左下"
+});
+
 function translateText(text, language) {
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;

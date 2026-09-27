@@ -19,29 +19,13 @@ try {
   const result = await page.evaluate(() => {
     const manager = window.WebWindows.cursor;
     const checks = {};
-    const inspect = (selector) => getComputedStyle(document.querySelector(selector)).cursor;
-    const selectors = {
-      default: '.cursor-preview [data-cursor-state="default"]',
-      pointer: '.cursor-preview button:not(:disabled)',
-      text: '.cursor-preview input',
-      move: '.cursor-preview [data-cursor-state="move"]',
-      'not-allowed': '.cursor-preview button:disabled',
-      wait: '.cursor-preview [data-cursor-state="wait"]',
-      progress: '.cursor-preview [data-cursor-state="progress"]',
-      crosshair: '.cursor-preview [data-cursor-state="crosshair"]',
-      help: '.cursor-preview [data-cursor-state="help"]',
-      'ew-resize': '.cursor-preview [data-cursor-state="ew-resize"]',
-      'ns-resize': '.cursor-preview [data-cursor-state="ns-resize"]',
-      'nwse-resize': '.cursor-preview [data-cursor-state="nwse-resize"]',
-      'nesw-resize': '.cursor-preview [data-cursor-state="nesw-resize"]'
-    };
     const sample = document.createElement('div');
     sample.className = 'window';
     document.body.appendChild(sample);
     for (const theme of ['dreama', 'classic', 'soft']) {
       manager.setTheme(theme);
       checks[theme] = {};
-      for (const [state, selector] of Object.entries(selectors)) checks[theme][state] = inspect(selector);
+      for (const state of manager.states) checks[theme][state] = manager.getCursor(state);
       for (const direction of ['n', 's', 'e', 'w', 'nw', 'se', 'ne', 'sw']) {
         const handle = document.createElement('div');
         handle.className = `resizer ${direction}`;
@@ -64,8 +48,27 @@ try {
   }
   assert.equal(result.saved, 'dreama');
   await page.locator('[data-settings-tab="cursorTab"]').click();
+  assert.equal(await page.locator('.cursor-preview-grid img').count(), 13);
+  for (const [language, labels] of Object.entries({
+    zh: ['鼠标指针', '默认'], tw: ['滑鼠指標', '預設'],
+    en: ['Mouse Pointer', 'Default'], jp: ['マウスポインター', '標準']
+  })) {
+    await page.evaluate((value) => window.setLanguage(value), language);
+    assert.equal(await page.locator('#cursorTab h3').textContent(), labels[0]);
+    assert.equal(await page.locator('.cursor-preview-grid figcaption').first().textContent(), labels[1]);
+  }
   await page.selectOption('#cursorThemeSelect', 'classic');
   assert.equal(await page.evaluate(() => localStorage.getItem('webwindows.cursor.theme')), 'classic');
+  await page.waitForFunction(() => [...document.querySelectorAll('.cursor-preview-grid img')].every((image) => image.complete && image.naturalWidth > 0));
+  const previewImages = await page.locator('.cursor-preview-grid img').evaluateAll((images) => images.map((image) => ({ state: image.dataset.cursorPreview, src: image.getAttribute('src'), loaded: image.complete && image.naturalWidth > 0 })));
+  for (const image of previewImages) {
+    assert.equal(image.src, `/assets/cursors/classic/${image.state}.svg`);
+    assert.equal(image.loaded, true, `preview ${image.state}`);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.locator('#cursorTab').evaluate((tab) => tab.scrollWidth <= tab.clientWidth), true);
+  await page.screenshot({ path: 'tmp/cursor-preview-mobile.png' });
+  await page.setViewportSize({ width: 1280, height: 800 });
   await page.reload({ waitUntil: 'domcontentloaded' });
   assert.equal(await page.inputValue('#cursorThemeSelect'), 'classic');
   await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: 'domcontentloaded' });

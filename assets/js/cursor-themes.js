@@ -28,12 +28,18 @@
     const themes = Object.freeze(Object.fromEntries(Object.entries(themeNames).map(([id, name]) => [id, Object.freeze({ id, name })])));
     let currentTheme = 'dreama';
 
-    function getCursor(state, themeId = currentTheme) {
+    function getAsset(state, themeId = currentTheme) {
         const id = themes[themeId] ? themeId : 'dreama';
         const resolved = aliases[state] || state;
-        if (!states.includes(resolved)) return null;
+        return states.includes(resolved) ? `/assets/cursors/${id}/${resolved}.svg` : null;
+    }
+
+    function getCursor(state, themeId = currentTheme) {
+        const resolved = aliases[state] || state;
+        const asset = getAsset(resolved, themeId);
+        if (!asset) return null;
         const [x, y] = hotspot[resolved];
-        return `url("/assets/cursors/${id}/${resolved}.svg") ${x} ${y}, ${resolved}`;
+        return `url("${asset}") ${x} ${y}, ${resolved}`;
     }
 
     function rules() {
@@ -89,7 +95,7 @@
     } catch (_) {}
 
     const manager = Object.freeze({
-        themes, states, get currentTheme() { return currentTheme; }, setTheme, getCursor
+        themes, states, get currentTheme() { return currentTheme; }, setTheme, getCursor, getAsset
     });
     global.WebWindows = global.WebWindows || {};
     global.WebWindows.cursor = manager;

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.28.2",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-27T18:17:03.749Z",
+  "generatedAt": "2026-09-27T18:19:12.348Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -803,8 +803,8 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "c90d12da7210e9124c74c29988f827cd08ba016422c666b2b0067c816b2c5a8f",
-      "size": 3529
+      "sha256": "9bc95426547a27d6bf824d218e19b796dbd89e6601a24c2b286b645d148f6db7",
+      "size": 3673
     },
     "cloud/browser/files.asp": {
       "sha256": "e8c538b70fd9fd85a0ec3e70b57803bf30ebd8cfa522aa647a31702a7070a5f6",

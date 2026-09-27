@@ -186,9 +186,7 @@
         throw new Error(data?.message || data?.error || `HTTP ${response.status}`);
       }
       const lines = [];
-      // 连接字符集先摆出来。nameHex 是服务端算的原始字节，能直接判断编码问题；
-      // 但只有 results 真的是 utf8mb4，驱动才会按 UTF-8 解释结果集。响应头带
-      // charset=utf-8 说明不了这件事，所以两项都要看。
+      // 连接字符集和原始字节一起显示；单凭响应头不能判断 ADO 的解码结果。
       const connection = data.connection || {};
       lines.push("连接字符集（results 决定驱动怎么解释结果集字节）");
       lines.push(`  SET NAMES utf8mb4 = ${connection.applied ? "成功" : "失败"}` +
@@ -204,13 +202,11 @@
       if (connection.readError) lines.push(`  读取失败：${connection.readError}`);
       const connectionOk = connection.applied && connection.results === "utf8mb4";
       lines.push(connectionOk
-        ? "  结论：连接已按 UTF-8 解释结果集 —— 乱码若仍存在，问题不在连接。"
-        : "  结论：连接没有按 UTF-8 解释结果集 —— 页面上的中文是按服务器默认码页误读的，库里数据无需修改。");
+        ? "  连接会话已设置为 utf8mb4；仍需对照页面文字和原始字节判断驱动解码。"
+        : "  连接会话未确认使用 utf8mb4；请结合原始字节排查，暂勿改写数据。");
       lines.push("");
 
-      // 连接正确却仍然乱码时，唯一剩下的解释是某一列的字符集声明与存储字节
-      // 不一致。HEX() 返回原始字节所以看着正常，驱动按列字符集转换后才乱码。
-      // 两张表的列必须一起看：只看分类表会误判成「连接坏了」。
+      // 列字符集可能影响旧 ADO 驱动的结果解码，但不同本身并不表示数据损坏。
       const columns = data.columns || [];
       if (columns.length) {
         lines.push("列字符集（连接正确但仍乱码时，问题通常在这里）");
@@ -220,9 +216,8 @@
         }
         const charsets = new Set(columns.map(column => column.charset).filter(Boolean));
         lines.push(charsets.size > 1
-          ? "  注意：这两列的字符集不一致。存储字节是同一个编码，驱动却按各自的列字符集"
-            + "转换，所以一张表正常、另一张表乱码。修法是让两列的字符集一致（ALTER TABLE ... CONVERT TO），不是改数据。"
-          : "  两列字符集一致，列声明不是原因。");
+          ? "  两列字符集不同；目前数据库原始字节正确。若只有分类名显示乱码，请检查驱动对 utf8mb4 列的解码，勿直接改表或改名。"
+          : "  两列字符集一致；仍需对照原始字节与实际显示排查解码。");
         lines.push("");
       }
       lines.push("分类（nameChars = 字符数，nameHex = 存储的原始字节，可据此判断编码）");

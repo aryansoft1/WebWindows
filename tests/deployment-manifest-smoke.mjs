@@ -221,6 +221,18 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/dashboardStats.asp",
     "deploy/ftp-manifest.json"
   ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-category-encoding-fix") {
+  assert.deepEqual(uploadFiles, [
+    "inc/json-charset.asp",
+    "inc/admin-security.asp",
+    "getNews.asp",
+    "getNewsById.asp",
+    "getPrevNextNews.asp",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "deploy/ftp-manifest.json"
+  ], "news category fix must upload its JSON dependencies, endpoints, page, and manifest last");
 } else if (manifest.releaseScope === "systemmanager-completion") {
   assert.equal(uploadFiles.length, 53, "SystemManager release must use the approved 53-file scope");
   for (const required of [

@@ -18,12 +18,12 @@ Else
     AdminSecurityFail 503, "DB_CHARSET_UNAVAILABLE", "数据库字符集不可用，未保存更改。", "valid", "same-origin"
   End If
   Set rs = conn.Execute("SELECT COUNT(*) AS ready FROM information_schema.COLUMNS " & _
-    "WHERE TABLE_SCHEMA=DATABASE() AND CHARACTER_SET_NAME='utf8mb4' AND (" & _
-    "(TABLE_NAME='webwindows_news_categories' AND COLUMN_NAME='name') OR " & _
-    "(TABLE_NAME='webwindows_news' AND COLUMN_NAME='category'))")
+    "WHERE TABLE_SCHEMA=DATABASE() AND (" & _
+    "(TABLE_NAME='webwindows_news_categories' AND COLUMN_NAME='name' AND CHARACTER_SET_NAME='utf8mb4') OR " & _
+    "(TABLE_NAME='webwindows_news' AND COLUMN_NAME='category' AND CHARACTER_SET_NAME IN ('utf8','utf8mb3','utf8mb4')))")
   If CLng(rs("ready")) <> 2 Then
     rs.Close
-    AdminSecurityFail 503, "NEWS_SCHEMA_CHARSET_REQUIRED", "新闻分类数据库字符集尚未修复，未保存更改。", "valid", "same-origin"
+    AdminSecurityFail 503, "NEWS_SCHEMA_CHARSET_REQUIRED", "新闻分类数据库字符集不符合要求，未保存更改。", "valid", "same-origin"
   End If
   rs.Close
   Set rs = Nothing
@@ -94,7 +94,9 @@ End If
 ' 两份独立数据，历史上一旦不同步，筛选下拉里就只剩没人用的分类，
 ' 界面看起来像“没有新闻”，实际是筛选项和新闻对不上。
 If action = "categories" And method = "GET" Then
-  Set rs = conn.Execute("SELECT c.id,IFNULL(c.name,'') AS name," & _
+  ' 生产数据库中 news.category 是 utf8，分类表 name 是 utf8mb4；旧 ADO 驱动只把
+  ' 后者解码成乱码。读取时投影到 utf8，与已正常显示的新闻分类使用同一种列编码。
+  Set rs = conn.Execute("SELECT c.id,IFNULL(CONVERT(c.name USING utf8),'') AS name," & _
     "COALESCE(n.uses_count,0) AS uses_count FROM webwindows_news_categories c " & _
     "LEFT JOIN (SELECT category,COUNT(*) AS uses_count FROM webwindows_news " & _
     "WHERE category IS NOT NULL AND TRIM(category)<>'' GROUP BY category) n " & _
@@ -139,7 +141,7 @@ If action = "diagnose" And method = "GET" Then
   ' 名字里的控制字符会让这份 JSON 无法解析（前端报 "Expected ',' or '}' after
   ' array element"），而 AdminSecurityJson 现在会转义它们，所以这里给的是转义后
   ' 的值：诊断要能显示「真实存了什么」，又不能自己把响应写坏。
-  Set diagRs = conn.Execute("SELECT c.id AS category_id,c.name AS category_name," & _
+  Set diagRs = conn.Execute("SELECT c.id AS category_id,CONVERT(c.name USING utf8) AS category_name," & _
     "COALESCE(CHAR_LENGTH(c.name),0) AS name_chars," & _
     "COALESCE(HEX(c.name),'') AS name_hex," & _
     "COALESCE((SELECT COUNT(*) FROM webwindows_news n WHERE n.category=c.name),0) AS news_total," & _

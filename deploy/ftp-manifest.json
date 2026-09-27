@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.27.3",
+  "releaseVersion": "2026.09.28.3",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-26T18:54:10.034Z",
+  "generatedAt": "2026-09-27T22:29:29.455Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -302,9 +302,10 @@
     "SystemManager/layout.html",
     "assets/js/developer-center.js",
     "developer-samples/hello-webwindows/index.html",
-    "developer-samples/hello-webwindows/manifest.json"
+    "developer-samples/hello-webwindows/manifest.json",
+    "inc/json-charset.asp"
   ],
-  "previousReleaseVersion": "2026.09.27.2",
+  "previousReleaseVersion": "2026.09.28.2",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -803,8 +804,8 @@
       "size": 2472
     },
     "cloud/browser/file-search.css": {
-      "sha256": "c90d12da7210e9124c74c29988f827cd08ba016422c666b2b0067c816b2c5a8f",
-      "size": 3529
+      "sha256": "9bc95426547a27d6bf824d218e19b796dbd89e6601a24c2b286b645d148f6db7",
+      "size": 3673
     },
     "cloud/browser/files.asp": {
       "sha256": "e8c538b70fd9fd85a0ec3e70b57803bf30ebd8cfa522aa647a31702a7070a5f6",
@@ -835,8 +836,8 @@
       "size": 15940
     },
     "cloud/browser/styles.css": {
-      "sha256": "442ef96e421d25ed88b7c79c804baf516ee47d8b68985ac3442bc51a8ef351fc",
-      "size": 14315
+      "sha256": "8773cca30721534b4c1e38aa2c5e3f8a3d1b9a1a16c1cac513412d1ff23c7c9c",
+      "size": 13667
     },
     "cloud/browser/toolbar.js": {
       "sha256": "7adf8797d7b2f29285c4f8bef35cce752ce65d698c7983cc290564dd767eb3dc",
@@ -1266,8 +1267,8 @@
       "size": 6291
     },
     "SystemManager/news.html": {
-      "sha256": "d9a5c53b902d6a6ebfd61dd2a1368c3e0e2544ff0c234ca00fbce2bcfc39e856",
-      "size": 3852
+      "sha256": "f0d5961a218f8b75717a35c66b877a8ed9d01082f1575c9841a59bb0854a0b29",
+      "size": 4763
     },
     "SystemManager/settings.html": {
       "sha256": "a66a5e97b2c152871d41e277c28cc4a1040a39e636848fa699278e0b054a9458",
@@ -1298,8 +1299,8 @@
       "size": 19031
     },
     "SystemManager/assets/js/news.js": {
-      "sha256": "43ff3ab379f193606feadaac027a4bc4d874aa50bfbe8176e4a41b3eb4b5eaa5",
-      "size": 5290
+      "sha256": "cd72e02fec0a5689b67440955497229979254d893ad388bdf5f3c905fd4346d8",
+      "size": 13012
     },
     "SystemManager/assets/js/news_categories.js": {
       "sha256": "d2e83103e805f0f6d47dc1c0e4941866b3eb865f8d00e5ad29f68c2857348fc9",
@@ -1346,8 +1347,8 @@
       "size": 902
     },
     "inc/admin-security.asp": {
-      "sha256": "a831f90ff5e62035ba7298fec4841c8b5d25a970d472c1bc4c03d594bc60092a",
-      "size": 12833
+      "sha256": "6497f0c8c7453b6e862f89ac66456a6ded01b3fa460cbe67f22defa58e3434d9",
+      "size": 14652
     },
     "SystemManager/assets/js/admin-login.js": {
       "sha256": "687083c99927217b96418a590596f7aae074286cfe861e7fea9352ab6a2cdf95",
@@ -1402,8 +1403,8 @@
       "size": 1192
     },
     "admin_api/news.asp": {
-      "sha256": "cf78e7c1e76233c95f58218d77988e49e52ba2dae2a4bf6d1310be8ea61e7735",
-      "size": 8353
+      "sha256": "abbf32457db25714c3fd4755173aeb3da2b6066c0ab5b3e04d7842c121635a9c",
+      "size": 25676
     },
     "admin_api/saveUser.asp": {
       "sha256": "cb6135708c597f2cb49260daafdc45be1206486c3c440aa1671b5178b24d8ced",
@@ -1450,16 +1451,16 @@
       "size": 12723
     },
     "getNews.asp": {
-      "sha256": "684fea43a8a7e5ef2e12b7f2de66e232be25e3726b4d7e303630478db30c9220",
-      "size": 1164
+      "sha256": "0727101ba14f5602a9749a4d3b7b1a7685ec7728f6f5b6fdb9cdd8edf4a9f0af",
+      "size": 1561
     },
     "getNewsById.asp": {
-      "sha256": "69d50fb44578f873272e13b597bf0da33f96de04567f25b7b6f43ec1843042f8",
-      "size": 1911
+      "sha256": "4df702349977cf5ae7fdebecb6a5930783c4fb77634ef4e7bed7a3a090d1756e",
+      "size": 3331
     },
     "getPrevNextNews.asp": {
-      "sha256": "83e804c1795599e8092a9b68bef259874684d76ddab4721b0860ab9f43d09ee9",
-      "size": 1712
+      "sha256": "8a7ac889bd74642bdbe138efd45f983cbf9c7bd226461da184b0bfffdd4a705a",
+      "size": 2000
     },
     "SystemManager/assets/css/admin-utilities.css": {
       "sha256": "b5b5461d520e5f6e1249ac402905d6a8f282478928b82717c9a789634d1701d3",
@@ -1488,12 +1489,22 @@
     "SystemManager/layout.html": {
       "sha256": "8ad3f25b2e16c9c92ea623f380fb8a04beae6da2c9d9dd82b26f2c81921243f2",
       "size": 1493
+    },
+    "inc/json-charset.asp": {
+      "sha256": "11cc4e4af293c24a051d323c75d2424b03b668f6ca07d5b69c177f1b3c2ea3a4",
+      "size": 2447
     }
   },
-  "releaseScope": "systemmanager-sidebar-css-fix",
+  "releaseScope": "news-category-encoding-fix",
   "uploadFiles": [
-    "SystemManager/assets/css/admin-utilities.css",
-    "SystemManager/index.html",
+    "inc/json-charset.asp",
+    "inc/admin-security.asp",
+    "getNews.asp",
+    "getNewsById.asp",
+    "getPrevNextNews.asp",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
     "deploy/ftp-manifest.json"
   ]
 }

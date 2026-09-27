@@ -183,8 +183,18 @@ try {
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     frame.contentDocument?.getElementById('ww-cursor-theme-style') ?? null
   ), null, 'pending iframe does not start cursor requests in its temporary about:blank document');
+  assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
+    getComputedStyle(frame).pointerEvents
+  ), 'none', 'pending iframe cannot expose its system cursor');
   await releaseFrame();
   await page.waitForFunction(() => !!document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.getElementById('ww-cursor-theme-style'));
+  await page.waitForFunction(() => {
+    const frame = document.querySelector('iframe[src="/cursor-pending-frame.html"]');
+    return frame && !frame.hasAttribute('data-ww-cursor-loading');
+  });
+  assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
+    getComputedStyle(frame).pointerEvents
+  ), 'auto', 'iframe receives pointer input after its theme cursor decodes');
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {

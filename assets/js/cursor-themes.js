@@ -89,7 +89,7 @@
         const explicitRules = Object.keys(tokenStates).map((state) =>
             `${prefix}[data-ww-cursor="${state}"]${lock} { cursor: var(--ww-cursor-${state}) !important; }`
         ).join('\n');
-        return `${root} { ${tokens} }\n${base} { cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }`;
+        return `${root} { ${tokens} }\n${base} { cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\niframe[data-ww-cursor-loading] { pointer-events: none !important; }\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }`;
     }
 
     function applyToDocument(doc) {
@@ -157,17 +157,37 @@
         }
         try {
             const child = frame.contentDocument;
-            if (!child) { frameLimitations.add(frame); return; }
+            if (!child) {
+                frame.removeAttribute('data-ww-cursor-loading');
+                frameLimitations.add(frame);
+                return;
+            }
             const destination = frame.getAttribute('src')?.trim();
             // A new iframe exposes an initial about:blank document before navigation.
             // Styling it starts cursor-image requests that navigation immediately aborts.
             if (child.URL === 'about:blank' && (frame.hasAttribute('srcdoc') ||
-                (destination && destination !== 'about:blank'))) return;
+                (destination && destination !== 'about:blank'))) {
+                frame.setAttribute('data-ww-cursor-loading', '');
+                return;
+            }
             applyToDocument(child);
             observeDocument(child);
             discover(child);
             frameLimitations.delete(frame);
-        } catch (_) { frameLimitations.add(frame); }
+            if (frame.hasAttribute('data-ww-cursor-loading')) {
+                const image = new child.defaultView.Image();
+                image.src = getAsset('default', currentTheme, 'png');
+                const ready = typeof image.decode === 'function' ? image.decode().catch(() => {}) : Promise.resolve();
+                ready.then(() => {
+                    try {
+                        if (frame.contentDocument === child) frame.removeAttribute('data-ww-cursor-loading');
+                    } catch (_) { frame.removeAttribute('data-ww-cursor-loading'); }
+                });
+            }
+        } catch (_) {
+            frame.removeAttribute('data-ww-cursor-loading');
+            frameLimitations.add(frame);
+        }
     }
 
     function applyToFrames(doc = document) {

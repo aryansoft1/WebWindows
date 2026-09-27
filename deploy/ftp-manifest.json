@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.1",
+  "releaseVersion": "2026.09.28.2",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-27T18:09:45.905Z",
+  "generatedAt": "2026-09-27T18:17:03.749Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -304,7 +304,7 @@
     "developer-samples/hello-webwindows/index.html",
     "developer-samples/hello-webwindows/manifest.json"
   ],
-  "previousReleaseVersion": "2026.09.27.3",
+  "previousReleaseVersion": "2026.09.28.1",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -835,8 +835,8 @@
       "size": 15940
     },
     "cloud/browser/styles.css": {
-      "sha256": "563ba9772632f72085468413e5bc35a2ef1f9e949bbcd3ed6c0a265317bf6ab5",
-      "size": 13556
+      "sha256": "8773cca30721534b4c1e38aa2c5e3f8a3d1b9a1a16c1cac513412d1ff23c7c9c",
+      "size": 13667
     },
     "cloud/browser/toolbar.js": {
       "sha256": "7adf8797d7b2f29285c4f8bef35cce752ce65d698c7983cc290564dd767eb3dc",
@@ -1490,10 +1490,10 @@
       "size": 1493
     }
   },
-  "releaseScope": "cloud-folder-tree-style-repair",
+  "releaseScope": "cloud-files-layout-repair",
   "uploadFiles": [
+    "cloud/browser/file-search.css",
     "cloud/browser/styles.css",
-    "cloud/browser/toolbar.js",
     "deploy/ftp-manifest.json"
   ]
 }

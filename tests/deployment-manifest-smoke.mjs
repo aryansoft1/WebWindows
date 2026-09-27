@@ -210,6 +210,12 @@ if (manifest.releaseScope === "navigation-map") {
   ], "the provider fallback release must upload only the shared resolver, the collector and the manifest last");
   assert.ok(!manifest.requiredFiles.includes("api/visitor-analytics.config.example.asp"),
     "the config template is tracked but must never be deployed, matching the other proxy config examples");
+} else if (manifest.releaseScope === "cloud-files-layout-repair") {
+  assert.deepEqual(uploadFiles, [
+    "cloud/browser/file-search.css",
+    "cloud/browser/styles.css",
+    "deploy/ftp-manifest.json"
+  ], "cloud file layout repair must upload the search and browser styles together");
 } else if (manifest.releaseScope === "cloud-folder-tree-style-repair") {
   assert.deepEqual(uploadFiles, [
     "cloud/browser/styles.css",

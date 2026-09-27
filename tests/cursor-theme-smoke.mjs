@@ -73,6 +73,7 @@ try {
   assert.equal(await page.inputValue('#cursorThemeSelect'), 'classic');
   await page.goto(`http://127.0.0.1:${port}/index.html`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => typeof window.openWindow === 'function');
+  const desktopBefore = await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor);
   await page.evaluate(() => window.openWindow('cursor-smoke', 'Cursor smoke', 'about:blank'));
   await page.locator('.window .resizer').first().waitFor();
   const actualHandles = await page.locator('.window .resizer').evaluateAll((handles) =>
@@ -82,6 +83,31 @@ try {
     assert.match(actualHandles[direction], new RegExp(`/assets/cursors/classic/${state}\\.svg`), `actual window ${direction}`);
   }
   assert.match(await page.locator('.window-header').first().evaluate((element) => getComputedStyle(element).cursor), /classic\/move\.svg/);
+  const coverage = await page.evaluate(() => {
+    const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; document.body.appendChild(checkbox);
+    const radio = document.createElement('input'); radio.type = 'radio'; document.body.appendChild(radio);
+    const range = document.createElement('input'); range.type = 'range'; document.body.appendChild(range);
+    const task = document.createElement('div'); task.className = 'vw-task'; document.body.appendChild(task);
+    const scroll = document.createElement('div'); scroll.style.cssText = 'width:100px;height:50px;overflow:auto';
+    scroll.innerHTML = '<div style="height:200px"></div>'; document.body.appendChild(scroll);
+    const frame = document.querySelector('.window iframe');
+    const nested = frame.contentDocument.createElement('iframe'); frame.contentDocument.body.appendChild(nested);
+    return {
+      desktop: getComputedStyle(document.querySelector('.desktop')).cursor,
+      checkbox: getComputedStyle(checkbox).cursor,
+      radio: getComputedStyle(radio).cursor,
+      range: getComputedStyle(range).cursor,
+      task: getComputedStyle(task).cursor,
+      scrollbar: getComputedStyle(scroll, '::-webkit-scrollbar-thumb').cursor
+    };
+  });
+  assert.equal(coverage.desktop, desktopBefore);
+  for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.svg/, state);
+  assert.match(coverage.scrollbar, /classic\/move\.svg/);
+  await page.waitForFunction(() => {
+    const nested = document.querySelector('.window iframe')?.contentDocument?.querySelector('iframe');
+    return !!nested?.contentDocument?.getElementById('ww-cursor-theme-style');
+  });
   console.log('Cursor themes: 3 themes, semantic states, 8 resize handles, persistence OK');
 } finally {
   await browser?.close();

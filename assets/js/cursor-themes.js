@@ -27,6 +27,8 @@
     };
     const themes = Object.freeze(Object.fromEntries(Object.entries(themeNames).map(([id, name]) => [id, Object.freeze({ id, name })])));
     let currentTheme = 'dreama';
+    const observedDocuments = new WeakSet();
+    const observedFrames = new WeakSet();
 
     function getAsset(state, themeId = currentTheme) {
         const id = themes[themeId] ? themeId : 'dreama';
@@ -44,21 +46,23 @@
 
     function rules() {
         const selectors = {
-            default: 'html, body, .desktop, .taskbar, #start-menu, .window, .window-content, [data-cursor-state="default"]',
-            pointer: 'button:not(:disabled), a[href], select:not(:disabled), .icon, .taskbar-app, .start-button, .start-menu li, .context-menu-item, [role="button"]:not([aria-disabled="true"]), [style*="cursor: pointer"], [style*="cursor:pointer"]',
-            text: 'input:not([type="button"]):not([type="submit"]):not([type="reset"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, [contenteditable="true"]',
-            move: '.window-header, .window-header .title, [draggable="true"], .weather-widget, [style*="cursor: move"], [style*="cursor:move"], [data-cursor-state="move"]',
-            'not-allowed': ':disabled, [aria-disabled="true"], [data-cursor-state="not-allowed"]',
-            wait: '[aria-busy="true"], [data-cursor-state="wait"]',
-            progress: '[data-cursor-state="progress"]',
-            crosshair: '[data-cursor-state="crosshair"]',
-            help: '[data-cursor-state="help"]',
+            default: 'html, body, .desktop, .taskbar, #start-menu, .window, .window-content, .window-iframe, iframe, .vw-taskbar, .battery-indicator, #taskbar-datetime, [data-cursor-state="default"], [style*="cursor: default"], [style*="cursor:default"]',
+            pointer: 'button:not(:disabled), a[href], select:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, .icon, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item, [role="button"]:not([aria-disabled="true"]), [role="checkbox"]:not([aria-disabled="true"]), [role="switch"]:not([aria-disabled="true"]), [role="tab"]:not([aria-disabled="true"]), [style*="cursor: pointer"], [style*="cursor:pointer"]',
+            text: 'input:not([type]), input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]), textarea, [contenteditable="true"], [style*="cursor: text"]',
+            move: '.window-header, .window-header .title, [draggable="true"], .weather-widget, [style*="cursor: move"], [style*="cursor:move"], [style*="cursor: grab"], [style*="cursor: grabbing"], [data-cursor-state="move"]',
+            'not-allowed': ':disabled, [aria-disabled="true"], [style*="cursor: not-allowed"], [data-cursor-state="not-allowed"]',
+            wait: '[aria-busy="true"], [style*="cursor: wait"], [data-cursor-state="wait"]',
+            progress: '[style*="cursor: progress"], [data-cursor-state="progress"]',
+            crosshair: '[style*="cursor: crosshair"], [data-cursor-state="crosshair"]',
+            help: '[style*="cursor: help"], [data-cursor-state="help"]',
             'ew-resize': '.resizer.e, .resizer.w, [data-resize-dir="e"], [data-resize-dir="w"], [style*="cursor: e-resize"], [style*="cursor: w-resize"], [style*="cursor: col-resize"], [data-cursor-state="ew-resize"]',
             'ns-resize': '.resizer.n, .resizer.s, [data-resize-dir="n"], [data-resize-dir="s"], [style*="cursor: n-resize"], [style*="cursor: s-resize"], [style*="cursor: row-resize"], [data-cursor-state="ns-resize"]',
             'nwse-resize': '.resizer.nw, .resizer.se, .ww-resizer, [data-resize-dir="nw"], [data-resize-dir="se"], [style*="cursor: nw-resize"], [style*="cursor: se-resize"], [style*="cursor: nwse-resize"], [data-cursor-state="nwse-resize"]',
             'nesw-resize': '.resizer.ne, .resizer.sw, [data-resize-dir="ne"], [data-resize-dir="sw"], [style*="cursor: ne-resize"], [style*="cursor: sw-resize"], [style*="cursor: nesw-resize"], [data-cursor-state="nesw-resize"]'
         };
-        return Object.entries(selectors).map(([state, selector]) => `${selector} { cursor: ${getCursor(state)} !important; }`).join('\n');
+        const semanticRules = Object.entries(selectors).map(([state, selector]) => `${selector} { cursor: ${getCursor(state)} !important; }`).join('\n');
+        const scrollbarRules = `::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: ${getCursor('default')} !important; }\n::-webkit-scrollbar-thumb { cursor: ${getCursor('move')} !important; }`;
+        return `${semanticRules}\n${scrollbarRules}`;
     }
 
     function applyToDocument(doc) {
@@ -73,10 +77,31 @@
         doc.documentElement.dataset.wwCursorTheme = currentTheme;
     }
 
-    function applyToFrames() {
-        document.querySelectorAll('iframe').forEach((frame) => {
-            try { applyToDocument(frame.contentDocument); } catch (_) { /* Cross-origin frames retain their own cursor. */ }
+    function applyToFrames(doc = document) {
+        doc.querySelectorAll('iframe').forEach((frame) => {
+            if (!observedFrames.has(frame)) {
+                observedFrames.add(frame);
+                frame.addEventListener('load', () => applyToFrames(doc));
+            }
+            try {
+                const child = frame.contentDocument;
+                if (!child) return;
+                applyToDocument(child);
+                observeDocument(child);
+                applyToFrames(child);
+            } catch (_) { /* Cross-origin frames retain their own cursor. */ }
         });
+    }
+
+    function observeDocument(doc) {
+        if (!doc.body || observedDocuments.has(doc)) return;
+        observedDocuments.add(doc);
+        const observer = new MutationObserver((records) => {
+            if (records.some((record) => Array.from(record.addedNodes).some((node) =>
+                node.nodeType === 1 && (node.tagName === 'IFRAME' || node.querySelector?.('iframe'))
+            ))) applyToFrames(doc);
+        });
+        observer.observe(doc.body, { childList: true, subtree: true });
     }
 
     function setTheme(themeId) {
@@ -102,17 +127,12 @@
     applyToDocument(document);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
-            applyToFrames();
-            const observer = new MutationObserver((records) => {
-                if (records.some((record) => Array.from(record.addedNodes).some((node) =>
-                    node.nodeType === 1 && (node.tagName === 'IFRAME' || node.querySelector?.('iframe'))
-                ))) applyToFrames();
-            });
-            observer.observe(document.body, { childList: true, subtree: true });
-            document.addEventListener('load', (event) => {
-                if (event.target?.tagName === 'IFRAME') applyToFrames();
-            }, true);
+            observeDocument(document);
+            applyToFrames(document);
         }, { once: true });
+    } else {
+        observeDocument(document);
+        applyToFrames(document);
     }
     global.addEventListener('storage', (event) => {
         if (event.key === storageKey && themes[event.newValue]) {

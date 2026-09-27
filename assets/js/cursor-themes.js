@@ -92,7 +92,7 @@
         const explicitRules = Object.keys(tokenStates).map((state) =>
             `${prefix}[data-ww-cursor="${state}"]${lock} { cursor: var(--ww-cursor-${state}) !important; }`
         ).join('\n');
-        return `${root} { ${tokens} }\n${base} { cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\niframe[data-ww-cursor-loading] { pointer-events: none !important; }\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }`;
+        return `${root} { ${tokens} }\n${base} { cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\niframe[data-ww-cursor-loading] { visibility: hidden !important; pointer-events: none !important; }\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }`;
     }
 
     function applyToDocument(doc) {

@@ -188,8 +188,15 @@ try {
   let releaseFrame;
   let frameRequestStarted;
   const frameRequest = new Promise((resolve) => { frameRequestStarted = resolve; });
+  let releaseSlowResource;
+  let slowResourceStarted;
+  const slowResource = new Promise((resolve) => { slowResourceStarted = resolve; });
+  await page.route('**/cursor-slow-resource.png', (route) => {
+    releaseSlowResource = () => route.abort();
+    slowResourceStarted();
+  });
   await page.route('**/cursor-pending-frame.html', (route) => {
-    releaseFrame = () => route.fulfill({ status: 200, contentType: 'text/html', body: '<button>loaded frame</button>' });
+    releaseFrame = () => route.fulfill({ status: 200, contentType: 'text/html', body: '<button>loaded frame</button><img src="/cursor-slow-resource.png">' });
     frameRequestStarted();
   });
   await page.evaluate(() => {
@@ -208,6 +215,7 @@ try {
     getComputedStyle(frame).visibility
   ), 'hidden', 'pending iframe is not painted during navigation');
   await releaseFrame();
+  await slowResource;
   await page.waitForFunction(() => !!document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.getElementById('ww-cursor-theme-style'));
   await page.waitForFunction(() => {
     const frame = document.querySelector('iframe[src="/cursor-pending-frame.html"]');
@@ -218,7 +226,11 @@ try {
   ), 'auto', 'iframe receives pointer input after its theme cursor decodes');
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     getComputedStyle(frame).visibility
-  ), 'visible', 'iframe is painted after its theme cursor decodes');
+  ), 'visible', 'iframe is painted before its slow image finishes loading');
+  assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
+    frame.contentDocument.readyState
+  ), 'interactive', 'iframe becomes visible before its load event');
+  await releaseSlowResource();
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {

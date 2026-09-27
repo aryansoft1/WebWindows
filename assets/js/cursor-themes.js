@@ -30,6 +30,7 @@
     let currentTheme = 'dreama';
     const observedDocuments = new WeakSet();
     const observedFrames = new WeakSet();
+    const watchingFrames = new WeakSet();
     const observedRoots = new WeakSet();
     const liveRoots = new Set();
     const frameLimitations = new Set();
@@ -153,6 +154,27 @@
         }
     }
 
+    function watchFrameDocument(frame) {
+        if (watchingFrames.has(frame)) return;
+        watchingFrames.add(frame);
+        const check = () => {
+            if (!frame.isConnected || !frame.hasAttribute('data-ww-cursor-loading')) {
+                watchingFrames.delete(frame);
+                return;
+            }
+            try {
+                const doc = frame.contentDocument;
+                if (doc?.URL !== 'about:blank' && doc?.head && doc?.body) {
+                    watchingFrames.delete(frame);
+                    applyToFrame(frame);
+                    return;
+                }
+            } catch (_) { /* Cross-origin frames remain hidden until their load event. */ }
+            global.setTimeout(check, 50);
+        };
+        global.setTimeout(check, 0);
+    }
+
     function applyToFrame(frame) {
         if (!observedFrames.has(frame)) {
             observedFrames.add(frame);
@@ -171,6 +193,7 @@
             if (child.URL === 'about:blank' && (frame.hasAttribute('srcdoc') ||
                 (destination && destination !== 'about:blank'))) {
                 frame.setAttribute('data-ww-cursor-loading', '');
+                watchFrameDocument(frame);
                 return;
             }
             applyToDocument(child);

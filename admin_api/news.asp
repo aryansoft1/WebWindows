@@ -455,7 +455,7 @@ If action = "rename-category" And method = "POST" Then
   Set cmd = Server.CreateObject("ADODB.Command")
   Set cmd.ActiveConnection = conn
   cmd.CommandType = 1
-  cmd.CommandText = "SELECT name FROM webwindows_news_categories WHERE id=? FOR UPDATE"
+  cmd.CommandText = "SELECT CONVERT(name USING utf8) AS name FROM webwindows_news_categories WHERE id=? FOR UPDATE"
   cmd.Parameters.Append cmd.CreateParameter("id", 3, 1, , newsId)
   Set rs = cmd.Execute
   If rs.EOF Then

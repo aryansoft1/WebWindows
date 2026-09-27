@@ -458,7 +458,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   margin-left: 8px;
   background: #e81123;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   transition: filter 0.2s;
 }
 
@@ -516,7 +516,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   color:#FFF;
   transition: background 0.2s;
 }

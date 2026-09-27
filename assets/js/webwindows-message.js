@@ -99,7 +99,7 @@
         box-shadow: 0 2px 6px rgba(0, 105, 195, .22);
         font: inherit;
         font-weight: 650;
-        cursor: pointer;
+        cursor: var(--ww-cursor-link, pointer);
       }
       .ww-system-dialog__button:hover { filter: brightness(1.06); }
       .ww-system-dialog__button--secondary {
@@ -288,4 +288,3 @@
   });
   observer.observe(document.documentElement, { childList: true, subtree: true });
 })(window);
-

@@ -15,7 +15,7 @@
 
 .context-menu-item {
     padding: 10px 20px;
-    cursor: pointer;
+    --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
     transition: background 0.2s;
 }
 
@@ -57,7 +57,7 @@
     font: inherit;
     text-align: left;
     padding: 10px 16px;
-    cursor: pointer;
+    --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
     gap: 10px;
     transition: background 0.2s ease;
 }
@@ -109,7 +109,7 @@
     color: #fff;
     background: rgba(255, 255, 255, .14);
     font: inherit;
-    cursor: pointer;
+    --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
     .power-item:hover {
@@ -145,7 +145,7 @@
 
     #window-context-menu li {
         padding: 8px 12px;
-        cursor: pointer;
+        --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
         white-space: nowrap;
     }
 

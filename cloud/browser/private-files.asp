@@ -198,10 +198,10 @@ End If
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}
     h1{margin:0;font-size:21px}.sub{margin-top:4px;color:#64748b;font-size:12px}.actions{display:flex;gap:8px;align-items:center}
-    button,.link{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:inherit;text-decoration:none;cursor:pointer}
+    button,.link{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:inherit;text-decoration:none;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
     .primary{border-color:#2563eb;background:#2563eb;color:#fff}.bar{display:flex;align-items:center;gap:8px;padding:10px 22px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
     .bar a{color:#2563eb;text-decoration:none}.files{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:22px}
-    .item{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px;border:1px solid #dbe3ec;border-radius:11px;background:#fff;text-align:left;cursor:pointer}
+    .item{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px;border:1px solid #dbe3ec;border-radius:11px;background:#fff;text-align:left;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
     .item:hover,.item:focus,.item.selected{border-color:#60a5fa;background:#eff6ff}.icon{display:grid;place-items:center;width:40px;height:40px;border-radius:9px;background:#e8f5ee;color:#107c41;font-weight:800}
     .folder .icon{background:#fff4ce;color:#8a5a00}.document .icon{background:#e8f1ff;color:#1d4ed8}.presentation .icon{background:#fff0e6;color:#c2410c}
     .archive .icon{background:#f3e8ff;color:#7e22ce}.image .icon{background:#ecfdf5;color:#047857}.text .icon{background:#f1f5f9;color:#334155}.name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -216,7 +216,7 @@ End If
     .picker-note{padding:6px 10px;border-radius:999px;background:#fff4d8;color:#9a5b00;font-size:12px;font-weight:650}
     .picker-mode{padding-bottom:78px}.picker-mode .context-menu{display:none!important}
     .picker-bar{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:68px;padding:10px 18px;border-top:1px solid #dbe3ec;background:rgba(255,255,255,.97);box-shadow:0 -8px 24px rgba(15,23,42,.08)}
-    .picker-selection strong,.picker-selection span{display:block}.picker-selection span{margin-top:4px;color:#64748b;font-size:12px}.picker-actions{display:flex;gap:8px;align-items:center}.picker-actions button:disabled{opacity:.48;cursor:not-allowed}
+    .picker-selection strong,.picker-selection span{display:block}.picker-selection span{margin-top:4px;color:#64748b;font-size:12px}.picker-actions{display:flex;gap:8px;align-items:center}.picker-actions button:disabled{opacity:.48;--ww-cursor-state:var(--ww-cursor-not-allowed, not-allowed);cursor:var(--ww-cursor-not-allowed, not-allowed)}
     .picker-name{width:min(320px,36vw);padding:8px 10px;border:1px solid #94a3b8;border-radius:7px;font:inherit}
   </style>
 </head>

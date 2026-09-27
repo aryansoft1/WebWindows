@@ -125,6 +125,48 @@ try {
   });
   await page.waitForFunction(() => document.head.lastElementChild?.id === 'ww-cursor-theme-style');
   assert.match(await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor), /classic\/default\.png/, 'theme survives late styles');
+  const dynamicCoverage = await page.evaluate(async () => {
+    const samples = Object.fromEntries([
+      ['plain', '<div style="cursor:default!important"><span>new</span></div>'],
+      ['link', '<button style="cursor:default!important"><span>new</span></button>'],
+      ['text', '<input type="text" style="cursor:pointer!important">'],
+      ['disabled', '<button disabled style="cursor:pointer!important">new</button>'],
+      ['wait', '<div aria-busy="true"><span>new</span></div>'],
+      ['progress', '<div data-ww-cursor="progress">new</div>'],
+      ['customState', '<div style="--ww-cursor-state:var(--ww-cursor-link)">new</div>'],
+      ['legacyInline', '<div style="cursor:pointer!important">new</div>']
+    ].map(([key, html]) => { const holder = document.createElement('div'); holder.innerHTML = html; document.body.appendChild(holder); return [key, holder.firstElementChild]; }));
+    const host = document.createElement('div'); document.body.appendChild(host);
+    const shadow = host.attachShadow({ mode: 'open' });
+    shadow.innerHTML = '<button>shadow</button><div data-ww-cursor="ne-resize">resize</div>';
+    const closedHost = document.createElement('div'); document.body.appendChild(closedHost);
+    const closed = closedHost.attachShadow({ mode: 'closed' });
+    closed.innerHTML = '<button>closed shadow</button>';
+    const iframe = document.createElement('iframe'); iframe.srcdoc = '<button>frame</button>';
+    const frameLoaded = new Promise((resolve) => iframe.addEventListener('load', resolve, { once: true }));
+    document.body.appendChild(iframe);
+    await frameLoaded;
+    return {
+      plain: getComputedStyle(samples.plain.firstElementChild).cursor,
+      link: getComputedStyle(samples.link.firstElementChild).cursor,
+      text: getComputedStyle(samples.text).cursor,
+      disabled: getComputedStyle(samples.disabled).cursor,
+      wait: getComputedStyle(samples.wait.firstElementChild).cursor,
+      progress: getComputedStyle(samples.progress).cursor,
+      customState: getComputedStyle(samples.customState).cursor,
+      legacyInline: getComputedStyle(samples.legacyInline).cursor,
+      shadowButton: getComputedStyle(shadow.querySelector('button')).cursor,
+      shadowResize: getComputedStyle(shadow.querySelector('[data-ww-cursor]')).cursor,
+      closedShadowButton: getComputedStyle(closed.querySelector('button')).cursor,
+      iframeButton: getComputedStyle(iframe.contentDocument.querySelector('button')).cursor,
+      tokens: Object.keys(window.WebWindows.cursor.tokenStates).every((key) =>
+        getComputedStyle(document.documentElement).getPropertyValue(`--ww-cursor-${key}`).includes('/assets/cursors/classic/'))
+    };
+  });
+  for (const [key, state] of Object.entries({ plain: 'default', link: 'pointer', text: 'text', disabled: 'not-allowed', wait: 'wait', progress: 'progress', customState: 'pointer', legacyInline: 'pointer', shadowButton: 'pointer', shadowResize: 'nesw-resize', closedShadowButton: 'pointer', iframeButton: 'pointer' })) {
+    assert.match(dynamicCoverage[key], new RegExp(`classic/${state}\\.png`), key);
+  }
+  assert.equal(dynamicCoverage.tokens, true, 'all cursor tokens use theme assets');
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {

@@ -22,7 +22,7 @@ select {
 }
 
 button {
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
 .wrapper {
@@ -153,7 +153,7 @@ button {
 .icon-btn:disabled:hover {
   color: #a3acba;
   background: transparent;
-  cursor: default;
+  --ww-cursor-state: var(--ww-cursor-default, default);cursor: var(--ww-cursor-default, default);
 }
 
 .icon-btn:disabled img {
@@ -263,7 +263,7 @@ button {
 .device-empty strong { display: block; margin-bottom: 6px; color: #334155; }
 .device-empty-action { margin-top: 14px; }
 .device-location,.device-entry { display: flex; align-items: flex-start; gap: 10px; min-width: 0; border: 1px solid #dbe3ec; border-radius: 11px; padding: 12px; color: #1f2937; background: #fff; text-align: left; }
-button.device-location,button.device-entry { cursor: pointer; }
+button.device-location,button.device-entry { --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer); }
 button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; background: #eff6ff; }
 .device-entry-icon { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border-radius: 9px; color: #1d4ed8; background: #e8f1ff; font-weight: 700; }
 .device-entry.is-folder .device-entry-icon,.device-location .device-entry-icon { color: #8a5a00; background: #fff4ce; }
@@ -515,7 +515,7 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
 
 .context-menu button:disabled {
   color: #9aa4b2;
-  cursor: default;
+  --ww-cursor-state: var(--ww-cursor-default, default);cursor: var(--ww-cursor-default, default);
 }
 
 .context-menu button:disabled:hover {
@@ -601,7 +601,7 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
 
 .picker-mode .file-item.file[disabled] {
   opacity: 0.42;
-  cursor: not-allowed;
+  --ww-cursor-state: var(--ww-cursor-not-allowed, not-allowed);cursor: var(--ww-cursor-not-allowed, not-allowed);
   filter: grayscale(0.65);
 }
 
@@ -670,7 +670,7 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
 }
 
 .picker-button:disabled {
-  cursor: not-allowed;
+  --ww-cursor-state: var(--ww-cursor-not-allowed, not-allowed);cursor: var(--ww-cursor-not-allowed, not-allowed);
   opacity: 0.48;
 }
 

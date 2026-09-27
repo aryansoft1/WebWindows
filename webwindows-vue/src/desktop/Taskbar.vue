@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
   height:40px; background:#222; color:#fff;
   display:flex; align-items:center; padding:0 6px; gap:6px;
 }
-.vw-task{ background:#444; padding:6px 10px; border-radius:6px; cursor:pointer; }
+.vw-task{ background:#444; padding:6px 10px; border-radius:6px; --ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer); }
 .vw-task:hover{ background:#555; }
 
 </style>

@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   icons.forEach(icon => {
     const id = icon.id;
     icon.style.position = "absolute";
-    icon.style.cursor = "default";
+    icon.dataset.wwCursor = "default";
 
     // 恢复位置
     const saved = localStorage.getItem("icon-pos-" + id);

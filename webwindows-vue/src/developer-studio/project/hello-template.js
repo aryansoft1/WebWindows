@@ -91,7 +91,7 @@ button {
   padding: 10px 18px;
   background: #1769e0;
   color: white;
-  cursor: pointer;
+  cursor: var(--ww-cursor-link, pointer);
 }
 `
       },

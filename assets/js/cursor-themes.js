@@ -18,6 +18,7 @@
         'ns-resize': [16, 16], 'nwse-resize': [16, 16], 'nesw-resize': [16, 16]
     };
     const aliases = {
+        link: 'pointer',
         'n-resize': 'ns-resize', 's-resize': 'ns-resize',
         'e-resize': 'ew-resize', 'w-resize': 'ew-resize',
         'nw-resize': 'nwse-resize', 'se-resize': 'nwse-resize',
@@ -29,6 +30,9 @@
     let currentTheme = 'dreama';
     const observedDocuments = new WeakSet();
     const observedFrames = new WeakSet();
+    const observedRoots = new WeakSet();
+    const liveRoots = new Set();
+    const frameLimitations = new Set();
 
     function getAsset(state, themeId = currentTheme, format = 'svg') {
         const id = themes[themeId] ? themeId : 'dreama';
@@ -44,25 +48,48 @@
         return `url("${png}") ${x} ${y}, url("${getAsset(resolved, themeId)}") ${x} ${y}, ${resolved}`;
     }
 
-    function rules() {
-        const selectors = {
-            default: 'html, body, .desktop, .taskbar, #start-menu, .window, .window-content, .window-iframe, iframe, .vw-taskbar, .battery-indicator, #taskbar-datetime, [data-cursor-state="default"], [style*="cursor: default"], [style*="cursor:default"]',
-            pointer: 'button:not(:disabled), .window-header .button, a[href], select:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, .icon, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item, [role="button"]:not([aria-disabled="true"]), [role="checkbox"]:not([aria-disabled="true"]), [role="switch"]:not([aria-disabled="true"]), [role="tab"]:not([aria-disabled="true"]), [style*="cursor: pointer"], [style*="cursor:pointer"]',
-            text: 'input:not([type]), input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]), textarea, [contenteditable="true"], [style*="cursor: text"]',
-            move: '.window-header, .window-header .title, [draggable="true"], .weather-widget, [style*="cursor: move"], [style*="cursor:move"], [style*="cursor: grab"], [style*="cursor: grabbing"], [data-cursor-state="move"]',
-            'not-allowed': ':disabled, [aria-disabled="true"], [style*="cursor: not-allowed"], [data-cursor-state="not-allowed"]',
-            wait: '[aria-busy="true"], [style*="cursor: wait"], [data-cursor-state="wait"]',
-            progress: '[style*="cursor: progress"], [data-cursor-state="progress"]',
-            crosshair: '[style*="cursor: crosshair"], [data-cursor-state="crosshair"]',
-            help: '[style*="cursor: help"], [data-cursor-state="help"]',
-            'ew-resize': '.resizer.e, .resizer.w, [data-resize-dir="e"], [data-resize-dir="w"], [style*="cursor: e-resize"], [style*="cursor: w-resize"], [style*="cursor: col-resize"], [data-cursor-state="ew-resize"]',
-            'ns-resize': '.resizer.n, .resizer.s, [data-resize-dir="n"], [data-resize-dir="s"], [style*="cursor: n-resize"], [style*="cursor: s-resize"], [style*="cursor: row-resize"], [data-cursor-state="ns-resize"]',
-            'nwse-resize': '.resizer.nw, .resizer.se, .ww-resizer, [data-resize-dir="nw"], [data-resize-dir="se"], [style*="cursor: nw-resize"], [style*="cursor: se-resize"], [style*="cursor: nwse-resize"], [data-cursor-state="nwse-resize"]',
-            'nesw-resize': '.resizer.ne, .resizer.sw, [data-resize-dir="ne"], [data-resize-dir="sw"], [style*="cursor: ne-resize"], [style*="cursor: sw-resize"], [style*="cursor: nesw-resize"], [data-cursor-state="nesw-resize"]'
-        };
-        const semanticRules = Object.entries(selectors).map(([state, selector]) => `${selector} { cursor: ${getCursor(state)} !important; }`).join('\n');
-        const scrollbarRules = `::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: ${getCursor('default')} !important; }\n::-webkit-scrollbar-thumb { cursor: ${getCursor('move')} !important; }`;
-        return `${semanticRules}\n${scrollbarRules}`;
+    const tokenStates = Object.freeze({
+        default: 'default', link: 'pointer', pointer: 'pointer', text: 'text',
+        wait: 'wait', progress: 'progress', move: 'move', grab: 'grab',
+        grabbing: 'grabbing', 'not-allowed': 'not-allowed', crosshair: 'crosshair',
+        help: 'help', 'n-resize': 'n-resize', 's-resize': 's-resize',
+        'e-resize': 'e-resize', 'w-resize': 'w-resize', 'ne-resize': 'ne-resize',
+        'nw-resize': 'nw-resize', 'se-resize': 'se-resize', 'sw-resize': 'sw-resize',
+        'ew-resize': 'ew-resize', 'ns-resize': 'ns-resize',
+        'nwse-resize': 'nwse-resize', 'nesw-resize': 'nesw-resize'
+    });
+
+    function rules(shadow = false) {
+        const tokens = Object.entries(tokenStates).map(([token, state]) =>
+            `--ww-cursor-${token}: ${getCursor(state)};`
+        ).join('\n');
+        const root = shadow ? ':host' : ':root';
+        const base = shadow ? ':host, :host *' : 'html, body, body *';
+        const prefix = shadow ? ':host ' : 'body ';
+        // One ID of specificity keeps later third-party !important rules from undoing the contract.
+        const lock = ':not(#ww-cursor-manager-specificity)';
+        const semantic = [
+            ['move', '.window-header, .window-header *, .ww-titlebar, .ww-titlebar *, .weather-widget, .weather-widget *, [draggable="true"], [draggable="true"] *'],
+            ['link', 'a[href], a[href] *, button:not(:disabled), button:not(:disabled) *, select:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, [role="button"], [role="button"] *, [role="checkbox"], [role="switch"], [role="tab"], .button, .button *, .icon, .icon *, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item'],
+            ['text', 'input:not([type]), input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]), textarea, [contenteditable="true"], [contenteditable="true"] *'],
+            ['grab', '[draggable="true"]:not(:active)'],
+            ['grabbing', '[draggable="true"]:active'],
+            ['not-allowed', ':disabled, [aria-disabled="true"], [aria-disabled="true"] *'],
+            ['wait', '[aria-busy="true"], [aria-busy="true"] *']
+        ];
+        const semanticRules = semantic.map(([state, selectors]) =>
+            `${prefix}:is(${selectors})${lock} { cursor: var(--ww-cursor-${state}) !important; }`
+        ).join('\n');
+        const resizeRules = Object.entries({
+            n: 'n-resize', s: 's-resize', e: 'e-resize', w: 'w-resize',
+            ne: 'ne-resize', nw: 'nw-resize', se: 'se-resize', sw: 'sw-resize'
+        }).map(([direction, state]) =>
+            `${prefix}.resizer.${direction}${lock}, ${prefix}[data-resize-dir="${direction}"]${lock} { cursor: var(--ww-cursor-${state}) !important; }`
+        ).join('\n');
+        const explicitRules = Object.keys(tokenStates).map((state) =>
+            `${prefix}[data-ww-cursor="${state}"]${lock} { cursor: var(--ww-cursor-${state}) !important; }`
+        ).join('\n');
+        return `${root} { ${tokens} }\n${base} { cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }`;
     }
 
     function applyToDocument(doc) {
@@ -79,31 +106,93 @@
         doc.documentElement.dataset.wwCursorTheme = currentTheme;
     }
 
+    function applyToShadow(root) {
+        if (!root) return;
+        liveRoots.add(root);
+        let style = root.querySelector('style[data-ww-cursor-manager]');
+        if (!style) {
+            style = root.ownerDocument.createElement('style');
+            style.dataset.wwCursorManager = '';
+            root.appendChild(style);
+        }
+        const css = rules(true);
+        if (style.textContent !== css) style.textContent = css;
+        if (!observedRoots.has(root)) {
+            observedRoots.add(root);
+            new MutationObserver((records) => {
+                for (const record of records) {
+                    if (record.type === 'attributes') normalizeInlineCursor(record.target);
+                    else for (const node of record.addedNodes) discover(node);
+                }
+                if (!root.querySelector('style[data-ww-cursor-manager]')) applyToShadow(root);
+            }).observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
+        }
+        discover(root);
+    }
+
+    function normalizeInlineCursor(element) {
+        const value = element.style?.getPropertyValue('cursor').trim();
+        if (!value) return;
+        element.style.removeProperty('cursor');
+        if (element.hasAttribute('data-ww-cursor') || element.matches('a[href], button, input, textarea, select, [contenteditable], [role], [aria-busy], [aria-disabled], :disabled')) return;
+        const token = value.match(/^var\(--ww-cursor-([a-z-]+)(?:,|\))/);
+        const state = token ? token[1] : value === 'pointer' ? 'link' : value;
+        if (tokenStates[state]) element.dataset.wwCursor = state;
+    }
+
+    function discover(node) {
+        if (!node || !node.querySelectorAll) return;
+        const elements = node.nodeType === 1 ? [node, ...node.querySelectorAll('*')] : node.querySelectorAll('*');
+        for (const element of elements) {
+            normalizeInlineCursor(element);
+            if (element.shadowRoot) applyToShadow(element.shadowRoot);
+            if (element.tagName === 'IFRAME') applyToFrame(element);
+        }
+    }
+
+    function applyToFrame(frame) {
+        if (!observedFrames.has(frame)) {
+            observedFrames.add(frame);
+            frame.addEventListener('load', () => applyToFrame(frame));
+        }
+        try {
+            const child = frame.contentDocument;
+            if (!child) { frameLimitations.add(frame); return; }
+            applyToDocument(child);
+            observeDocument(child);
+            discover(child);
+            frameLimitations.delete(frame);
+        } catch (_) { frameLimitations.add(frame); }
+    }
+
     function applyToFrames(doc = document) {
-        doc.querySelectorAll('iframe').forEach((frame) => {
-            if (!observedFrames.has(frame)) {
-                observedFrames.add(frame);
-                frame.addEventListener('load', () => applyToFrames(doc));
-            }
-            try {
-                const child = frame.contentDocument;
-                if (!child) return;
-                applyToDocument(child);
-                observeDocument(child);
-                applyToFrames(child);
-            } catch (_) { /* Cross-origin frames retain their own cursor. */ }
-        });
+        discover(doc);
     }
 
     function observeDocument(doc) {
         if (!doc.body || observedDocuments.has(doc)) return;
         observedDocuments.add(doc);
-        const observer = new MutationObserver((records) => {
-            if (records.some((record) => Array.from(record.addedNodes).some((node) =>
-                node.nodeType === 1 && (node.tagName === 'IFRAME' || node.querySelector?.('iframe'))
-            ))) applyToFrames(doc);
-        });
-        observer.observe(doc.body, { childList: true, subtree: true });
+        doc.addEventListener('load', (event) => {
+            if (event.target?.tagName === 'IFRAME') applyToFrame(event.target);
+        }, true);
+        const realm = doc.defaultView;
+        if (realm?.Element?.prototype && !realm.Element.prototype.__wwCursorWrapped) {
+            const original = realm.Element.prototype.attachShadow;
+            if (original) {
+                realm.Element.prototype.attachShadow = function (options) {
+                    const root = original.call(this, options);
+                    applyToShadow(root);
+                    return root;
+                };
+                Object.defineProperty(realm.Element.prototype, '__wwCursorWrapped', { value: true });
+            }
+        }
+        new MutationObserver((records) => {
+            for (const record of records) {
+                if (record.type === 'attributes') normalizeInlineCursor(record.target);
+                else for (const node of record.addedNodes) discover(node);
+            }
+        }).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
         const headObserver = new MutationObserver((records) => {
             const style = doc.getElementById('ww-cursor-theme-style');
             if (!style) { applyToDocument(doc); return; }
@@ -120,6 +209,10 @@
         try { global.localStorage.setItem(storageKey, themeId); } catch (_) {}
         applyToDocument(document);
         applyToFrames();
+        for (const root of liveRoots) {
+            if (root.host.isConnected) applyToShadow(root);
+            else liveRoots.delete(root);
+        }
         global.dispatchEvent(new CustomEvent('webwindows:cursor-theme-changed', { detail: { themeId } }));
         return true;
     }
@@ -130,7 +223,9 @@
     } catch (_) {}
 
     const manager = Object.freeze({
-        themes, states, get currentTheme() { return currentTheme; }, setTheme, getCursor, getAsset
+        themes, states, tokenStates, get currentTheme() { return currentTheme; },
+        get crossOriginFrameCount() { return frameLimitations.size; },
+        setTheme, getCursor, getAsset
     });
     global.WebWindows = global.WebWindows || {};
     global.WebWindows.cursor = manager;
@@ -149,6 +244,10 @@
             currentTheme = event.newValue;
             applyToDocument(document);
             applyToFrames();
+            for (const root of liveRoots) {
+                if (root.host.isConnected) applyToShadow(root);
+                else liveRoots.delete(root);
+            }
         }
     });
 })(window);

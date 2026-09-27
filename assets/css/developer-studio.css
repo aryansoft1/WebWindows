@@ -15,8 +15,8 @@ html, body, #developer-studio-app {
 }
 
 button, input, select, textarea { font: inherit; }
-button { cursor: pointer; }
-button:disabled { cursor: not-allowed; opacity: .55; }
+button { --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer); }
+button:disabled { --ww-cursor-state: var(--ww-cursor-not-allowed, not-allowed);cursor: var(--ww-cursor-not-allowed, not-allowed); opacity: .55; }
 
 .studio-loading {
   margin: 0;

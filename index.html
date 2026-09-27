@@ -8,19 +8,19 @@
     </title>
     <link href="assets/icons/logo_large.png" rel="icon" />
     <link href="dist-widget/weather-widget.css" rel="stylesheet" />
-    <link href="dist-window/window-manager-widget.css?v=20260826-window-fit-1" rel="stylesheet" />
-    <link rel="stylesheet" href="assets/css/main.css?v=20260823-mobile-parity-1">
+    <link href="dist-window/window-manager-widget.css?v=20260927-cursor-manager-1" rel="stylesheet" />
+    <link rel="stylesheet" href="assets/css/main.css?v=20260927-cursor-manager-1">
     <link href="assets/css/context_menu.css?v=20260802-device-1" rel="stylesheet" />
     <link rel="stylesheet" href="assets/css/desktalk.css?v=20260818-presence-layout-5">
-    <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20260823-weather-drag-3">
+    <link rel="stylesheet" href="dist-weather/weather-widget.css?v=20260927-cursor-manager-1">
     <!-- Markdown 解析 + 安全清洗 + 代码高亮（CDN） -->
     <link href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" rel="stylesheet"/>
     <!-- 引入预编译后的 WeatherTimeWidget 组件 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="assets/js/contextmenu-guard.js?v=20260726-3"></script>
-    <script src="assets/js/webwindows-message.js?v=20260729-1"></script>
+    <script src="assets/js/webwindows-message.js?v=20260927-cursor-manager-1"></script>
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
-    <script src="assets/js/cursor-themes.js?v=4"></script>
+    <script src="assets/js/cursor-themes.js?v=5"></script>
     <script defer src="assets/js/system-session.js?v=20260802-7"></script>
     <script defer src="assets/js/auth-session.js?v=20260810-session-truth-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260825-storage-2"></script>
@@ -28,14 +28,14 @@
     <script defer src="assets/js/device-controls.js?v=20260823-mobile-parity-1"></script>
     <script defer src="assets/js/vendor/html2canvas.min.js?v=1.4.1"></script>
     <script defer src="assets/js/taskbar-experience.js?v=20260815-task-manager-1"></script>
-    <script src="dist-weather/weather-widget.umd.js?v=20260823-weather-drag-3"></script>
-    <script defer src="dist-window/window-manager-widget.js?v=20260826-window-fit-1"></script>
+    <script src="dist-weather/weather-widget.umd.js?v=20260927-cursor-manager-1"></script>
+    <script defer src="dist-window/window-manager-widget.js?v=20260927-cursor-manager-1"></script>
     <script defer src="assets/js/app-registry.js?v=20260923-startup-1"></script>
     <script defer src="assets/js/startup-manager.js?v=20260923-startup-1"></script>
     <script defer src="assets/js/function-sync.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/start-menu-functions.js?v=20260728-1"></script>
     <script defer src="assets/js/desktop-functions.js?v=20260808-device-api-1"></script>
-    <script defer src="assets/js/cloud-file-dialog.js?v=20260729-1"></script>
+    <script defer src="assets/js/cloud-file-dialog.js?v=20260927-cursor-manager-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/visitor-analytics.js?v=20260920-1"></script>
     <script defer src="assets/js/resource-open.js?v=20260812-aplay-media-1"></script>
@@ -219,13 +219,13 @@
     <!-- Win11 Start Menu -->
     <!-- Win11 中文开始菜单 -->
     <div id="start-menu">
-        <div id="start-menu-login" style="cursor:default; display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
+        <div id="start-menu-login" style="--ww-cursor-state:var(--ww-cursor-default, default);cursor:var(--ww-cursor-default, default); display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #f8f8f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 14px;">
     <div style="display: flex; align-items: center;" id="login-area">
   <img id="login-avatar" src="assets/icons/149071.png" alt="avatar" style="width: 28px; height: 28px; border-radius: 50%; margin-right: 8px;">
   <span id="login-username">正在确认登录状态…</span>
   <span id="login-status" style="width: 8px; height: 8px; background: #cc8800; border-radius: 50%; display: inline-block; margin-left: 6px;"></span>
 </div>
-    <button class="power-btn"  id="power-button" style="background: none; border: none; font-size: 16px; cursor: pointer;">
+    <button class="power-btn"  id="power-button" style="background: none; border: none; font-size: 16px; --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);">
       <img src="https://cdn.jsdelivr.net/npm/@tabler/icons@2.47.0/icons/power.svg">
     </button>
   </div>
@@ -341,37 +341,37 @@
 <div id="tab-mailbox" style="width:300px;font-family:Arial,sans-serif;">
   <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
     <li>
-      <button class="tab-btn" data-tab="manage" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <button class="tab-btn" data-tab="manage" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">
         <span><img class="mailbox-icon-inline mailbox-icon-menu" src="assets/icons/mailbox.png?v=20260727-1" alt="" aria-hidden="true"></span>
         <span>讯筒管理</span>
       </button>
     </li>
     <li>
-      <button class="tab-btn" data-tab="inbox" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <button class="tab-btn" data-tab="inbox" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">
         <span>📥</span>
         <span>打开邮筒</span>
       </button>
     </li>
     <li>
-      <button class="tab-btn" data-tab="sent" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <button class="tab-btn" data-tab="sent" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">
         <span>📤</span>
         <span>邮送记录</span>
       </button>
     </li>
     <li>
-      <button class="tab-btn" data-tab="compose" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <button class="tab-btn" data-tab="compose" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">
         <span>✉️</span>
         <span>写信</span>
       </button>
     </li>
     <li>
-      <button class="tab-btn" data-tab="address" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <button class="tab-btn" data-tab="address" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">
         <span>⚙️</span>
         <span>讯址设置</span>
       </button>
     </li>
     <li>
-      <button class="tab-btn" data-tab="trash" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;cursor:pointer;">
+      <button class="tab-btn" data-tab="trash" style="width:100%;padding:10px;background:#f0f8ff;border:1px solid #ccc;border-radius:8px;display:flex;align-items:center;gap:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">
         <span>🗑️</span>
         <span>废纸篓</span>
       </button>
@@ -386,12 +386,12 @@
     </div>
 
     <div class="tab-content" data-content="inbox" style="display:none;">
-      <h4>📥 邮筒内容 <button type="button" data-mail-refresh="inbox" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;cursor:pointer;">刷新</button></h4>
+      <h4>📥 邮筒内容 <button type="button" data-mail-refresh="inbox" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">刷新</button></h4>
       <div id="mailbox-inbox-list"></div>
     </div>
 
     <div class="tab-content" data-content="sent" style="display:none;">
-      <h4>📤 邮送记录 <button type="button" data-mail-refresh="sent" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;cursor:pointer;">刷新</button></h4>
+      <h4>📤 邮送记录 <button type="button" data-mail-refresh="sent" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">刷新</button></h4>
       <div id="mailbox-sent-list"></div>
     </div>
 
@@ -401,13 +401,13 @@
         <input id="mailbox-to" type="text" autocomplete="off" placeholder="收件人（桌讯用户名或邮箱）" style="padding:6px;border:1px solid #ccc;">
         <input id="mailbox-subject" type="text" autocomplete="off" placeholder="主题" style="padding:6px;border:1px solid #ccc;">
         <textarea id="mailbox-body" placeholder="邮件内容" rows="5" style="padding:6px;border:1px solid #ccc;resize:vertical;"></textarea>
-        <button type="submit" style="padding:4px;background:#007bff;color:#fff;border:none;cursor:pointer;">发送</button>
+        <button type="submit" style="padding:4px;background:#007bff;color:#fff;border:none;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">发送</button>
       </form>
       <div id="mailbox-compose-status" aria-live="polite" style="font-size:12px;margin-top:8px;"></div>
     </div>
 
     <div class="tab-content" data-content="trash" style="display:none;">
-      <h4>🗑️ 废纸篓 <button type="button" data-mail-refresh="trash" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;cursor:pointer;">刷新</button></h4>
+      <h4>🗑️ 废纸篓 <button type="button" data-mail-refresh="trash" style="float:right;font-size:12px;border:0;background:transparent;color:#1677ff;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">刷新</button></h4>
       <div id="mailbox-trash-list"></div>
     </div>
 
@@ -420,7 +420,7 @@
         <input id="mailbox-address-name" type="text" autocomplete="off" placeholder="显示名称，例如：我的工作讯址" style="padding:6px;border:1px solid #ccc;">
         <input id="mailbox-address-value" type="email" autocomplete="email" placeholder="邮箱地址，例如：name@example.com" style="padding:6px;border:1px solid #ccc;">
         <input id="mailbox-address-password" type="password" autocomplete="new-password" placeholder="邮箱授权码（仅加密保存于讯址中心）" style="padding:6px;border:1px solid #ccc;">
-        <button type="submit" style="padding:5px;background:#007bff;color:#fff;border:0;cursor:pointer;">添加讯址</button>
+        <button type="submit" style="padding:5px;background:#007bff;color:#fff;border:0;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">添加讯址</button>
       </form>
       <div id="mailbox-address-status" aria-live="polite" style="font-size:12px;margin-top:8px;"></div>
       <div style="border-top:1px solid #eee;margin-top:12px;padding-top:10px;">
@@ -430,7 +430,7 @@
     </div>
 
     <div class="tab-content" data-content="detail" style="display:none;">
-      <button id="mailbox-back" type="button" style="border:0;background:transparent;color:#1677ff;padding:0;cursor:pointer;">← 返回列表</button>
+      <button id="mailbox-back" type="button" style="border:0;background:transparent;color:#1677ff;padding:0;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">← 返回列表</button>
       <div id="mailbox-detail" style="margin-top:10px;"></div>
     </div>
   </div>
@@ -462,7 +462,7 @@
 <div id="settings-sheet">
   <header style="display:flex;justify-content:space-between;align-items:center;">
     <h3 style="margin:0;font-size:16px;">⚙ 设置</h3>
-    <button onclick="closeSettingsSheet()" style="border:none;background:none;font-size:18px;cursor:pointer;">✕</button>
+    <button onclick="closeSettingsSheet()" style="border:none;background:none;font-size:18px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);">✕</button>
   </header>
   <div style="padding:10px">
     <!-- 你原本的 tab-settings 内容挪到这里 -->
@@ -488,7 +488,7 @@
 <div class="panel" style="width:min(92vw,360px);background:#FFF;border:1px solid #ccc;border-radius:16px;box-shadow:0 18px 46px rgba(0,0,0,.22);padding:14px">
 <div style="font-weight:700">设置你的昵称</div>
 <div class="row" style="display:flex;gap:10px;align-items:center;margin:8px 0">
-<span class="swatch" id="modal-color" style="width:28px;height:28px;border-radius:50%;border:1px #ccc;cursor:pointer"></span>
+<span class="swatch" id="modal-color" style="width:28px;height:28px;border-radius:50%;border:1px #ccc;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)"></span>
 <input id="modal-name" placeholder="比如：阿强 / 小李 / Luna" style="flex:1;border:1px solid #ccc;border-radius:10px;padding:8px 10px;background:var(--surface);color:var(--fg)"/>
 <button class="btn" id="modal-rand">换颜色</button>
 </div>
@@ -653,7 +653,7 @@
 <script src="assets/js/file-search.js?v=20260811-query-v2-3"></script>
 <script src="assets/js/ai-tool-registry.js?v=20260810-file-tool-1"></script>
 <script src="assets/js/ai-file-tools.js?v=20260811-file-tool-1"></script>
-<script src="assets/js/desktalk.js?v=20260819-discovery-privacy-1"></script>
+<script src="assets/js/desktalk.js?v=20260927-cursor-manager-1"></script>
     <script src="assets/js/tw.js?v=20260925-settings-apps-i18n-1"></script>
 </body>
 </html>

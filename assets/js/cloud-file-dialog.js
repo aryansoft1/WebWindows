@@ -110,8 +110,9 @@
       Object.assign(close.style, {
         position: "absolute", top: "8px", right: "10px", zIndex: "2",
         width: "32px", height: "32px", border: "0", borderRadius: "6px",
-        background: "rgba(255,255,255,.92)", fontSize: "22px", cursor: "pointer"
+        background: "rgba(255,255,255,.92)", fontSize: "22px"
       });
+      close.dataset.wwCursor = "link";
       dialog.append(frame, close);
       document.body.appendChild(dialog);
 

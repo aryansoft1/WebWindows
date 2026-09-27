@@ -4,7 +4,7 @@
   padding: 10px;
   border: none;
   background: #f5f5f5;
-  cursor: default;
+  --ww-cursor-state: var(--ww-cursor-default, default);cursor: var(--ww-cursor-default, default);
 }
 
 .tab-content {
@@ -43,9 +43,9 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   background:rgba(255,255,255,.9);backdrop-filter:saturate(120%) blur(6px);
   border-top:1px solid var(--border);display:flex;align-items:center;padding:0 10px}
 #tb-left,#tb-right{display:flex;gap:8px;align-items:center} #tb-center{flex:1;display:flex;justify-content:center;gap:8px}
-.tb-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;cursor:pointer;position:relative}
+.tb-btn{width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);position:relative}
 .badge{position:absolute;right:-4px;top:-4px;min-width:18px;height:18px;padding:0 5px;background:var(--bad);color:#fff;border-radius:999px;font-size:12px;/*display:grid;*/display:none;displace-items:center}
-.tb-chip{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px;background:var(--surface);border:1px solid var(--border);border-radius:999px;cursor:pointer}
+.tb-chip{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 10px;background:var(--surface);border:1px solid var(--border);border-radius:999px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
 .tb-chip .mini{width:18px;height:18px;border-radius:50%}
 
 /* HUD */
@@ -53,8 +53,8 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   background:rgba(17,24,39,.94);color:#fff;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:10px 14px;display:inline-flex;align-items:center;gap:8px;
   box-shadow:0 12px 28px rgba(0,0,0,.22);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .12s, transform .12s; z-index:var(--z-hud)}
 #hud.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
-#hud .undo{color:#9AE6B4;background:transparent;border:0;cursor:pointer;font-weight:400}
-#hud .close{color:#cbd5e1;background:transparent;border:0;margin-left:6px;border-left:1px solid rgba(255,255,255,.18);padding-left:8px;cursor:pointer}
+#hud .undo{color:#9AE6B4;background:transparent;border:0;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);font-weight:400}
+#hud .close{color:#cbd5e1;background:transparent;border:0;margin-left:6px;border-left:1px solid rgba(255,255,255,.18);padding-left:8px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
 
 /* 遮罩 */
 #overlay-mask{position:fixed;inset:0;background:transparent;display:none;z-index:var(--z-mask)}
@@ -81,7 +81,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 #presence-sheet .inner{padding:8px;overflow:auto;flex:1;overscroll-behavior:contain;background-color: #FFF;}
 
 /* “我”胶囊 */
-.me-pill{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--glass-border);border-radius:999px;background:var(--glass-head);cursor:pointer;flex:0 0 auto}
+.me-pill{display:flex;align-items:center;gap:8px;padding:4px 8px;border:1px solid var(--glass-border);border-radius:999px;background:var(--glass-head);--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);flex:0 0 auto}
 .me-pill .av{width:20px;height:20px;border-radius:50%}
 .me-pill .name{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:400}
 
@@ -149,7 +149,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   appearance:none; -webkit-appearance:none;
   width:38px; height:22px; border-radius:999px;
   background:#cbd5e1; border:1px solid var(--border);
-  position:relative; outline:none; cursor:pointer;
+  position:relative; outline:none; --ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);
   vertical-align:middle; transition:background .18s ease, border-color .18s ease;
 }
 .switch input::after{
@@ -163,10 +163,10 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 
 #fab{position:fixed;right:16px;bottom:calc(16px + var(--safe-bot));width:56px;height:56px;border-radius:50%;
   background:var(--primary);color:#fff;display:none;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.18);z-index:var(--z-overlay)}
-.btn{height:32px;padding:0 12px;border:1px solid var(--border);background:#93c5fd; border-radius:10px;cursor:pointer;color:var(--fg)}
+.btn{height:32px;padding:0 12px;border:1px solid var(--border);background:#93c5fd; border-radius:10px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);color:var(--fg)}
 
 /* 列表项 */
-.row{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;padding:8px;border-radius:12px;border:1px solid transparent;cursor:pointer;transition:background .15s ease;margin:6px 0}
+.row{display:grid;grid-template-columns:48px 1fr auto;align-items:center;gap:10px;padding:8px;border-radius:12px;border:1px solid transparent;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);transition:background .15s ease;margin:6px 0}
 .row .av{position:relative;width:36px;height:36px;border-radius:50%}
 .row .dot{position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border:2px solid var(--surface);border-radius:50%}
 .row .name{font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -194,8 +194,8 @@ main{padding:20px;max-width:1180px;margin:0 auto}
 #chat .dot{position:absolute;right:-2px;bottom:-2px;width:10px;height:10px;border:2px solid var(--surface);border-radius:50%}
 #chat .name{font-weight:500}
 #chat .actions{margin-left:auto;display:flex;align-items:center;gap:8px}
-.icon-btn{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;font-size:16px;cursor:pointer}
-.icon-btn.lock{opacity:.45;cursor:not-allowed}
+.icon-btn{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:var(--surface);display:grid;place-items:center;font-size:16px;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
+.icon-btn.lock{opacity:.45;--ww-cursor-state:var(--ww-cursor-not-allowed, not-allowed);cursor:var(--ww-cursor-not-allowed, not-allowed)}
 #chat .body{max-height:48vh;min-height:300px;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:8px}
 .msg{max-width:72%;padding:8px 10px;border-radius:12px;line-height:0}
 .msg.peer{margin-right:auto;background:rgba(0,0,0,.06)} .msg.me{margin-left:auto;background:var(--primary);color:#fff}
@@ -336,7 +336,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   border: 1px solid transparent;
   background: #fff;
   color: inherit;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   transition: background .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .02s ease;
 }
 #presence-sheet .btn:focus-visible{
@@ -490,7 +490,7 @@ main{padding:20px;max-width:1180px;margin:0 auto}
   font-size: 20px; line-height: 32px;
   width: 32px; height: 32px;
   border: none; border-radius: 6px;
-  background: transparent; cursor: pointer;
+  background: transparent; --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 .emoji-item:hover { background: rgba(0,0,0,.08); }
 #desktalk-footer {

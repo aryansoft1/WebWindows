@@ -91,7 +91,7 @@ select {
   border-radius: 9px;
   background: transparent;
   color: var(--muted);
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   font-weight: 750;
 }
 .wendao-tabs button span { margin-right: 6px; }
@@ -290,7 +290,7 @@ select {
   background: transparent;
   color: var(--ink);
   text-align: left;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   font-size: .82rem;
 }
 .place-suggestion:last-child {
@@ -441,7 +441,7 @@ select {
   border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   font-size: .74rem;
   text-align: left;
 }
@@ -516,7 +516,7 @@ select {
 /* 结果标题里的车型小图标：与地图标记共用同一套 SVG，只是尺寸小、不旋转 */
 .transit-route-glyph { display: inline-block; width: 20px; height: 20px; vertical-align: -4px; margin-right: 2px; }
 .transit-route-glyph svg { display: block; width: 100%; height: 100%; }
-.map-mode-toggle { position: absolute; z-index: 5; right: 16px; top: 16px; min-width: 45px; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(24,55,44,.15); }
+.map-mode-toggle { position: absolute; z-index: 5; right: 16px; top: 16px; min-width: 45px; min-height: 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font-weight: 800; --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer); box-shadow: 0 4px 16px rgba(24,55,44,.15); }
 .map-mode-toggle.active { background: var(--green); color: #fff; }
 .icon-button,
 .swap-button,
@@ -527,7 +527,7 @@ select {
   background: var(--surface);
   color: var(--ink);
   border-radius: 11px;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 .icon-button {
   width: 45px;
@@ -551,7 +551,7 @@ select {
   background: transparent;
   color: var(--muted);
   font-weight: 650;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   padding: 0 3px;
 }
 .mode-tabs button span {
@@ -567,7 +567,7 @@ select {
   box-shadow: 0 2px 9px rgba(23, 45, 37, 0.1);
 }
 .quick-places { display: grid; grid-template-columns: repeat(4,auto); gap: 5px; margin: -6px 0 13px; overflow-x: auto; }
-.quick-places button { min-height: 34px; white-space: nowrap; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); cursor: pointer; font-size: .75rem; }
+.quick-places button { min-height: 34px; white-space: nowrap; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer); font-size: .75rem; }
 .quick-places button.saved { color: var(--green); border-color: #9ccdbb; }
 .journey-time-controls { display: flex; justify-content: space-between; align-items: end; gap: 8px; margin: -5px 0 12px; }
 .journey-time-controls label span { display: block; margin-bottom: 3px; color: var(--muted); font-size: .7rem; }
@@ -670,7 +670,7 @@ select {
   border-bottom: 1px solid var(--line);
   background: #fff;
   text-align: left;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 .search-result:last-child {
   border-bottom: 0;
@@ -705,7 +705,7 @@ select {
   border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 .nearby-tools button span {
   margin-right: 3px;
@@ -731,12 +731,12 @@ select {
   background: linear-gradient(135deg, var(--green), var(--green2));
   color: #fff;
   font-weight: 750;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   box-shadow: 0 7px 18px rgba(8, 122, 85, 0.22);
 }
 .primary-button:disabled {
   opacity: 0.55;
-  cursor: wait;
+  --ww-cursor-state: var(--ww-cursor-wait, wait);cursor: var(--ww-cursor-wait, wait);
 }
 .provider-select {
   display: flex;
@@ -855,7 +855,7 @@ select {
   background: var(--green);
   color: #fff;
   font-weight: 700;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 .route-result > .external-route {
   min-height: 43px;
@@ -883,7 +883,7 @@ select {
   line-height: 1.5;
 }
 .privacy-note summary {
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   color: var(--ink);
 }
 .map-panel {
@@ -925,7 +925,7 @@ select {
   font-size: 12px;
   font-weight: 800;
   filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.25));
-  cursor: grab;
+  --ww-cursor-state: var(--ww-cursor-grab, grab);cursor: var(--ww-cursor-grab, grab);
 }
 .map-marker:before {
   content: "";
@@ -958,7 +958,7 @@ select {
   font-size: 0.8rem;
   font-weight: 800;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 .pick-tools {
   position: absolute;
@@ -1070,7 +1070,7 @@ select {
   padding: 8px 13px;
 }
 .map-picking #map {
-  cursor: crosshair;
+  --ww-cursor-state: var(--ww-cursor-crosshair, crosshair);cursor: var(--ww-cursor-crosshair, crosshair);
 }
 @keyframes spin {
   to {

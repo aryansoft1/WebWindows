@@ -2006,7 +2006,8 @@ function closeSettingsSheet(){
     var row = document.createElement('button');
     row.type = 'button'; row.className = 'mailbox-message'; row.dataset.mailId = message.id;
     row.style.cssText = 'width:100%;text-align:left;padding:8px 2px;border:0;border-bottom:1px solid #eee;background:' +
-      (message.read || folder === 'sent' ? '#fff' : '#f0f8ff') + ';cursor:pointer;font:inherit;';
+      (message.read || folder === 'sent' ? '#fff' : '#f0f8ff') + ';font:inherit;';
+    row.dataset.wwCursor = 'link';
     var title = document.createElement('div');
     title.style.cssText = 'display:flex;gap:8px;justify-content:space-between;font-weight:' + (message.read || folder === 'sent' ? '400' : '700') + ';';
     setText(title.appendChild(document.createElement('span')), folder === 'sent' ? '至 ' + message.to : message.from);

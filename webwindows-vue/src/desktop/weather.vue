@@ -1,5 +1,5 @@
 <template>
-  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle" @mousedown="onMouseDown"
+  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle" :data-ww-cursor="isDragging ? 'grabbing' : 'move'" @mousedown="onMouseDown"
     @touchstart.prevent="onTouchStart">
     <!-- 顶部：城市在左，关闭在右 -->
     <div class="weather-header">
@@ -42,7 +42,7 @@ export default {
   },
   computed: {
     rootStyle() {
-      const base = { position: 'absolute', cursor: this.isDragging ? 'move' : 'default' }
+      const base = { position: 'absolute' }
       if (this.hasDragged) {
         base.left = this.position.x + 'px'
         base.top = this.position.y + 'px'
@@ -452,7 +452,7 @@ export default {
   border: none;
   color: #fff;
   font-size: 14px;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
 /* 下部：天气 */

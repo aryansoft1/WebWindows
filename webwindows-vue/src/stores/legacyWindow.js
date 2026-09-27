@@ -68,6 +68,7 @@ function bindWindowBehavior(winEl){
       const handle = document.createElement('div');
       handle.className = `resizer ${resizeDir}`;
       handle.dataset.resizeDir = resizeDir;
+      handle.dataset.wwCursor = `${resizeDir}-resize`;
       handle.setAttribute('aria-hidden', 'true');
       winEl.appendChild(handle);
     });
@@ -152,9 +153,8 @@ function bindWindowBehavior(winEl){
     return d;
   }
   function updateCursor(d){
-    const map = { n:'n-resize', s:'s-resize', e:'e-resize', w:'w-resize',
-                  ne:'ne-resize', nw:'nw-resize', se:'se-resize', sw:'sw-resize' };
-    winEl.style.cursor = map[d] || '';
+    if (d) winEl.dataset.wwCursor = `${d}-resize`;
+    else delete winEl.dataset.wwCursor;
   }
 
   winEl.addEventListener('pointermove', (e)=>{
@@ -298,7 +298,7 @@ function createTaskbarIcon(id, title, iconUrl) {
     icon.style.marginLeft = '6px';
     icon.style.padding = '4px 8px';
     icon.style.borderRadius = '6px';
-    icon.style.cursor = 'pointer';
+    icon.dataset.wwCursor = 'link';
     icon.style.background = 'rgba(255,255,255,0.15)';
     icon.style.color = 'white';
     icon.style.fontSize = '12px';

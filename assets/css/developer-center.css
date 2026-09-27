@@ -30,9 +30,9 @@ h1,h2,h3,p{margin:0}
 .hero p,.section-title p{margin-top:8px;color:var(--muted)}
 .hero pre{display:grid;align-content:center;margin:0;padding:22px;border-radius:14px;background:#111a2b;color:#c7d8ef;box-shadow:0 18px 40px rgba(13,29,56,.2)}
 .actions,.sample-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}
-.button,button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 13px;border:1px solid #cfd8e6;border-radius:9px;background:#fff;color:#344054;cursor:pointer;text-decoration:none}
+.button,button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 13px;border:1px solid #cfd8e6;border-radius:9px;background:#fff;color:#344054;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer);text-decoration:none}
 .button.primary,button.primary{border-color:var(--blue);background:var(--blue);color:#fff}
-button:disabled{cursor:not-allowed;opacity:.5}
+button:disabled{--ww-cursor-state:var(--ww-cursor-not-allowed, not-allowed);cursor:var(--ww-cursor-not-allowed, not-allowed);opacity:.5}
 .release-banner{margin-top:14px;padding:9px 14px;border:1px solid #cfe1f6;border-radius:10px;background:#edf6ff;color:#245781;font-size:12px}
 .release-banner.error{border-color:#f3cbc7;background:#fff1f0;color:#b42318}
 .section-title{display:flex;gap:13px;margin-bottom:22px}

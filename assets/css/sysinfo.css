@@ -16,7 +16,7 @@ body {
       padding: 10px;
       border: none;
       background: #e0e0e0;
-      cursor: pointer;
+      --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
       font-weight: bold;
     }
 

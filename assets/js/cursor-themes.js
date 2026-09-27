@@ -33,6 +33,7 @@
     const observedRoots = new WeakSet();
     const liveRoots = new Set();
     const frameLimitations = new Set();
+    const inlineImages = global.WebWindowsCursorImages || {};
 
     function getAsset(state, themeId = currentTheme, format = 'svg') {
         const id = themes[themeId] ? themeId : 'dreama';
@@ -45,7 +46,9 @@
         const png = getAsset(resolved, themeId, 'png');
         if (!png) return null;
         const [x, y] = hotspot[resolved];
-        return `url("${png}") ${x} ${y}, url("${getAsset(resolved, themeId)}") ${x} ${y}, ${resolved}`;
+        const inline = inlineImages[themeId]?.[resolved];
+        const embedded = inline ? `url("data:image/png;base64,${inline}") ${x} ${y}, ` : '';
+        return `${embedded}url("${png}") ${x} ${y}, url("${getAsset(resolved, themeId)}") ${x} ${y}, ${resolved}`;
     }
 
     const tokenStates = Object.freeze({
@@ -70,7 +73,7 @@
         const lock = ':not(#ww-cursor-manager-specificity)';
         const semantic = [
             ['move', '.window-header, .window-header *, .ww-titlebar, .ww-titlebar *, .weather-widget, .weather-widget *, [draggable="true"], [draggable="true"] *'],
-            ['link', 'a[href], a[href] *, button:not(:disabled), button:not(:disabled) *, select:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, [role="button"], [role="button"] *, [role="checkbox"], [role="switch"], [role="tab"], .button, .button *, .icon, .icon *, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item'],
+            ['link', 'a[href], a[href] *, button:not(:disabled), button:not(:disabled) *, select:not(:disabled), select option:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, [role="button"], [role="button"] *, [role="checkbox"], [role="switch"], [role="tab"], .button, .button *, .icon, .icon *, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item'],
             ['text', 'input:not([type]), input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]), textarea, [contenteditable="true"], [contenteditable="true"] *'],
             ['grab', '[draggable="true"]:not(:active)'],
             ['grabbing', '[draggable="true"]:active'],
@@ -176,7 +179,8 @@
             frameLimitations.delete(frame);
             if (frame.hasAttribute('data-ww-cursor-loading')) {
                 const image = new child.defaultView.Image();
-                image.src = getAsset('default', currentTheme, 'png');
+                const inline = inlineImages[currentTheme]?.default;
+                image.src = inline ? `data:image/png;base64,${inline}` : getAsset('default', currentTheme, 'png');
                 const ready = typeof image.decode === 'function' ? image.decode().catch(() => {}) : Promise.resolve();
                 ready.then(() => {
                     try {

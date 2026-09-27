@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/css/settings.css?v=20260927-cursor-manager-1" />
+    <link rel="stylesheet" href="assets/css/settings.css?v=20260928-cursor-picker-1" />
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
-    <script src="assets/js/cursor-themes.js?v=7"></script>
+    <script src="assets/js/cursor-theme-inline.js?v=1"></script>
+    <script src="assets/js/cursor-themes.js?v=8"></script>
     <script defer src="assets/js/tw.js?v=20260927-cursor-preview-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
@@ -41,7 +42,7 @@
                     <h3>语言与区域</h3>
                     <div class="settings-card">
                         <label>显示语言</label>
-                        <select id="langSelect">
+                        <select id="langSelect" class="ww-cursor-picker">
                             <option value="zh">简体中文</option>
                             <option value="tw">繁體中文</option>
                             <option value="en">English</option>
@@ -50,7 +51,7 @@
                     </div>
                     <div class="settings-card">
                         <label>地区设置</label>
-                        <select id="regionSelect">
+                        <select id="regionSelect" class="ww-cursor-picker">
                             <option value="CN">中国大陆（北京时间）</option>
                             <option value="JP">日本（日本标准时间）</option>
                             <option value="TW">台湾（台北时间）</option>
@@ -74,7 +75,7 @@
                     <h3>鼠标指针</h3>
                     <div class="settings-card">
                         <label for="cursorThemeSelect">指针主题</label>
-                        <select id="cursorThemeSelect">
+                        <select id="cursorThemeSelect" class="ww-cursor-picker">
                             <option value="dreama">Dreama</option>
                             <option value="classic">Classic</option>
                             <option value="soft">Soft</option>
@@ -110,7 +111,7 @@
 
                     <div class="settings-card">
                         <label>界面缩放</label>
-                        <select id="scaleSelect">
+                        <select id="scaleSelect" class="ww-cursor-picker">
                             <option value="0.75">75%</option>
                             <option value="1" selected>100%</option>
                             <option value="1.25">125%</option>
@@ -190,7 +191,7 @@
                                 <p>仅在你点击后测试，不获取或展示 IP。平均值只统计预热后的稳定采样区间；移动网络可能产生流量费用。</p>
                             </div>
                             <label class="network-speed-profile">测试档位
-                                <select id="networkSpeedProfile" aria-label="测速流量档位">
+                                <select id="networkSpeedProfile" class="ww-cursor-picker" aria-label="测速流量档位">
                                     <option value="light">轻量（约 2–4 MB）</option>
                                     <option value="standard">标准（自适应，最多约 24 MB）</option>
                                 </select>
@@ -274,7 +275,7 @@
 
                     <div class="function-toolbar settings-card">
                         <input id="functionSearch" type="search" placeholder="搜索功能" aria-label="搜索功能">
-                        <select id="functionFilter" aria-label="筛选功能">
+                        <select id="functionFilter" class="ww-cursor-picker" aria-label="筛选功能">
                             <option value="all">全部</option>
                             <option value="installed">我的功能</option>
                             <option value="available">可添加功能</option>

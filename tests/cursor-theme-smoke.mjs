@@ -16,6 +16,17 @@ try {
   browser = await chromium.launch({ headless: true, executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${port}/settings.html`, { waitUntil: 'domcontentloaded' });
+  const pickerCoverage = await page.locator('#cursorThemeSelect').evaluate((select) => ({
+    supported: CSS.supports('appearance', 'base-select'),
+    appearance: getComputedStyle(select).appearance,
+    popupAppearance: getComputedStyle(select, '::picker(select)').appearance,
+    optionCursor: getComputedStyle(select.options[0]).cursor
+  }));
+  assert.equal(pickerCoverage.supported, true, 'Chromium supports styleable select popups');
+  assert.equal(pickerCoverage.appearance, 'base-select');
+  assert.equal(pickerCoverage.popupAppearance, 'base-select');
+  assert.match(pickerCoverage.optionCursor, /^url\("data:image\/png;base64,/);
+  assert.match(pickerCoverage.optionCursor, /dreama\/pointer\.png/);
   const rasterAssets = await page.evaluate(async () => {
     const manager = window.WebWindows.cursor;
     return Promise.all(Object.keys(manager.themes).flatMap((theme) => manager.states.map(async (state) => {
@@ -51,6 +62,7 @@ try {
   const directionState = { n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize', nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
   for (const [theme, cursors] of Object.entries(result.checks)) {
     for (const state of result.states) {
+      assert.match(cursors[state], /^url\("data:image\/png;base64,/);
       assert.match(cursors[state], new RegExp(`/assets/cursors/${theme}/${state}\\.png.*?/assets/cursors/${theme}/${state}\\.svg`), `${theme}/${state}`);
     }
     for (const [direction, state] of Object.entries(directionState)) {
@@ -60,6 +72,12 @@ try {
   assert.equal(result.saved, 'dreama');
   await page.locator('[data-settings-tab="cursorTab"]').click();
   assert.equal(await page.locator('.cursor-preview-grid img').count(), 13);
+  await page.locator('#cursorThemeSelect').click();
+  assert.match(await page.locator('#cursorThemeSelect').evaluate((select) =>
+    getComputedStyle(select, '::picker(select)').cursor
+  ), /^url\("data:image\/png;base64,/);
+  await page.locator('#cursorThemeSelect option[value="classic"]').click();
+  assert.equal(await page.inputValue('#cursorThemeSelect'), 'classic', 'styleable picker selects a theme by mouse');
   for (const [language, labels] of Object.entries({
     zh: ['鼠标指针', '默认'], tw: ['滑鼠指標', '預設'],
     en: ['Mouse Pointer', 'Default'], jp: ['マウスポインター', '標準']

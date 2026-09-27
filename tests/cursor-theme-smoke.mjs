@@ -16,6 +16,17 @@ try {
   browser = await chromium.launch({ headless: true, executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
   const page = await browser.newPage();
   await page.goto(`http://127.0.0.1:${port}/settings.html`, { waitUntil: 'domcontentloaded' });
+  const rasterAssets = await page.evaluate(async () => {
+    const manager = window.WebWindows.cursor;
+    return Promise.all(Object.keys(manager.themes).flatMap((theme) => manager.states.map(async (state) => {
+      const image = new Image();
+      image.src = manager.getAsset(state, theme, 'png');
+      try { await image.decode(); return image.naturalWidth === 32 && image.naturalHeight === 32; }
+      catch { return false; }
+    })));
+  });
+  assert.equal(rasterAssets.length, 65);
+  assert.equal(rasterAssets.every(Boolean), true, 'all PNG cursor assets decode at 32px');
   const result = await page.evaluate(() => {
     const manager = window.WebWindows.cursor;
     const checks = {};
@@ -40,10 +51,10 @@ try {
   const directionState = { n: 'ns-resize', s: 'ns-resize', e: 'ew-resize', w: 'ew-resize', nw: 'nwse-resize', se: 'nwse-resize', ne: 'nesw-resize', sw: 'nesw-resize' };
   for (const [theme, cursors] of Object.entries(result.checks)) {
     for (const state of result.states) {
-      assert.match(cursors[state], new RegExp(`/assets/cursors/${theme}/${state}\\.svg`), `${theme}/${state}`);
+      assert.match(cursors[state], new RegExp(`/assets/cursors/${theme}/${state}\\.png.*?/assets/cursors/${theme}/${state}\\.svg`), `${theme}/${state}`);
     }
     for (const [direction, state] of Object.entries(directionState)) {
-      assert.match(cursors[direction], new RegExp(`/assets/cursors/${theme}/${state}\\.svg`), `${theme}/${direction}`);
+      assert.match(cursors[direction], new RegExp(`/assets/cursors/${theme}/${state}\\.png`), `${theme}/${direction}`);
     }
   }
   assert.equal(result.saved, 'dreama');
@@ -80,9 +91,12 @@ try {
     Object.fromEntries(handles.map((handle) => [handle.dataset.resizeDir, getComputedStyle(handle).cursor]))
   );
   for (const [direction, state] of Object.entries(directionState)) {
-    assert.match(actualHandles[direction], new RegExp(`/assets/cursors/classic/${state}\\.svg`), `actual window ${direction}`);
+    assert.match(actualHandles[direction], new RegExp(`/assets/cursors/classic/${state}\\.png`), `actual window ${direction}`);
   }
-  assert.match(await page.locator('.window-header').first().evaluate((element) => getComputedStyle(element).cursor), /classic\/move\.svg/);
+  assert.match(await page.locator('.window-header').first().evaluate((element) => getComputedStyle(element).cursor), /classic\/move\.png/);
+  const titleButtons = await page.locator('.window-header .button').evaluateAll((buttons) => buttons.map((button) => getComputedStyle(button).cursor));
+  assert.equal(titleButtons.length, 3);
+  for (const cursor of titleButtons) assert.match(cursor, /classic\/pointer\.png/);
   const coverage = await page.evaluate(() => {
     const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; document.body.appendChild(checkbox);
     const radio = document.createElement('input'); radio.type = 'radio'; document.body.appendChild(radio);
@@ -102,8 +116,17 @@ try {
     };
   });
   assert.equal(coverage.desktop, desktopBefore);
-  for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.svg/, state);
-  assert.match(coverage.scrollbar, /classic\/move\.svg/);
+  const desktopBlank = await page.evaluate(() => getComputedStyle(document.elementFromPoint(1200, 300)).cursor);
+  assert.match(desktopBlank, /classic\/default\.png/, 'blank desktop after opening a window');
+  await page.evaluate(() => {
+    const lateStyle = document.createElement('style');
+    lateStyle.textContent = '.desktop { cursor: default !important; }';
+    document.head.appendChild(lateStyle);
+  });
+  await page.waitForFunction(() => document.head.lastElementChild?.id === 'ww-cursor-theme-style');
+  assert.match(await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor), /classic\/default\.png/, 'theme survives late styles');
+  for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
+  assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {
     const nested = document.querySelector('.window iframe')?.contentDocument?.querySelector('iframe');
     return !!nested?.contentDocument?.getElementById('ww-cursor-theme-style');

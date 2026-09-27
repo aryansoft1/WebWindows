@@ -30,24 +30,24 @@
     const observedDocuments = new WeakSet();
     const observedFrames = new WeakSet();
 
-    function getAsset(state, themeId = currentTheme) {
+    function getAsset(state, themeId = currentTheme, format = 'svg') {
         const id = themes[themeId] ? themeId : 'dreama';
         const resolved = aliases[state] || state;
-        return states.includes(resolved) ? `/assets/cursors/${id}/${resolved}.svg` : null;
+        return states.includes(resolved) ? `/assets/cursors/${id}/${resolved}.${format === 'png' ? 'png' : 'svg'}` : null;
     }
 
     function getCursor(state, themeId = currentTheme) {
         const resolved = aliases[state] || state;
-        const asset = getAsset(resolved, themeId);
-        if (!asset) return null;
+        const png = getAsset(resolved, themeId, 'png');
+        if (!png) return null;
         const [x, y] = hotspot[resolved];
-        return `url("${asset}") ${x} ${y}, ${resolved}`;
+        return `url("${png}") ${x} ${y}, url("${getAsset(resolved, themeId)}") ${x} ${y}, ${resolved}`;
     }
 
     function rules() {
         const selectors = {
             default: 'html, body, .desktop, .taskbar, #start-menu, .window, .window-content, .window-iframe, iframe, .vw-taskbar, .battery-indicator, #taskbar-datetime, [data-cursor-state="default"], [style*="cursor: default"], [style*="cursor:default"]',
-            pointer: 'button:not(:disabled), a[href], select:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, .icon, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item, [role="button"]:not([aria-disabled="true"]), [role="checkbox"]:not([aria-disabled="true"]), [role="switch"]:not([aria-disabled="true"]), [role="tab"]:not([aria-disabled="true"]), [style*="cursor: pointer"], [style*="cursor:pointer"]',
+            pointer: 'button:not(:disabled), .window-header .button, a[href], select:not(:disabled), input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="color"]):not(:disabled), label[for], summary, .icon, .taskbar-app, .taskbar-item, .vw-task, .start-button, .start-menu li, .context-menu-item, [role="button"]:not([aria-disabled="true"]), [role="checkbox"]:not([aria-disabled="true"]), [role="switch"]:not([aria-disabled="true"]), [role="tab"]:not([aria-disabled="true"]), [style*="cursor: pointer"], [style*="cursor:pointer"]',
             text: 'input:not([type]), input:is([type="text"], [type="search"], [type="email"], [type="url"], [type="tel"], [type="password"], [type="number"]), textarea, [contenteditable="true"], [style*="cursor: text"]',
             move: '.window-header, .window-header .title, [draggable="true"], .weather-widget, [style*="cursor: move"], [style*="cursor:move"], [style*="cursor: grab"], [style*="cursor: grabbing"], [data-cursor-state="move"]',
             'not-allowed': ':disabled, [aria-disabled="true"], [style*="cursor: not-allowed"], [data-cursor-state="not-allowed"]',
@@ -73,7 +73,9 @@
             style.id = 'ww-cursor-theme-style';
             doc.head.appendChild(style);
         }
-        style.textContent = rules();
+        if (doc.head.lastElementChild !== style) doc.head.appendChild(style);
+        const css = rules();
+        if (style.textContent !== css) style.textContent = css;
         doc.documentElement.dataset.wwCursorTheme = currentTheme;
     }
 
@@ -102,6 +104,14 @@
             ))) applyToFrames(doc);
         });
         observer.observe(doc.body, { childList: true, subtree: true });
+        const headObserver = new MutationObserver((records) => {
+            const style = doc.getElementById('ww-cursor-theme-style');
+            if (!style) { applyToDocument(doc); return; }
+            if (style !== doc.head.lastElementChild && records.some((record) =>
+                Array.from(record.addedNodes).some((node) => node.nodeType === 1 && ['LINK', 'STYLE'].includes(node.tagName))
+            )) doc.head.appendChild(style);
+        });
+        headObserver.observe(doc.head, { childList: true });
     }
 
     function setTheme(themeId) {

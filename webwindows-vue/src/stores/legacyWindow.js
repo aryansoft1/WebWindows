@@ -595,7 +595,7 @@ function openCloudWindow() {
 
     padTitleBarTouch(win, titleBar);
 
-    content.src = 'https://y0.hk/jpshop/';
+    content.src = '/jpshop/';
     content.style.width = "100%";
     content.style.height = 'calc(100vh - 46px)';
     content.style.border = "none";

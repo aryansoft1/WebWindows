@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.11",
+  "releaseVersion": "2026.09.28.12",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T08:57:15.311Z",
+  "generatedAt": "2026-09-28T09:06:27.269Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -318,7 +318,7 @@
     "assets/js/cursor-themes.js",
     "cloud/browser/file-selection.js"
   ],
-  "previousReleaseVersion": "2026.09.28.10",
+  "previousReleaseVersion": "2026.09.28.11",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -965,8 +965,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "bbb2173e267a03bdd7161408279e9d7d862e54e55e03f9f7f63875e16b07d19d",
-      "size": 33244
+      "sha256": "4924db624cabec9662dc2226a46f4d0420da3059c9299512dcd95bfee5378891",
+      "size": 34794
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
@@ -985,7 +985,7 @@
       "size": 2554
     },
     "settings.html": {
-      "sha256": "7c2491b6a6bbdf4ba33ee9eeceb076dc299fe0ec31339094020160ebc8150e8f",
+      "sha256": "c6a19078dedaa374b7951cd833aa7c7f5bd34a0e9f0160378ac119907287f73b",
       "size": 24015
     },
     "software.html": {
@@ -1560,13 +1560,10 @@
       "size": 12660
     }
   },
-  "releaseScope": "settings-cursor-icon",
+  "releaseScope": "cursor-cache-refresh",
   "uploadFiles": [
-    "assets/icons/settings-cursor.svg",
     "settings.html",
-    "assets/js/cursor-theme-inline.js",
-    "assets/js/cursor-themes.js",
-    "cloud/browser/file-selection.js",
+    "index.html",
     "deploy/ftp-manifest.json"
   ]
 }

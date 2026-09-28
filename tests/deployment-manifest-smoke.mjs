@@ -325,6 +325,12 @@ if (manifest.releaseScope === "navigation-map") {
     assert.ok(!uploadFiles.includes(alreadyManaged),
       `SystemManager release must not re-upload unchanged dependency ${alreadyManaged}`);
   }
+} else if (manifest.releaseScope === "cursor-cache-refresh") {
+  assert.deepEqual(uploadFiles, [
+    "settings.html",
+    "index.html",
+    "deploy/ftp-manifest.json"
+  ], "cursor cache refresh must upload both entry references and the manifest last");
 } else if (manifest.releaseScope === "settings-cursor-icon") {
   assert.deepEqual(uploadFiles, [
     "assets/icons/settings-cursor.svg",

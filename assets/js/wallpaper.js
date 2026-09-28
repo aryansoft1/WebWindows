@@ -2,14 +2,9 @@
   "use strict";
 
   const LIBRARY_KEY = "webwindows.wallpaper.library.v1";
-  const defaults = [
-    "assets/wallpapers/wall1.jpg",
-    "assets/wallpapers/wall2.jpg",
-    "assets/wallpapers/wall3.jpg",
-    "assets/wallpapers/wall4.jpg",
-    "assets/wallpapers/wall5.jpg",
-    "assets/wallpapers/wall6.jpg"
-  ];
+  const MANIFEST_URL = "assets/data/wallpaper-index.json";
+  let builtInWallpapers = [];
+  let manifestRequested = false;
 
   function readCloudLibrary() {
     try {
@@ -23,9 +18,39 @@
     }
   }
 
+  function normalizeEntry(entry) {
+    if (typeof entry === "string") return { url: entry, name: "" };
+    if (!entry?.url) return null;
+    return { url: entry.url, name: entry.name || "" };
+  }
+
+  function loadBuiltInWallpapers() {
+    if (manifestRequested) return Promise.resolve();
+    manifestRequested = true;
+    return fetch(MANIFEST_URL, { cache: "no-cache" })
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((payload) => {
+        const entries = Array.isArray(payload) ? payload : payload?.wallpapers;
+        builtInWallpapers = (Array.isArray(entries) ? entries : [])
+          .map(normalizeEntry)
+          .filter(Boolean);
+      })
+      .catch(() => {
+        builtInWallpapers = [];
+        manifestRequested = false;
+      });
+  }
+
   function wallpaperItems() {
-    const builtIn = (Array.isArray(window.wallpaperList) ? window.wallpaperList : defaults)
-      .map((url) => ({ url, name: "内置壁纸" }));
+    const injected = Array.isArray(window.wallpaperList) ? window.wallpaperList : null;
+    const source = (injected || builtInWallpapers).map(normalizeEntry).filter(Boolean);
+    const builtIn = source.map((item) => ({
+      url: item.url,
+      name: item.name || "内置壁纸"
+    }));
     const seen = new Set();
     return [...builtIn, ...readCloudLibrary()].filter((item) => {
       if (seen.has(item.url)) return false;
@@ -70,8 +95,13 @@
     });
   }
 
+  function refreshWallpaperLibrary() {
+    return loadBuiltInWallpapers().then(renderWallpaperLibrary);
+  }
+
   window.renderWallpaperLibrary = renderWallpaperLibrary;
-  document.addEventListener("DOMContentLoaded", renderWallpaperLibrary);
+  window.refreshWallpaperLibrary = refreshWallpaperLibrary;
+  document.addEventListener("DOMContentLoaded", refreshWallpaperLibrary);
   window.addEventListener("storage", (event) => {
     if (event.key === LIBRARY_KEY || event.key === "selectedWallpaper") {
       renderWallpaperLibrary();

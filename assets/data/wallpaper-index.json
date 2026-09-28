@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-28T13:36:21.010Z",
+  "sourceDirectory": "assets/wallpapers",
+  "count": 6,
+  "wallpapers": [
+    {
+      "path": "assets/wallpapers/wall1.jpg",
+      "name": "wall1",
+      "bytes": 167948
+    },
+    {
+      "path": "assets/wallpapers/wall2.jpg",
+      "name": "wall2",
+      "bytes": 28790
+    },
+    {
+      "path": "assets/wallpapers/wall3.jpg",
+      "name": "wall3",
+      "bytes": 448775
+    },
+    {
+      "path": "assets/wallpapers/wall4.jpg",
+      "name": "wall4",
+      "bytes": 1937070
+    },
+    {
+      "path": "assets/wallpapers/wall5.jpg",
+      "name": "wall5",
+      "bytes": 867902
+    },
+    {
+      "path": "assets/wallpapers/wall6.jpg",
+      "name": "wall6",
+      "bytes": 1602572
+    }
+  ]
+}

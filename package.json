@@ -8,7 +8,8 @@
     "build:production-broker": "npm run build:developer-studio:validator && vite build --config webwindows-vue/vite.production-broker.config.js",
     "build:production-rehearsal-manifest": "node tools/build-production-rehearsal-manifest.mjs",
     "test:e2e": "playwright test",
-    "serve:static": "node tools/static-server.mjs"
+    "serve:static": "node tools/static-server.mjs",
+    "build:wallpapers": "node tools/build-wallpaper-manifest.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

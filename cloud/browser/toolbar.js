@@ -73,7 +73,16 @@
     if (language.startsWith("en")) return "en";
     return "zh";
   };
-  const cloudI18n = window.WebWindowsCloudI18n;
+  // The resource page can load independently of the desktop language adapter.
+  // Keep directory loading and selection usable with its own existing labels.
+  const cloudI18n = window.WebWindowsCloudI18n || {
+    language: () => window.localStorage.getItem('lang') || document.body.dataset.language,
+    text(key, values, language) {
+      const template = uiText[key]?.[language || currentLanguage] || uiText[key]?.zh || key;
+      return template.replace(/\{([^}]+)\}/g, (match, name) => values?.[name] ?? match);
+    },
+    apply() {} // applyDirectoryDisplayNames already applies the local labels.
+  };
   let currentLanguage = normalizeLanguage(
     cloudI18n?.language() || window.localStorage.getItem("lang") || document.body.dataset.language
   );

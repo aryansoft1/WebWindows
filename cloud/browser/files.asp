@@ -393,7 +393,7 @@ itemCount = subfolders.Count + visibleFileCount
   </div>
 
   <script src="file-selection.js?v=20260928-selection-2"></script>
-  <script src="toolbar.js?v=20260928-selection-2"></script>
+  <script src="toolbar.js?v=20260928-selection-3"></script>
   <% If Not pickerMode Then %><script src="device-locations.js?v=20260809-device-1"></script><% End If %>
 </body>
 </html>

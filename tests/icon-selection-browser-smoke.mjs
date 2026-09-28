@@ -75,10 +75,13 @@ try {
   const files = Array.from({ length: 5 }, (_, i) => i === 0
     ? '<a class="file-item folder" id="file-0" data-kind="folder" data-path="Folder" data-name="Folder" href="files.asp?path=Folder"><span class="file-name">Folder</span></a>'
     : `<button class="file-item file" id="file-${i}" data-kind="file" data-path="File${i}.txt" data-name="File${i}.txt"><span class="file-name">File ${i}</span></button>`).join('');
-  cloud = cloud.replace('<script src="file-selection.js', `<script>document.querySelector('.file-list').className='file-list large';document.querySelector('.file-list').innerHTML=${JSON.stringify(files)};window.WebWindowsCloudI18n={language:()=> 'zh',apply(){},text:key=>key};document.querySelector('#device-panel').hidden=true;</script><script src="file-selection.js`);
-  await page.route('**/getFolders.asp?*', route => route.fulfill({ json: [] }));
+  cloud = cloud.replace('<script src="file-selection.js', `<script>document.querySelector('.file-list').className='file-list large';document.querySelector('.file-list').innerHTML=${JSON.stringify(files)};document.querySelector('#device-panel').hidden=true;</script><script src="file-selection.js`);
+  await page.route('**/getFolders.asp?*', route => route.fulfill({ json: [{name:'Documents',path:'Documents',children:[]}] }));
   await page.route('**/cloud/browser/selection-fixture.html', route => route.fulfill({ contentType: 'text/html', body: cloud }));
   await page.goto(`${origin}/cloud/browser/selection-fixture.html`);
+  await page.waitForSelector('#folder-tree button');
+  assert.equal(await page.evaluate(() => window.WebWindowsCloudI18n), undefined, 'real page has no external language adapter');
+  assert.match(await page.locator('#folder-tree').innerText(), /官方文档/, 'directory tree initializes without external language adapter');
   await page.locator('#file-0').click();
   assert.match(page.url(), /selection-fixture/, 'folder single click selects without navigation');
   await page.locator('#file-1').click({ modifiers: ['Control'] });

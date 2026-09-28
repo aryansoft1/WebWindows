@@ -19,7 +19,10 @@ if (!validId) {
       document.getElementById("news-breadcrumb-title").textContent = title
       document.getElementById("news-category").textContent = category
       document.getElementById("news-meta").textContent = `${category} ｜ ${data.created_at || ""}`
-      document.getElementById("news-content").innerHTML = data.content || "<p>这篇新闻暂时没有正文。</p>"
+      const rawContent = String(data.content || "这篇新闻暂时没有正文。")
+      const contentElement = document.getElementById("news-content")
+      window.WebWindowsNewsContent.load(contentElement, rawContent)
+      contentElement.style.whiteSpace = "pre-wrap"
 
       // 加载上一篇
       fetch("getPrevNextNews.asp?dir=prev&id=" + encodeURIComponent(id), { credentials: "same-origin" })

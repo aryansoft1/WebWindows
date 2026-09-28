@@ -20,6 +20,25 @@ Function JsonText(ByVal value)
   JsonText = text
 End Function
 
+Function ConfiguredAdminIdleMinutes()
+  Dim idleRs, minutes
+  minutes = 30
+  On Error Resume Next
+  Set idleRs = conn.Execute("SELECT setting_value FROM webwindows_admin_settings " & _
+    "WHERE setting_key='admin_idle_minutes' LIMIT 1")
+  If Err.Number = 0 Then
+    If Not idleRs.EOF Then
+      If IsNumeric(idleRs("setting_value")) Then minutes = CLng(idleRs("setting_value"))
+    End If
+  End If
+  If IsObject(idleRs) Then idleRs.Close
+  Set idleRs = Nothing
+  Err.Clear
+  On Error GoTo 0
+  If minutes < 5 Or minutes > 120 Then minutes = 30
+  ConfiguredAdminIdleMinutes = minutes
+End Function
+
 Sub Fail(ByVal statusCode, ByVal code, ByVal message)
   Select Case CLng(statusCode)
     Case 400: Response.Status = "400 Bad Request"
@@ -80,6 +99,7 @@ ElseIf action = "status" And method = "GET" Then
   Dim statusTokenJson
   statusTokenJson = ""
   If authenticated Then
+    Session.Timeout = ConfiguredAdminIdleMinutes()
     statusTokenJson = ",""csrfToken"":""" & AdminSecurityEnsureToken() & """"
   End If
   Response.Write "{""ok"":true,""authenticated"":" & LCase(CStr(authenticated)) & _
@@ -87,16 +107,16 @@ ElseIf action = "status" And method = "GET" Then
 
 ElseIf action = "login" And method = "POST" Then
   AdminSecurityRequirePreAuthMutation "admin-auth", "login"
-  Dim username, passwordHash, captchaValue, expectedCaptcha, captchaCreated
+  Dim username, passwordRaw, captchaValue, expectedCaptcha, captchaCreated
   username = LCase(Trim(CStr(Request.Form("username"))))
-  passwordHash = LCase(Trim(CStr(Request.Form("password"))))
+  passwordRaw = CStr(Request.Form("password"))
   captchaValue = Trim(CStr(Request.Form("captcha")))
   expectedCaptcha = Trim(CStr(Session("admin_captcha_answer")))
   captchaCreated = Session("admin_captcha_created")
   Session("admin_captcha_answer") = Empty
   Session("admin_captcha_created") = Empty
 
-  If username = "" Or passwordHash = "" Or captchaValue = "" Then
+  If username = "" Or passwordRaw = "" Or captchaValue = "" Then
     Fail 400, "FIELDS_REQUIRED", "请填写账号、密码和验证码。"
   End If
   If expectedCaptcha = "" Or captchaValue <> expectedCaptcha Then
@@ -112,25 +132,17 @@ ElseIf action = "login" And method = "POST" Then
     Fail 401, "ADMIN_CREDENTIALS_INVALID", "管理员账号或密码错误。"
   End If
 
-  Dim hashRegex
-  Set hashRegex = New RegExp
-  hashRegex.Pattern = "^[a-f0-9]{32}$"
-  hashRegex.IgnoreCase = True
-  If Not hashRegex.Test(passwordHash) Then
-    Set hashRegex = Nothing
-    Fail 400, "PASSWORD_FORMAT_INVALID", "密码格式无效。"
-  End If
-  Set hashRegex = Nothing
+  If Len(passwordRaw) > 128 Then Fail 400, "PASSWORD_FORMAT_INVALID", "密码长度无效。"
 
   Dim loginCmd, loginRs
   Set loginCmd = Server.CreateObject("ADODB.Command")
   With loginCmd
     .ActiveConnection = conn
     .CommandText = "SELECT id,username,nickname FROM webwindows_users " & _
-      "WHERE username=? AND password=? LIMIT 1"
+      "WHERE username=? AND password=MD5(?) LIMIT 1"
     .CommandType = 1
     .Parameters.Append .CreateParameter(, 200, 1, 50, username)
-    .Parameters.Append .CreateParameter(, 200, 1, 50, passwordHash)
+    .Parameters.Append .CreateParameter(, 200, 1, 128, passwordRaw)
     Set loginRs = .Execute
   End With
   If loginRs.EOF Then
@@ -150,7 +162,7 @@ ElseIf action = "login" And method = "POST" Then
   End If
   Session("webwindows_admin") = True
   Session("webwindows_admin_since") = Now()
-  Session.Timeout = 120
+  Session.Timeout = ConfiguredAdminIdleMinutes()
   loginRs.Close
   Set loginRs = Nothing
   Set loginCmd = Nothing

@@ -85,23 +85,22 @@ for (const client of [securityClient, loginClient, shellClient, platformClient, 
   assert.doesNotMatch(client, /WebWindowsNative|NativeAdapter|ProductionBrokerContext/);
 }
 assert.match(securityClient, /let csrfToken = ""/);
-assert.match(securityClient, /Object\.freeze\(\{ ready, authorize, invalidate \}\)/);
+assert.match(securityClient, /Object\.freeze\(\{ ready, authorize, read, invalidate \}\)/);
 assert.doesNotMatch(securityClient, /localStorage|sessionStorage|document\.cookie/);
 assert.match(loginClient, /payload\.csrfToken/);
 assert.match(loginClient, /"X-WebWindows-CSRF": csrfToken/);
 assert.match(platformClient, /WebWindowsAdminSecurity\.authorize/);
 assert.match(catalogClient, /WebWindowsAdminSecurity\.authorize/);
 assert.match(usersClient, /WebWindowsAdminSecurity\.authorize/);
-assert.match(dcClient, /WebWindowsAdminSecurity\.authorize/);
+assert.match(dcClient, /security\.authorize/);
 assert.doesNotMatch(usersClient, /row\.innerHTML/);
 assert.doesNotMatch(dcClient, /row\.innerHTML/);
 
 assert.match(webConfig, /Content-Security-Policy[^\n]*frame-ancestors 'self'/);
 assert.match(webConfig, /X-Frame-Options[^\n]*SAMEORIGIN/);
 assert.match(webConfig, /Referrer-Policy[^\n]*same-origin/);
-assert.match(loginPage, /blueimp-md5@2\.19\.0/);
-assert.match(loginPage, /integrity="sha384-JmVtRz6RWiXnA14QbIOJzPuU3MidULOpBP66deeLLyyoF4Tr\/gZlbkHkL6vTthxH"/);
-assert.match(loginPage, /crossorigin="anonymous"/);
+assert.doesNotMatch(loginPage, /blueimp-md5|cdn\.jsdelivr\.net/);
+assert.match(auth, /password=MD5\(\?\)/);
 assert.match(doc, /CSRF does not defend a trusted-origin XSS/);
 assert.match(doc, /Classic ASP does not expose a portable application-level Session ID regeneration API/);
 assert.match(checklist, /Admin CSRF application contract/);

@@ -1,55 +1,35 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/admin-security.asp"-->
 <%
-Response.Charset = "utf-8"
 Response.ContentType = "application/json"
-
-If Err.Number <> 0 Then
-    Response.Write "{""error"":""连接数据库失败：" & Replace(Err.Description, """", "'") & """}"
-    Response.End
-End If
-
-sql = "SELECT * FROM webwindows_datacenters ORDER BY id ASC"
-Set rs = conn.Execute(sql)
-
-If Err.Number <> 0 Then
-    If conn Is Nothing Then
-        Response.Write "{""error"":""数据库连接对象 conn 缺失""}"
-        Response.End
-    End If
-    Response.Write "{""error"":""SQL 查询失败：" & Replace(Err.Description, """", "'") & """}"
-    Response.End
-End If
-
-Dim json : json = "["
+Response.Charset = "UTF-8"
+Response.CodePage = 65001
+AdminSecurityRequireRead "system-manager", "get-datacenters"
+Dim rs, json, enabledValue, checkTime, quotaValue
+Set rs = conn.Execute("SELECT id,name,api_url,api_key,enabled,description,status," & _
+  "last_check_time,last_check_detail,user_quota_mb FROM webwindows_datacenters ORDER BY id ASC")
+json = "["
 Do Until rs.EOF
-    Dim checkTime
-    If IsNull(rs("last_check_time")) Then
-        checkTime = ""
-    Else
-        checkTime = FormatDateTime(rs("last_check_time"), 1)
-    End If
-
-    json = json & "{"
-    json = json & """id"":" & rs("id") & ","
-    json = json & """name"":""" & Replace(rs("name"), """", "\""") & ""","
-    json = json & """api_url"":""" & Replace(rs("api_url"), """", "\""") & ""","
-    json = json & """api_key"":""" & Replace(rs("api_key"), """", "\""") & ""","
-    json = json & """enabled"":" & LCase(CStr(rs("enabled"))) & ","
-    json = json & """description"":""" & Replace(rs("description") & "", """", "\""") & ""","
-    json = json & """last_check_time"":""" & Replace(checkTime, """", "\""") & ""","
-    json = json & """status"":""" & Replace(rs("status") & "", """", "\""") & """"
-    json = json & "},"
-    rs.MoveNext
+  If Len(json) > 1 Then json = json & ","
+  enabledValue = "false"
+  If CBool(rs("enabled")) Then enabledValue = "true"
+  checkTime = ""
+  If Not IsNull(rs("last_check_time")) Then checkTime = CStr(rs("last_check_time"))
+  quotaValue = 1024
+  If Not IsNull(rs("user_quota_mb")) Then quotaValue = CLng(rs("user_quota_mb"))
+  json = json & "{""id"":" & CLng(rs("id")) & _
+    ",""name"":""" & AdminSecurityJson(rs("name")) & _
+    """,""api_url"":""" & AdminSecurityJson(rs("api_url")) & _
+    """,""api_key_configured"":" & LCase(CStr(Len(CStr(rs("api_key") & "")) > 0)) & _
+    ",""enabled"":" & enabledValue & _
+    ",""description"":""" & AdminSecurityJson(rs("description")) & _
+    """,""user_quota_mb"":" & quotaValue & _
+    ",""last_check_time"":""" & AdminSecurityJson(checkTime) & _
+    """,""last_check_detail"":""" & AdminSecurityJson(rs("last_check_detail")) & _
+    """,""status"":""" & AdminSecurityJson(rs("status")) & """}"
+  rs.MoveNext
 Loop
-
-If Right(json, 1) = "," Then json = Left(json, Len(json) - 1)
-json = json & "]"
-
 rs.Close
-Set rs = Nothing
-conn.Close
-Set conn = Nothing
-
-Response.Write json
+Response.Write json & "]"
 %>

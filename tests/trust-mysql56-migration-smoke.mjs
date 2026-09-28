@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+const frozen=readFileSync('database/migrations/001_webwindows_trust_schema.sql','utf8');
+const compat=readFileSync('database/migrations/008_mysql56_trust_index_compat.sql','utf8').replace(/\r\n/g,'\n').split('\n').filter(line=>!line.startsWith('--')).join('\n').trim();
+const original=frozen.match(/CREATE TABLE IF NOT EXISTS webwindows_published_releases \([\s\S]*?ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;/)[0];
+assert.equal(compat,original.replace('app_version VARCHAR(40) NOT NULL,','app_version VARCHAR(40) CHARACTER SET ascii COLLATE ascii_general_ci NOT NULL,'));
+assert.ok(160*4+40<=767);assert.match(compat,/UNIQUE KEY uk_published_release_version \(app_id,app_version\)/);assert.doesNotMatch(compat,/app_version\(\d+\)|SET GLOBAL|DROP/);
+const validator=readFileSync('server-tools/developer-package-validator/Program.cs','utf8');assert.match(validator,/SafeVersion = new Regex\("\^\[0-9\]/);
+const gate=readFileSync('inc/trust-schema.asp','utf8');assert.ok(gate.includes(createHash('sha256').update(Buffer.from(frozen)).digest('hex')));
+const repair=readFileSync('tools/repair-trust-schema-mysql56.py','utf8');assert.match(repair,/read_timeout=3600/);assert.match(repair,/Existing data changed/);assert.match(repair,/before.json/);assert.match(repair,/cursor.execute\(verify\)/);assert.ok(repair.indexOf('Schema verification incomplete')<repair.indexOf('INSERT INTO webwindows_schema_migrations'));
+console.log('MySQL 5.6 migration passed: unchanged frozen schema, only ASCII validated version column, full unique index within 767 bytes, backups/data comparison before success registration');

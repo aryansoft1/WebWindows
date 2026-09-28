@@ -1,222 +1,122 @@
-// datacenter.js
-let currentEditId = null;
-function openDataCenterForm(name = '', url = '') {
-  document.getElementById('centerName').value = name;
-  document.getElementById('centerURL').value = url;
-  document.getElementById('dataCenterModal').classList.remove('hidden');
-}
+(function () {
+  "use strict";
+  let centers = [];
+  let currentEditId = null;
+  const security = window.WebWindowsAdminSecurity;
+  const status = () => document.getElementById("dataCenterStatus");
+  const field = id => document.getElementById(id);
 
-function closeDataCenterForm() {
-  document.getElementById('dataCenterModal').classList.add('hidden');
-}
-
-function editDataCenter(id) {
-  fetch("/admin_api/getDatacenters.asp")
-    .then(res => res.json())
-    .then(res => {
-      const item = res.find(d => d.id == id);
-      console.log(res)
-      if (!item) return alert("未找到对应数据中心信息");
-
-      // 设置表单内容
-      document.getElementById("centerName").value = item.name;
-      document.getElementById("centerURL").value = item.api_url;
-      document.getElementById("centerStatus").value = item.status || "未知";
-
-      currentEditId = id;
-
-      // 打开弹窗并带入内容
-      openDataCenterForm(item.name, item.api_url);
-    });
-}
-
-
-async function deleteDataCenter(id) {
-  if (!confirm("确定要删除该数据中心？")) return;
-  const body = new URLSearchParams({ id: String(id) });
-  const options = await window.WebWindowsAdminSecurity.authorize({
-    body,
-    headers: { "X-WebWindows-Admin-Request": "system-manager" }
-  });
-  fetch("/admin_api/deleteDatacenter.asp", options)
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        alert("删除成功");
-        // 删除成功后重新加载表格
-        fetch("/admin_api/getDatacenters.asp")
-          .then(res => res.json())
-          .then(data => renderDataCenters(data));
-      } else {
-        alert("删除失败：" + res.error);
-      }
-    })
-    .catch(err => {
-      alert("删除请求失败");
-    });
-}
-
-function checkConnectivity(baseUrl, callback) {
-  const testUrl = baseUrl.replace(/\/+$/, '') + '/node-info.asp';
-  fetch(testUrl)
-    .then(res => res.json())
-    .then(info => callback(
-      info?.protocol === 'webwindows-cloud-resource' &&
-      typeof info?.version === 'string' &&
-      info?.publicReady === true
-    ))
-    .catch(() => callback(false));
-}
-
-function refreshAllConnectivity() {
-  const rows = document.querySelectorAll("#dataCenterTableBody tr");
-  rows.forEach(row => {
-    const apiUrl = row.getAttribute("data-api-url");
-    const connectivityCell = row.querySelector(".connectivity-cell");
-
-    if (!apiUrl || !connectivityCell) return;
-
-    const testUrl = apiUrl.replace(/\/+$/, '') + '/node-info.asp';
-
-    fetch(testUrl)
-      .then(res => res.json())
-      .then(info => {
-        if (
-          info?.protocol === 'webwindows-cloud-resource' &&
-          typeof info?.version === 'string' &&
-          info?.publicReady === true
-        ) {
-          connectivityCell.textContent = '可访问 ✅';
-          connectivityCell.className = 'p-2 border connectivity-cell text-green-600';
-        } else {
-          connectivityCell.textContent = '响应异常 ⚠️';
-          connectivityCell.className = 'p-2 border connectivity-cell text-yellow-600';
-        }
-      })
-      .catch(() => {
-        connectivityCell.textContent = '无法访问 ❌';
-        connectivityCell.className = 'p-2 border connectivity-cell text-red-600';
-      });
-  });
-}
-
-function checkEndpoint() {
-  const baseUrl = document.getElementById('centerURL').value.trim();
-  if (!baseUrl) {
-    alert('请输入接口地址');
-    return;
+  async function parse(response) {
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.error || data.message || `HTTP ${response.status}`);
+    return data;
   }
-
-  const testUrl = baseUrl.replace(/\/+$/, '') + '/node-info.asp';
-
-  fetch(testUrl)
-    .then(res => res.json())
-    .then(info => {
-      if (
-        info?.protocol === 'webwindows-cloud-resource' &&
-        typeof info?.version === 'string' &&
-        info?.publicReady === true
-      ) {
-        alert('接口可访问 ✅');
-      } else {
-        alert('接口响应格式异常 ❌');
-      }
-    })
-    .catch(err => {
-      console.log(err);
-      alert('接口无法访问 ❌');
+  async function mutation(url, fields) {
+    const options = await security.authorize({
+      body: new URLSearchParams(fields),
+      headers: { "X-WebWindows-Admin-Request": "system-manager" }
     });
-}
-
-
-// 表单提交事件
-const form = document.getElementById('dataCenterForm');
-if (form) {
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const name = document.getElementById('centerName').value.trim();
-    const url = document.getElementById('centerURL').value.trim();
-    if (!name || !url) {
-      alert('名称和地址不能为空');
-      return;
+    return parse(await fetch(url, options));
+  }
+  async function load() {
+    status().textContent = "正在加载数据中心…";
+    try {
+      centers = await security.read("/admin_api/getDatacenters.asp").then(r => r.json());
+      render();
+      status().textContent = centers.length ? `共 ${centers.length} 个数据中心` : "暂无数据中心";
+    } catch (error) {
+      status().textContent = `加载失败：${error.message}`;
     }
-    alert(`已保存数据中心：${name} → ${url}`);
-    closeDataCenterForm();
-    // 实际保存逻辑应为 fetch/post + 刷新列表
-  });
-}
-document.addEventListener("DOMContentLoaded", () => {
-  fetch("/admin_api/getDatacenters.asp")
-    .then(res => res.json())
-    .then(data => renderDataCenters(data));
-});
-
-function renderDataCenters(data) {
-  const tbody = document.getElementById("dataCenterTableBody");
-  tbody.replaceChildren();
-
-  data.forEach(dc => {
-    const row = document.createElement("tr");
-    row.setAttribute("data-api-url", dc.api_url);
-    const nameCell = document.createElement("td");
-    nameCell.className = "p-2 border";
-    nameCell.textContent = dc.name || "";
-    const urlCell = document.createElement("td");
-    urlCell.className = "p-2 border";
-    urlCell.textContent = dc.api_url || "";
-    const statusCell = document.createElement("td");
-    statusCell.className = `p-2 border ${dc.status === "已启用" ? "text-green-600" : dc.status === "维护中" ? "text-yellow-600" : "text-red-600"}`;
-    statusCell.textContent = dc.status || "";
-    const connectivityCell = document.createElement("td");
-    connectivityCell.className = "p-2 border connectivity-cell text-gray-500";
-    connectivityCell.textContent = "检测中...";
-    const actions = document.createElement("td");
-    actions.className = "p-2 border";
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.className = "text-blue-600 hover:underline mr-2";
-    edit.textContent = "编辑";
-    edit.addEventListener("click", () => editDataCenter(Number(dc.id)));
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "text-red-600 hover:underline";
-    remove.textContent = "删除";
-    remove.addEventListener("click", () => deleteDataCenter(Number(dc.id)));
-    actions.append(edit, remove);
-    row.append(nameCell, urlCell, statusCell, connectivityCell, actions);
-    tbody.appendChild(row);
-  });
-
-  // 渲染后立即执行接通检测
-  refreshAllConnectivity();
-}
-
-document.getElementById("dataCenterForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
-
-  const name = document.getElementById("centerName").value;
-  const url = document.getElementById("centerURL").value;
-  const status = document.getElementById("centerStatus").value;
-
-  const formData = new URLSearchParams();
-  formData.append("name", name);
-  formData.append("api_url", url);
-  formData.append("status", status);
-  if (currentEditId) formData.append("id", currentEditId);
-
-  const options = await window.WebWindowsAdminSecurity.authorize({
-    body: formData,
-    headers: { "X-WebWindows-Admin-Request": "system-manager" }
-  });
-  fetch("/admin_api/saveDatacenter.asp", options)
-    .then(res => res.json())
-    .then(res => {
-      if (res.success) {
-        alert("保存成功");
-        closeDataCenterForm();
-        location.reload();
-      } else {
-        alert("保存失败：" + res.error);
-      }
+  }
+  function addCell(row, value) {
+    const cell = document.createElement("td");
+    cell.className = "p-2 border";
+    cell.textContent = value;
+    row.appendChild(cell);
+    return cell;
+  }
+  function button(label, action) {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "text-blue-600 hover:underline mr-2";
+    item.textContent = label;
+    item.addEventListener("click", action);
+    return item;
+  }
+  function render() {
+    const tbody = field("dataCenterTableBody");
+    tbody.replaceChildren();
+    centers.forEach(center => {
+      const row = document.createElement("tr");
+      addCell(row, center.name || "");
+      addCell(row, center.api_url || "");
+      addCell(row, `${center.enabled ? "已启用" : "已停用"} · ${center.user_quota_mb} MB${center.api_key_configured ? " · Key 已配置" : ""}`);
+      addCell(row, `${center.status || "未检测"}${center.last_check_time ? ` · ${center.last_check_time}` : ""}${center.last_check_detail ? ` · ${center.last_check_detail}` : ""}`);
+      const actions = addCell(row, "");
+      actions.append(
+        button("编辑", () => edit(center)),
+        button("检测", () => check(center)),
+        button("删除", () => remove(center))
+      );
+      tbody.appendChild(row);
     });
-});
+  }
+  function open(center = null) {
+    currentEditId = center?.id || null;
+    field("centerName").value = center?.name || "";
+    field("centerURL").value = center?.api_url || "";
+    field("centerApiKey").value = "";
+    field("centerApiKey").placeholder = center?.api_key_configured ? "已配置；留空保持原值" : "尚未配置";
+    field("centerDescription").value = center?.description || "";
+    field("centerQuota").value = center?.user_quota_mb || 1024;
+    field("centerEnabled").value = center?.enabled === false ? "0" : "1";
+    field("dataCenterModal").classList.remove("hidden");
+  }
+  function edit(center) { open(center); }
+  function close() { field("dataCenterModal").classList.add("hidden"); }
+  async function save(event) {
+    event.preventDefault();
+    try {
+      await mutation("/admin_api/saveDatacenter.asp", {
+        id: currentEditId || "",
+        name: field("centerName").value.trim(),
+        api_url: field("centerURL").value.trim(),
+        api_key: field("centerApiKey").value,
+        description: field("centerDescription").value.trim(),
+        user_quota_mb: field("centerQuota").value,
+        enabled: field("centerEnabled").value
+      });
+      close();
+      await load();
+      status().textContent = "数据中心已保存。";
+    } catch (error) {
+      status().textContent = `保存失败：${error.message}`;
+    }
+  }
+  async function check(center) {
+    status().textContent = `正在检测 ${center.name}…`;
+    try {
+      const result = await mutation("/admin_api/checkDatacenter.asp", { id: String(center.id) });
+      await load();
+      status().textContent = `${center.name}：${result.detail}`;
+    } catch (error) {
+      status().textContent = `检测失败：${error.message}`;
+    }
+  }
+  async function remove(center) {
+    if (!confirm(`确定删除 ${center.name}？`)) return;
+    try {
+      await mutation("/admin_api/deleteDatacenter.asp", { id: String(center.id) });
+      await load();
+      status().textContent = "数据中心已删除。";
+    } catch (error) {
+      status().textContent = `删除失败：${error.message}`;
+    }
+  }
+  window.openDataCenterForm = () => open();
+  window.closeDataCenterForm = close;
+  document.addEventListener("DOMContentLoaded", () => {
+    field("dataCenterForm").addEventListener("submit", save);
+    load();
+  });
+})();

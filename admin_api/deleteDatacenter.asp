@@ -7,7 +7,12 @@ AdminSecurityRequireMutation "system-manager", "delete-datacenter"
 
 Dim id
 id = 0
-If IsNumeric(Request.Form("id")) Then id = CLng(Request.Form("id"))
+If IsNumeric(Request.Form("id")) Then
+  On Error Resume Next
+  id = CLng(Request.Form("id"))
+  Err.Clear
+  On Error GoTo 0
+End If
 
 If id = 0 Then
   Response.Write("{""success"":false,""error"":""缺少ID""}")
@@ -19,7 +24,7 @@ On Error Resume Next
 conn.Execute sql
 
 If Err.Number <> 0 Then
-  Response.Write("{""success"":false,""error"":""" & Replace(Err.Description, """", "'") & """}")
+  Response.Write("{""success"":false,""error"":""删除失败，可能仍有用户使用此数据中心。""}")
 Else
   AdminSecurityAudit "delete-datacenter", "success", "valid", AdminSecurityOriginCategory()
   Response.Write("{""success"":true}")

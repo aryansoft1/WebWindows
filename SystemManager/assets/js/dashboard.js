@@ -1,38 +1,33 @@
- // 页面加载完成时执行
-  window.addEventListener("DOMContentLoaded", () => {
-    loadDatacenterStats(); // 动态渲染数据中心状态面板
-  });
-
-  function loadDatacenterStats() {
-    fetch('/admin_api/getDatacenters.asp')
-      .then(res => res.json())
-      .then(data => {
-        // 更新数量...
-        document.getElementById("dc-running").textContent = data.filter(d => d.status === "已启用").length;
-        document.getElementById("dc-maintenance").textContent = data.filter(d => d.status === "维护中").length;
-        document.getElementById("dc-unknown").textContent = data.filter(d => d.status === "未知").length;
-
-        // 确保图标被渲染
-        lucide.createIcons();
-      });
+(function () {
+  "use strict";
+  const el = id => document.getElementById(id);
+  function renderList(id, items, emptyMessage) {
+    const list = el(id);
+    list.replaceChildren();
+    if (!items.length) items = [emptyMessage];
+    items.forEach(item => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      list.appendChild(li);
+    });
   }
-  async function loadUserTotal() {
-  const el = document.getElementById('kpi-users');
-  try {
-    const url = new URL('/admin_api/getUsers.asp', location.origin);
-    url.searchParams.set('page', 1);
-    url.searchParams.set('pageSize', 1); // 只取一条
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const total = json.length;
-    el.textContent = total;
-  } catch (err) {
-    console.error('加载用户总数失败:', err);
-    el.textContent = '--';
+  async function load() {
+    try {
+      const stats = await window.WebWindowsAdminSecurity.read("/admin_api/dashboardStats.asp").then(r => r.json());
+      el("kpi-users").textContent = stats.usersTotal;
+      el("kpi-files").textContent = stats.filesTotal === null ? "不可用" : stats.filesTotal;
+      el("kpi-feedback").textContent = stats.feedbackPending;
+      el("dc-running").textContent = stats.datacenters.enabled;
+      el("dc-disabled").textContent = stats.datacenters.disabled;
+      el("dc-unhealthy").textContent = stats.datacenters.unhealthy;
+      renderList("recentActivities", stats.recentActivities.map(item => `${item.time} · ${item.action}`), "暂无管理活动记录");
+      renderList("systemTips", stats.systemTips, "目前没有需要处理的系统提示");
+      el("dashboardStatus").textContent = stats.filesTotal === null ? "主节点资料目录不可用，其余统计已更新。" : "统计已更新。";
+    } catch (error) {
+      el("dashboardStatus").textContent = `统计加载失败：${error.message}`;
+      renderList("recentActivities", [], "活动暂不可用");
+      renderList("systemTips", [], "系统提示暂不可用");
+    }
   }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadUserTotal();
-});
+  load();
+})();

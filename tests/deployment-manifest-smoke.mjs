@@ -210,6 +210,109 @@ if (manifest.releaseScope === "navigation-map") {
   ], "the provider fallback release must upload only the shared resolver, the collector and the manifest last");
   assert.ok(!manifest.requiredFiles.includes("api/visitor-analytics.config.example.asp"),
     "the config template is tracked but must never be deployed, matching the other proxy config examples");
+} else if (manifest.releaseScope === "systemmanager-sidebar-css-fix") {
+  assert.deepEqual(uploadFiles, [
+    "SystemManager/assets/css/admin-utilities.css",
+    "SystemManager/index.html",
+    "deploy/ftp-manifest.json"
+  ], "sidebar CSS fix must upload the stylesheet, entry page, and manifest in order");
+} else if (manifest.releaseScope === "systemmanager-dashboard-json-fix") {
+  assert.deepEqual(uploadFiles, [
+    "admin_api/dashboardStats.asp",
+    "deploy/ftp-manifest.json"
+  ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-jodit-editor") {
+  assert.deepEqual(uploadFiles, [
+    "assets/vendor/jodit/4.15.14/jodit.min.js",
+    "assets/vendor/jodit/4.15.14/jodit.min.css",
+    "assets/vendor/jodit/4.15.14/LICENSE.txt",
+    "assets/vendor/jodit/4.15.14/SOURCE.json",
+    "assets/vendor/jodit/4.15.14/README.md",
+    "assets/js/news-content.js",
+    "assets/js/admin-richtext.js",
+    "assets/css/admin-richtext.css",
+    "inc/news-html.asp",
+    "SystemManager/news.html",
+    "news_view.html",
+    "deploy/ftp-manifest.json"
+  ], "Jodit release must deploy self-hosted locked vendor, compatible sanitation and pages together");
+} else if (manifest.releaseScope === "news-full-rich-editor") {
+  assert.deepEqual(uploadFiles, [
+    "assets/css/admin-richtext.css",
+    "assets/js/news-content.js",
+    "assets/js/admin-richtext.js",
+    "inc/news-html.asp",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "news_view.html",
+    "deploy/ftp-manifest.json"
+  ], "full rich editor must deploy editor, server sanitation, rendering, pages and manifest together");
+} else if (manifest.releaseScope === "news-rich-editor-fix") {
+  assert.deepEqual(uploadFiles, [
+    "assets/js/news-content.js",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "assets/js/news_view.js",
+    "SystemManager/news.html",
+    "news_view.html",
+    "deploy/ftp-manifest.json"
+  ], "rich editor must deploy sanitized rendering and the fresh detail API with both pages");
+} else if (manifest.releaseScope === "news-content-read-fix") {
+  assert.deepEqual(uploadFiles, [
+    "getNewsById.asp",
+    "admin_api/news.asp",
+    "deploy/ftp-manifest.json"
+  ], "content read fix must deploy the detail and admin editor APIs together");
+} else if (manifest.releaseScope === "news-category-id-save-fix") {
+  assert.deepEqual(uploadFiles, [
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "deploy/ftp-manifest.json"
+  ], "category ID fix must deploy its API and client contract together");
+} else if (manifest.releaseScope === "news-odbc-charset-fix") {
+  assert.deepEqual(uploadFiles, [
+    "inc/json-charset.asp",
+    "admin_api/news.asp",
+    "deploy/ftp-manifest.json"
+  ], "ODBC charset fix must upload the helper, caller, and manifest last");
+} else if (manifest.releaseScope === "news-debug-ui-cleanup") {
+  assert.deepEqual(uploadFiles, [
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "deploy/ftp-manifest.json"
+  ], "news debug cleanup must upload only the script, page, and manifest last");
+} else if (manifest.releaseScope === "news-category-encoding-fix") {
+  assert.deepEqual(uploadFiles, [
+    "inc/json-charset.asp",
+    "inc/admin-security.asp",
+    "getNews.asp",
+    "getNewsById.asp",
+    "getPrevNextNews.asp",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "deploy/ftp-manifest.json"
+  ], "news category fix must upload its JSON dependencies, endpoints, page, and manifest last");
+} else if (manifest.releaseScope === "systemmanager-completion") {
+  assert.equal(uploadFiles.length, 53, "SystemManager release must use the approved 53-file scope");
+  for (const required of [
+    "SystemManager/assets/css/admin-utilities.css",
+    "developer-samples/hello-webwindows.zip",
+    "deploy/ftp-manifest.json"
+  ]) {
+    assert.ok(uploadFiles.includes(required), `SystemManager release is missing ${required}`);
+  }
+  for (const alreadyManaged of [
+    "assets/js/developer-center.js",
+    "developer-samples/hello-webwindows/index.html",
+    "developer-samples/hello-webwindows/manifest.json",
+    ...onlineReleaseFiles
+  ]) {
+    assert.ok(!uploadFiles.includes(alreadyManaged),
+      `SystemManager release must not re-upload unchanged dependency ${alreadyManaged}`);
+  }
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

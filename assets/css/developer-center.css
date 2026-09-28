@@ -119,3 +119,6 @@ section,.hero{padding:20px}
 .site-header a,.sample-actions a,body>footer a{display:inline-flex;align-items:center;min-height:44px}
 .sample-actions{flex-wrap:wrap}
 }
+.published-content-card { border:1px solid #dbe3ef; border-radius:10px; padding:16px; margin:10px 0; background:#fff; }
+.published-content-card h3 { margin:0 0 4px; }
+.published-content-card p { white-space:pre-wrap; }

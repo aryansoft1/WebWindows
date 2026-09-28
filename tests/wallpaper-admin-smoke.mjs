@@ -6,12 +6,13 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const read = (relative) => fs.readFile(path.join(root, relative), "utf8");
 
-const [adminApi, publicApi, page, script, main] = await Promise.all([
+const [adminApi, publicApi, page, script, main, settings] = await Promise.all([
   read("admin_api/wallpapers.asp"),
   read("api/wallpapers.asp"),
   read("SystemManager/wallpapers.html"),
   read("SystemManager/assets/js/wallpapers.js"),
-  read("assets/js/main.js")
+  read("assets/js/main.js"),
+  read("settings.html")
 ]);
 
 /* Both endpoints must sit behind the shared admin security gate. Uploads are
@@ -28,10 +29,15 @@ assert.doesNotMatch(adminApi, /Session\("webwindows_admin"\)\s*=\s*True/,
   "壁纸接口不得自行放宽管理员会话校验");
 
 /* The catalogue and the admin API must agree on the managed folder, otherwise
- * an upload would be invisible to the desktop wallpaper library. */
+ * an upload would be invisible to the desktop wallpaper library. The folder is
+ * spelled as a URL root: deriving it from a backslash path made every
+ * path-prefix comparison off by one, so deletes and set-default were rejected
+ * and a valid system default was silently dropped. */
 for (const [name, source] of [["admin_api/wallpapers.asp", adminApi], ["api/wallpapers.asp", publicApi]]) {
-  assert.match(source, /Const WALLPAPER_ROOT = "\\assets\\wallpapers\\"/,
-    `${name} 必须管理 assets/wallpapers 目录`);
+  assert.match(source, /Const WALLPAPER_URL_ROOT = "assets\/wallpapers\/"/,
+    `${name} 必须以 URL 形式声明壁纸目录`);
+  assert.doesNotMatch(source, /WALLPAPER_ROOT/,
+    `${name} 不得再使用带反斜杠的目录常量做前缀比较`);
   assert.match(source, /IsImageFile/, `${name} 必须限制可接受的图片扩展名`);
   for (const extension of [".jpg", ".png", ".webp", ".gif", ".avif", ".bmp"]) {
     assert.ok(source.includes(`"${extension}"`), `${name} 缺少允许的扩展名 ${extension}`);
@@ -45,11 +51,13 @@ assert.doesNotMatch(adminApi, /Request\.Files|multipart/,
   "上传不能依赖 multipart，后台安全网关只接受 urlencoded");
 assert.match(adminApi, /InStr\(relativeName, "\.\."\) > 0/,
   "删除操作必须拒绝路径穿越");
-assert.match(adminApi, /Left\(LCase\(requestedUrl\), Len\(ToUrlPath\(WALLPAPER_ROOT\)\)\)/,
+assert.match(adminApi, /Left\(LCase\(requestedUrl\), Len\(WALLPAPER_URL_ROOT\)\)/,
   "删除与设默认必须限定在壁纸目录内");
 assert.match(adminApi, /default_wallpaper/, "系统默认壁纸必须写入后台设置表");
 assert.match(publicApi, /default_wallpaper/, "公开目录接口必须返回系统默认壁纸");
 assert.match(publicApi, /fso\.FileExists/, "公开目录接口必须剔除已不存在的默认壁纸");
+assert.match(publicApi, /Left\(defaultWallpaper, Len\(WALLPAPER_URL_ROOT\)\)/,
+  "系统默认壁纸必须按 URL 根目录校验");
 
 /* The console must guard uploads with the size the endpoint enforces, and it
  * must verify the stored byte count so a truncated write cannot pass silently. */
@@ -65,9 +73,18 @@ assert.match(page, /assets\/js\/wallpapers\.js/);
 assert.match(page, /admin-security\.js/);
 assert.match(page, /page-guard\.js/);
 
-/* New users without a stored wallpaper take the administrator default once. */
+/* New users without a stored wallpaper take the administrator default once,
+ * and reapplying the same wallpaper must not restart the image request. */
 assert.match(main, /wallpaperDefaultResolved/,
   "桌面启动必须只在用户未选择过壁纸时读取系统默认壁纸");
 assert.match(main, /api\/wallpapers\.asp/);
+assert.match(main, /dataset\.wwWallpaper/,
+  "同一张壁纸重复应用必须是无操作，否则窗口开关会不断取消壁纸请求");
+assert.match(main, /backgroundColor = '#042a57'/,
+  "壁纸未加载完成时必须有兜底底色，不能出现纯白桌面");
+assert.match(page, /assets\/js\/wallpapers\.js\?v=/,
+  "壁纸管理页必须带版本号，否则浏览器会继续用旧脚本");
+assert.match(settings, /assets\/js\/wallpaper\.js\?v=/,
+  "设置页必须给壁纸脚本加版本号，否则线上改动无法到达用户");
 
 console.log("wallpaper admin smoke test passed");

@@ -15,7 +15,7 @@ Response.Charset = "utf-8"
 Response.CodePage = 65001
 Response.AddHeader "X-Content-Type-Options", "nosniff"
 
-Const WALLPAPER_ROOT = "\assets\wallpapers\"
+Const WALLPAPER_URL_ROOT = "assets/wallpapers/"
 Const MAX_UPLOAD_BYTES = 4194304
 Const MAX_BASE64_CHARS = 6000000
 Const MAX_NAME_CHARS = 120
@@ -33,15 +33,11 @@ Else
   AdminSecurityRequireMutation "system-manager", "wallpapers-" & action
 End If
 
-rootPath = Server.MapPath(WALLPAPER_ROOT)
+rootPath = Server.MapPath("/" & WALLPAPER_URL_ROOT)
 If Not fso.FolderExists(rootPath) Then
   AdminSecurityFail 500, "WALLPAPER_STORAGE_MISSING", _
     "壁纸目录不存在，请联系部署管理员创建 assets/wallpapers。", "not-checked", "not-checked"
 End If
-
-Function ToUrlPath(ByVal fileSystemPath)
-  ToUrlPath = Replace(fileSystemPath, "\", "/")
-End Function
 
 Function IsImageFile(ByVal fileName)
   Dim extension, position
@@ -168,7 +164,7 @@ If action = "upload" And method = "POST" Then
     AdminSecurityFail 400, "WALLPAPER_TOO_LARGE", _
       "壁纸图片过大，请上传小于 4MB 的图片。", "valid", "same-origin"
   End If
-  storedUrl = ToUrlPath(WALLPAPER_ROOT) & storedName
+  storedUrl = WALLPAPER_URL_ROOT & storedName
   AdminSecurityAudit "wallpaper-upload", "success", "valid", AdminSecurityOriginCategory()
   Response.Write "{""ok"":true,""success"":true,""url"":""" & storedUrl & _
     """,""name"":""" & storedName & """,""bytes"":" & CStr(CLng(storedSize)) & "}"
@@ -184,7 +180,7 @@ If action = "delete" And method = "POST" Then
   If InStr(relativeName, "..") > 0 Or Len(relativeName) > MAX_NAME_CHARS Then
     AdminSecurityFail 400, "WALLPAPER_PATH_INVALID", "壁纸路径无效。", "valid", "same-origin"
   End If
-  If Left(LCase(requestedUrl), Len(ToUrlPath(WALLPAPER_ROOT))) <> LCase(ToUrlPath(WALLPAPER_ROOT)) Then
+  If Left(LCase(requestedUrl), Len(WALLPAPER_URL_ROOT)) <> LCase(WALLPAPER_URL_ROOT) Then
     AdminSecurityFail 400, "WALLPAPER_PATH_INVALID", "只能管理 assets/wallpapers 内的壁纸。", "valid", "same-origin"
   End If
   targetFile = rootPath & relativeName
@@ -211,7 +207,7 @@ If action = "default" And method = "POST" Then
   requestedUrl = Replace(Trim(CStr(Request.Form("url"))), "\", "/")
   If requestedUrl <> "" Then
     defaultName = Mid(requestedUrl, InStrRev(requestedUrl, "/") + 1)
-    If Left(LCase(requestedUrl), Len(ToUrlPath(WALLPAPER_ROOT))) <> LCase(ToUrlPath(WALLPAPER_ROOT)) _
+    If Left(LCase(requestedUrl), Len(WALLPAPER_URL_ROOT)) <> LCase(WALLPAPER_URL_ROOT) _
        Or InStr(defaultName, "..") > 0 Or Not IsImageFile(defaultName) _
        Or Not fso.FileExists(rootPath & defaultName) Then
       AdminSecurityFail 400, "WALLPAPER_DEFAULT_INVALID", "只能把 assets/wallpapers 内已存在的壁纸设为默认。", "valid", "same-origin"

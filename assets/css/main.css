@@ -9,6 +9,7 @@ html.ww-boot-pending body{background:#042a57!important}
 
 body {
     background: url('/assets/icons/wall_aryan.jpg') no-repeat center center fixed;
+    background-color: #042a57;
     background-size: cover;
     margin: 0;
     padding: 0 !important;

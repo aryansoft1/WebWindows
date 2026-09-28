@@ -6,6 +6,7 @@
   const MANIFEST_URL = "assets/data/wallpaper-index.json";
   let builtInWallpapers = [];
   let catalogRequested = false;
+  let renderedSignature = null;
 
   function readCloudLibrary() {
     try {
@@ -74,15 +75,32 @@
     const host = window.parent && window.parent !== window ? window.parent : window;
     host.localStorage.setItem("selectedWallpaper", item.url);
     host.setWallpaperByPath?.(item.url);
-    container.querySelectorAll("img").forEach((node) => node.classList.remove("active"));
-    image.classList.add("active");
+    syncActiveWallpaper(container, item.url);
   }
 
+  function syncActiveWallpaper(container, current) {
+    container.querySelectorAll("img[data-wallpaper-url]").forEach((node) => {
+      node.classList.toggle("active", node.dataset.wallpaperUrl === current);
+    });
+  }
+
+  /* Rebuilding the grid restarts every <img> request, and Chromium reports the
+   * superseded ones as (canceled), which leaves blank thumbnails. The tab
+   * switch and the catalogue fetch both call this, so an unchanged item set
+   * must not touch the DOM at all, and a selection change must only move the
+   * highlight. */
   function renderWallpaperLibrary() {
     const container = document.getElementById("wallpaperThumbnails");
     if (!container) return;
     const current = localStorage.getItem("selectedWallpaper");
     const items = wallpaperItems();
+    const signature = items.map((item) => `${item.url}\u0000${item.name || ""}`).join("\u0001");
+
+    if (signature === renderedSignature) {
+      syncActiveWallpaper(container, current);
+      return;
+    }
+    renderedSignature = signature;
     container.replaceChildren();
 
     if (!items.length) {
@@ -96,6 +114,7 @@
     items.forEach((item) => {
       const image = document.createElement("img");
       image.src = item.url;
+      image.dataset.wallpaperUrl = item.url;
       image.className = "wallpaper-thumb";
       image.alt = item.name || "桌面壁纸";
       image.title = item.name || item.url;
@@ -103,6 +122,7 @@
       image.addEventListener("click", () => applyWallpaper(item, image, container));
       container.appendChild(image);
     });
+    syncActiveWallpaper(container, current);
   }
 
   function refreshWallpaperLibrary() {

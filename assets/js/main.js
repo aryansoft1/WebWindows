@@ -502,17 +502,33 @@ function bindStartMenuAutoHide(attempt = 0) {
 }
 /**
  * 设置桌面壁纸背景
+ *
+ * 只有 background-image 变化才会让浏览器重新发起图片请求，被取消的旧请求会
+ * 在 Network 面板显示为 (canceled)。窗口开关、标签切换都会再次调用这里，所以
+ * 同一张壁纸必须是无操作，否则壁纸会一直被取消、桌面退回空白。
+ *
  * @param {string} path - 壁纸图片的路径
  */
 function setWallpaperByPath(path) {
-    // 假设您的桌面根元素是 body
+    const value = String(path || '').trim().replace(/^['"]|['"]$/g, '');
     const desktopEl = document.body;
 
-    if (desktopEl) {
-        desktopEl.style.backgroundImage = `url(${path})`;
+    if (desktopEl && value) {
+        const requested = `url("${value}")`;
+        // 兼容窗口管理器里 url('...') 的写法：只要当前背景指向同一张壁纸就
+        // 不再赋值，避免两个写入者互相取消请求。
+        const applied = desktopEl.dataset.wwWallpaper === requested
+            || String(desktopEl.style.backgroundImage || '').includes(value);
+        if (!applied) {
+            desktopEl.dataset.wwWallpaper = requested;
+            desktopEl.style.backgroundImage = requested;
+        }
         desktopEl.style.backgroundSize = 'cover';
         desktopEl.style.backgroundRepeat = 'no-repeat';
         desktopEl.style.backgroundPosition = 'center center';
+        desktopEl.style.backgroundAttachment = 'fixed';
+        // 图片缺失或仍在下载时的兜底底色，避免出现纯白桌面。
+        desktopEl.style.backgroundColor = '#042a57';
     }
 }
 

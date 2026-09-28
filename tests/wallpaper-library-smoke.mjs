@@ -59,30 +59,43 @@ function createElement(tagName) {
     alt: "",
     title: "",
     textContent: "",
+    dataset: {},
     classList: {
       add: (name) => classes.add(name),
       remove: (name) => classes.delete(name),
-      has: (name) => classes.has(name)
+      has: (name) => classes.has(name),
+      toggle: (name, force) => (force ? classes.add(name) : classes.delete(name))
     },
     addEventListener: () => {}
   };
 }
 
-function runWallpaperLibrary({ manifest, storage = {}, failUrls = [] }) {
-  const requested = [];
-  const listeners = new Map();
-  const container = {
+/* The grid records every replaceChildren() call, because rebuilding it
+ * restarts the image requests the browser already has in flight. */
+function createGrid() {
+  return {
     children: [],
+    replaced: 0,
     replaceChildren() {
+      this.replaced += 1;
       this.children = [];
     },
-    querySelectorAll() {
+    querySelectorAll(selector) {
+      if (selector === "img[data-wallpaper-url]") {
+        return this.children.filter((node) => node.tagName === "img" && node.dataset.wallpaperUrl);
+      }
       return this.children;
     },
     appendChild(node) {
       this.children.push(node);
     }
   };
+}
+
+function runWallpaperLibrary({ manifest, storage = {}, failUrls = [] }) {
+  const requested = [];
+  const listeners = new Map();
+  const container = createGrid();
   const store = new Map(Object.entries(storage));
   const sandbox = {
     console,
@@ -162,5 +175,38 @@ await offline.fire("DOMContentLoaded");
 assert.equal(offline.container.children.length, 1);
 assert.equal(offline.container.children[0].textContent, "壁纸库暂时为空。",
   "清单读取失败时必须给出空状态提示，而不是静默空白");
+
+/* Rebuilding the grid restarts every <img> request and Chromium reports the
+ * superseded ones as (canceled), which is what left the thumbnails blank. */
+const repeated = runWallpaperLibrary({ manifest: liveCatalog });
+await repeated.fire("DOMContentLoaded");
+const grid = repeated.container;
+const firstBatch = grid.children.slice();
+const replacedAfterFirstRender = grid.replaced;
+
+repeated.sandbox.window.renderWallpaperLibrary();
+repeated.sandbox.window.renderWallpaperLibrary();
+assert.equal(grid.replaced, replacedAfterFirstRender,
+  "壁纸条目没有变化时不得重建 DOM，否则每张缩略图请求都会被取消");
+assert.deepEqual(grid.children, firstBatch,
+  "重复渲染必须复用同一批 <img> 节点");
+
+repeated.storage.set("selectedWallpaper", index.wallpapers[4].url);
+repeated.sandbox.window.renderWallpaperLibrary();
+assert.equal(grid.replaced, replacedAfterFirstRender,
+  "仅切换选中项也不得重建 DOM");
+assert.deepEqual(grid.children, firstBatch,
+  "切换选中项必须复用同一批 <img> 节点");
+assert.deepEqual(
+  grid.children.filter((node) => node.classList.has("active")).map((node) => node.dataset.wallpaperUrl),
+  [index.wallpapers[4].url],
+  "切换选中项后只有对应缩略图高亮"
+);
+
+/* A real catalogue change still has to rebuild the grid. */
+const grown = runWallpaperLibrary({ manifest: liveCatalog });
+await grown.fire("DOMContentLoaded");
+grown.sandbox.window.renderWallpaperLibrary();
+assert.ok(grown.container.replaced >= 1, "首次渲染必须构建网格");
 
 console.log(`wallpaper library smoke test passed (${index.wallpapers.length} wallpapers)`);

@@ -11,7 +11,7 @@ Response.AddHeader "X-Content-Type-Options", "nosniff"
 Response.CacheControl = "no-cache"
 Response.AddHeader "Pragma", "no-cache"
 
-Const WALLPAPER_ROOT = "\assets\wallpapers\"
+Const WALLPAPER_URL_ROOT = "assets/wallpapers/"
 Const MAX_DEPTH = 4
 Const MAX_ITEMS = 500
 
@@ -42,9 +42,7 @@ Function ToUrlPath(ByVal relativePath)
 End Function
 
 Function WebRelativePath(ByVal rootPath, ByVal filePath)
-  Dim rootUrl
-  rootUrl = ToUrlPath(rootPath)
-  WebRelativePath = rootUrl & ToUrlPath(Mid(filePath, Len(rootPath) + 1))
+  WebRelativePath = WALLPAPER_URL_ROOT & ToUrlPath(Mid(filePath, Len(rootPath) + 1))
 End Function
 
 Sub CollectFiles(ByVal fso, ByVal folder, ByVal depth, ByRef items)
@@ -88,7 +86,7 @@ Dim fso, rootPath, rootFolder, defaultWallpaper, payload, index, item
 Dim found
 Set found = CreateObject("System.Collections.ArrayList")
 Set fso = Server.CreateObject("Scripting.FileSystemObject")
-rootPath = Server.MapPath(WALLPAPER_ROOT)
+rootPath = Server.MapPath("/" & WALLPAPER_URL_ROOT)
 
 If fso.FolderExists(rootPath) Then
   Set rootFolder = fso.GetFolder(rootPath)
@@ -97,7 +95,7 @@ End If
 
 For Each item In found
   index = index + 1
-  payload = payload & "{""url"":""" & JsonText(WebRelativePath(WALLPAPER_ROOT, item.Path)) & _
+  payload = payload & "{""url"":""" & JsonText(WebRelativePath(rootPath, item.Path)) & _
     """,""name"":""" & JsonText(fso.GetBaseName(item.Name)) & _
     """,""bytes"":" & CStr(CLng(item.Size)) & _
     "}"
@@ -109,11 +107,11 @@ If defaultWallpaper <> "" Then
   ' A default that no longer resolves would leave new users without a wallpaper.
   Dim defaultName
   defaultName = Mid(defaultWallpaper, InStrRev(defaultWallpaper, "/") + 1)
-  If LCase(Left(defaultWallpaper, Len(WALLPAPER_ROOT) - 1)) <> LCase(Replace(WALLPAPER_ROOT, "\", "/")) Then
-    defaultWallpaper = ""
-  ElseIf Not fso.FileExists(Server.MapPath("\" & Replace(defaultWallpaper, "/", "\"))) Then
+  If LCase(Left(defaultWallpaper, Len(WALLPAPER_URL_ROOT))) <> LCase(WALLPAPER_URL_ROOT) Then
     defaultWallpaper = ""
   ElseIf Not IsImageFile(defaultName) Then
+    defaultWallpaper = ""
+  ElseIf Not fso.FileExists(rootPath & defaultName) Then
     defaultWallpaper = ""
   End If
 End If

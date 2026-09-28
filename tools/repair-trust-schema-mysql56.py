@@ -65,7 +65,10 @@ def main():
             cursor.execute("SELECT COUNT(*) FROM webwindows_function_catalog_versions WHERE is_active=1 AND storage_encoding <> 'base64'")
             if cursor.fetchone()[0]:
                 raise RuntimeError('Active legacy raw catalog needs separate reconciliation; nothing applied')
-            cursor.execute("SELECT COUNT(*) FROM webwindows_function_submissions WHERE status='published' AND validation_status='not-validated'")
+            cursor.execute("SHOW COLUMNS FROM webwindows_function_submissions LIKE 'validation_status'")
+            validation_exists = cursor.fetchone() is not None
+            legacy_filter = " AND validation_status='not-validated'" if validation_exists else ""
+            cursor.execute("SELECT COUNT(*) FROM webwindows_function_submissions WHERE status='published'" + legacy_filter)
             if cursor.fetchone()[0]:
                 raise RuntimeError('Legacy published submissions need separate reconciliation; nothing applied')
             cursor.execute('SHOW GRANTS FOR CURRENT_USER')

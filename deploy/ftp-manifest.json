@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.10",
+  "releaseVersion": "2026.09.28.11",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T04:34:24.768Z",
+  "generatedAt": "2026-09-28T08:54:50.557Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -312,9 +312,10 @@
     "assets/vendor/jodit/4.15.14/jodit.min.css",
     "assets/vendor/jodit/4.15.14/LICENSE.txt",
     "assets/vendor/jodit/4.15.14/SOURCE.json",
-    "assets/vendor/jodit/4.15.14/README.md"
+    "assets/vendor/jodit/4.15.14/README.md",
+    "assets/icons/settings-cursor.svg"
   ],
-  "previousReleaseVersion": "2026.09.28.9",
+  "previousReleaseVersion": "2026.09.28.10",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -981,8 +982,8 @@
       "size": 2554
     },
     "settings.html": {
-      "sha256": "2c5a7f0243b033eabb1ee1dea4d7e77b2a194a1c849c8f59b317bd50adad43c5",
-      "size": 20182
+      "sha256": "7c2491b6a6bbdf4ba33ee9eeceb076dc299fe0ec31339094020160ebc8150e8f",
+      "size": 24015
     },
     "software.html": {
       "sha256": "ace84106a5eef3718bfcb344ca82661f439b3ecd48e29ee296df7aa8240c5fb9",
@@ -1538,22 +1539,16 @@
     "assets/vendor/jodit/4.15.14/README.md": {
       "sha256": "10d759fe21fd1eab6491cded83591a6caf084245499c7fe36d85ef0c0f38ff37",
       "size": 422
+    },
+    "assets/icons/settings-cursor.svg": {
+      "sha256": "628ab8365cca3f8691eaafbed87e2155375126bee19caee8809836d7059036d9",
+      "size": 467
     }
   },
-  "releaseScope": "news-jodit-editor",
+  "releaseScope": "settings-cursor-icon",
   "uploadFiles": [
-    "assets/vendor/jodit/4.15.14/jodit.min.js",
-    "assets/vendor/jodit/4.15.14/jodit.min.css",
-    "assets/vendor/jodit/4.15.14/LICENSE.txt",
-    "assets/vendor/jodit/4.15.14/SOURCE.json",
-    "assets/vendor/jodit/4.15.14/README.md",
-    "assets/js/news-content.js",
-    "assets/js/admin-richtext.js",
-    "assets/css/admin-richtext.css",
-    "inc/news-html.asp",
-    "SystemManager/news.html",
-    "news_view.html",
+    "assets/icons/settings-cursor.svg",
+    "settings.html",
     "deploy/ftp-manifest.json"
-  ],
-  "releaseScope": "news-jodit-editor"
+  ]
 }

@@ -273,7 +273,29 @@ try {
     const nested = document.querySelector('.window iframe')?.contentDocument?.querySelector('iframe');
     return !!nested?.contentDocument?.getElementById('ww-cursor-theme-style');
   });
-  console.log('Cursor themes: 3 themes, semantic states, 8 resize handles, persistence OK');
+  // Exercise Wendao's real CSP instead of a permissive synthetic iframe document.
+  await page.route('https://unpkg.com/**', (route) => route.abort());
+  await page.evaluate(() => {
+    const frame = document.createElement('iframe');
+    frame.id = 'cursor-wendao';
+    frame.src = '/road.html';
+    document.body.appendChild(frame);
+  });
+  await page.waitForFunction(() => document.querySelector('#cursor-wendao')?.contentDocument?.readyState === 'complete');
+  for (const theme of ['dreama', 'classic', 'soft', 'dark-pro', 'mono']) {
+    await page.evaluate((id) => window.WebWindows.cursor.setTheme(id), theme);
+    const cursors = await page.locator('#cursor-wendao').evaluate((frame) => {
+      const doc = frame.contentDocument;
+      return ['.navigation-shell', '#locate-button', '#start-input'].map((selector) => {
+        const element = doc.querySelector(selector);
+        return element ? doc.defaultView.getComputedStyle(element).cursor : null;
+      });
+    });
+    for (const [index, state] of ['default', 'pointer', 'text'].entries()) {
+      assert.match(cursors[index], new RegExp(`${theme}/${state}\\.png`), `Wendao CSP permits ${theme} ${state}`);
+    }
+  }
+  console.log('Cursor themes: semantic states, 8 resize handles, persistence, 5 Wendao CSP themes OK');
 } finally {
   await browser?.close();
   server.kill();

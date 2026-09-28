@@ -216,6 +216,11 @@ try {
   ), 'hidden', 'pending iframe is not painted during navigation');
   await releaseFrame();
   await slowResource;
+  await page.waitForFunction(() => document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.readyState === 'interactive');
+  assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
+    getComputedStyle(frame).visibility
+  ), 'hidden', 'iframe remains unpainted while subresources are still loading');
+  await releaseSlowResource();
   await page.waitForFunction(() => !!document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.getElementById('ww-cursor-theme-style'));
   await page.waitForFunction(() => {
     const frame = document.querySelector('iframe[src="/cursor-pending-frame.html"]');
@@ -226,11 +231,10 @@ try {
   ), 'auto', 'iframe receives pointer input after its theme cursor decodes');
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     getComputedStyle(frame).visibility
-  ), 'visible', 'iframe is painted before its slow image finishes loading');
+  ), 'visible', 'iframe is painted after loading and cursor preparation');
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     frame.contentDocument.readyState
-  ), 'interactive', 'iframe becomes visible before its load event');
-  await releaseSlowResource();
+  ), 'complete', 'iframe is not exposed before its load event');
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {

@@ -68,6 +68,19 @@ body.webwindows-visual-brightness::after {
     filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.28));
 }
 
+.desktop > .icon.selected {
+    background: rgba(85, 163, 255, .28);
+    outline: 1px solid rgba(181, 220, 255, .9);
+    border-radius: 8px;
+}
+.desktop > .selection-marquee {
+    position: absolute;
+    border: 1px solid #83c4ff;
+    background: rgba(57, 146, 255, .2);
+    pointer-events: none;
+    z-index: 3;
+}
+
     .icon img {
         width: 64px;
         height: 64px;

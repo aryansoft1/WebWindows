@@ -18,6 +18,7 @@ const desktopIconCleanup = []
 let desktopLayoutResizeTimer = null
 let desktopLayoutObserver = null
 let desktopIconObserver = null
+let desktopSelection = null
 
 function updateWindowViewportMetrics() {
   const viewportHeight = window.visualViewport?.height || window.innerHeight
@@ -239,6 +240,16 @@ document.addEventListener("DOMContentLoaded", () => {
 function makeDesktopIconsDraggable() {
   const desktop = document.querySelector('.desktop')
   if (!desktop) return
+  if (!desktopSelection && window.WebWindowsFileSelection) {
+    desktopSelection = window.WebWindowsFileSelection.create({
+      container: desktop,
+      itemSelector: '.desktop > .icon[id]',
+      isSelectable: icon => icon.parentElement === desktop && getComputedStyle(icon).display !== 'none',
+      isSurface: target => target === desktop,
+      capture: true,
+      openOnDoubleClick: true
+    })
+  }
 
   const icons = Array.from(desktop.querySelectorAll('.icon[id]'))
   icons.forEach(icon => {
@@ -257,6 +268,7 @@ function makeDesktopIconsDraggable() {
     let startSlot = null
     let dragging = false
     let suppressClickUntil = 0
+    let group = []
 
     const finishDrag = (event) => {
       if (pointerId == null) return
@@ -270,6 +282,34 @@ function makeDesktopIconsDraggable() {
 
       if (dragging) {
         const grid = getDesktopGrid(desktop)
+        const cancelled = event?.type === 'pointercancel' || event?.type === 'blur'
+        if (cancelled) {
+          group.forEach(entry => {
+            entry.icon.style.left = `${entry.x}px`
+            entry.icon.style.top = `${entry.y}px`
+            entry.icon.style.zIndex = ''
+          })
+        } else if (group.length > 1) {
+          const positions = persistCurrentDesktopLayout(desktop)
+          const occupied = new Set()
+          const moving = new Set(group.map(entry => entry.icon))
+          // Reserve the group's snapped cells, then move any displaced icons
+          // into the nearest free cells. Every icon occupies exactly one cell.
+          group.forEach(entry => {
+            const desired = positionToSlot(parseFloat(entry.icon.style.left), parseFloat(entry.icon.style.top), grid)
+            const slot = findNearestFreeSlot(desired, occupied, grid)
+            occupied.add(slot)
+            applyIconSlot(entry.icon, slot, grid, positions)
+          })
+          const stationary = grid.icons.filter(other => !moving.has(other))
+          stationary.sort((a, b) => Number(occupied.has(Number(a.dataset.wwGridSlot))) - Number(occupied.has(Number(b.dataset.wwGridSlot))))
+          stationary.forEach(other => {
+            const slot = findNearestFreeSlot(Number(other.dataset.wwGridSlot), occupied, grid)
+            occupied.add(slot)
+            applyIconSlot(other, slot, grid, positions)
+          })
+          writeIconPositions(positions)
+        } else {
         const desiredSlot = positionToSlot(
           parseFloat(icon.style.left) || grid.originX,
           parseFloat(icon.style.top) || grid.originY,
@@ -302,12 +342,14 @@ function makeDesktopIconsDraggable() {
           applyIconSlot(icon, slot, grid, positions)
         }
         writeIconPositions(positions)
+        }
         suppressClickUntil = Date.now() + 350
       }
 
       dragging = false
       startSlot = null
-      icon.classList.remove('dragging')
+      group.forEach(entry => { entry.icon.classList.remove('dragging'); entry.icon.style.zIndex = '' })
+      group = []
       try {
         if (icon.hasPointerCapture(finishedPointerId)) {
           icon.releasePointerCapture(finishedPointerId)
@@ -317,23 +359,28 @@ function makeDesktopIconsDraggable() {
 
     const moveDrag = (event) => {
       if (event.pointerId !== pointerId) return
-      const deltaX = event.clientX - startClientX
-      const deltaY = event.clientY - startClientY
+      let deltaX = event.clientX - startClientX
+      let deltaY = event.clientY - startClientY
       if (!dragging && Math.hypot(deltaX, deltaY) < ICON_DRAG_THRESHOLD) return
 
       dragging = true
       event.preventDefault()
-      icon.classList.add('dragging')
       const grid = getDesktopGrid(desktop)
       const maxLeft = Math.max(grid.originX, desktop.clientWidth - grid.iconWidth - grid.originX)
       const maxTop = Math.max(grid.originY, desktop.clientHeight - grid.iconHeight - grid.originY)
-      icon.style.left = `${Math.max(grid.originX, Math.min(maxLeft, startLeft + deltaX))}px`
-      icon.style.top = `${Math.max(grid.originY, Math.min(maxTop, startTop + deltaY))}px`
-      icon.style.zIndex = '2'
+      deltaX = Math.max(grid.originX - Math.min(...group.map(entry => entry.x)), Math.min(maxLeft - Math.max(...group.map(entry => entry.x)), deltaX))
+      deltaY = Math.max(grid.originY - Math.min(...group.map(entry => entry.y)), Math.min(maxTop - Math.max(...group.map(entry => entry.y)), deltaY))
+      group.forEach(entry => {
+        entry.icon.classList.add('dragging')
+        entry.icon.style.left = `${entry.x + deltaX}px`
+        entry.icon.style.top = `${entry.y + deltaY}px`
+        entry.icon.style.zIndex = '2'
+      })
     }
 
     const startDrag = (event) => {
       if (isCompactDesktopLayout() || event.button !== 0 || pointerId != null) return
+      if (event.ctrlKey || event.metaKey || event.shiftKey) return
       const desktopRect = desktop.getBoundingClientRect()
       const iconRect = icon.getBoundingClientRect()
       pointerId = event.pointerId
@@ -342,6 +389,11 @@ function makeDesktopIconsDraggable() {
       startLeft = iconRect.left - desktopRect.left + desktop.scrollLeft
       startTop = iconRect.top - desktopRect.top + desktop.scrollTop
       startSlot = Number(icon.dataset.wwGridSlot)
+      group = (desktopSelection?.isSelected(icon) ? desktopSelection.selection : [icon]).map(item => ({
+        icon: item,
+        x: parseFloat(item.style.left) || item.offsetLeft,
+        y: parseFloat(item.style.top) || item.offsetTop
+      }))
       dragging = false
       try { icon.setPointerCapture(pointerId) } catch (_) {}
       window.addEventListener('pointermove', moveDrag, true)
@@ -407,6 +459,8 @@ onBeforeUnmount(() => {
   desktopIconObserver = null
   clearTimeout(desktopLayoutResizeTimer)
   desktopIconCleanup.splice(0).forEach(cleanup => cleanup())
+  desktopSelection?.destroy()
+  desktopSelection = null
   if (window.updateIconPositionState === updateIconPositionState) {
     delete window.updateIconPositionState
   }

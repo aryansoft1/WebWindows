@@ -15,8 +15,8 @@
  *
  * Design notes that matter for correctness:
  *
- * - The marquee is driven by pointer events, not mouse events, so touch and
- *   pen produce the same behaviour as a mouse.
+ * - Mouse and pen use pointer capture for marquee selection. Touch scrolling
+ *   on empty space is left to the browser.
  * - A drag that starts on an item is a *move* of the current selection and must
  *   not also paint a marquee. A drag that starts on empty space paints a
  *   marquee. Distinguishing them by `event.target` is what keeps "drag a file
@@ -40,6 +40,8 @@
     return {
       left: Math.min(a.x, b.x),
       top: Math.min(a.y, b.y),
+      right: Math.max(a.x, b.x),
+      bottom: Math.max(a.y, b.y),
       width: Math.abs(a.x - b.x),
       height: Math.abs(a.y - b.y),
     };
@@ -66,12 +68,17 @@
     let anchor = null;
     let marquee = null;
     let dragAdditive = false;
+    let dragItems = null;
+    let suppressClickUntil = 0;
+    let cancelMarquee = null;
+    if (!container.hasAttribute('tabindex')) container.tabIndex = 0;
 
     function items() {
       return Array.from(container.querySelectorAll(itemSelector));
     }
 
     function paint() {
+      selection = new Set(Array.from(selection).filter(item => container.contains(item) && isSelectable(item)));
       items().forEach((item) => {
         item.classList.toggle("selected", selection.has(item));
         item.setAttribute("aria-selected", selection.has(item) ? "true" : "false");
@@ -197,6 +204,9 @@
         container.removeEventListener("pointercancel", end);
         document.removeEventListener("keydown", onEscapeDuringDrag, true);
         removeMarquee();
+        cancelMarquee = null;
+        try { if (container.hasPointerCapture(event.pointerId)) container.releasePointerCapture(event.pointerId); } catch (_) {}
+        if (moved) suppressClickUntil = Date.now() + 350;
         // A click that never moved is a click on empty space: clear, unless the
         // additive modifier asked us to keep what was already selected.
         if (!moved && !dragAdditive) clear();
@@ -204,7 +214,7 @@
 
       function onEscapeDuringDrag(keyEvent) {
         if (keyEvent.key !== "Escape") return;
-        removeMarquee();
+        end();
         clear();
       }
 
@@ -212,6 +222,8 @@
       container.addEventListener("pointerup", end);
       container.addEventListener("pointercancel", end);
       document.addEventListener("keydown", onEscapeDuringDrag, true);
+      cancelMarquee = end;
+      try { container.setPointerCapture(event.pointerId); } catch (_) {}
     }
 
     function onPointerDown(event) {
@@ -219,6 +231,8 @@
       if (event.button !== 0) return;
       const item = event.target.closest(itemSelector);
       if (!item || !container.contains(item) || !isSelectable(item)) {
+        if (options.isSurface && !options.isSurface(event.target)) return;
+        if (event.pointerType === 'touch') return;
         // Empty space: start a marquee. The additive modifier is read at
         // gesture start, matching how desktop lassoes behave.
         dragAdditive = event.ctrlKey || event.metaKey;
@@ -229,10 +243,12 @@
           }
           return;
         }
+        container.focus?.({ preventScroll: true });
         beginMarquee(event);
         return;
       }
 
+      container.focus?.({ preventScroll: true });
       const additive = event.ctrlKey || event.metaKey;
       if (additive) {
         toggle(item);
@@ -252,6 +268,17 @@
       if (!item || !container.contains(item)) return;
       // A double click must never leave a partial multi-selection behind.
       selectOnly(item);
+      if (options.openOnDoubleClick) item.click();
+    }
+
+    function onClick(event) {
+      const item = event.target.closest(itemSelector);
+      const onSurface = !options.isSurface || options.isSurface(event.target);
+      if ((Date.now() < suppressClickUntil && (item || onSurface)) || (item && options.openOnDoubleClick && event.pointerType !== 'touch' &&
+          (event.detail > 0 || event.ctrlKey || event.metaKey || event.shiftKey))) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }
     }
 
     function onDragStart(event) {
@@ -263,6 +290,7 @@
         event.preventDefault();
         return;
       }
+      dragItems = Array.from(selection);
       event.dataTransfer.effectAllowed = "copyMove";
       try {
         event.dataTransfer.setData(DRAG_MIME, JSON.stringify(payload));
@@ -274,6 +302,11 @@
     }
 
     function onDragOver(event) {
+      if (options.reorder && dragItems) {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        return;
+      }
       if (!event.dataTransfer || !Array.from(event.dataTransfer.types || []).includes(DRAG_MIME)) return;
       const target = event.target.closest("[data-drop-target]");
       if (!target || !isDropTarget(target)) return;
@@ -288,6 +321,16 @@
     }
 
     function onDropEvent(event) {
+      if (options.reorder && dragItems) {
+        event.preventDefault();
+        const targetItem = event.target.closest(itemSelector);
+        if (!dragItems.includes(targetItem)) {
+          const target = targetItem && container.contains(targetItem) ? targetItem : null;
+          dragItems.forEach(item => container.insertBefore(item, target));
+        }
+        onDragEnd();
+        return;
+      }
       const target = event.target.closest("[data-drop-target]");
       if (target) target.classList.remove("drop-target");
       if (!target || !isDropTarget(target)) return;
@@ -304,6 +347,7 @@
     }
 
     function onKeyDown(event) {
+      if (!container.contains(document.activeElement) || event.target.closest?.('input, textarea, select, [contenteditable="true"]')) return;
       if (event.key === "Escape" && selection.size) {
         clear();
         return;
@@ -314,12 +358,21 @@
       }
     }
 
-    container.addEventListener("pointerdown", onPointerDown);
+    function onDragEnd() {
+      dragItems = null;
+      suppressClickUntil = Date.now() + 350;
+      container.focus?.({ preventScroll: true });
+      paint();
+    }
+
+    container.addEventListener("pointerdown", onPointerDown, Boolean(options.capture));
+    container.addEventListener("click", onClick, true);
     container.addEventListener("dblclick", onDoubleClick);
     container.addEventListener("dragstart", onDragStart);
     container.addEventListener("dragover", onDragOver);
     container.addEventListener("dragleave", onDragLeave);
     container.addEventListener("drop", onDropEvent);
+    container.addEventListener("dragend", onDragEnd);
     document.addEventListener("keydown", onKeyDown);
 
     return {
@@ -329,12 +382,15 @@
       setSelection,
       isSelected: (item) => selection.has(item),
       destroy() {
-        container.removeEventListener("pointerdown", onPointerDown);
+        cancelMarquee?.();
+        container.removeEventListener("pointerdown", onPointerDown, Boolean(options.capture));
+        container.removeEventListener("click", onClick, true);
         container.removeEventListener("dblclick", onDoubleClick);
         container.removeEventListener("dragstart", onDragStart);
         container.removeEventListener("dragover", onDragOver);
         container.removeEventListener("dragleave", onDragLeave);
         container.removeEventListener("drop", onDropEvent);
+        container.removeEventListener("dragend", onDragEnd);
         document.removeEventListener("keydown", onKeyDown);
         removeMarquee();
       },

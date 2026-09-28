@@ -666,6 +666,12 @@
         event.preventDefault();
         return;
       }
+      if (fileSelection && !pickerMode) {
+        event.preventDefault();
+        if (event.detail === 0) fileSelection.selectOnly(item);
+        if (item.dataset.kind === 'folder' && (event.detail === 0 || event.pointerType === 'touch')) navigateToResourcePath(item.dataset.path);
+        return;
+      }
       if (item.dataset.kind === "folder") {
         activateItem(item);
         event.preventDefault();
@@ -676,7 +682,9 @@
         activateItem(item);
       }
     });
-    if (item.dataset.kind === "file") {
+    if (item.dataset.kind === "folder" && !pickerMode) {
+      item.addEventListener('dblclick', () => navigateToResourcePath(item.dataset.path));
+    } else if (item.dataset.kind === "file") {
       item.addEventListener("dblclick", () => {
         if (pickerMode && item.dataset.pickerEligible === "true") {
           if (!pickerMultiple) {
@@ -735,12 +743,11 @@
   // Multi-file selection: marquee, Ctrl/Shift extend, Ctrl+A, Escape, drag.
   const listHost = document.querySelector(".file-list") || document.querySelector(".main");
   if (listHost && window.WebWindowsFileSelection && !pickerMode) {
-    // Dragging is offered only for files, never for folders: a folder drop
-    // target is what makes "move into folder" meaningful, and the public
-    // scope is read-only so there is nothing to move.
+    // Reorder only the displayed grid. Public resources remain read-only;
+    // dropping on a folder does not move any server-side files.
     const isSelectable = (node) => node.dataset.pickerEligible !== "false"
       || !node.hasAttribute("disabled");
-    document.querySelectorAll(".file-item.file").forEach((node) => {
+    document.querySelectorAll(".file-item").forEach((node) => {
       node.draggable = true;
     });
     document.querySelectorAll(".file-item.folder").forEach((node) => {
@@ -750,6 +757,7 @@
       container: listHost,
       itemSelector: ".file-item",
       isSelectable,
+      reorder: true,
       buildPayload: (selection) => ({
         kind: "cloud-public",
         nodeId: pickerNodeId,

@@ -37,17 +37,57 @@
     const pendingFrames = new Set();
     let mousePoint = null;
     let navigationPointer = null;
+    let mouseTarget = null;
+    const managedDocuments = new Set();
+    const pointerDocuments = new WeakSet();
+    const watchingFrames = new WeakSet();
+
+    function bindPointerDocument(doc) {
+        if (pointerDocuments.has(doc)) return;
+        pointerDocuments.add(doc);
+        const track = (event) => {
+            if (event.pointerType !== 'mouse') {
+                if (event.type === 'pointerdown') { mousePoint = null; updateNavigationPointer(); }
+                return;
+            }
+            let x = event.clientX, y = event.clientY, realm = doc.defaultView;
+            while (realm && realm !== global) {
+                const frame = realm.frameElement;
+                if (!frame) return;
+                const rect = frame.getBoundingClientRect();
+                x = rect.left + (x + frame.clientLeft) * rect.width / frame.offsetWidth;
+                y = rect.top + (y + frame.clientTop) * rect.height / frame.offsetHeight;
+                realm = realm.parent;
+            }
+            mousePoint = { x, y };
+            mouseTarget = event.target;
+            if (pendingFrames.size) updateNavigationPointer();
+        };
+        doc.addEventListener('pointermove', track, { passive: true });
+        doc.addEventListener('pointerdown', track, { passive: true });
+        doc.addEventListener('pointerout', (event) => {
+            if (event.pointerType === 'mouse' && !event.relatedTarget && doc === document) {
+                mousePoint = null;
+                updateNavigationPointer();
+            }
+        }, { passive: true });
+    }
 
     function updateNavigationPointer() {
         for (const frame of pendingFrames) if (!frame.isConnected) pendingFrames.delete(frame);
+        const active = pendingFrames.size && mousePoint;
+        for (const doc of managedDocuments) {
+            if (doc !== document && !doc.defaultView?.frameElement?.isConnected) { managedDocuments.delete(doc); continue; }
+            doc.documentElement.toggleAttribute('data-ww-cursor-navigation', Boolean(active));
+        }
         if (!pendingFrames.size || !mousePoint || !document.body) {
             document.documentElement.removeAttribute('data-ww-cursor-navigation');
             navigationPointer?.remove();
             navigationPointer = null;
             return;
         }
-        const target = document.elementFromPoint(mousePoint.x, mousePoint.y);
-        const computed = target ? getComputedStyle(target) : null;
+        const target = mouseTarget?.isConnected ? mouseTarget : document.elementFromPoint(mousePoint.x, mousePoint.y);
+        const computed = target ? target.ownerDocument.defaultView.getComputedStyle(target) : null;
         const interactionState = computed?.getPropertyValue('--ww-cursor-state').match(/\/assets\/cursors\/[^/]+\/([a-z-]+)\.png/);
         const state = interactionState?.[1] || computed?.getPropertyValue('--ww-cursor-render-state').trim() || 'default';
         const resolved = aliases[state] || state;
@@ -137,6 +177,9 @@
 
     function applyToDocument(doc) {
         if (!doc?.head) return;
+        managedDocuments.add(doc);
+        bindPointerDocument(doc);
+        doc.documentElement.toggleAttribute('data-ww-cursor-navigation', Boolean(pendingFrames.size && mousePoint));
         let style = doc.getElementById('ww-cursor-theme-style');
         if (!style) {
             style = doc.createElement('style');
@@ -193,6 +236,25 @@
         }
     }
 
+    function watchFrameDocument(frame) {
+        if (watchingFrames.has(frame)) return;
+        watchingFrames.add(frame);
+        const started = Date.now();
+        const check = () => {
+            if (!frame.isConnected || !pendingFrames.has(frame) || Date.now() - started > 10000) { watchingFrames.delete(frame); return; }
+            const doc = frame.contentDocument;
+            // Cross-origin documents cannot be prepared early; their load event ends navigation.
+            if (!doc) { watchingFrames.delete(frame); return; }
+            if (doc?.URL !== 'about:blank' && doc?.body) {
+                watchingFrames.delete(frame);
+                applyToFrame(frame);
+                return;
+            }
+            global.setTimeout(check, 50);
+        };
+        global.setTimeout(check, 0);
+    }
+
     function applyToFrame(frame, loaded = false) {
         if (!observedFrames.has(frame)) {
             observedFrames.add(frame);
@@ -213,20 +275,24 @@
                 frame.setAttribute('data-ww-cursor-loading', '');
                 pendingFrames.add(frame);
                 updateNavigationPointer();
+                watchFrameDocument(frame);
                 return;
             }
             applyToDocument(child);
             observeDocument(child);
             discover(child);
             frameLimitations.delete(frame);
-            if (frame.hasAttribute('data-ww-cursor-loading') && (loaded || child.readyState === 'complete')) {
+            if (pendingFrames.has(frame) && child.body) {
                 const image = new child.defaultView.Image();
                 const inline = inlineImages[currentTheme]?.default;
                 image.src = inline ? `data:image/png;base64,${inline}` : getAsset('default', currentTheme, 'png');
                 const ready = typeof image.decode === 'function' ? image.decode().catch(() => {}) : Promise.resolve();
                 ready.then(() => {
                     try {
-                        if (frame.contentDocument === child) finishFrameNavigation(frame);
+                        if (frame.contentDocument === child) {
+                            frame.removeAttribute('data-ww-cursor-loading');
+                            if (loaded || child.readyState === 'complete') finishFrameNavigation(frame);
+                        }
                     } catch (_) { finishFrameNavigation(frame); }
                 });
             }
@@ -299,21 +365,6 @@
     });
     global.WebWindows = global.WebWindows || {};
     global.WebWindows.cursor = manager;
-    document.addEventListener('pointerdown', (event) => {
-        mousePoint = event.pointerType === 'mouse' ? { x: event.clientX, y: event.clientY } : null;
-        updateNavigationPointer();
-    }, { passive: true });
-    document.addEventListener('pointermove', (event) => {
-        if (event.pointerType !== 'mouse') return;
-        mousePoint = { x: event.clientX, y: event.clientY };
-        if (pendingFrames.size) updateNavigationPointer();
-    }, { passive: true });
-    document.addEventListener('pointerout', (event) => {
-        if (event.pointerType === 'mouse' && !event.relatedTarget) {
-            mousePoint = null;
-            updateNavigationPointer();
-        }
-    }, { passive: true });
     applyToDocument(document);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {

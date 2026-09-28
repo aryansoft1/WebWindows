@@ -233,9 +233,21 @@ try {
   await releaseFrame();
   await slowResource;
   await page.waitForFunction(() => document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.readyState === 'interactive');
+  await page.waitForFunction(() => {
+    const frame = document.querySelector('iframe[src="/cursor-pending-frame.html"]');
+    return frame?.contentDocument?.getElementById('ww-cursor-theme-style') && !frame.hasAttribute('data-ww-cursor-loading');
+  });
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     getComputedStyle(frame).visibility
-  ), 'hidden', 'iframe remains unpainted while subresources are still loading');
+  ), 'visible', 'prepared iframe is painted without waiting for slow subresources');
+  const frameButton = page.frameLocator('iframe[src="/cursor-pending-frame.html"]').locator('button');
+  await frameButton.hover();
+  assert.equal(await frameButton.evaluate((element) => getComputedStyle(element).cursor), 'none', 'loading iframe suppresses Chromium native loading cursor');
+  assert.equal(await page.locator('#ww-navigation-pointer').getAttribute('data-ww-cursor-state'), 'pointer', 'temporary pointer tracks button semantics inside the iframe');
+  const buttonBounds = await frameButton.boundingBox();
+  const pointerBounds = await page.locator('#ww-navigation-pointer').boundingBox();
+  assert.ok(Math.abs(pointerBounds.x + 10 - (buttonBounds.x + buttonBounds.width / 2)) < 2, 'iframe pointer is positioned in top-level coordinates');
+  assert.ok(Math.abs(pointerBounds.y + 5 - (buttonBounds.y + buttonBounds.height / 2)) < 2, 'iframe pointer vertical hotspot is correct');
   await releaseSlowResource();
   await page.waitForFunction(() => !!document.querySelector('iframe[src="/cursor-pending-frame.html"]')?.contentDocument?.getElementById('ww-cursor-theme-style'));
   await page.waitForFunction(() => {
@@ -250,8 +262,10 @@ try {
   ), 'visible', 'iframe is painted after loading and cursor preparation');
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     frame.contentDocument.readyState
-  ), 'complete', 'iframe is not exposed before its load event');
+  ), 'complete', 'iframe load completes normally');
+  await page.waitForFunction(() => !document.getElementById('ww-navigation-pointer'));
   assert.equal(await page.locator('#ww-navigation-pointer').count(), 0, 'temporary pointer is removed after load');
+  assert.match(await frameButton.evaluate((element) => getComputedStyle(element).cursor), /classic\/pointer\.png/, 'iframe returns to themed native cursor after load');
   assert.match(await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor), /classic\/default\.png/, 'native CSS cursor returns after load');
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);

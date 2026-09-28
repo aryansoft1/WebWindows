@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-09-28T13:47:37.711Z",
+  "generatedAt": "2026-09-28T15:02:12.923Z",
   "sourceDirectory": "assets/wallpapers",
-  "count": 6,
+  "count": 10,
   "wallpapers": [
     {
       "url": "assets/wallpapers/wall1.jpg",
@@ -33,6 +33,26 @@
       "url": "assets/wallpapers/wall6.jpg",
       "name": "wall6",
       "bytes": 1602572
+    },
+    {
+      "url": "assets/wallpapers/wall7.png",
+      "name": "wall7",
+      "bytes": 1190764
+    },
+    {
+      "url": "assets/wallpapers/wall8.png",
+      "name": "wall8",
+      "bytes": 1619985
+    },
+    {
+      "url": "assets/wallpapers/wall9.png",
+      "name": "wall9",
+      "bytes": 1315677
+    },
+    {
+      "url": "assets/wallpapers/wall10.png",
+      "name": "wall10",
+      "bytes": 1518279
     }
   ]
 }

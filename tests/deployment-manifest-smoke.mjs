@@ -221,6 +221,12 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/dashboardStats.asp",
     "deploy/ftp-manifest.json"
   ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-content-read-fix") {
+  assert.deepEqual(uploadFiles, [
+    "getNewsById.asp",
+    "admin_api/news.asp",
+    "deploy/ftp-manifest.json"
+  ], "content read fix must deploy the detail and admin editor APIs together");
 } else if (manifest.releaseScope === "news-category-id-save-fix") {
   assert.deepEqual(uploadFiles, [
     "admin_api/news.asp",

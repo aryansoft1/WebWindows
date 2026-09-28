@@ -14,7 +14,7 @@ Dim jsonFault
 jsonFault = ""
 
 Function JsonText(ByVal value, ByVal fieldName)
-  Dim result, convertedCode, convertedDescription
+  Dim result, convertedCode, convertedDescription, index, code
   result = ""
   If Not IsNull(value) And Not IsEmpty(value) Then
     If VarType(value) = vbObject Then
@@ -39,10 +39,16 @@ Function JsonText(ByVal value, ByVal fieldName)
   result = Replace(result, vbCrLf, "\n")
   result = Replace(result, vbCr, "\n")
   result = Replace(result, vbLf, "\n")
+  For index = 0 To 31
+    If index <> 10 And index <> 13 Then
+      code = "\u" & Right("0000" & Hex(index), 4)
+      result = Replace(result, Chr(index), code)
+    End If
+  Next
   JsonText = result
 End Function
 
-Dim idText, newsId, cmd, rs
+Dim idText, newsId, cmd, rs, newsContent, contentChars
 idText = Trim(CStr(Request.QueryString("id")))
 If Not IsNumeric(idText) Then
   Response.Status = "400 Bad Request"
@@ -66,8 +72,12 @@ Set cmd = Server.CreateObject("ADODB.Command")
 Set cmd.ActiveConnection = conn
 cmd.CommandType = 1
 cmd.CommandText = "SELECT id,IFNULL(title,'') AS title," & _
-  "IFNULL(category,'') AS category,IFNULL(content,'') AS content," & _
-  "IFNULL(DATE_FORMAT(COALESCE(publish_at,created_at),'%Y-%m-%d %H:%i:%s'),'') AS created_at " & _
+  "IFNULL(category,'') AS category," & _
+  "IFNULL(DATE_FORMAT(COALESCE(publish_at,created_at),'%Y-%m-%d %H:%i:%s'),'') AS created_at," & _
+  "CHAR_LENGTH(IFNULL(content,'')) AS content_chars," & _
+  "CAST(SUBSTRING(IFNULL(content,''),1,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_1," & _
+  "CAST(SUBSTRING(IFNULL(content,''),21846,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_2," & _
+  "CAST(SUBSTRING(IFNULL(content,''),43691,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_3 " & _
   "FROM webwindows_news WHERE id=? AND COALESCE(publish_at,created_at)<=NOW() LIMIT 1"
 cmd.Parameters.Append cmd.CreateParameter("id", 3, 1, , newsId)
 Set rs = cmd.Execute
@@ -76,11 +86,24 @@ If rs.EOF Then
   Response.Write "{""error"":""新闻不存在或尚未到发布时间""}"
   Response.End
 End If
+contentChars = CLng(rs("content_chars").Value)
+newsContent = ""
+On Error Resume Next
+Err.Clear
+newsContent = CStr(rs("content_1").Value) & CStr(rs("content_2").Value) & CStr(rs("content_3").Value)
+If Err.Number <> 0 Or Len(newsContent) <> contentChars Then
+  Err.Clear
+  On Error GoTo 0
+  Response.Status = "500 Internal Server Error"
+  Response.Write "{""error"":""新闻正文读取失败，请稍后重试。"",""code"":""NEWS_CONTENT_READ_FAILED""}"
+  Response.End
+End If
+On Error GoTo 0
 Response.Write "{""id"":" & CLng(rs("id")) & _
   ",""title"":""" & JsonText(rs("title"), "title") & _
   """,""category"":""" & JsonText(rs("category"), "category") & _
   """,""created_at"":""" & JsonText(rs("created_at"), "created_at") & _
-  """,""content"":""" & JsonText(rs("content"), "content") & """"
+  """,""content"":""" & JsonText(newsContent, "content") & """"
 If jsonFault <> "" Then Response.Write ",""fault"":""" & jsonFault & """"
 Response.Write "}"
 rs.Close

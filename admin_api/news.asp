@@ -37,7 +37,7 @@ End If
 ' 而驱动可能把它交给 VBScript 的 DBNull —— IsNull(DBNull) 是 False，
 ' CStr(DBNull) 却抛「无效使用 Null」，只靠 IsNull 判断挡不住。
 If action = "list" And method = "GET" Then
-  Dim listRs, countRs, rowTotal, queryError
+  Dim listRs, countRs, rowTotal, queryError, listContent
   queryError = ""
   rowTotal = -1
   On Error Resume Next
@@ -57,8 +57,12 @@ If action = "list" And method = "GET" Then
   ' 真正让这个接口 500 的是 AdminSecurityJson 里的 CStr：SQL 层已经 IFNULL
   ' 过了，值仍会变成 IsNull 判不出、CStr 会抛的形态，所以助手改成尝试转换。
   Set listRs = conn.Execute("SELECT id,IFNULL(title,'') AS title," & _
-    "IFNULL(category,'') AS category,IFNULL(content,'') AS content," & _
-    "IFNULL(DATE_FORMAT(COALESCE(publish_at,created_at),'%Y-%m-%d %H:%i'),'') AS publish_label " & _
+    "IFNULL(category,'') AS category," & _
+    "IFNULL(DATE_FORMAT(COALESCE(publish_at,created_at),'%Y-%m-%d %H:%i'),'') AS publish_label," & _
+    "CHAR_LENGTH(IFNULL(content,'')) AS content_chars," & _
+    "CAST(SUBSTRING(IFNULL(content,''),1,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_1," & _
+    "CAST(SUBSTRING(IFNULL(content,''),21846,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_2," & _
+    "CAST(SUBSTRING(IFNULL(content,''),43691,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_3 " & _
     "FROM webwindows_news ORDER BY COALESCE(publish_at,created_at) DESC,id DESC LIMIT 500")
   If Err.Number <> 0 Then
     queryError = "Err " & CStr(Err.Number) & ": " & CStr(Err.Description)
@@ -75,11 +79,21 @@ If action = "list" And method = "GET" Then
   End If
   json = "["
   Do Until listRs.EOF
+    listContent = ""
+    On Error Resume Next
+    Err.Clear
+    listContent = CStr(listRs("content_1").Value) & CStr(listRs("content_2").Value) & CStr(listRs("content_3").Value)
+    If Err.Number <> 0 Or Len(listContent) <> CLng(listRs("content_chars").Value) Then
+      Err.Clear
+      On Error GoTo 0
+      AdminSecurityFail 500, "NEWS_CONTENT_READ_FAILED", "新闻正文读取失败，请稍后重试。", "valid", "same-origin"
+    End If
+    On Error GoTo 0
     If Len(json) > 1 Then json = json & ","
     json = json & "{""id"":" & CLng(listRs("id")) & _
       ",""title"":""" & AdminSecurityJson(listRs("title")) & _
       """,""category"":""" & AdminSecurityJson(listRs("category")) & _
-      """,""content"":""" & AdminSecurityJson(listRs("content")) & _
+      """,""content"":""" & AdminSecurityJson(listContent) & _
       """,""publish_at"":""" & AdminSecurityJson(listRs("publish_label")) & """}"
     listRs.MoveNext
   Loop

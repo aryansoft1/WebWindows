@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.6",
+  "releaseVersion": "2026.09.28.7",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T03:06:18.706Z",
+  "generatedAt": "2026-09-28T03:14:01.260Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -305,7 +305,7 @@
     "developer-samples/hello-webwindows/manifest.json",
     "inc/json-charset.asp"
   ],
-  "previousReleaseVersion": "2026.09.28.5",
+  "previousReleaseVersion": "2026.09.28.6",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -1403,8 +1403,8 @@
       "size": 1192
     },
     "admin_api/news.asp": {
-      "sha256": "5735330f7bb7ccbd8ac2c122c04fb4293fe49bdf411d6f127737b59870cac358",
-      "size": 26037
+      "sha256": "08b5929924037ece74694f6cc30123ac8cf5803bfb6cd9463bfd54826cf1767c",
+      "size": 26851
     },
     "admin_api/saveUser.asp": {
       "sha256": "cb6135708c597f2cb49260daafdc45be1206486c3c440aa1671b5178b24d8ced",
@@ -1455,8 +1455,8 @@
       "size": 1561
     },
     "getNewsById.asp": {
-      "sha256": "4df702349977cf5ae7fdebecb6a5930783c4fb77634ef4e7bed7a3a090d1756e",
-      "size": 3331
+      "sha256": "c5c0bc37a611656bcce693cba0489a4fe3453857d45cd1adc9b5fc15c9771c6e",
+      "size": 4376
     },
     "getPrevNextNews.asp": {
       "sha256": "8a7ac889bd74642bdbe138efd45f983cbf9c7bd226461da184b0bfffdd4a705a",
@@ -1495,11 +1495,10 @@
       "size": 1425
     }
   },
-  "releaseScope": "news-category-id-save-fix",
+  "releaseScope": "news-content-read-fix",
   "uploadFiles": [
+    "getNewsById.asp",
     "admin_api/news.asp",
-    "SystemManager/assets/js/news.js",
-    "SystemManager/news.html",
     "deploy/ftp-manifest.json"
   ]
 }

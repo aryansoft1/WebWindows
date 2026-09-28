@@ -28,6 +28,8 @@ try {
   assert.equal(await page.locator('.icon.selected').count(), 4, 'Shift extends from the retained anchor');
   await page.keyboard.press('Control+a');
   assert.equal(await page.locator('.icon.selected').count(), 8);
+  await page.locator('.desktop').focus();
+  assert.equal(await page.locator('.desktop').evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'desktop selection has no viewport-wide focus border');
   await page.keyboard.press('Escape');
   assert.equal(await page.locator('.icon.selected').count(), 0);
   // Lasso the first two cells, starting on bare desktop padding.
@@ -66,6 +68,22 @@ try {
   await page.waitForFunction(() => document.getElementById('dynamic-icon').dataset.wwPointerDragBound === '1');
   await page.locator('#dynamic-icon').click({ modifiers: ['Control'] });
   assert.equal(await page.locator('.icon.selected').count(), 2);
+  await page.keyboard.press('Escape');
+  await page.mouse.move(1000, 700);
+  await page.locator('.desktop > .icon img').evaluateAll(nodes => Promise.all(nodes.map(node => node.decode())));
+  const imageNodes = page.locator('.desktop > .icon img');
+  const beforeCloseImages = [];
+  for (const image of await imageNodes.all()) beforeCloseImages.push(await image.screenshot());
+  for (let cycle = 0; cycle < 2; cycle++) {
+    await page.evaluate(() => window.openWindow('paint-regression', 'Visual regression', 'about:blank', '/assets/icons/cloud.png', true));
+    await page.locator('#win-paint-regression .button.close').click();
+    await page.mouse.move(1000, 700);
+    assert.equal(await page.locator('#win-paint-regression').count(), 0);
+    const images = await imageNodes.all();
+    for (let index = 0; index < images.length; index++) {
+      assert.deepEqual(await images[index].screenshot(), beforeCloseImages[index], 'desktop icon pixels survive window close');
+    }
+  }
 
   // Render the real ASP client shell with deterministic file data; retain its
   // actual toolbar/controller so folder links and click handlers are covered.
@@ -79,6 +97,8 @@ try {
   await page.route('**/getFolders.asp?*', route => route.fulfill({ json: [{name:'Documents',path:'Documents',children:[]}] }));
   await page.route('**/cloud/browser/selection-fixture.html', route => route.fulfill({ contentType: 'text/html', body: cloud }));
   await page.goto(`${origin}/cloud/browser/selection-fixture.html`);
+  await page.locator('.file-list').focus();
+  assert.equal(await page.locator('.file-list').evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'cloud grid has no black focus border');
   await page.waitForSelector('#folder-tree button');
   assert.equal(await page.evaluate(() => window.WebWindowsCloudI18n), undefined, 'real page has no external language adapter');
   assert.match(await page.locator('#folder-tree').innerText(), /官方文档/, 'directory tree initializes without external language adapter');
@@ -105,6 +125,8 @@ try {
   privatePage = privatePage.replace('(function(){', `document.querySelector('.files').innerHTML=${JSON.stringify(privateItems)};document.querySelector('.login').remove();document.querySelector('.picker-bar').remove();(function(){`);
   await page.route('**/cloud/browser/private-selection-fixture.html', route => route.fulfill({ contentType: 'text/html', body: privatePage }));
   await page.goto(`${origin}/cloud/browser/private-selection-fixture.html`);
+  await page.locator('.files').focus();
+  assert.equal(await page.locator('.files').evaluate(node => getComputedStyle(node).outlineStyle), 'none', 'private cloud has no black focus border');
   await page.locator('#private-0').click();
   await page.locator('#private-1').click({ modifiers: ['Control'] });
   assert.equal(await page.locator('.files .selected').count(), 2);

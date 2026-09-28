@@ -421,6 +421,7 @@ button.device-entry.selected:hover {
   background: rgba(37, 99, 235, .14);
   pointer-events: none;
 }
+.ww-selection-surface:focus { outline: none; }
 
 /* The container the marquee is positioned in must establish a positioning
    context, otherwise the rectangle anchors to the page instead of the grid. */

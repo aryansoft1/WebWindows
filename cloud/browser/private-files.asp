@@ -188,7 +188,7 @@ End If
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>我的私人文件</title>
-  <script src="file-selection.js?v=20260928-selection-2"></script>
+  <script src="file-selection.js?v=20260928-selection-3"></script>
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
@@ -220,6 +220,7 @@ End If
     .picker-selection strong,.picker-selection span{display:block}.picker-selection span{margin-top:4px;color:#64748b;font-size:12px}.picker-actions{display:flex;gap:8px;align-items:center}.picker-actions button:disabled{opacity:.48;--ww-cursor-state:var(--ww-cursor-not-allowed, not-allowed);cursor:var(--ww-cursor-not-allowed, not-allowed)}
     .picker-name{width:min(320px,36vw);padding:8px 10px;border:1px solid #94a3b8;border-radius:7px;font:inherit}
     .files{position:relative}
+    .ww-selection-surface:focus{outline:none}
     .files>.item.selected{background:#dbeafe;border-color:#2563eb;box-shadow:inset 0 0 0 1px #2563eb}
     .files>.selection-marquee{position:absolute;z-index:5;border:1px solid #2563eb;background:rgba(37,99,235,.14);pointer-events:none}
   </style>

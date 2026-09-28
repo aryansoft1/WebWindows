@@ -72,6 +72,7 @@
     let suppressClickUntil = 0;
     let cancelMarquee = null;
     if (!container.hasAttribute('tabindex')) container.tabIndex = 0;
+    container.classList.add('ww-selection-surface');
 
     function items() {
       return Array.from(container.querySelectorAll(itemSelector));

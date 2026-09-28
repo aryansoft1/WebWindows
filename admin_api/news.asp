@@ -188,7 +188,7 @@ If action = "diagnose" And method = "GET" Then
 
   ' 连接与列的字符集。@@character_set_results 决定驱动怎么解释结果集字节，
   ' 它不是 utf8mb4 就一定会乱码，哪怕响应头已经写了 charset=utf-8。
-  ' jsonCharsetError 是 include 里 SET NAMES 的实际结果，失败原因就在里面
+  ' jsonCharsetError 是 include 中读取并验证连接字符集的结果
   ' （最常见的是 MySQL 早于 5.5.3，不支持 utf8mb4）。
   ' 这里刻意不用 IIf，也不靠 CStr(CBool(...))。IIf 在部分主机的 VBScript 里根本
   ' 不存在（Option Explicit 下报「变量未定义」），而 CStr(CBool(True)) 产出的是

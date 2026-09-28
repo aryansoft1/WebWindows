@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.4",
+  "releaseVersion": "2026.09.28.5",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T02:39:36.359Z",
+  "generatedAt": "2026-09-28T03:01:47.230Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -305,7 +305,7 @@
     "developer-samples/hello-webwindows/manifest.json",
     "inc/json-charset.asp"
   ],
-  "previousReleaseVersion": "2026.09.28.3",
+  "previousReleaseVersion": "2026.09.28.4",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -1403,8 +1403,8 @@
       "size": 1192
     },
     "admin_api/news.asp": {
-      "sha256": "41a63bd95dd7e3e6275d5d2d850fc8afb073fb350b82d17f6faf52dff2821d42",
-      "size": 25704
+      "sha256": "62272c5d4089dbd75a196fba5fc0637ddd98a019b1970e805a538b1b765257fe",
+      "size": 25690
     },
     "admin_api/saveUser.asp": {
       "sha256": "cb6135708c597f2cb49260daafdc45be1206486c3c440aa1671b5178b24d8ced",
@@ -1491,14 +1491,14 @@
       "size": 1493
     },
     "inc/json-charset.asp": {
-      "sha256": "11cc4e4af293c24a051d323c75d2424b03b668f6ca07d5b69c177f1b3c2ea3a4",
-      "size": 2447
+      "sha256": "189aeaf9292c4052899202e9267bf4b9d0979a695fd639cd3fb626c7d51b8b91",
+      "size": 1425
     }
   },
-  "releaseScope": "news-debug-ui-cleanup",
+  "releaseScope": "news-odbc-charset-fix",
   "uploadFiles": [
-    "SystemManager/assets/js/news.js",
-    "SystemManager/news.html",
+    "inc/json-charset.asp",
+    "admin_api/news.asp",
     "deploy/ftp-manifest.json"
   ]
 }

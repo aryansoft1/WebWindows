@@ -1554,5 +1554,6 @@
     "SystemManager/news.html",
     "news_view.html",
     "deploy/ftp-manifest.json"
-  ]
+  ],
+  "releaseScope": "news-jodit-editor"
 }

@@ -71,7 +71,7 @@
     list.replaceChildren();
     categories.forEach(category => {
       filter.add(new Option(category.name, category.name));
-      categoryInput.add(new Option(category.name, category.name));
+      categoryInput.add(new Option(category.name, String(category.id)));
       const li = document.createElement("li");
       const name = document.createElement("span");
       name.textContent = category.name;
@@ -115,7 +115,10 @@
     editId = item?.id || null;
     el("newsModalTitle").textContent = item ? "编辑新闻" : "发布新闻";
     el("newsTitle").value = item?.title || "";
-    el("newsCategory").value = item?.category || categories[0]?.name || "";
+    const selectedCategory = item
+      ? categories.find(category => category.name === item.category)
+      : categories[0];
+    el("newsCategory").value = selectedCategory ? String(selectedCategory.id) : "";
     el("newsPublishAt").value = item?.publish_at?.replace(" ", "T") || "";
     el("newsContent").value = item?.content || "";
     el("newsModal").hidden = false;
@@ -125,7 +128,7 @@
     try {
       await write("save", {
         id: editId || "", title: el("newsTitle").value.trim(),
-        category: el("newsCategory").value, content: el("newsContent").value.trim(),
+        category_id: el("newsCategory").value, content: el("newsContent").value.trim(),
         publish_at: el("newsPublishAt").value
       });
       el("newsModal").hidden = true;

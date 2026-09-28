@@ -221,6 +221,13 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/dashboardStats.asp",
     "deploy/ftp-manifest.json"
   ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-category-id-save-fix") {
+  assert.deepEqual(uploadFiles, [
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "deploy/ftp-manifest.json"
+  ], "category ID fix must deploy its API and client contract together");
 } else if (manifest.releaseScope === "news-odbc-charset-fix") {
   assert.deepEqual(uploadFiles, [
     "inc/json-charset.asp",

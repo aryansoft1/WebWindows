@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.5",
+  "releaseVersion": "2026.09.28.6",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T03:01:47.230Z",
+  "generatedAt": "2026-09-28T03:06:18.706Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -305,7 +305,7 @@
     "developer-samples/hello-webwindows/manifest.json",
     "inc/json-charset.asp"
   ],
-  "previousReleaseVersion": "2026.09.28.4",
+  "previousReleaseVersion": "2026.09.28.5",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -1267,7 +1267,7 @@
       "size": 6291
     },
     "SystemManager/news.html": {
-      "sha256": "1bac3505e63af53fd3107ab75c35c1e6f1d0e9019c5ab618451caaceb319e094",
+      "sha256": "0a1594dd16af3255853d9a89cad7d66fe29ad1dd4fcce9e3cc246d3da2a94f30",
       "size": 4104
     },
     "SystemManager/settings.html": {
@@ -1299,8 +1299,8 @@
       "size": 19031
     },
     "SystemManager/assets/js/news.js": {
-      "sha256": "782c48e06f6419ae9d3e630226dda84c086f5963207509c241442e7fbfe75d65",
-      "size": 7795
+      "sha256": "e669a96425cf6c1c26787bbd3fa76b137555db71cfd3568e99b6d0cc2e33c8b4",
+      "size": 7938
     },
     "SystemManager/assets/js/news_categories.js": {
       "sha256": "d2e83103e805f0f6d47dc1c0e4941866b3eb865f8d00e5ad29f68c2857348fc9",
@@ -1403,8 +1403,8 @@
       "size": 1192
     },
     "admin_api/news.asp": {
-      "sha256": "62272c5d4089dbd75a196fba5fc0637ddd98a019b1970e805a538b1b765257fe",
-      "size": 25690
+      "sha256": "5735330f7bb7ccbd8ac2c122c04fb4293fe49bdf411d6f127737b59870cac358",
+      "size": 26037
     },
     "admin_api/saveUser.asp": {
       "sha256": "cb6135708c597f2cb49260daafdc45be1206486c3c440aa1671b5178b24d8ced",
@@ -1495,10 +1495,11 @@
       "size": 1425
     }
   },
-  "releaseScope": "news-odbc-charset-fix",
+  "releaseScope": "news-category-id-save-fix",
   "uploadFiles": [
-    "inc/json-charset.asp",
     "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
     "deploy/ftp-manifest.json"
   ]
 }

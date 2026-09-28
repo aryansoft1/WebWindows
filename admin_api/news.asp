@@ -324,9 +324,15 @@ If action = "reconcile-categories" And method = "POST" Then
 End If
 
 If action = "save" And method = "POST" Then
-  Dim title, category, content, publishAt, dateRegex
+  Dim title, category, categoryIdText, categoryId, content, publishAt, dateRegex
   title = Trim(CStr(Request.Form("title")))
-  category = Trim(CStr(Request.Form("category")))
+  categoryIdText = Trim(CStr(Request.Form("category_id")))
+  Set dateRegex = New RegExp
+  dateRegex.Pattern = "^[1-9][0-9]{0,8}$"
+  If Not dateRegex.Test(categoryIdText) Then
+    AdminSecurityFail 400, "INVALID_CATEGORY", "请选择有效的新闻分类。", "valid", "same-origin"
+  End If
+  categoryId = CLng(categoryIdText)
   content = Trim(CStr(Request.Form("content")))
   publishAt = Replace(Trim(CStr(Request.Form("publish_at"))), "T", " ")
   idText = Trim(CStr(Request.Form("id")))
@@ -339,8 +345,8 @@ If action = "save" And method = "POST" Then
     On Error GoTo 0
     If newsId <= 0 Then AdminSecurityFail 400, "INVALID_ID", "新闻编号无效。", "valid", "same-origin"
   End If
-  If title = "" Or category = "" Or content = "" Or _
-     Len(title) > 200 Or Len(category) > 100 Or Len(content) > 20000 Then
+  If title = "" Or content = "" Or _
+     Len(title) > 200 Or Len(content) > 20000 Then
     AdminSecurityFail 400, "INVALID_NEWS", "标题、分类和内容必填，且不能超过长度限制。", "valid", "same-origin"
   End If
   Set dateRegex = New RegExp
@@ -353,10 +359,11 @@ If action = "save" And method = "POST" Then
   Set cmd = Server.CreateObject("ADODB.Command")
   Set cmd.ActiveConnection = conn
   cmd.CommandType = 1
-  cmd.CommandText = "SELECT id FROM webwindows_news_categories WHERE name=? LIMIT 1"
-  cmd.Parameters.Append cmd.CreateParameter("category", 201, 1, 100, category)
+  cmd.CommandText = "SELECT CONVERT(name USING utf8) AS name FROM webwindows_news_categories WHERE id=? LIMIT 1"
+  cmd.Parameters.Append cmd.CreateParameter("category_id", 3, 1, , categoryId)
   Set rs = cmd.Execute
-  If rs.EOF Then AdminSecurityFail 400, "CATEGORY_NOT_FOUND", "请先创建新闻分类。", "valid", "same-origin"
+  If rs.EOF Then AdminSecurityFail 400, "CATEGORY_NOT_FOUND", "所选分类已不存在，请刷新分类列表。", "valid", "same-origin"
+  category = CStr(rs("name"))
   rs.Close
   Set rs = Nothing
   Set cmd = Nothing
@@ -373,9 +380,9 @@ If action = "save" And method = "POST" Then
     cmd.CommandText = "UPDATE webwindows_news SET title=?,category=?,content=?," & _
       "publish_at=STR_TO_DATE(?,'%Y-%m-%d %H:%i') WHERE id=?"
   End If
-  cmd.Parameters.Append cmd.CreateParameter("title", 201, 1, 200, title)
-  cmd.Parameters.Append cmd.CreateParameter("category", 201, 1, 100, category)
-  cmd.Parameters.Append cmd.CreateParameter("content", 201, 1, Len(content), content)
+  cmd.Parameters.Append cmd.CreateParameter("title", 202, 1, 200, title)
+  cmd.Parameters.Append cmd.CreateParameter("category", 202, 1, 100, category)
+  cmd.Parameters.Append cmd.CreateParameter("content", 203, 1, Len(content), content)
   cmd.Parameters.Append cmd.CreateParameter("publish_at", 200, 1, 16, publishAt)
   If newsId > 0 Then cmd.Parameters.Append cmd.CreateParameter("id", 3, 1, , newsId)
   On Error Resume Next
@@ -420,7 +427,7 @@ If action = "add-category" And method = "POST" Then
   Set cmd.ActiveConnection = conn
   cmd.CommandType = 1
   cmd.CommandText = "INSERT INTO webwindows_news_categories(name) VALUES (?)"
-  cmd.Parameters.Append cmd.CreateParameter("name", 201, 1, 100, categoryName)
+  cmd.Parameters.Append cmd.CreateParameter("name", 202, 1, 100, categoryName)
   On Error Resume Next
   cmd.Execute
   If Err.Number <> 0 Then
@@ -474,8 +481,8 @@ If action = "rename-category" And method = "POST" Then
     Set cmd.ActiveConnection = conn
     cmd.CommandType = 1
     cmd.CommandText = "UPDATE webwindows_news SET category=? WHERE category=?"
-    cmd.Parameters.Append cmd.CreateParameter("new_name", 201, 1, 100, newName)
-    cmd.Parameters.Append cmd.CreateParameter("old_name", 201, 1, 100, oldName)
+    cmd.Parameters.Append cmd.CreateParameter("new_name", 202, 1, 100, newName)
+    cmd.Parameters.Append cmd.CreateParameter("old_name", 202, 1, 100, oldName)
     cmd.Execute
     If Err.Number <> 0 Then renameError = CStr(Err.Number)
     Err.Clear
@@ -484,7 +491,7 @@ If action = "rename-category" And method = "POST" Then
       Set cmd.ActiveConnection = conn
       cmd.CommandType = 1
       cmd.CommandText = "UPDATE webwindows_news_categories SET name=? WHERE id=?"
-      cmd.Parameters.Append cmd.CreateParameter("new_name", 201, 1, 100, newName)
+      cmd.Parameters.Append cmd.CreateParameter("new_name", 202, 1, 100, newName)
       cmd.Parameters.Append cmd.CreateParameter("id", 3, 1, , newsId)
       cmd.Execute
       If Err.Number <> 0 Then renameError = CStr(Err.Number)

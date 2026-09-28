@@ -9,6 +9,10 @@
   const pickerAction = document.body.dataset.pickerAction || "open";
   const pickerNodeId = document.body.dataset.nodeId || "local-main";
   const pickerSelections = new Set();
+  // Shared multi-file selection controller (marquee, Ctrl/Shift, drag).
+  // Created during startup; null when the script failed to load, in which case
+  // every call site falls back to the previous single-selection behaviour.
+  let fileSelection = null;
   const directoryNames = {
     public: { zh: "公共区域", jp: "パブリックエリア", en: "Public" },
     welcome: { zh: "欢迎", jp: "ようこそ", en: "Welcome" },
@@ -529,6 +533,10 @@
   }
 
   function activateItem(item) {
+    if (fileSelection) {
+      fileSelection.selectOnly(item);
+      return;
+    }
     document.querySelectorAll(".file-item.selected").forEach((node) => node.classList.remove("selected"));
     item.classList.add("selected");
   }
@@ -540,6 +548,10 @@
       document.querySelectorAll(".file-item.selected").forEach((node) => node.classList.remove("selected"));
       pickerSelections.add(item);
       item.classList.add("selected");
+    } else if (fileSelection) {
+      // The shared controller owns the "selected" class and the anchor rules;
+      // delegating keeps picker mode and browse mode behaving identically.
+      fileSelection.setSelection([item], item);
     } else if (pickerSelections.has(item)) {
       pickerSelections.delete(item);
       item.classList.remove("selected");
@@ -547,13 +559,20 @@
       pickerSelections.add(item);
       item.classList.add("selected");
     }
+    syncPickerSelectionUi();
+  }
+
+  function syncPickerSelectionUi() {
     const selections = Array.from(pickerSelections);
-    document.getElementById("picker-selection-text").textContent = selections.length
+    const label = document.getElementById("picker-selection-text");
+    if (!label) return;
+    label.textContent = selections.length
       ? (pickerMultiple
         ? cloudI18n.text("selectedCount", { count: selections.length }, currentLanguage)
         : `${selections[0].dataset.name} · ${Math.ceil(Number(selections[0].dataset.size || 0) / 1024)} KB`)
       : cloudI18n.text("nothingSelected", null, currentLanguage);
-    document.getElementById("picker-confirm").disabled = selections.length === 0;
+    const confirm = document.getElementById("picker-confirm");
+    if (confirm) confirm.disabled = selections.length === 0;
   }
 
   function pickerMessage(type, resources) {
@@ -639,6 +658,14 @@
   });
   document.querySelectorAll(".file-item").forEach((item) => {
     item.addEventListener("click", (event) => {
+      // A modified click means "extend the selection", never "open". Without
+      // this a Ctrl+click on a folder would navigate away and destroy the
+      // multi-selection the user is building.
+      const modified = event.ctrlKey || event.metaKey || event.shiftKey;
+      if (modified) {
+        event.preventDefault();
+        return;
+      }
       if (item.dataset.kind === "folder") {
         activateItem(item);
         event.preventDefault();
@@ -704,4 +731,40 @@
   updateNavigationButtons();
   applyDirectoryDisplayNames();
   loadFolderTree();
+
+  // Multi-file selection: marquee, Ctrl/Shift extend, Ctrl+A, Escape, drag.
+  const listHost = document.querySelector(".file-list") || document.querySelector(".main");
+  if (listHost && window.WebWindowsFileSelection && !pickerMode) {
+    // Dragging is offered only for files, never for folders: a folder drop
+    // target is what makes "move into folder" meaningful, and the public
+    // scope is read-only so there is nothing to move.
+    const isSelectable = (node) => node.dataset.pickerEligible !== "false"
+      || !node.hasAttribute("disabled");
+    document.querySelectorAll(".file-item.file").forEach((node) => {
+      node.draggable = true;
+    });
+    document.querySelectorAll(".file-item.folder").forEach((node) => {
+      node.setAttribute("data-drop-target", "folder");
+    });
+    fileSelection = window.WebWindowsFileSelection.create({
+      container: listHost,
+      itemSelector: ".file-item",
+      isSelectable,
+      buildPayload: (selection) => ({
+        kind: "cloud-public",
+        nodeId: pickerNodeId,
+        label: selection.length === 1
+          ? selection[0].dataset.name
+          : `${selection.length} items`,
+        items: selection.map((node) => ({
+          name: node.dataset.name,
+          path: node.dataset.path,
+          kind: node.dataset.kind,
+          size: Number(node.dataset.size || 0),
+          mimeType: node.dataset.mimeType || "application/octet-stream",
+          resourceUrl: node.dataset.resourceUrl || "",
+        })),
+      }),
+    });
+  }
 })();

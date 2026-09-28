@@ -395,6 +395,47 @@ button.device-location:hover,button.device-entry:hover { border-color: #60a5fa; 
   background: #eff6ff;
 }
 
+/*
+ * Multi-file selection (see file-selection.js). Windows keeps the hovered and
+ * the selected states visually distinct, so hovering an already-selected item
+ * must not erase the fact that it is selected.
+ */
+.file-item.selected,
+button.device-entry.selected {
+  border-color: #2563eb;
+  background: #dbeafe;
+  box-shadow: inset 0 0 0 1px #2563eb;
+}
+
+.file-item.selected:hover,
+button.device-entry.selected:hover {
+  background: #c7ddfd;
+}
+
+/* The rubber-band rectangle drawn while lassoing. */
+.selection-marquee {
+  position: absolute;
+  z-index: 5;
+  border: 1px solid #2563eb;
+  border-radius: 2px;
+  background: rgba(37, 99, 235, .14);
+  pointer-events: none;
+}
+
+/* The container the marquee is positioned in must establish a positioning
+   context, otherwise the rectangle anchors to the page instead of the grid. */
+.file-list,
+.device-content {
+  position: relative;
+}
+
+/* A folder that will accept the dragged selection. */
+[data-drop-target].drop-target {
+  border-color: #16a34a;
+  background: #dcfce7;
+  box-shadow: inset 0 0 0 1px #16a34a;
+}
+
 .file-list.large .file-item {
   display: flex;
   min-height: 112px;

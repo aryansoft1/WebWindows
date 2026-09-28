@@ -32,8 +32,14 @@ body {
 
 .icon {
     position: relative;
-    max-width: 100px;
-    max-height: 100px;
+    /*
+     * Windows-style fixed icon cell. The cell width must not depend on the
+     * label: a long name used to widen the box, so the icon visibly "grew" and
+     * the desktop grid lost its rhythm. Every icon now occupies the same cell
+     * and the label is truncated instead (see `.icon label`).
+     */
+    width: 80px;
+    max-width: 80px;
     text-align: center;
     user-select: none;
     flex-shrink: 0; /* 禁止被压缩 */
@@ -84,6 +90,12 @@ body.webwindows-visual-brightness::after {
         font-size: 12px;
         color: white;
         pointer-events: none;
+        /* Truncate like Windows: stay inside the icon cell and end with an ellipsis. */
+        max-width: 80px;
+        margin: 0 auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     /* 防止点击出现outline等影响布局 */

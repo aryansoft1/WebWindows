@@ -154,7 +154,7 @@ itemCount = subfolders.Count + visibleFileCount
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>WebWindows <%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></title>
-  <link rel="stylesheet" href="styles.css?v=20260809-device-1">
+  <link rel="stylesheet" href="styles.css?v=20260928-selection-1">
   <link rel="stylesheet" href="file-search.css?v=20260809-search-1">
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
@@ -392,7 +392,8 @@ itemCount = subfolders.Count + visibleFileCount
     </div>
   </div>
 
-  <script src="toolbar.js?v=20260730-1"></script>
+  <script src="file-selection.js?v=20260928-selection-1"></script>
+  <script src="toolbar.js?v=20260928-selection-1"></script>
   <% If Not pickerMode Then %><script src="device-locations.js?v=20260809-device-1"></script><% End If %>
 </body>
 </html>

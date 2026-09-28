@@ -7,6 +7,9 @@
   let volumes = [];
   let activeVolume = null;
   let activePath = [];
+  // Shared multi-file selection controller; null when unavailable, in which
+  // case single-item behaviour is unchanged.
+  let fileSelection = null;
 
   const labels = {
     zh: {
@@ -162,6 +165,16 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = `device-entry${entry.kind === "directory" ? " is-folder" : ""}`;
+    // Windows marks each entry with its absolute location so a drag or a
+    // selection survives a re-render of the grid.
+    button.dataset.kind = entry.kind === "directory" ? "directory" : "file";
+    button.dataset.path = Array.isArray(entry.path) ? entry.path.join("/") : String(entry.path || "");
+    button.dataset.name = entry.name || "";
+    if (entry.kind === "directory") {
+      button.setAttribute("data-drop-target", "directory");
+    } else {
+      button.draggable = true;
+    }
     const icon = document.createElement("span");
     icon.className = "device-entry-icon";
     icon.textContent = entry.kind === "directory" ? "▰" : (String(entry.name || "").split(".").pop() || "FILE").slice(0, 4).toUpperCase();
@@ -178,9 +191,19 @@
     metadata.textContent = details.filter(Boolean).join(" · ");
     copy.append(name, metadata);
     button.append(icon, copy);
-    button.addEventListener("click", () => entry.kind === "directory"
-      ? openDirectory(activeVolume, entry.path || [...activePath, entry.name])
-      : openLocalFile(activeVolume, entry));
+    button.addEventListener("click", (event) => {
+      // Ctrl/Shift clicks belong to the multi-selection controller, so a
+      // modified click must not open the file or enter the directory.
+      if (event.ctrlKey || event.metaKey || event.shiftKey) {
+        event.preventDefault();
+        return;
+      }
+      if (entry.kind === "directory") {
+        openDirectory(activeVolume, entry.path || [...activePath, entry.name]);
+      } else {
+        openLocalFile(activeVolume, entry);
+      }
+    });
     return button;
   }
 
@@ -226,11 +249,41 @@
     setStatus("");
   }
 
+  /*
+   * Multi-file selection for the on-device panel: marquee, Ctrl/Shift extend,
+   * Ctrl+A, Escape and drag. Wired once against the persistent content
+   * container, so it keeps working across directory re-renders.
+   */
+  function installSelection() {
+    const content = elements().content;
+    if (!content || fileSelection || !global.WebWindowsFileSelection) return;
+    fileSelection = global.WebWindowsFileSelection.create({
+      container: content,
+      itemSelector: ".device-entry",
+      isSelectable: (node) => node.dataset.kind === "file" || node.dataset.kind === "directory",
+      buildPayload: (selection) => ({
+        kind: "device",
+        volumeId: activeVolume?.id || "",
+        label: selection.length === 1
+          ? selection[0].dataset.name
+          : `${selection.length} items`,
+        items: selection.map((node) => ({
+          name: node.dataset.name,
+          path: node.dataset.path,
+          kind: node.dataset.kind,
+        })),
+      }),
+    });
+  }
+
   async function openDirectory(volume, path) {
     activeVolume = volume;
     activePath = Array.isArray(path) ? [...path] : [];
     renderBreadcrumbs();
     const content = elements().content;
+    // The grid is rebuilt from scratch, so the old selection no longer refers
+    // to anything on screen. Clear it instead of leaving a stale highlight.
+    fileSelection?.clear();
     content.replaceChildren();
     setStatus(text("loading"));
     try {
@@ -288,6 +341,7 @@
     const state = await availability(storage);
     if (state.state === "unsupported" || state.state === "empty") return;
     volumes = state.volumes;
+    installSelection();
     ui.root.hidden = false;
     ui.add.hidden = true;
     ui.root.querySelector("span:last-child").textContent = text("device");
@@ -300,6 +354,7 @@
     const ui = elements();
     const label = ui.root?.querySelector("span:last-child");
     if (label) label.textContent = text("device");
+    installSelection();
     if (!ui.panel?.hidden) {
       if (activeVolume) openDirectory(activeVolume, activePath);
       else renderVolumes();

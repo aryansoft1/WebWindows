@@ -27,9 +27,6 @@
     .hint { margin:8px 0 0; padding:8px 10px; border-radius:6px; background:#fff7ed; color:#9a3412; }
     .hint[hidden] { display:none; }
     #categoryList li span .usage { color:#64748b; font-size:12px; }
-    #diagnosePanel { margin:10px 0 0; border:1px solid #cbd5e1; border-radius:8px; padding:10px 12px; }
-    #diagnosePanel[hidden] { display:none; } #diagnosePanel summary { cursor:pointer; color:#475569; }
-    #diagnoseOutput { margin:10px 0 0; max-height:340px; overflow:auto; font:12px/1.6 ui-monospace,Consolas,monospace; white-space:pre-wrap; }
   </style>
 </head>
 <body>
@@ -39,13 +36,9 @@
     <p id="newsHint" class="hint" hidden></p>
     <div class="toolbar">
       <label>分类筛选 <select id="newsFilter"><option value="">全部</option></select></label>
-      <div><button id="newNews">发布新闻</button> <button id="reconcileCategories" class="secondary">按新闻补齐分类</button> <button id="manageCategories" class="secondary">分类管理</button> <button id="diagnoseCategories" class="secondary">诊断分类数据</button></div>
+      <div><button id="newNews">发布新闻</button> <button id="manageCategories" class="secondary">分类管理</button></div>
     </div>
     <p id="newsStatus" role="status">正在加载新闻…</p>
-    <details id="diagnosePanel" hidden>
-      <summary>分类与新闻的逐行对照</summary>
-      <pre id="diagnoseOutput"></pre>
-    </details>
     <table><thead><tr><th>标题</th><th>分类</th><th>发布时间</th><th>操作</th></tr></thead><tbody id="newsRows"></tbody></table>
   </main>
   <div id="newsModal" class="modal" hidden>
@@ -68,6 +61,6 @@
       <footer><button type="button" id="closeCategories" class="secondary">关闭</button></footer>
     </div>
   </div>
-  <script src="assets/js/news.js?v=20260928-6"></script>
+  <script src="assets/js/news.js?v=20260928-7"></script>
 </body>
 </html>

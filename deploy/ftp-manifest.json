@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.3",
+  "releaseVersion": "2026.09.28.4",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-27T22:34:47.631Z",
+  "generatedAt": "2026-09-28T02:39:36.359Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -305,7 +305,7 @@
     "developer-samples/hello-webwindows/manifest.json",
     "inc/json-charset.asp"
   ],
-  "previousReleaseVersion": "2026.09.28.2",
+  "previousReleaseVersion": "2026.09.28.3",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -1267,8 +1267,8 @@
       "size": 6291
     },
     "SystemManager/news.html": {
-      "sha256": "f0d5961a218f8b75717a35c66b877a8ed9d01082f1575c9841a59bb0854a0b29",
-      "size": 4763
+      "sha256": "1bac3505e63af53fd3107ab75c35c1e6f1d0e9019c5ab618451caaceb319e094",
+      "size": 4104
     },
     "SystemManager/settings.html": {
       "sha256": "a66a5e97b2c152871d41e277c28cc4a1040a39e636848fa699278e0b054a9458",
@@ -1299,8 +1299,8 @@
       "size": 19031
     },
     "SystemManager/assets/js/news.js": {
-      "sha256": "cd72e02fec0a5689b67440955497229979254d893ad388bdf5f3c905fd4346d8",
-      "size": 13012
+      "sha256": "782c48e06f6419ae9d3e630226dda84c086f5963207509c241442e7fbfe75d65",
+      "size": 7795
     },
     "SystemManager/assets/js/news_categories.js": {
       "sha256": "d2e83103e805f0f6d47dc1c0e4941866b3eb865f8d00e5ad29f68c2857348fc9",
@@ -1495,14 +1495,8 @@
       "size": 2447
     }
   },
-  "releaseScope": "news-category-encoding-fix",
+  "releaseScope": "news-debug-ui-cleanup",
   "uploadFiles": [
-    "inc/json-charset.asp",
-    "inc/admin-security.asp",
-    "getNews.asp",
-    "getNewsById.asp",
-    "getPrevNextNews.asp",
-    "admin_api/news.asp",
     "SystemManager/assets/js/news.js",
     "SystemManager/news.html",
     "deploy/ftp-manifest.json"

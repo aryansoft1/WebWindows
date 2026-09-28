@@ -2,9 +2,10 @@
   "use strict";
 
   const LIBRARY_KEY = "webwindows.wallpaper.library.v1";
+  const CATALOG_URL = "api/wallpapers.asp";
   const MANIFEST_URL = "assets/data/wallpaper-index.json";
   let builtInWallpapers = [];
-  let manifestRequested = false;
+  let catalogRequested = false;
 
   function readCloudLibrary() {
     try {
@@ -25,23 +26,31 @@
     return { url, name: entry.name || "" };
   }
 
+  function readJson(url) {
+    return fetch(url, { cache: "no-cache" }).then((response) => {
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    });
+  }
+
+  function applyCatalog(payload) {
+    const entries = Array.isArray(payload) ? payload : payload?.wallpapers;
+    builtInWallpapers = (Array.isArray(entries) ? entries : [])
+      .map(normalizeEntry)
+      .filter(Boolean);
+  }
+
+  /* The live catalogue reflects administrator uploads; the generated manifest
+   * keeps the library working when the endpoint is unavailable. */
   function loadBuiltInWallpapers() {
-    if (manifestRequested) return Promise.resolve();
-    manifestRequested = true;
-    return fetch(MANIFEST_URL, { cache: "no-cache" })
-      .then((response) => {
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
-      })
-      .then((payload) => {
-        const entries = Array.isArray(payload) ? payload : payload?.wallpapers;
-        builtInWallpapers = (Array.isArray(entries) ? entries : [])
-          .map(normalizeEntry)
-          .filter(Boolean);
-      })
+    if (catalogRequested) return Promise.resolve();
+    catalogRequested = true;
+    return readJson(CATALOG_URL)
+      .then(applyCatalog)
+      .catch(() => readJson(MANIFEST_URL).then(applyCatalog))
       .catch(() => {
         builtInWallpapers = [];
-        manifestRequested = false;
+        catalogRequested = false;
       });
   }
 

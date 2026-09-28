@@ -29,6 +29,7 @@ const files = [
   "admin_api/dashboardStats.asp",
   "admin_api/settings.asp",
   "admin_api/developerContent.asp",
+  "admin_api/wallpapers.asp",
   "developer_content.asp",
   "admin_api/adminAuth.asp",
   "api/feedback.asp",
@@ -40,7 +41,8 @@ const files = [
   "api/runtime-release.asp",
   "api/railway-proxy.asp",
   "api/visitor-analytics.asp",
-  "api/region-geo.asp"
+  "api/region-geo.asp",
+  "api/wallpapers.asp"
 ];
 
 for (const relative of files) {

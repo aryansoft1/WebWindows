@@ -68,7 +68,7 @@ function createElement(tagName) {
   };
 }
 
-function runWallpaperLibrary({ manifest, storage = {}, failFetch = false }) {
+function runWallpaperLibrary({ manifest, storage = {}, failUrls = [] }) {
   const requested = [];
   const listeners = new Map();
   const container = {
@@ -97,7 +97,7 @@ function runWallpaperLibrary({ manifest, storage = {}, failFetch = false }) {
     },
     fetch: async (url) => {
       requested.push(url);
-      if (failFetch) throw new Error("network unavailable");
+      if (failUrls.includes(url)) throw new Error("network unavailable");
       return { ok: true, json: async () => manifest };
     }
   };
@@ -111,9 +111,12 @@ function runWallpaperLibrary({ manifest, storage = {}, failFetch = false }) {
   return { sandbox, container, requested, storage: store, fire: (type) => listeners.get(type)?.() };
 }
 
-const loaded = runWallpaperLibrary({ manifest: index });
+const liveCatalog = { ok: true, defaultWallpaper: "", wallpapers: index.wallpapers };
+
+const loaded = runWallpaperLibrary({ manifest: liveCatalog });
 await loaded.fire("DOMContentLoaded");
-assert.deepEqual(loaded.requested, ["assets/data/wallpaper-index.json"]);
+assert.deepEqual(loaded.requested, ["api/wallpapers.asp"],
+  "壁纸库必须优先读取线上目录接口");
 assert.equal(loaded.container.children.length, index.wallpapers.length,
   "清单里的每一张壁纸都必须渲染成缩略图");
 assert.deepEqual(
@@ -124,8 +127,15 @@ assert.ok(loaded.container.children.every((node) => node.className === "wallpape
 assert.ok(loaded.container.children.every((node) => node.alt && node.title),
   "缩略图必须有可访问的名称");
 
+const fallback = runWallpaperLibrary({ manifest: index, failUrls: ["api/wallpapers.asp"] });
+await fallback.fire("DOMContentLoaded");
+assert.deepEqual(fallback.requested, ["api/wallpapers.asp", "assets/data/wallpaper-index.json"],
+  "线上接口不可用时必须回退到静态清单");
+assert.equal(fallback.container.children.length, index.wallpapers.length,
+  "回退到静态清单后仍要显示全部壁纸");
+
 const active = runWallpaperLibrary({
-  manifest: index,
+  manifest: liveCatalog,
   storage: { selectedWallpaper: index.wallpapers[2].url }
 });
 await active.fire("DOMContentLoaded");
@@ -133,7 +143,7 @@ assert.equal(active.container.children.filter((node) => node.classList.has("acti
   "当前壁纸必须保持选中状态");
 
 const withCloud = runWallpaperLibrary({
-  manifest: index,
+  manifest: liveCatalog,
   storage: {
     "webwindows.wallpaper.library.v1": JSON.stringify([
       { url: "https://cdn.example.com/custom.jpg", name: "云端壁纸" }
@@ -144,7 +154,10 @@ await withCloud.fire("DOMContentLoaded");
 assert.equal(withCloud.container.children.length, index.wallpapers.length + 1,
   "云端壁纸库必须与内置清单合并");
 
-const offline = runWallpaperLibrary({ manifest: index, failFetch: true });
+const offline = runWallpaperLibrary({
+  manifest: index,
+  failUrls: ["api/wallpapers.asp", "assets/data/wallpaper-index.json"]
+});
 await offline.fire("DOMContentLoaded");
 assert.equal(offline.container.children.length, 1);
 assert.equal(offline.container.children[0].textContent, "壁纸库暂时为空。",

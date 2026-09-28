@@ -218,6 +218,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 关键步骤：调用全局函数来设置壁纸
         window.setWallpaperByPath(savedPath);
+    } else if (window.setWallpaperByPath && !localStorage.getItem("wallpaperDefaultResolved")) {
+        // 从未选择过壁纸的用户采用管理员设定的系统默认壁纸，只尝试一次，
+        // 之后以用户自己的选择为准。
+        localStorage.setItem("wallpaperDefaultResolved", "1");
+        fetch("api/wallpapers.asp", { cache: "no-cache" })
+            .then(response => (response.ok ? response.json() : null))
+            .then(catalog => {
+                const fallback = catalog && catalog.defaultWallpaper;
+                if (!fallback) return;
+                localStorage.setItem("selectedWallpaper", fallback);
+                window.setWallpaperByPath(fallback);
+                console.log("[Wallpaper] 已应用系统默认壁纸:", fallback);
+            })
+            .catch(() => { /* 没有默认壁纸时保持系统自带背景 */ });
     }
     // -------------------------------------
   });

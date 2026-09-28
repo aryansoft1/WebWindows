@@ -1,0 +1,73 @@
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
+const read = (relative) => fs.readFile(path.join(root, relative), "utf8");
+
+const [adminApi, publicApi, page, script, main] = await Promise.all([
+  read("admin_api/wallpapers.asp"),
+  read("api/wallpapers.asp"),
+  read("SystemManager/wallpapers.html"),
+  read("SystemManager/assets/js/wallpapers.js"),
+  read("assets/js/main.js")
+]);
+
+/* Both endpoints must sit behind the shared admin security gate. Uploads are
+ * urlencoded because the gate rejects multipart, and every mutation has to be
+ * audited, or an anonymous request could write into the wallpaper folder. */
+assert.match(adminApi, /AdminSecurityRequireRead "system-manager", "wallpapers-list"/,
+  "壁纸列表必须使用后台只读鉴权");
+assert.match(adminApi, /AdminSecurityRequireMutation "system-manager", "wallpapers-" & action/,
+  "壁纸写操作必须使用后台变更鉴权");
+assert.match(adminApi, /AdminSecurityAudit "wallpaper-upload", "success"/);
+assert.match(adminApi, /AdminSecurityAudit "wallpaper-delete", "success"/);
+assert.match(adminApi, /AdminSecurityAudit "wallpaper-default", "success"/);
+assert.doesNotMatch(adminApi, /Session\("webwindows_admin"\)\s*=\s*True/,
+  "壁纸接口不得自行放宽管理员会话校验");
+
+/* The catalogue and the admin API must agree on the managed folder, otherwise
+ * an upload would be invisible to the desktop wallpaper library. */
+for (const [name, source] of [["admin_api/wallpapers.asp", adminApi], ["api/wallpapers.asp", publicApi]]) {
+  assert.match(source, /Const WALLPAPER_ROOT = "\\assets\\wallpapers\\"/,
+    `${name} 必须管理 assets/wallpapers 目录`);
+  assert.match(source, /IsImageFile/, `${name} 必须限制可接受的图片扩展名`);
+  for (const extension of [".jpg", ".png", ".webp", ".gif", ".avif", ".bmp"]) {
+    assert.ok(source.includes(`"${extension}"`), `${name} 缺少允许的扩展名 ${extension}`);
+  }
+}
+
+/* Upload validation and path safety. */
+assert.match(adminApi, /MAX_UPLOAD_BYTES = 4194304/, "单张壁纸上限为 4MB");
+assert.match(adminApi, /SafeName\(ByVal rawName\)/, "上传文件名必须经过清洗");
+assert.doesNotMatch(adminApi, /Request\.Files|multipart/,
+  "上传不能依赖 multipart，后台安全网关只接受 urlencoded");
+assert.match(adminApi, /InStr\(relativeName, "\.\."\) > 0/,
+  "删除操作必须拒绝路径穿越");
+assert.match(adminApi, /Left\(LCase\(requestedUrl\), Len\(ToUrlPath\(WALLPAPER_ROOT\)\)\)/,
+  "删除与设默认必须限定在壁纸目录内");
+assert.match(adminApi, /default_wallpaper/, "系统默认壁纸必须写入后台设置表");
+assert.match(publicApi, /default_wallpaper/, "公开目录接口必须返回系统默认壁纸");
+assert.match(publicApi, /fso\.FileExists/, "公开目录接口必须剔除已不存在的默认壁纸");
+
+/* The console must guard uploads with the size the endpoint enforces, and it
+ * must verify the stored byte count so a truncated write cannot pass silently. */
+assert.match(script, /MAX_UPLOAD_BYTES = 4 \* 1024 \* 1024/);
+assert.match(script, /result\.bytes !== file\.size/,
+  "上传后必须比对服务器保存的字节数");
+assert.match(script, /security\.authorize/);
+assert.match(script, /X-WebWindows-Admin-Request": "system-manager"/);
+assert.match(script, /"delete"/);
+assert.match(script, /"default"/);
+assert.match(page, /id="wallpaperGrid"/);
+assert.match(page, /assets\/js\/wallpapers\.js/);
+assert.match(page, /admin-security\.js/);
+assert.match(page, /page-guard\.js/);
+
+/* New users without a stored wallpaper take the administrator default once. */
+assert.match(main, /wallpaperDefaultResolved/,
+  "桌面启动必须只在用户未选择过壁纸时读取系统默认壁纸");
+assert.match(main, /api\/wallpapers\.asp/);
+
+console.log("wallpaper admin smoke test passed");

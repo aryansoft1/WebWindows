@@ -29,13 +29,13 @@ for (const file of files) {
   seen.add(relative);
   const info = await stat(file);
   wallpapers.push({
-    path: relative,
+    url: relative,
     name: path.basename(file, path.extname(file)),
     bytes: info.size
   });
 }
 wallpapers.sort((left, right) =>
-  left.path.localeCompare(right.path, undefined, { numeric: true, sensitivity: "base" })
+  left.url.localeCompare(right.url, undefined, { numeric: true, sensitivity: "base" })
 );
 if (!wallpapers.length) throw new Error(`未在 ${path.relative(root, sourceDirectory)} 找到任何壁纸图片`);
 

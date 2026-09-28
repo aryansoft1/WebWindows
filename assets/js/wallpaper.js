@@ -20,8 +20,9 @@
 
   function normalizeEntry(entry) {
     if (typeof entry === "string") return { url: entry, name: "" };
-    if (!entry?.url) return null;
-    return { url: entry.url, name: entry.name || "" };
+    const url = entry?.url || entry?.path;
+    if (!url) return null;
+    return { url, name: entry.name || "" };
   }
 
   function loadBuiltInWallpapers() {

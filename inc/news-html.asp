@@ -36,8 +36,19 @@ Function NewsHtmlUrl(ByVal value, ByVal image)
   End If
   If valid Then NewsHtmlUrl = value Else NewsHtmlUrl = ""
 End Function
-Function NewsHtmlStyle(ByVal value)
-  Dim part, pairs, key, val, valid, result, n, nums, re, matches, item, font
+Function NewsHtmlDimension(ByVal value)
+  Dim unit, number, pieces, n
+  NewsHtmlDimension = False
+  If Not NewsHtmlMatches(value, "^[0-9]{1,4}(\.[0-9]{1,4})?(px|%)$") Then Exit Function
+  unit = Right(value, 1)
+  If unit = "%" Then number = Left(value, Len(value)-1) Else number = Left(value, Len(value)-2)
+  pieces = Split(number, ".")
+  n = CLng(pieces(0))
+  If UBound(pieces) = 1 Then n = n + CLng(pieces(1)) / (10 ^ Len(pieces(1)))
+  If unit = "%" Then NewsHtmlDimension = (n >= 1 And n <= 100) Else NewsHtmlDimension = (n >= 1 And n <= 2000)
+End Function
+Function NewsHtmlStyle(ByVal value, ByVal tag)
+  Dim part, pairs, key, val, valid, result, n, nums, re, matches, item, font, borderParts
   result = ""
   For Each part In Split(value, ";")
     pairs = Split(part, ":", 2)
@@ -79,6 +90,16 @@ Function NewsHtmlStyle(ByVal value)
         Case "text-decoration"
           valid = NewsHtmlMatches(val, "^(underline|line-through|none)$")
       End Select
+      If InStr("|img|table|td|th|", "|" & tag & "|") > 0 And (key = "width" Or key = "height") Then valid = NewsHtmlDimension(val)
+      If tag = "table" And key = "margin-left" And Right(val, 1) = "%" Then valid = NewsHtmlDimension(val)
+      If InStr("|table|td|th|", "|" & tag & "|") > 0 Then
+        If key = "border-collapse" Then valid = (val = "collapse")
+        If key = "border" And NewsHtmlMatches(val, "^[0-9]{1,2}px (solid|dashed|dotted) .+$") Then
+          borderParts = Split(val, " ", 3)
+          valid = (CLng(Left(borderParts(0), Len(borderParts(0))-2)) <= 10 And NewsHtmlStyle("color:" & borderParts(2), "") <> "")
+        End If
+      End If
+      If (tag = "td" Or tag = "th") And key = "vertical-align" Then valid = NewsHtmlMatches(val, "^(top|middle|bottom)$")
       If valid Then
         If result <> "" Then result = result & ";"
         result = result & key & ":" & val
@@ -120,7 +141,7 @@ Function NewsHtmlTag(ByVal token)
     safe = ""
     If Not seen.Exists(name) Then
       seen.Add name, True
-      If name = "style" Then safe = NewsHtmlStyle(value)
+      If name = "style" Then safe = NewsHtmlStyle(value, tag)
       If tag = "a" And name = "href" Then safe = NewsHtmlUrl(value, False)
       If tag = "a" And name = "title" Then safe = Left(value, 200)
       If tag = "img" And name = "src" Then

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.9",
+  "releaseVersion": "2026.09.28.10",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T04:16:24.081Z",
+  "generatedAt": "2026-09-28T04:34:24.768Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -307,9 +307,14 @@
     "assets/js/news-content.js",
     "assets/css/admin-richtext.css",
     "assets/js/admin-richtext.js",
-    "inc/news-html.asp"
+    "inc/news-html.asp",
+    "assets/vendor/jodit/4.15.14/jodit.min.js",
+    "assets/vendor/jodit/4.15.14/jodit.min.css",
+    "assets/vendor/jodit/4.15.14/LICENSE.txt",
+    "assets/vendor/jodit/4.15.14/SOURCE.json",
+    "assets/vendor/jodit/4.15.14/README.md"
   ],
-  "previousReleaseVersion": "2026.09.28.8",
+  "previousReleaseVersion": "2026.09.28.9",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -968,7 +973,7 @@
       "size": 1970
     },
     "news_view.html": {
-      "sha256": "b203587eebf0b7e0fdd520e874232ef1c9d5aa809cb8a2a77959434baadb6e49",
+      "sha256": "bf75f70e582d9ece6f96cd727cabc1f52b66ceebb2983a3d2035662f00b3eeaf",
       "size": 2828
     },
     "news.html": {
@@ -1271,8 +1276,8 @@
       "size": 6291
     },
     "SystemManager/news.html": {
-      "sha256": "0db850e0aab9f6bec3f0aeb056324b9df579ee27669cff27e0202ad27a0946d3",
-      "size": 4629
+      "sha256": "9e0f501171cbfa66e29ffe9656754a6c65ae5e998bd857e69838b84fcd70617f",
+      "size": 4841
     },
     "SystemManager/settings.html": {
       "sha256": "a66a5e97b2c152871d41e277c28cc4a1040a39e636848fa699278e0b054a9458",
@@ -1499,30 +1504,53 @@
       "size": 1425
     },
     "assets/js/news-content.js": {
-      "sha256": "66d8fe0fa27c3aea64545b9845b9f65c75fa7e1463c9b4e8bc63ca490f595d7c",
-      "size": 5316
+      "sha256": "0e7a1016428d306a9cc7fbe16bf74715993254eeef0def8b4aa09e0ec5700b27",
+      "size": 6183
     },
     "assets/css/admin-richtext.css": {
-      "sha256": "cf767d212bfdd3223fca8be89b14581ac144680ac25e96cccbe684b4033d8b69",
-      "size": 2896
+      "sha256": "2b152b804b8551c5c43802a6ee91cae4bc443f7d978e4ed18a9bae7c54fa72b2",
+      "size": 1281
     },
     "assets/js/admin-richtext.js": {
-      "sha256": "6f5e266c555bc97b2aa53fee56f669e3cd8685caf193625ee066570f39242792",
-      "size": 15237
+      "sha256": "9822cb3b951ea54a3c152dcb2420a340dead40ec0c3d842a160a3f6c9c8961df",
+      "size": 4475
     },
     "inc/news-html.asp": {
-      "sha256": "c15bd8bc20f377860738e2387cf89ca714a4b55168ca7bc34f024100e00fb876",
-      "size": 7574
+      "sha256": "de8616d95879f3d49969108a87d7dc1e3b81a34a3aed8ae2ff5ff185f1ada14f",
+      "size": 8970
+    },
+    "assets/vendor/jodit/4.15.14/jodit.min.js": {
+      "sha256": "0e5a50cb5f0004bccac4a22eaadfc8faa6d74131e03e28786d157b25f98b1a76",
+      "size": 835895
+    },
+    "assets/vendor/jodit/4.15.14/jodit.min.css": {
+      "sha256": "cb7dfd894fed5116e4a2369c24edd31503c1cc9ddebfa497962554419b13732c",
+      "size": 178889
+    },
+    "assets/vendor/jodit/4.15.14/LICENSE.txt": {
+      "sha256": "b6eccb41553c575c01f6a1261e87fdc7b842a721d6ba9daa88bdbd9259865d55",
+      "size": 1067
+    },
+    "assets/vendor/jodit/4.15.14/SOURCE.json": {
+      "sha256": "b29340991e838b89e43b080981bdfa85e97acd91c25224e0856c0975f5ed8012",
+      "size": 843
+    },
+    "assets/vendor/jodit/4.15.14/README.md": {
+      "sha256": "10d759fe21fd1eab6491cded83591a6caf084245499c7fe36d85ef0c0f38ff37",
+      "size": 422
     }
   },
-  "releaseScope": "news-full-rich-editor",
+  "releaseScope": "news-jodit-editor",
   "uploadFiles": [
-    "assets/css/admin-richtext.css",
+    "assets/vendor/jodit/4.15.14/jodit.min.js",
+    "assets/vendor/jodit/4.15.14/jodit.min.css",
+    "assets/vendor/jodit/4.15.14/LICENSE.txt",
+    "assets/vendor/jodit/4.15.14/SOURCE.json",
+    "assets/vendor/jodit/4.15.14/README.md",
     "assets/js/news-content.js",
     "assets/js/admin-richtext.js",
+    "assets/css/admin-richtext.css",
     "inc/news-html.asp",
-    "admin_api/news.asp",
-    "SystemManager/assets/js/news.js",
     "SystemManager/news.html",
     "news_view.html",
     "deploy/ftp-manifest.json"

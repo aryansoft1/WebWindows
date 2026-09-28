@@ -3,6 +3,8 @@ import {readFileSync,writeFileSync} from 'node:fs';
 const code=readFileSync(new URL('../inc/news-html.asp',import.meta.url),'utf8').replace(/^\uFEFF?<%/,'').replace(/%>\s*$/,'');
 const q=value=>'"'+value.replaceAll('"','""')+'"';
 const cases=[
+ ['<table style="border-collapse:collapse;width:80.25%;margin-left:5.5%"><tr><td style="width:50%;border:1px solid rgb(18, 52, 86);vertical-align:middle;background-color:#abcdef">Cell</td></tr></table><img src="https://example.com/i.png" style="width:300px;height:200px">', /width:80.25%/, /border:1px solid rgb\(18, 52, 86\)/, /vertical-align:middle/, /width:300px;height:200px/],
+ ['<p style="width:100%;height:500px">Normal</p><td style="width:9999px;vertical-align:expression(x);border:999px solid #fff">Cell</td>', /^<p>Normal<\/p><td>Cell<\/td>$/],
  ['<h1>Title</h1><p style="text-align:center;color:#123456;font-size:24px;font-family:Georgia">Body</p>', /<h1>Title<\/h1>/, /text-align:center;color:#123456;font-size:24px;font-family:Georgia/],
  ['<p onclick="evil()">Keep<script>alert(1)</script><img src="data:image/png;base64,x" onerror="evil()"><a href="javascript:alert(1)">Link</a></p>', /Keep/, /<a rel="noopener noreferrer">Link<\/a>/],
  ['<table><tbody><tr><th colspan="2">Heading</th></tr><tr><td>One</td><td>Two</td></tr></tbody></table><img src="https://example.com/a.png" alt="A &amp; B" width="300">', /<th colspan="2">Heading/, /alt="A &amp; B" width="300"/],

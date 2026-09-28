@@ -221,6 +221,21 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/dashboardStats.asp",
     "deploy/ftp-manifest.json"
   ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-jodit-editor") {
+  assert.deepEqual(uploadFiles, [
+    "assets/vendor/jodit/4.15.14/jodit.min.js",
+    "assets/vendor/jodit/4.15.14/jodit.min.css",
+    "assets/vendor/jodit/4.15.14/LICENSE.txt",
+    "assets/vendor/jodit/4.15.14/SOURCE.json",
+    "assets/vendor/jodit/4.15.14/README.md",
+    "assets/js/news-content.js",
+    "assets/js/admin-richtext.js",
+    "assets/css/admin-richtext.css",
+    "inc/news-html.asp",
+    "SystemManager/news.html",
+    "news_view.html",
+    "deploy/ftp-manifest.json"
+  ], "Jodit release must deploy self-hosted locked vendor, compatible sanitation and pages together");
 } else if (manifest.releaseScope === "news-full-rich-editor") {
   assert.deepEqual(uploadFiles, [
     "assets/css/admin-richtext.css",

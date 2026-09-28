@@ -1,0 +1,24 @@
+{
+  "package": "jodit",
+  "version": "4.15.14",
+  "license": "MIT",
+  "repository": "git+https://github.com/xdan/jodit.git",
+  "source": "https://registry.npmjs.org/jodit/-/jodit-4.15.14.tgz",
+  "npmIntegrity": "sha512-u0a9/5v6c0An3lqOH7Vb/230637M1yF2+NiP6cM5Ob6Rshk/Hb5EAc5yDiWfxJEdrxZ6vECSqIBzkjtV5i7TQw==",
+  "build": "ES5 UMD",
+  "retrieved": "2026-09-28",
+  "files": {
+    "jodit.min.js": {
+      "source": "package/es5/jodit.min.js",
+      "sha256": "0e5a50cb5f0004bccac4a22eaadfc8faa6d74131e03e28786d157b25f98b1a76"
+    },
+    "jodit.min.css": {
+      "source": "package/es5/jodit.min.css",
+      "sha256": "cb7dfd894fed5116e4a2369c24edd31503c1cc9ddebfa497962554419b13732c"
+    },
+    "LICENSE.txt": {
+      "source": "package/LICENSE.txt",
+      "sha256": "b6eccb41553c575c01f6a1261e87fdc7b842a721d6ba9daa88bdbd9259865d55"
+    }
+  }
+}

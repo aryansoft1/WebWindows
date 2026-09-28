@@ -12,7 +12,7 @@
       return (image ? url.protocol === "https:" : ["http:", "https:", "mailto:"].includes(url.protocol)) && !url.username && !url.password ? url.href : null;
     } catch { return null; }
   }
-  function safeStyle(style) {
+  function safeStyle(style, tag = "") {
     const output = [];
     for (const part of String(style || "").split(";")) {
       const index = part.indexOf(":"), key = part.slice(0, index).trim().toLowerCase(), value = part.slice(index + 1).trim();
@@ -26,6 +26,17 @@
       if (key === "font-weight") valid = /^(bold|normal|[1-9]00)$/.test(value);
       if (key === "font-style") valid = /^(italic|normal)$/.test(value);
       if (key === "text-decoration") valid = /^(underline|line-through|none)$/.test(value);
+      if (["IMG", "TABLE", "TH", "TD"].includes(tag) && ["width", "height"].includes(key)) {
+        const match = /^(\d{1,4}(?:\.\d{1,4})?)(px|%)$/.exec(value);
+        valid = !!match && +match[1] >= 1 && +match[1] <= (match[2] === "%" ? 100 : 2000);
+      }
+      if (["TABLE", "TD", "TH"].includes(tag) && key === "border-collapse") valid = value === "collapse";
+      if (["TD", "TH"].includes(tag) && key === "vertical-align") valid = /^(top|middle|bottom)$/.test(value);
+      if (["TABLE", "TD", "TH"].includes(tag) && key === "border") {
+        const match = /^(\d{1,2})px (solid|dashed|dotted) (.+)$/.exec(value);
+        valid = !!match && +match[1] <= 10 && !!safeStyle(`color:${match[3]}`);
+      }
+      if (tag === "TABLE" && key === "margin-left" && /^\d{1,2}(?:\.\d{1,4})?%$/.test(value)) valid = parseFloat(value) <= 100;
       if (valid) output.push(`${key}:${value.replace(/['"]/g, "")}`);
     }
     return output.join(";");
@@ -49,7 +60,7 @@
         }
         const indent = /(?:^|;)\s*margin:\s*0(?:px)?\s+0(?:px)?\s+0(?:px)?\s+(\d{1,3}px)\s*(?:;|$)/i.exec(style);
         if (indent) style += `;margin-left:${indent[1]}`;
-        const cleaned = safeStyle(style);
+        const cleaned = safeStyle(style, tag);
         if (cleaned) target.setAttribute("style", cleaned);
         if (tag === "A") {
           const href = safeLink(node.getAttribute("href"));

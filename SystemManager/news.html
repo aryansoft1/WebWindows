@@ -7,7 +7,8 @@
   <script src="assets/js/admin-security.js?v=20260926-1"></script>
   <script src="assets/js/page-guard.js?v=20260926-1"></script>
   <link rel="stylesheet" href="assets/css/global.css">
-  <link rel="stylesheet" href="../assets/css/admin-richtext.css?v=20260928-2">
+  <link rel="stylesheet" href="../assets/vendor/jodit/4.15.14/jodit.min.css">
+  <link rel="stylesheet" href="../assets/css/admin-richtext.css?v=20260928-3">
   <style>
     body { margin:0; background:#f3f4f6; color:#1f2937; font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif; padding:24px; }
     main { max-width:1100px; margin:auto; }
@@ -22,7 +23,7 @@
     td.actions { white-space:nowrap; } td.actions button { margin-right:6px; }
     .modal { position:fixed; inset:0; background:#0008; display:grid; place-items:center; padding:16px; }
     .modal[hidden] { display:none; } .dialog { width:min(980px,100%); max-height:90vh; overflow:auto; background:white; border-radius:10px; padding:20px; }
-    .dialog input,.dialog select { width:100%; } .dialog footer { display:flex; justify-content:flex-end; gap:8px; margin-top:15px; }
+    #newsTitle,#newsCategory,#newsPublishAt,#newCategory { width:100%; } .dialog footer { display:flex; justify-content:flex-end; gap:8px; margin-top:15px; }
     #categoryList li { display:flex; justify-content:space-between; align-items:center; padding:5px 0; }
     #newsStatus { min-height:22px; } .muted { color:#64748b; }
     .hint { margin:8px 0 0; padding:8px 10px; border-radius:6px; background:#fff7ed; color:#9a3412; }
@@ -51,7 +52,8 @@
         <label for="newsCategory">分类</label><select id="newsCategory" required></select>
         <label for="newsPublishAt">发布时间（留空立即发布）</label><input id="newsPublishAt" type="datetime-local">
         <label id="newsContentLabel">正文</label>
-        <div id="newsRichEditor"><div id="newsContent" contenteditable="false" role="textbox" aria-multiline="true" aria-labelledby="newsContentLabel"></div></div>
+        <div id="newsRichEditor"><textarea id="newsContent" aria-labelledby="newsContentLabel"></textarea></div>
+        <p class="muted">图片仅支持 HTTPS 地址，暂不支持本地上传。</p>
         <p id="newsEditorStatus" class="muted" role="status"></p>
         <footer><button type="button" id="closeNews" class="secondary">取消</button><button id="newsSave" type="submit">保存</button></footer>
       </form>
@@ -65,8 +67,9 @@
       <footer><button type="button" id="closeCategories" class="secondary">关闭</button></footer>
     </div>
   </div>
-  <script src="../assets/js/news-content.js?v=20260928-2"></script>
-  <script src="../assets/js/admin-richtext.js?v=20260928-2"></script>
+  <script src="../assets/js/news-content.js?v=20260928-3"></script>
+  <script src="../assets/vendor/jodit/4.15.14/jodit.min.js"></script>
+  <script src="../assets/js/admin-richtext.js?v=20260928-3"></script>
   <script src="assets/js/news.js?v=20260928-10"></script>
 </body>
 </html>

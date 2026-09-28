@@ -34,6 +34,45 @@
     const liveRoots = new Set();
     const frameLimitations = new Set();
     const inlineImages = global.WebWindowsCursorImages || {};
+    const pendingFrames = new Set();
+    let mousePoint = null;
+    let navigationPointer = null;
+
+    function updateNavigationPointer() {
+        for (const frame of pendingFrames) if (!frame.isConnected) pendingFrames.delete(frame);
+        if (!pendingFrames.size || !mousePoint || !document.body) {
+            document.documentElement.removeAttribute('data-ww-cursor-navigation');
+            navigationPointer?.remove();
+            navigationPointer = null;
+            return;
+        }
+        const target = document.elementFromPoint(mousePoint.x, mousePoint.y);
+        const computed = target ? getComputedStyle(target) : null;
+        const interactionState = computed?.getPropertyValue('--ww-cursor-state').match(/\/assets\/cursors\/[^/]+\/([a-z-]+)\.png/);
+        const state = interactionState?.[1] || computed?.getPropertyValue('--ww-cursor-render-state').trim() || 'default';
+        const resolved = aliases[state] || state;
+        if (!navigationPointer?.isConnected) {
+            navigationPointer = document.createElement('img');
+            navigationPointer.id = 'ww-navigation-pointer';
+            navigationPointer.alt = '';
+            navigationPointer.setAttribute('aria-hidden', 'true');
+            navigationPointer.style.cssText = 'position:fixed;left:0;top:0;width:32px;height:32px;pointer-events:none!important;z-index:2147483647;';
+            document.body.appendChild(navigationPointer);
+        }
+        const pixels = inlineImages[currentTheme]?.[resolved];
+        const source = pixels ? `data:image/png;base64,${pixels}` : getAsset(resolved, currentTheme, 'png');
+        if (navigationPointer.getAttribute('src') !== source) navigationPointer.src = source;
+        navigationPointer.dataset.wwCursorState = resolved;
+        const [x, y] = hotspot[resolved] || hotspot.default;
+        navigationPointer.style.transform = `translate(${mousePoint.x - x}px, ${mousePoint.y - y}px)`;
+        document.documentElement.setAttribute('data-ww-cursor-navigation', '');
+    }
+
+    function finishFrameNavigation(frame) {
+        frame.removeAttribute('data-ww-cursor-loading');
+        pendingFrames.delete(frame);
+        updateNavigationPointer();
+    }
 
     function getAsset(state, themeId = currentTheme, format = 'svg') {
         const id = themes[themeId] ? themeId : 'dreama';
@@ -81,18 +120,19 @@
             ['wait', '[aria-busy="true"], [aria-busy="true"] *']
         ];
         const semanticRules = semantic.map(([state, selectors]) =>
-            `${prefix}:is(${selectors})${lock} { cursor: var(--ww-cursor-${state}) !important; }`
+            `${prefix}:is(${selectors})${lock} { --ww-cursor-render-state: ${state}; cursor: var(--ww-cursor-${state}) !important; }`
         ).join('\n');
         const resizeRules = Object.entries({
             n: 'n-resize', s: 's-resize', e: 'e-resize', w: 'w-resize',
             ne: 'ne-resize', nw: 'nw-resize', se: 'se-resize', sw: 'sw-resize'
         }).map(([direction, state]) =>
-            `${prefix}.resizer.${direction}${lock}, ${prefix}[data-resize-dir="${direction}"]${lock} { cursor: var(--ww-cursor-${state}) !important; }`
+            `${prefix}.resizer.${direction}${lock}, ${prefix}[data-resize-dir="${direction}"]${lock} { --ww-cursor-render-state: ${state}; cursor: var(--ww-cursor-${state}) !important; }`
         ).join('\n');
         const explicitRules = Object.keys(tokenStates).map((state) =>
-            `${prefix}[data-ww-cursor="${state}"]${lock} { cursor: var(--ww-cursor-${state}) !important; }`
+            `${prefix}[data-ww-cursor="${state}"]${lock} { --ww-cursor-render-state: ${state}; cursor: var(--ww-cursor-${state}) !important; }`
         ).join('\n');
-        return `${root} { ${tokens} }\n${base} { cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\niframe[data-ww-cursor-loading] { visibility: hidden !important; pointer-events: none !important; }\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }`;
+        const navigationRule = shadow ? '' : 'html[data-ww-cursor-navigation]:not(#ww-nav-a):not(#ww-nav-b), html[data-ww-cursor-navigation] body:not(#ww-nav-a):not(#ww-nav-b), html[data-ww-cursor-navigation] body *:not(#ww-nav-a):not(#ww-nav-b) { cursor: none !important; }';
+        return `${root} { ${tokens} }\n${base} { --ww-cursor-render-state: default; cursor: var(--ww-cursor-default) !important; }\n${shadow ? `:host *${lock}` : `html body *${lock}`} { cursor: var(--ww-cursor-state, var(--ww-cursor-default)) !important; }\n${semanticRules}\n${resizeRules}\n${prefix}.ww-resizer${lock} { --ww-cursor-render-state: se-resize; cursor: var(--ww-cursor-se-resize) !important; }\n${explicitRules}\niframe[data-ww-cursor-loading] { visibility: hidden !important; pointer-events: none !important; }\n::-webkit-scrollbar, ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { cursor: var(--ww-cursor-default) !important; }\n::-webkit-scrollbar-thumb { cursor: var(--ww-cursor-move) !important; }\n${navigationRule}`;
     }
 
     function applyToDocument(doc) {
@@ -153,15 +193,15 @@
         }
     }
 
-    function applyToFrame(frame) {
+    function applyToFrame(frame, loaded = false) {
         if (!observedFrames.has(frame)) {
             observedFrames.add(frame);
-            frame.addEventListener('load', () => applyToFrame(frame));
+            frame.addEventListener('load', () => applyToFrame(frame, true));
         }
         try {
             const child = frame.contentDocument;
             if (!child) {
-                frame.removeAttribute('data-ww-cursor-loading');
+                if (loaded) finishFrameNavigation(frame);
                 frameLimitations.add(frame);
                 return;
             }
@@ -171,25 +211,27 @@
             if (child.URL === 'about:blank' && (frame.hasAttribute('srcdoc') ||
                 (destination && destination !== 'about:blank'))) {
                 frame.setAttribute('data-ww-cursor-loading', '');
+                pendingFrames.add(frame);
+                updateNavigationPointer();
                 return;
             }
             applyToDocument(child);
             observeDocument(child);
             discover(child);
             frameLimitations.delete(frame);
-            if (frame.hasAttribute('data-ww-cursor-loading')) {
+            if (frame.hasAttribute('data-ww-cursor-loading') && (loaded || child.readyState === 'complete')) {
                 const image = new child.defaultView.Image();
                 const inline = inlineImages[currentTheme]?.default;
                 image.src = inline ? `data:image/png;base64,${inline}` : getAsset('default', currentTheme, 'png');
                 const ready = typeof image.decode === 'function' ? image.decode().catch(() => {}) : Promise.resolve();
                 ready.then(() => {
                     try {
-                        if (frame.contentDocument === child) frame.removeAttribute('data-ww-cursor-loading');
-                    } catch (_) { frame.removeAttribute('data-ww-cursor-loading'); }
+                        if (frame.contentDocument === child) finishFrameNavigation(frame);
+                    } catch (_) { finishFrameNavigation(frame); }
                 });
             }
         } catch (_) {
-            frame.removeAttribute('data-ww-cursor-loading');
+            if (loaded) finishFrameNavigation(frame);
             frameLimitations.add(frame);
         }
     }
@@ -202,7 +244,7 @@
         if (!doc.body || observedDocuments.has(doc)) return;
         observedDocuments.add(doc);
         doc.addEventListener('load', (event) => {
-            if (event.target?.tagName === 'IFRAME') applyToFrame(event.target);
+            if (event.target?.tagName === 'IFRAME') applyToFrame(event.target, true);
         }, true);
         const realm = doc.defaultView;
         if (realm?.Element?.prototype && !realm.Element.prototype.__wwCursorWrapped) {
@@ -221,6 +263,7 @@
                 if (record.type === 'attributes') normalizeInlineCursor(record.target);
                 else for (const node of record.addedNodes) discover(node);
             }
+            if (records.some((record) => record.removedNodes.length)) updateNavigationPointer();
         }).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
         const headObserver = new MutationObserver(() => {
             const style = doc.getElementById('ww-cursor-theme-style');
@@ -235,6 +278,7 @@
         try { global.localStorage.setItem(storageKey, themeId); } catch (_) {}
         applyToDocument(document);
         applyToFrames();
+        updateNavigationPointer();
         for (const root of liveRoots) {
             if (root.host.isConnected) applyToShadow(root);
             else liveRoots.delete(root);
@@ -255,6 +299,21 @@
     });
     global.WebWindows = global.WebWindows || {};
     global.WebWindows.cursor = manager;
+    document.addEventListener('pointerdown', (event) => {
+        mousePoint = event.pointerType === 'mouse' ? { x: event.clientX, y: event.clientY } : null;
+        updateNavigationPointer();
+    }, { passive: true });
+    document.addEventListener('pointermove', (event) => {
+        if (event.pointerType !== 'mouse') return;
+        mousePoint = { x: event.clientX, y: event.clientY };
+        if (pendingFrames.size) updateNavigationPointer();
+    }, { passive: true });
+    document.addEventListener('pointerout', (event) => {
+        if (event.pointerType === 'mouse' && !event.relatedTarget) {
+            mousePoint = null;
+            updateNavigationPointer();
+        }
+    }, { passive: true });
     applyToDocument(document);
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -270,6 +329,7 @@
             currentTheme = event.newValue;
             applyToDocument(document);
             applyToFrames();
+            updateNavigationPointer();
             for (const root of liveRoots) {
                 if (root.host.isConnected) applyToShadow(root);
                 else liveRoots.delete(root);

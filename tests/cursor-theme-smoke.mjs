@@ -205,6 +205,22 @@ try {
     document.body.appendChild(frame);
   });
   await frameRequest;
+  await page.mouse.move(1200, 100);
+  await page.waitForSelector('#ww-navigation-pointer');
+  assert.equal(await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor), 'none', 'native loading cursor is hidden');
+  assert.match(await page.locator('#ww-navigation-pointer').getAttribute('src'), /^data:image\/png;base64,/);
+  await page.evaluate(() => {
+    const control = document.createElement('button');
+    control.id = 'cursor-navigation-control';
+    control.style.cssText = 'position:fixed;left:1100px;top:40px;width:100px;height:60px;z-index:2147483646';
+    document.body.appendChild(control);
+  });
+  await page.mouse.move(1150, 70);
+  assert.equal(await page.locator('#ww-navigation-pointer').getAttribute('data-ww-cursor-state'), 'pointer', 'temporary pointer preserves button semantics');
+  await page.evaluate(() => document.dispatchEvent(new PointerEvent('pointerdown', { pointerType: 'touch' })));
+  assert.equal(await page.locator('#ww-navigation-pointer').count(), 0, 'touch does not use the temporary pointer');
+  await page.locator('#cursor-navigation-control').evaluate((element) => element.remove());
+  await page.mouse.move(1200, 100);
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     frame.contentDocument?.getElementById('ww-cursor-theme-style') ?? null
   ), null, 'pending iframe does not start cursor requests in its temporary about:blank document');
@@ -235,6 +251,8 @@ try {
   assert.equal(await page.locator('iframe[src="/cursor-pending-frame.html"]').evaluate((frame) =>
     frame.contentDocument.readyState
   ), 'complete', 'iframe is not exposed before its load event');
+  assert.equal(await page.locator('#ww-navigation-pointer').count(), 0, 'temporary pointer is removed after load');
+  assert.match(await page.locator('.desktop').evaluate((element) => getComputedStyle(element).cursor), /classic\/default\.png/, 'native CSS cursor returns after load');
   for (const state of ['checkbox', 'radio', 'range', 'task']) assert.match(coverage[state], /classic\/pointer\.png/, state);
   assert.match(coverage.scrollbar, /classic\/move\.png/);
   await page.waitForFunction(() => {

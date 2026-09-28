@@ -2044,7 +2044,10 @@ function closeSettingsSheet(){
     addresses.forEach(function(address){
       var row = document.createElement('div'); row.style.cssText = 'padding:7px 0;border-bottom:1px solid #eee;';
       var name = document.createElement('div'); name.style.fontWeight = '600'; setText(name, address.name || address.address); row.appendChild(name);
-      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;'; setText(value, address.address + (address.isDefault ? ' · 默认讯址' : ' · 尚未连接')); row.appendChild(value);
+      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;';
+      var stateText = address.remote ? ' · 已连接' : ' · 尚未连接';
+      if (address.isDefault) stateText += ' · 默认讯址';
+      setText(value, address.address + stateText); row.appendChild(value);
       var controls = document.createElement('div'); controls.style.cssText = 'display:flex;gap:8px;margin-top:5px;';
       if (!address.isDefault) { var setDefault = document.createElement('button'); setDefault.type = 'button'; setDefault.dataset.addressAction = 'default'; setDefault.dataset.addressId = address.id; setText(setDefault, '设为默认'); controls.appendChild(setDefault); }
       var remove = document.createElement('button'); remove.type = 'button'; remove.dataset.addressAction = 'remove'; remove.dataset.addressId = address.id; setText(remove, '移除'); controls.appendChild(remove); row.appendChild(controls); list.appendChild(row);
@@ -2171,7 +2174,17 @@ function closeSettingsSheet(){
     if (addressAction) {
       var addresses = getAddresses();
       if (addressAction.dataset.addressAction === 'default') { addresses.forEach(function(item){ item.isDefault = item.id === addressAction.dataset.addressId; }); saveAddresses(addresses); render(); return; }
-      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){ addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; }); saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render(); }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
+      var selectedAddress = addresses.filter(function(item){ return item.id === addressAction.dataset.addressId; })[0];
+      if (!selectedAddress || !selectedAddress.remote) {
+        addresses = addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; });
+        if (addresses.length && !addresses.some(function(item){ return item.isDefault; })) addresses[0].isDefault = true;
+        saveAddresses(addresses); render(); return;
+      }
+      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){
+        addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; });
+        if (addresses.length && !addresses.some(function(item){ return item.isDefault; })) addresses[0].isDefault = true;
+        saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render();
+      }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
     }
     var refresh = event.target.closest('[data-mail-refresh]');
     if (refresh) { loadRemoteFolder(refresh.dataset.mailRefresh, true); return; }
@@ -2207,7 +2220,7 @@ function closeSettingsSheet(){
     if (!password) { status.style.color = '#b42318'; setText(status, '请输入邮箱授权码。'); return; }
     status.style.color = '#667085'; setText(status, '正在加密保存并验证收信连接…');
     mailCenter('account-save', { provider:provider, displayName:name || address, email:address, appPassword:password })
-      .then(function(){ saved = true; return loadRemoteAccounts(); })
+      .then(function(){ saved = true; return loadRemoteAccounts(true); })
       .then(function(accounts){ var account=accounts.filter(function(a){return a.address===address;})[0]; if(!account) throw new Error('讯址保存后无法读取'); return mailCenter('test-mailbox',{accountId:account.id}); })
       .then(function(result){ addressForm.reset(); status.style.color='#067647'; setText(status,'讯址已加密保存，收信连接验证通过（当前 ' + result.messageCount + ' 封）。'); render(); })
       .catch(function(error){ status.style.color='#b42318'; setText(status,(saved ? '讯址已保存，但连接验证失败：' : '讯址未保存：') + error.message + (saved ? '。可检查授权码与服务商 IMAP 设置后重新保存。' : '')); });

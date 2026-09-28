@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.11",
+  "releaseVersion": "2026.09.28.12",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T08:57:15.311Z",
+  "generatedAt": "2026-09-28T10:40:05.620Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -316,9 +316,32 @@
     "assets/icons/settings-cursor.svg",
     "assets/js/cursor-theme-inline.js",
     "assets/js/cursor-themes.js",
-    "cloud/browser/file-selection.js"
+    "cloud/browser/file-selection.js",
+    "mail-center/Api.ashx",
+    "mail-center/web.config",
+    "bin/BouncyCastle.Cryptography.dll",
+    "bin/Google.Protobuf.dll",
+    "bin/K4os.Compression.LZ4.dll",
+    "bin/K4os.Compression.LZ4.Streams.dll",
+    "bin/K4os.Hash.xxHash.dll",
+    "bin/MailKit.dll",
+    "bin/Microsoft.Bcl.AsyncInterfaces.dll",
+    "bin/MimeKit.dll",
+    "bin/MySql.Data.dll",
+    "bin/System.Buffers.dll",
+    "bin/System.Configuration.ConfigurationManager.dll",
+    "bin/System.Diagnostics.DiagnosticSource.dll",
+    "bin/System.Formats.Asn1.dll",
+    "bin/System.IO.Pipelines.dll",
+    "bin/System.Memory.dll",
+    "bin/System.Numerics.Vectors.dll",
+    "bin/System.Runtime.CompilerServices.Unsafe.dll",
+    "bin/System.Threading.Tasks.Extensions.dll",
+    "bin/System.ValueTuple.dll",
+    "bin/WebWindows.MailCenter.dll",
+    "bin/ZstdSharp.dll"
   ],
-  "previousReleaseVersion": "2026.09.28.10",
+  "previousReleaseVersion": "2026.09.28.11",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -601,8 +624,8 @@
       "size": 1897
     },
     "assets/js/desktalk.js": {
-      "sha256": "4da495c5da584accce57a20aa1f2825e26fe430966a5aaef0e8d4e2603c75cb2",
-      "size": 108572
+      "sha256": "2443171d82515a1f19bb157b00e77f927c18a8c086386d5207d695195705fc5b",
+      "size": 100892
     },
     "assets/js/desktop-functions.js": {
       "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
@@ -965,8 +988,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "bbb2173e267a03bdd7161408279e9d7d862e54e55e03f9f7f63875e16b07d19d",
-      "size": 33244
+      "sha256": "7fc362bd362c81c5be560b692321126290411f346e68ab83dcfc143631b340aa",
+      "size": 34922
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
@@ -1558,15 +1581,132 @@
     "cloud/browser/file-selection.js": {
       "sha256": "7f1549efc90ae880e7eb4f89efee138995aa3b9b7a2163abfa8088c8f6d23293",
       "size": 12660
+    },
+    "mail-center/Api.ashx": {
+      "sha256": "4123c21b2a941554366dd6d36c1475df17e29838e5321a77fd7768d38b225c4f",
+      "size": 73
+    },
+    "mail-center/web.config": {
+      "sha256": "c462514f4d7148f94d10367d63610ac19f5eeeaad4714094c6528db28d18b4c3",
+      "size": 675
+    },
+    "bin/BouncyCastle.Cryptography.dll": {
+      "sha256": "d9a58c84baa55a12684cd2381bca03c8f2a9cbae21a6bf1e9ebd65f495629721",
+      "size": 4694688
+    },
+    "bin/Google.Protobuf.dll": {
+      "sha256": "878877f77c806ccd4a822b1b65ca04141fc34b0759569ddf7ee96dbe590dfbcd",
+      "size": 489568
+    },
+    "bin/K4os.Compression.LZ4.dll": {
+      "sha256": "6dade79664f48a163d6864c84a0a6c5c55b856bdfaf34ba187c87f18f9167238",
+      "size": 75264
+    },
+    "bin/K4os.Compression.LZ4.Streams.dll": {
+      "sha256": "36f1ca01f12522a0c50f8fe48cd06adc24571ee2a0ff248315b388b8bd00f484",
+      "size": 83456
+    },
+    "bin/K4os.Hash.xxHash.dll": {
+      "sha256": "fd5fbeafb3ae59b45dbc6ac6b867ecdbeb4b4b715adebc5d1766e155e639caf3",
+      "size": 13312
+    },
+    "bin/MailKit.dll": {
+      "sha256": "1a8484dbf3e77429ac3b6b2c3b597e7577addf2052d44f385fa2a0ab8ce6a95d",
+      "size": 973312
+    },
+    "bin/Microsoft.Bcl.AsyncInterfaces.dll": {
+      "sha256": "075ce79e84041137c78885b3738c1b5a03547d0ae2a79916e844196a9d0ec1db",
+      "size": 20872
+    },
+    "bin/MimeKit.dll": {
+      "sha256": "e193fbd5991b6357956902658114f44706a1a16bf956c1e1f373a07b5c206ce9",
+      "size": 1327104
+    },
+    "bin/MySql.Data.dll": {
+      "sha256": "83ad87923b13e3d7a173791a2cd917fd7c96b050c3e1524f6b88d4cd5c2815bc",
+      "size": 1188936
+    },
+    "bin/System.Buffers.dll": {
+      "sha256": "2d78d770c9cb997199154ae8c018b9f1d1efbc86729f7264dde6dbad2a12cac3",
+      "size": 23816
+    },
+    "bin/System.Configuration.ConfigurationManager.dll": {
+      "sha256": "be1068d1af240549afcd48f22cfcf15ac10c4630600a5344ae025d3055029834",
+      "size": 91824
+    },
+    "bin/System.Diagnostics.DiagnosticSource.dll": {
+      "sha256": "1887592615fc08bbc91ad62307c8c11dfc14c45bf120d271d66be4a0d1a149a7",
+      "size": 189104
+    },
+    "bin/System.Formats.Asn1.dll": {
+      "sha256": "84692333cd9e3d9ef2761722a853dc88a412e1e71809744e18639a293c218c8e",
+      "size": 105232
+    },
+    "bin/System.IO.Pipelines.dll": {
+      "sha256": "91d6404aa214aa4ba21e066180a88cbe9565e52316491111cb7f239fc4982f82",
+      "size": 72592
+    },
+    "bin/System.Memory.dll": {
+      "sha256": "d5e8e4866f9cfa66f7765660f84b210198893e55335487afe5ebda342c0e913d",
+      "size": 145200
+    },
+    "bin/System.Numerics.Vectors.dll": {
+      "sha256": "20c2fa81b8c70d651099d762954f285fd4f942e63b2d7217c145dab8d4b2f4c9",
+      "size": 110344
+    },
+    "bin/System.Runtime.CompilerServices.Unsafe.dll": {
+      "sha256": "08cbd7278b66f1e68425a82d4b97181a4130d93e3dd91831407aba7212ccdacf",
+      "size": 19256
+    },
+    "bin/System.Threading.Tasks.Extensions.dll": {
+      "sha256": "af4e13ef418fd89b432de20cd1dfb7fa10a7179c8dd049c9856316e50c5949ca",
+      "size": 27960
+    },
+    "bin/System.ValueTuple.dll": {
+      "sha256": "e4774aead2793f440e0ced6c097048423d118e0b6ed238c6fe5b456acb07817f",
+      "size": 78992
+    },
+    "bin/WebWindows.MailCenter.dll": {
+      "sha256": "0921116a6369fbe7f4b7c834beba54a94c21a8917e8d70e9b2da46054b6dcc8d",
+      "size": 22528
+    },
+    "bin/ZstdSharp.dll": {
+      "sha256": "e69baa507daa5fb47ebcfdd3325eb3f47ccf652eaa63e6181252e7a990e9b10a",
+      "size": 427520
     }
   },
-  "releaseScope": "settings-cursor-icon",
+  "releaseScope": "mail-center-v1",
   "uploadFiles": [
-    "assets/icons/settings-cursor.svg",
-    "settings.html",
-    "assets/js/cursor-theme-inline.js",
-    "assets/js/cursor-themes.js",
-    "cloud/browser/file-selection.js",
+    "assets/js/desktalk.js",
+    "index.html",
+    "mail-center/Api.ashx",
+    "mail-center/web.config",
+    "sysinfo.html",
+    "assets/js/sysinfo.js",
+    "api/release-version.asp",
+    "api/mobile-version.asp",
+    "data/apps/system-apps.json",
+    "bin/BouncyCastle.Cryptography.dll",
+    "bin/Google.Protobuf.dll",
+    "bin/K4os.Compression.LZ4.dll",
+    "bin/K4os.Compression.LZ4.Streams.dll",
+    "bin/K4os.Hash.xxHash.dll",
+    "bin/MailKit.dll",
+    "bin/Microsoft.Bcl.AsyncInterfaces.dll",
+    "bin/MimeKit.dll",
+    "bin/MySql.Data.dll",
+    "bin/System.Buffers.dll",
+    "bin/System.Configuration.ConfigurationManager.dll",
+    "bin/System.Diagnostics.DiagnosticSource.dll",
+    "bin/System.Formats.Asn1.dll",
+    "bin/System.IO.Pipelines.dll",
+    "bin/System.Memory.dll",
+    "bin/System.Numerics.Vectors.dll",
+    "bin/System.Runtime.CompilerServices.Unsafe.dll",
+    "bin/System.Threading.Tasks.Extensions.dll",
+    "bin/System.ValueTuple.dll",
+    "bin/WebWindows.MailCenter.dll",
+    "bin/ZstdSharp.dll",
     "deploy/ftp-manifest.json"
   ]
 }

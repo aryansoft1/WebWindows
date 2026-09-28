@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.28.11",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T08:54:50.557Z",
+  "generatedAt": "2026-09-28T08:57:15.311Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -313,7 +313,10 @@
     "assets/vendor/jodit/4.15.14/LICENSE.txt",
     "assets/vendor/jodit/4.15.14/SOURCE.json",
     "assets/vendor/jodit/4.15.14/README.md",
-    "assets/icons/settings-cursor.svg"
+    "assets/icons/settings-cursor.svg",
+    "assets/js/cursor-theme-inline.js",
+    "assets/js/cursor-themes.js",
+    "cloud/browser/file-selection.js"
   ],
   "previousReleaseVersion": "2026.09.28.10",
   "integrity": {
@@ -1543,12 +1546,27 @@
     "assets/icons/settings-cursor.svg": {
       "sha256": "628ab8365cca3f8691eaafbed87e2155375126bee19caee8809836d7059036d9",
       "size": 467
+    },
+    "assets/js/cursor-theme-inline.js": {
+      "sha256": "0c02fee69d94726218ab5e36418c783a6e4406252f5e54942b5cf9f68c9f371a",
+      "size": 67648
+    },
+    "assets/js/cursor-themes.js": {
+      "sha256": "bdb8367360b429453f09c4b6bcfe495ed5d51dd3061175447b5dbf997ccbd408",
+      "size": 15121
+    },
+    "cloud/browser/file-selection.js": {
+      "sha256": "7f1549efc90ae880e7eb4f89efee138995aa3b9b7a2163abfa8088c8f6d23293",
+      "size": 12660
     }
   },
   "releaseScope": "settings-cursor-icon",
   "uploadFiles": [
     "assets/icons/settings-cursor.svg",
     "settings.html",
+    "assets/js/cursor-theme-inline.js",
+    "assets/js/cursor-themes.js",
+    "cloud/browser/file-selection.js",
     "deploy/ftp-manifest.json"
   ]
 }

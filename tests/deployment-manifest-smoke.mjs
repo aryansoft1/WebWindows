@@ -325,6 +325,15 @@ if (manifest.releaseScope === "navigation-map") {
     assert.ok(!uploadFiles.includes(alreadyManaged),
       `SystemManager release must not re-upload unchanged dependency ${alreadyManaged}`);
   }
+} else if (manifest.releaseScope === "settings-cursor-icon") {
+  assert.deepEqual(uploadFiles, [
+    "assets/icons/settings-cursor.svg",
+    "settings.html",
+    "assets/js/cursor-theme-inline.js",
+    "assets/js/cursor-themes.js",
+    "cloud/browser/file-selection.js",
+    "deploy/ftp-manifest.json"
+  ], "cursor icon release must keep the existing runtime dependencies recorded");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

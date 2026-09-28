@@ -221,6 +221,16 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/dashboardStats.asp",
     "deploy/ftp-manifest.json"
   ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-rich-editor-fix") {
+  assert.deepEqual(uploadFiles, [
+    "assets/js/news-content.js",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "assets/js/news_view.js",
+    "SystemManager/news.html",
+    "news_view.html",
+    "deploy/ftp-manifest.json"
+  ], "rich editor must deploy sanitized rendering and the fresh detail API with both pages");
 } else if (manifest.releaseScope === "news-content-read-fix") {
   assert.deepEqual(uploadFiles, [
     "getNewsById.asp",

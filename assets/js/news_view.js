@@ -20,11 +20,8 @@ if (!validId) {
       document.getElementById("news-category").textContent = category
       document.getElementById("news-meta").textContent = `${category} ｜ ${data.created_at || ""}`
       const rawContent = String(data.content || "这篇新闻暂时没有正文。")
-      const content = /<\/?[a-z][^>]*>/i.test(rawContent)
-        ? new DOMParser().parseFromString(rawContent, "text/html").body.textContent
-        : rawContent
       const contentElement = document.getElementById("news-content")
-      contentElement.textContent = content
+      window.WebWindowsNewsContent.load(contentElement, rawContent)
       contentElement.style.whiteSpace = "pre-wrap"
 
       // 加载上一篇

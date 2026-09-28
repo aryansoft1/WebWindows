@@ -29,6 +29,47 @@ Else
   Set rs = Nothing
 End If
 
+If action = "get" And method = "GET" Then
+  Dim editRegex, editContent, editTitle, editCategory, editPublishAt, editContentChars
+  idText = Trim(CStr(Request.QueryString("id")))
+  Set editRegex = New RegExp
+  editRegex.Pattern = "^[1-9][0-9]{0,8}$"
+  If Not editRegex.Test(idText) Then AdminSecurityFail 400, "INVALID_ID", "新闻编号无效。", "not-needed", "same-origin"
+  newsId = CLng(idText)
+  Set cmd = Server.CreateObject("ADODB.Command")
+  Set cmd.ActiveConnection = conn
+  cmd.CommandType = 1
+  cmd.CommandText = "SELECT id,IFNULL(title,'') AS title,IFNULL(category,'') AS category," & _
+    "DATE_FORMAT(COALESCE(publish_at,created_at),'%Y-%m-%d %H:%i') AS publish_label," & _
+    "CHAR_LENGTH(IFNULL(content,'')) AS content_chars," & _
+    "CAST(SUBSTRING(IFNULL(content,''),1,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_1," & _
+    "CAST(SUBSTRING(IFNULL(content,''),21846,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_2," & _
+    "CAST(SUBSTRING(IFNULL(content,''),43691,21845) AS CHAR(21845) CHARACTER SET utf8) AS content_3 " & _
+    "FROM webwindows_news WHERE id=? LIMIT 1"
+  cmd.Parameters.Append cmd.CreateParameter("id", 3, 1, , newsId)
+  Set rs = cmd.Execute
+  If rs.EOF Then AdminSecurityFail 404, "NEWS_NOT_FOUND", "新闻已不存在。", "not-needed", "same-origin"
+  editContent = ""
+  On Error Resume Next
+  Err.Clear
+  editTitle = CStr(rs("title").Value)
+  editCategory = CStr(rs("category").Value)
+  editPublishAt = CStr(rs("publish_label").Value)
+  editContentChars = CLng(rs("content_chars").Value)
+  editContent = CStr(rs("content_1").Value) & CStr(rs("content_2").Value) & CStr(rs("content_3").Value)
+  If Err.Number <> 0 Or Len(editContent) <> editContentChars Then
+    Err.Clear
+    On Error GoTo 0
+    AdminSecurityFail 500, "NEWS_CONTENT_READ_FAILED", "新闻正文读取失败，未允许编辑。", "not-needed", "same-origin"
+  End If
+  On Error GoTo 0
+  rs.Close
+  Response.Write "{""id"":" & newsId & ",""title"":" & NewsJsonString(editTitle) & _
+    ",""category"":" & NewsJsonString(editCategory) & ",""publish_at"":" & NewsJsonString(editPublishAt) & _
+    ",""content"":" & NewsJsonString(editContent) & "}"
+  Response.End
+End If
+
 ' 列表接口过去一旦出错，返回的是 ASP 默认的 HTML 错误页：前端 JSON.parse 直接
 ' 抛异常，管理员只看到「HTTP 500」，而如果错误被静默吞掉就会变成一个空的 []，
 ' 和「真的没有新闻」长得一模一样。现在查询失败时返回可解析的 JSON 错误，并带上

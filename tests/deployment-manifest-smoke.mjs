@@ -221,6 +221,18 @@ if (manifest.releaseScope === "navigation-map") {
     "admin_api/dashboardStats.asp",
     "deploy/ftp-manifest.json"
   ], "dashboard JSON fix must upload only the affected endpoint and the manifest last");
+} else if (manifest.releaseScope === "news-full-rich-editor") {
+  assert.deepEqual(uploadFiles, [
+    "assets/css/admin-richtext.css",
+    "assets/js/news-content.js",
+    "assets/js/admin-richtext.js",
+    "inc/news-html.asp",
+    "admin_api/news.asp",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/news.html",
+    "news_view.html",
+    "deploy/ftp-manifest.json"
+  ], "full rich editor must deploy editor, server sanitation, rendering, pages and manifest together");
 } else if (manifest.releaseScope === "news-rich-editor-fix") {
   assert.deepEqual(uploadFiles, [
     "assets/js/news-content.js",

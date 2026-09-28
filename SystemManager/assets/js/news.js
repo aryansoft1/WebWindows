@@ -7,7 +7,7 @@
   let editId = null;
   let contentLoaded = false;
   let editorRequest = 0;
-  const richContent = window.WebWindowsNewsContent;
+  const editor = window.WebWindowsAdminRichText.create(el("newsRichEditor"), el("newsContent"));
   const endpoint = (action, params = {}) => `/admin_api/news.asp?${new URLSearchParams({ action, ...params })}`;
   function report(message) { el("newsStatus").textContent = message; }
   async function read(action, params) {
@@ -118,8 +118,8 @@
     const request = ++editorRequest;
     contentLoaded = false;
     el("newsSave").disabled = true;
-    el("newsContent").contentEditable = "false";
-    richContent.load(el("newsContent"), "");
+    editor.setEnabled(false);
+    editor.setContent("");
     el("newsEditorStatus").textContent = item ? "正在读取已保存的正文…" : "";
     el("newsModal").hidden = false;
     editId = item?.id || null;
@@ -136,11 +136,11 @@
         : categories[0];
       el("newsCategory").value = selectedCategory ? String(selectedCategory.id) : "";
       el("newsPublishAt").value = record?.publish_at?.replace(" ", "T") || "";
-      richContent.load(el("newsContent"), record?.content || "");
+      editor.setContent(record?.content || "");
       contentLoaded = true;
-      el("newsContent").contentEditable = "true";
+      editor.setEnabled(true);
       el("newsSave").disabled = false;
-      el("newsEditorStatus").textContent = record ? "正文已加载。" : "支持标题、列表、强调和链接。";
+      el("newsEditorStatus").textContent = record ? "正文已加载。" : "支持排版、图片、表格；Ctrl+B/I/U 强调，Ctrl+K 链接，Ctrl+Z 撤销。";
     } catch (error) {
       if (request === editorRequest) el("newsEditorStatus").textContent = `加载失败：${error.message}`;
     }
@@ -149,7 +149,7 @@
     event.preventDefault();
     if (!contentLoaded) return;
     try {
-      const content = richContent.serialize(el("newsContent"));
+      const content = editor.getContent();
       if (!content) throw new Error("请填写正文。");
       if (content.length > 20000) throw new Error("正文含格式不能超过 20000 字符。");
       el("newsSave").disabled = true;
@@ -158,6 +158,7 @@
         category_id: el("newsCategory").value, content,
         publish_at: el("newsPublishAt").value
       });
+      editor.close();
       el("newsModal").hidden = true;
       await reload();
       report("新闻已保存。");
@@ -195,30 +196,7 @@
   }
   el("newNews").addEventListener("click", () => openNews());
   el("manageCategories").addEventListener("click", () => { el("categoryModal").hidden = false; });
-  el("closeNews").addEventListener("click", () => { ++editorRequest; contentLoaded = false; el("newsModal").hidden = true; });
-  el("newsEditorToolbar").addEventListener("mousedown", event => {
-    if (event.target.closest("button")) event.preventDefault();
-  });
-  el("newsEditorToolbar").addEventListener("click", event => {
-    const control = event.target.closest("button[data-command]");
-    if (!control || !contentLoaded) return;
-    let value = control.dataset.value || null;
-    if (control.dataset.command === "createLink") {
-      const input = prompt("链接地址（https://…）");
-      if (!input) return;
-      value = richContent.safeLink(input);
-      if (!value) { el("newsEditorStatus").textContent = "请输入有效的网页或邮件链接。"; return; }
-    }
-    el("newsContent").focus();
-    document.execCommand(control.dataset.command, false, value);
-  });
-  el("newsContent").addEventListener("paste", event => {
-    event.preventDefault();
-    if (!contentLoaded) return;
-    const holder = document.createElement("div");
-    richContent.load(holder, event.clipboardData.getData("text/html") || event.clipboardData.getData("text/plain"));
-    document.execCommand("insertHTML", false, holder.innerHTML);
-  });
+  el("closeNews").addEventListener("click", () => { ++editorRequest; contentLoaded = false; editor.close(); el("newsModal").hidden = true; });
   el("closeCategories").addEventListener("click", () => { el("categoryModal").hidden = true; });
   el("newsForm").addEventListener("submit", saveNews);
   el("categoryForm").addEventListener("submit", addCategory);

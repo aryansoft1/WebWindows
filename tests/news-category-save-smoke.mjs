@@ -13,7 +13,7 @@ const context = vm.createContext({
   contentLoaded: false, editorRequest: 0,
   record: {id:42,title:"中文标题",category:"系统更新",content:"<p>中文正文</p>",publish_at:"2026-09-19 11:57"},
   readError: false,
-  richContent: {load: (target,value) => {target.innerHTML=value;}, serialize: target => target.innerHTML},
+  editor: {setContent: value => {context.el("newsContent").innerHTML=value;}, getContent: () => context.el("newsContent").innerHTML, setEnabled: value => {context.el("newsContent").contentEditable=String(value);}, close(){}},
   el: id => { if (!fields.has(id)) fields.set(id, {}); return fields.get(id); },
   write: async (action, data) => calls.push({ action, data }),
   reload: async () => {}, report: () => {}
@@ -47,4 +47,6 @@ assert.match(save, /CreateParameter\("title", 202,/);
 assert.match(save, /CreateParameter\("category", 202,/);
 assert.match(save, /CreateParameter\("content", 203,/);
 assert.doesNotMatch(asp, /CreateParameter\([^\n]*, 201,/);
+assert.match(save, /content = NewsHtmlSanitize\(content\)/);
+assert.match(save, /NewsHtmlHasContent\(content\)/);
 console.log("news category save passed: IDs, edit selection, missing category, Unicode bindings");

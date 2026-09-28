@@ -2,6 +2,7 @@
 <!--#include file="../inc/conn.asp"-->
 <!--#include file="../inc/json-charset.asp"-->
 <!--#include file="../inc/admin-security.asp"-->
+<!--#include file="../inc/news-html.asp"-->
 <%
 Response.CodePage = 65001
 Function NewsJsonString(ByVal value)
@@ -403,6 +404,10 @@ If action = "save" And method = "POST" Then
   If title = "" Or content = "" Or _
      Len(title) > 200 Or Len(content) > 20000 Then
     AdminSecurityFail 400, "INVALID_NEWS", "标题、分类和内容必填，且不能超过长度限制。", "valid", "same-origin"
+  End If
+  content = NewsHtmlSanitize(content)
+  If Not NewsHtmlHasContent(content) Or Len(content) > 20000 Then
+    AdminSecurityFail 400, "INVALID_NEWS_HTML", "正文清洗后为空或超过长度限制，未保存更改。", "valid", "same-origin"
   End If
   Set dateRegex = New RegExp
   dateRegex.Pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$"

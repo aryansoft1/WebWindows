@@ -153,3 +153,5 @@
 - 2026-09-29：远端分支 `codex/admin-wallpaper-management-20260928` 中有完整功能。经生产清单与 FTP 备份核对，生产已包含壁纸管理页/脚本，管理 API 内容一致；漏的是 `SystemManager/index.html` 左侧入口。原始 15 文件候选在备份阶段因 `admin_api/wallpapers.asp` 仅有 CRLF/LF 差异停止，未上传。同时发现线上公开壁纸 API 返回非法 JSON（对象间缺逗号、路径多一个 `/`），管理员页面读取列表操作也未实现。修正管理员 GET 列表、公开目录 JSON/路径和设置页动态目录缓存戳，保留默认壁纸应用；发布导航与必要 API/前端文件。
 
 - 2026-09-29 release note: the production static wallpaper index already contains all 10 entries; the only difference was generatedAt, so the release excludes that file and the server-only image files. Final upload list is 6 functional files plus manifest.
+
+- 2026-09-29 production probe: live settings already loads the catalogue API, and the current wallpaper.js/main.js cache behavior is present. Final payload is narrowed to SystemManager/index.html, admin_api/wallpapers.asp and api/wallpapers.asp plus manifest.

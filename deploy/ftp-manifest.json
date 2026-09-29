@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.29.13",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-29T14:23:34.520Z",
+  "generatedAt": "2026-09-29T14:27:03.922Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -653,8 +653,8 @@
       "size": 7270
     },
     "assets/js/main.js": {
-      "sha256": "77c5a76aa766d5698a4a68652a5e6095fda53e287726e3777be3efba96df7f22",
-      "size": 25279
+      "sha256": "8ea83fb4cd914a41a69f51106bf203ee0b23ecacac22a8c07066fef6ea877555",
+      "size": 24286
     },
     "assets/js/network-speed.js": {
       "sha256": "3bae1453ed88635593befe2bba6defbb04a2f6e0a587f38ecbd7de9c6edcc7a1",
@@ -705,8 +705,8 @@
       "size": 198690
     },
     "assets/js/wallpaper.js": {
-      "sha256": "ef13df43a4c4d70493f692bcd399141a90bdef4a475331ec5687fd6a98c98d88",
-      "size": 5123
+      "sha256": "fef355794684573702e78ed712a6e326efa38e537cfe4e72db21056b5012b4e2",
+      "size": 4286
     },
     "assets/js/webwindows-message.js": {
       "sha256": "bdd1dea9b0f37689697e6fe1a4659cca0ada9f80998c237bd2752c6017ef3f34",
@@ -993,8 +993,8 @@
       "size": 2554
     },
     "settings.html": {
-      "sha256": "5a7fb94c6873b7d51d44fd3d0262f288d6d8e8814a32de9a7cb4dfd0a7e3ba00",
-      "size": 20205
+      "sha256": "7c2491b6a6bbdf4ba33ee9eeceb076dc299fe0ec31339094020160ebc8150e8f",
+      "size": 24015
     },
     "software.html": {
       "sha256": "ace84106a5eef3718bfcb344ca82661f439b3ecd48e29ee296df7aa8240c5fb9",
@@ -1605,9 +1605,6 @@
     "SystemManager/index.html",
     "admin_api/wallpapers.asp",
     "api/wallpapers.asp",
-    "assets/js/main.js",
-    "assets/js/wallpaper.js",
-    "settings.html",
     "deploy/ftp-manifest.json"
   ]
 }

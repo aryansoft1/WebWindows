@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.29.14",
+  "releaseVersion": "2026.09.30.1",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-29T14:36:06.203Z",
+  "generatedAt": "2026-09-29T15:19:43.598Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -326,7 +326,7 @@
     "api/dt_friends.asp",
     "assets/js/desktalk-file-feedback.js"
   ],
-  "previousReleaseVersion": "2026.09.29.13",
+  "previousReleaseVersion": "2026.09.29.14",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -1568,12 +1568,12 @@
       "size": 12660
     },
     "api/wallpapers.asp": {
-      "sha256": "bf7f8727eca5bc9f9fb7dbdc5aa5a6dd37df79bc9d571da56a0085816a2c3b4d",
-      "size": 4438
+      "sha256": "4b90303ec50c4ec1cd6d9c798f130b61ab36eb487b4bdac30e7796721d0a1cd2",
+      "size": 4495
     },
     "admin_api/wallpapers.asp": {
-      "sha256": "e1b244b9c87134334760d5c0d98cc0414826c2a74a2ced11b1949f8de44b79bc",
-      "size": 11217
+      "sha256": "927a2d3bf240d328e69bac4e897db32537f4a62ae252f9556f2881a2ca9c6fd5",
+      "size": 11275
     },
     "SystemManager/wallpapers.html": {
       "sha256": "f584334070afb3df7979301f1cb659343d3c72eb3238a2e4f6ca761593fad190",
@@ -1600,10 +1600,10 @@
       "size": 2377
     }
   },
-  "releaseScope": "wallpaper-management",
+  "releaseScope": "wallpaper-storage-path",
   "uploadFiles": [
-    "SystemManager/wallpapers.html",
-    "SystemManager/assets/js/wallpapers.js",
+    "admin_api/wallpapers.asp",
+    "api/wallpapers.asp",
     "deploy/ftp-manifest.json"
   ]
 }

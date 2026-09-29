@@ -8,6 +8,10 @@
 
   function status(message) { el("wallpaperStatus").textContent = message; }
 
+  function imageUrl(path) {
+    return `/${String(path || "").replace(/^\/+/, "")}`;
+  }
+
   async function read(action) { return security.read(api(action)).then(r => r.json()); }
 
   async function write(action, values) {
@@ -36,7 +40,7 @@
       return;
     }
     const image = document.createElement("img");
-    image.src = catalogue.defaultWallpaper;
+    image.src = imageUrl(catalogue.defaultWallpaper);
     image.alt = "系统默认壁纸";
     image.style.maxWidth = "240px";
     image.style.borderRadius = "8px";
@@ -57,7 +61,7 @@
     catalogue.wallpapers.forEach(item => {
       const figure = document.createElement("figure");
       const image = document.createElement("img");
-      image.src = item.url;
+      image.src = imageUrl(item.url);
       image.alt = item.name || "壁纸";
       image.loading = "lazy";
       const caption = document.createElement("figcaption");
@@ -168,3 +172,4 @@
 
   load();
 })();
+

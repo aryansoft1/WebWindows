@@ -349,4 +349,3 @@ for (const app of appsToVerify) {
 }
 
 console.log(`deployment manifest smoke test passed: ${manifest.requiredFiles.length} files`);
-

@@ -43,6 +43,8 @@ for (const [name, source] of [["admin_api/wallpapers.asp", adminApi], ["api/wall
     `${name} 必须以 URL 形式声明壁纸目录`);
   assert.doesNotMatch(source, /WALLPAPER_ROOT/,
     `${name} 不得再使用带反斜杠的目录常量做前缀比较`);
+  assert.match(source, /If Right\(rootPath, 1\) <> "\\" Then rootPath = rootPath & "\\"/,
+    `${name} 必须为 Server.MapPath 的物理目录补齐尾部分隔符`);
   assert.match(source, /IsImageFile/, `${name} 必须限制可接受的图片扩展名`);
   for (const extension of [".jpg", ".png", ".webp", ".gif", ".avif", ".bmp"]) {
     assert.ok(source.includes(`"${extension}"`), `${name} 缺少允许的扩展名 ${extension}`);

@@ -155,3 +155,6 @@
 - 2026-09-29 release note: the production static wallpaper index already contains all 10 entries; the only difference was generatedAt, so the release excludes that file and the server-only image files. Final upload list is 6 functional files plus manifest.
 
 - 2026-09-29 production probe: live settings already loads the catalogue API, and the current wallpaper.js/main.js cache behavior is present. Final payload is narrowed to SystemManager/index.html, admin_api/wallpapers.asp and api/wallpapers.asp plus manifest.
+
+- 2026-09-29 completion: production 2026.09.29.13 shipped the sidebar and API fixes; public catalogue returned 10 valid entries. Admin upload/delete was not exercised without an authenticated session.
+- 2026-09-29 path-fix follow-up: admin preview URLs now resolve from the site root; release 2026.09.29.14 contains only the admin page, script and manifest. Targeted tests passed.

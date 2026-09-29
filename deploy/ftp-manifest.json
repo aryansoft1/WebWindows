@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.29.13",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-29T14:04:08.811Z",
+  "generatedAt": "2026-09-29T14:19:29.488Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -324,11 +324,7 @@
     "assets/data/wallpaper-index.json",
     "api/dt_file_transfer.asp",
     "api/dt_friends.asp",
-    "assets/js/desktalk-file-feedback.js",
-    "assets/wallpapers/wall7.png",
-    "assets/wallpapers/wall8.png",
-    "assets/wallpapers/wall9.png",
-    "assets/wallpapers/wall10.png"
+    "assets/js/desktalk-file-feedback.js"
   ],
   "previousReleaseVersion": "2026.09.29.12",
   "integrity": {
@@ -389,8 +385,8 @@
       "size": 6542
     },
     "assets/css/main.css": {
-      "sha256": "6884c084e2a181b0aec792d72a3b7d5d1c897ed91883e0b87b4674f871751fba",
-      "size": 30494
+      "sha256": "5e4f790f66f7e12a8a9637cef0eb4f9512b0fb24efb2874494c4d3e01dcc0aa2",
+      "size": 31739
     },
     "assets/css/news.css": {
       "sha256": "25051efec335935b78287bba240a42a7f1a3ae8fc52a34bc5738cba34bb180fe",
@@ -1572,12 +1568,12 @@
       "size": 12660
     },
     "api/wallpapers.asp": {
-      "sha256": "f176f5d488aa803d21864d0605b924b6002773b275297dd8bcdfbb49756bf0c1",
-      "size": 4095
+      "sha256": "bf7f8727eca5bc9f9fb7dbdc5aa5a6dd37df79bc9d571da56a0085816a2c3b4d",
+      "size": 4438
     },
     "admin_api/wallpapers.asp": {
-      "sha256": "40f6023d4ada95469e04e7c617116895158214621aa0408974d4af78660d818f",
-      "size": 9317
+      "sha256": "e1b244b9c87134334760d5c0d98cc0414826c2a74a2ced11b1949f8de44b79bc",
+      "size": 11217
     },
     "SystemManager/wallpapers.html": {
       "sha256": "733f7f031361bfb565a772d78a526e8bc0264abb89fab20875e4ee7cf33494b7",
@@ -1588,7 +1584,7 @@
       "size": 6328
     },
     "assets/data/wallpaper-index.json": {
-      "sha256": "c0712b85f1413d43ddd9c19b424faac2fc008da58ce2dcbd05b8e31bd973588c",
+      "sha256": "1b29b31adc5efaea9290bb71b06048f4799385d1ad86265d3876ee58ef4ee3a3",
       "size": 1176
     },
     "api/dt_file_transfer.asp": {
@@ -1602,39 +1598,16 @@
     "assets/js/desktalk-file-feedback.js": {
       "sha256": "0ceb9f6b219695e932599f4786560d77f988c23a372557dc0bc2cfb8ae12c3ae",
       "size": 2377
-    },
-    "assets/wallpapers/wall7.png": {
-      "sha256": "bf23b764ab872c147be67e3ca5d7e9ea8e493630160884035bde5cff3113b7ce",
-      "size": 1190764
-    },
-    "assets/wallpapers/wall8.png": {
-      "sha256": "c1d91633e340dac6972fa52edc320aabd151edc62cfed7744633061caf4402a9",
-      "size": 1619985
-    },
-    "assets/wallpapers/wall9.png": {
-      "sha256": "e29405749d5055022527ee1e40e58ec1074e4c96a747ed0f59d0bd0aa10e487e",
-      "size": 1315677
-    },
-    "assets/wallpapers/wall10.png": {
-      "sha256": "3c66a68243ec759e75741329230ee0b69fe3e864da3f51d38d6f71b60d06ec53",
-      "size": 1518279
     }
   },
   "releaseScope": "wallpaper-management",
   "uploadFiles": [
     "SystemManager/index.html",
-    "SystemManager/wallpapers.html",
-    "SystemManager/assets/js/wallpapers.js",
     "admin_api/wallpapers.asp",
     "api/wallpapers.asp",
-    "assets/css/main.css",
     "assets/data/wallpaper-index.json",
     "assets/js/main.js",
     "assets/js/wallpaper.js",
-    "assets/wallpapers/wall7.png",
-    "assets/wallpapers/wall8.png",
-    "assets/wallpapers/wall9.png",
-    "assets/wallpapers/wall10.png",
     "settings.html",
     "deploy/ftp-manifest.json"
   ]

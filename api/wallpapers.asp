@@ -42,7 +42,12 @@ Function ToUrlPath(ByVal relativePath)
 End Function
 
 Function WebRelativePath(ByVal rootPath, ByVal filePath)
-  WebRelativePath = WALLPAPER_URL_ROOT & ToUrlPath(Mid(filePath, Len(rootPath) + 1))
+  Dim relativePath
+  relativePath = Mid(filePath, Len(rootPath) + 1)
+  If Left(relativePath, 1) = "\" Or Left(relativePath, 1) = "/" Then
+    relativePath = Mid(relativePath, 2)
+  End If
+  WebRelativePath = WALLPAPER_URL_ROOT & ToUrlPath(relativePath)
 End Function
 
 Sub CollectFiles(ByVal fso, ByVal folder, ByVal depth, ByRef items)
@@ -95,6 +100,7 @@ End If
 
 For Each item In found
   index = index + 1
+  If index > 1 Then payload = payload & ","
   payload = payload & "{""url"":""" & JsonText(WebRelativePath(rootPath, item.Path)) & _
     """,""name"":""" & JsonText(fso.GetBaseName(item.Name)) & _
     """,""bytes"":" & CStr(CLng(item.Size)) & _

@@ -21,6 +21,7 @@ Const MAX_BASE64_CHARS = 6000000
 Const MAX_NAME_CHARS = 120
 
 Dim action, method, fso, rootPath
+Dim wallpaperFolder, wallpaperFile, listJson, listCount, defaultValue, defaultRows, defaultFileName
 Dim rawName, fileName, base64Text, targetPath, storedName, storedSize, storedUrl
 Dim requestedUrl, targetFile, relativeName, defaultName, uploadError
 action = LCase(Trim(CStr(Request("action"))))
@@ -125,6 +126,41 @@ Sub WriteDefault(ByVal value)
   cmd.Execute
   Set cmd = Nothing
 End Sub
+
+If action = "list" And method = "GET" Then
+  Set wallpaperFolder = fso.GetFolder(rootPath)
+  listJson = "{""ok"":true,""success"":true,""wallpapers"":["
+  listCount = 0
+  For Each wallpaperFile In wallpaperFolder.Files
+    If Left(wallpaperFile.Name, 1) <> "." And IsImageFile(wallpaperFile.Name) Then
+      If listCount > 0 Then listJson = listJson & ","
+      listJson = listJson & "{""url"":""" & AdminSecurityJson(WALLPAPER_URL_ROOT & wallpaperFile.Name) & _
+        """,""name"":""" & AdminSecurityJson(fso.GetBaseName(wallpaperFile.Name)) & _
+        """,""bytes"":" & CStr(CLng(wallpaperFile.Size)) & "}"
+      listCount = listCount + 1
+    End If
+  Next
+  defaultValue = ""
+  On Error Resume Next
+  Set defaultRows = conn.Execute("SELECT setting_value FROM webwindows_admin_settings " & _
+    "WHERE setting_key='default_wallpaper' LIMIT 1")
+  If Err.Number = 0 Then
+    If Not defaultRows.EOF Then defaultValue = Trim(CStr(defaultRows("setting_value")))
+  End If
+  If IsObject(defaultRows) Then defaultRows.Close
+  Set defaultRows = Nothing
+  Err.Clear
+  On Error GoTo 0
+  If defaultValue <> "" Then
+    defaultFileName = Mid(defaultValue, InStrRev(defaultValue, "/") + 1)
+    If LCase(Left(defaultValue, Len(WALLPAPER_URL_ROOT))) <> LCase(WALLPAPER_URL_ROOT) _
+       Or Not IsImageFile(defaultFileName) Or Not fso.FileExists(rootPath & defaultFileName) Then
+      defaultValue = ""
+    End If
+  End If
+  Response.Write listJson & "],""defaultWallpaper"":""" & AdminSecurityJson(defaultValue) & """}"
+  Response.End
+End If
 
 If action = "upload" And method = "POST" Then
   rawName = Trim(CStr(Request.Form("filename")))

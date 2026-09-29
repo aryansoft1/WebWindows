@@ -21,6 +21,10 @@ const [adminApi, publicApi, page, script, main, settings, shell] = await Promise
  * audited, or an anonymous request could write into the wallpaper folder. */
 assert.match(adminApi, /AdminSecurityRequireRead "system-manager", "wallpapers-list"/,
   "壁纸列表必须使用后台只读鉴权");
+assert.match(adminApi, /If action = "list" And method = "GET" Then/,
+  "管理员壁纸页必须有返回清单的只读接口操作");
+assert.match(adminApi, /listJson = .*wallpapers/,
+  "管理员清单接口必须返回壁纸数组");
 assert.match(adminApi, /AdminSecurityRequireMutation "system-manager", "wallpapers-" & action/,
   "壁纸写操作必须使用后台变更鉴权");
 assert.match(adminApi, /AdminSecurityAudit "wallpaper-upload", "success"/);
@@ -57,6 +61,10 @@ assert.match(adminApi, /Left\(LCase\(requestedUrl\), Len\(WALLPAPER_URL_ROOT\)\)
 assert.match(adminApi, /default_wallpaper/, "系统默认壁纸必须写入后台设置表");
 assert.match(publicApi, /default_wallpaper/, "公开目录接口必须返回系统默认壁纸");
 assert.match(publicApi, /fso\.FileExists/, "公开目录接口必须剔除已不存在的默认壁纸");
+assert.match(publicApi, /If index > 1 Then payload = payload & ","/,
+  "公开目录 JSON 必须在图片对象之间加入逗号");
+assert.match(publicApi, /relativePath = Mid\(relativePath, 2\)/,
+  "公开目录路径必须去掉系统路径分隔符，避免生成双斜线 URL");
 assert.match(publicApi, /Left\(defaultWallpaper, Len\(WALLPAPER_URL_ROOT\)\)/,
   "系统默认壁纸必须按 URL 根目录校验");
 

@@ -35,6 +35,7 @@ Else
 End If
 
 rootPath = Server.MapPath("/" & WALLPAPER_URL_ROOT)
+If Right(rootPath, 1) <> "\" Then rootPath = rootPath & "\"
 If Not fso.FolderExists(rootPath) Then
   AdminSecurityFail 500, "WALLPAPER_STORAGE_MISSING", _
     "壁纸目录不存在，请联系部署管理员创建 assets/wallpapers。", "not-checked", "not-checked"

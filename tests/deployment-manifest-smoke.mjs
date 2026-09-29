@@ -302,6 +302,12 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/assets/js/wallpapers.js",
   ]) assert.ok(uploadFiles.includes(required), `wallpaper release must upload ${required}`);
   assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"), "deployment manifest must be uploaded last");
+} else if (manifest.releaseScope === "wallpaper-storage-path") {
+  assert.deepEqual(uploadFiles, [
+    "admin_api/wallpapers.asp",
+    "api/wallpapers.asp",
+    "deploy/ftp-manifest.json"
+  ], "wallpaper storage path fix must upload both path consumers and the manifest");
 } else if (manifest.releaseScope === "systemmanager-completion") {
   assert.equal(uploadFiles.length, 53, "SystemManager release must use the approved 53-file scope");
   for (const required of [

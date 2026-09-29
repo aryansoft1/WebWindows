@@ -6,13 +6,14 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const read = (relative) => fs.readFile(path.join(root, relative), "utf8");
 
-const [adminApi, publicApi, page, script, main, settings] = await Promise.all([
+const [adminApi, publicApi, page, script, main, settings, shell] = await Promise.all([
   read("admin_api/wallpapers.asp"),
   read("api/wallpapers.asp"),
   read("SystemManager/wallpapers.html"),
   read("SystemManager/assets/js/wallpapers.js"),
   read("assets/js/main.js"),
-  read("settings.html")
+  read("settings.html"),
+  read("SystemManager/index.html")
 ]);
 
 /* Both endpoints must sit behind the shared admin security gate. Uploads are
@@ -86,5 +87,7 @@ assert.match(page, /assets\/js\/wallpapers\.js\?v=/,
   "壁纸管理页必须带版本号，否则浏览器会继续用旧脚本");
 assert.match(settings, /assets\/js\/wallpaper\.js\?v=/,
   "设置页必须给壁纸脚本加版本号，否则线上改动无法到达用户");
+
+assert.match(shell, /href="wallpapers\.html" target="mainFrame"[^>]*>🖼️ 壁纸管理/, "后台左侧导航必须提供壁纸管理入口");
 
 console.log("wallpaper admin smoke test passed");

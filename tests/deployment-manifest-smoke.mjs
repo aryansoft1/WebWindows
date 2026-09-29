@@ -295,6 +295,26 @@ if (manifest.releaseScope === "navigation-map") {
     "SystemManager/news.html",
     "deploy/ftp-manifest.json"
   ], "news category fix must upload its JSON dependencies, endpoints, page, and manifest last");
+} else if (manifest.releaseScope === "wallpaper-management") {
+  assert.equal(uploadFiles.length, 15, "wallpaper release must upload its 14 changed files and manifest");
+  for (const required of [
+    "SystemManager/index.html",
+    "SystemManager/wallpapers.html",
+    "SystemManager/assets/js/wallpapers.js",
+    "admin_api/wallpapers.asp",
+    "api/wallpapers.asp",
+    "assets/data/wallpaper-index.json",
+    "assets/js/main.js",
+    "assets/js/wallpaper.js",
+    "settings.html",
+    "deploy/ftp-manifest.json"
+  ]) {
+    assert.ok(uploadFiles.includes(required), `wallpaper release is missing ${required}`);
+  }
+  for (const onlineReleaseFile of onlineReleaseFiles) {
+    assert.ok(!uploadFiles.includes(onlineReleaseFile),
+      "wallpaper release must not re-upload unrelated production dependencies: " + onlineReleaseFile);
+  }
 } else if (manifest.releaseScope === "systemmanager-completion") {
   assert.equal(uploadFiles.length, 53, "SystemManager release must use the approved 53-file scope");
   for (const required of [

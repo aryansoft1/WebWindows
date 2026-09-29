@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.10",
+  "releaseVersion": "2026.09.29.13",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T04:34:24.768Z",
+  "generatedAt": "2026-09-29T14:04:08.811Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -312,9 +312,25 @@
     "assets/vendor/jodit/4.15.14/jodit.min.css",
     "assets/vendor/jodit/4.15.14/LICENSE.txt",
     "assets/vendor/jodit/4.15.14/SOURCE.json",
-    "assets/vendor/jodit/4.15.14/README.md"
+    "assets/vendor/jodit/4.15.14/README.md",
+    "assets/icons/settings-cursor.svg",
+    "assets/js/cursor-theme-inline.js",
+    "assets/js/cursor-themes.js",
+    "cloud/browser/file-selection.js",
+    "api/wallpapers.asp",
+    "admin_api/wallpapers.asp",
+    "SystemManager/wallpapers.html",
+    "SystemManager/assets/js/wallpapers.js",
+    "assets/data/wallpaper-index.json",
+    "api/dt_file_transfer.asp",
+    "api/dt_friends.asp",
+    "assets/js/desktalk-file-feedback.js",
+    "assets/wallpapers/wall7.png",
+    "assets/wallpapers/wall8.png",
+    "assets/wallpapers/wall9.png",
+    "assets/wallpapers/wall10.png"
   ],
-  "previousReleaseVersion": "2026.09.28.9",
+  "previousReleaseVersion": "2026.09.29.12",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -333,8 +349,8 @@
       "size": 2877
     },
     "api/dt_presence_mem.asp": {
-      "sha256": "9be07c749dc15c47981aaa24d4fb066dcaa961b3177aaea5bb8de4a4fe74ba60",
-      "size": 7498
+      "sha256": "c8186c0fa27230cf1e5e0c9ec873ee48501c38c1f9a2ae7550bd64699f564a49",
+      "size": 9862
     },
     "api/function-catalog.asp": {
       "sha256": "55f822aebe7ee33ec8ce00670d7ad1652b8fa8787cf7a2e5131182857ad5ea79",
@@ -357,8 +373,8 @@
       "size": 3569
     },
     "assets/css/desktalk.css": {
-      "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
-      "size": 22651
+      "sha256": "4c5a42c6b8fd51da20679a5a8928c1dfe0cf0b57a7465598fe89e788392da77b",
+      "size": 23308
     },
     "assets/css/developer-studio.css": {
       "sha256": "f74878a1d78bb72aeea81629b586782fbe25af8665b66dd3dc4364dc5f2452b1",
@@ -373,8 +389,8 @@
       "size": 6542
     },
     "assets/css/main.css": {
-      "sha256": "5e4f790f66f7e12a8a9637cef0eb4f9512b0fb24efb2874494c4d3e01dcc0aa2",
-      "size": 31739
+      "sha256": "6884c084e2a181b0aec792d72a3b7d5d1c897ed91883e0b87b4674f871751fba",
+      "size": 30494
     },
     "assets/css/news.css": {
       "sha256": "25051efec335935b78287bba240a42a7f1a3ae8fc52a34bc5738cba34bb180fe",
@@ -597,8 +613,8 @@
       "size": 1897
     },
     "assets/js/desktalk.js": {
-      "sha256": "4da495c5da584accce57a20aa1f2825e26fe430966a5aaef0e8d4e2603c75cb2",
-      "size": 108572
+      "sha256": "b4685287d297f965edf7debfffa2a79d06d9da70fa0eea3a4f8764c085510b9e",
+      "size": 119529
     },
     "assets/js/desktop-functions.js": {
       "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
@@ -637,12 +653,12 @@
       "size": 4689
     },
     "assets/js/login.js": {
-      "sha256": "d788b24241c18f53201feb4407b63a056256a675ca04618302737ab1bd1a2af2",
-      "size": 4771
+      "sha256": "4c322161c4c49a3835db41e3222827f5e08a093d3540e9e42bbd46092b57638d",
+      "size": 7270
     },
     "assets/js/main.js": {
-      "sha256": "d6d896ac93c72181ff994363cd3e79ee4603283f78732e8ec83b5fa2c00a00aa",
-      "size": 23398
+      "sha256": "77c5a76aa766d5698a4a68652a5e6095fda53e287726e3777be3efba96df7f22",
+      "size": 25279
     },
     "assets/js/network-speed.js": {
       "sha256": "3bae1453ed88635593befe2bba6defbb04a2f6e0a587f38ecbd7de9c6edcc7a1",
@@ -693,8 +709,8 @@
       "size": 198690
     },
     "assets/js/wallpaper.js": {
-      "sha256": "70593fb83e5d0cc59161347044d2340dd43583e729deb857ff0e36ff2b1a249b",
-      "size": 2982
+      "sha256": "ef13df43a4c4d70493f692bcd399141a90bdef4a475331ec5687fd6a98c98d88",
+      "size": 5123
     },
     "assets/js/webwindows-message.js": {
       "sha256": "bdd1dea9b0f37689697e6fe1a4659cca0ada9f80998c237bd2752c6017ef3f34",
@@ -961,16 +977,16 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "bbb2173e267a03bdd7161408279e9d7d862e54e55e03f9f7f63875e16b07d19d",
-      "size": 33244
+      "sha256": "118d0123d22e6bc7b26f1acc925360ad67f875273e9c82c3ba0333273c97e7ee",
+      "size": 36632
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
       "size": 3541
     },
     "login.html": {
-      "sha256": "dfcf39d4670cf62a79b0d5f4908eadb7a4321e28772d53b20f51703f26678aa8",
-      "size": 1970
+      "sha256": "84ec368beb597eff2f7c716df98a5b4f96c523edc017d4e282bff2dc690a0752",
+      "size": 4391
     },
     "news_view.html": {
       "sha256": "bf75f70e582d9ece6f96cd727cabc1f52b66ceebb2983a3d2035662f00b3eeaf",
@@ -981,8 +997,8 @@
       "size": 2554
     },
     "settings.html": {
-      "sha256": "2c5a7f0243b033eabb1ee1dea4d7e77b2a194a1c849c8f59b317bd50adad43c5",
-      "size": 20182
+      "sha256": "5a7fb94c6873b7d51d44fd3d0262f288d6d8e8814a32de9a7cb4dfd0a7e3ba00",
+      "size": 20205
     },
     "software.html": {
       "sha256": "ace84106a5eef3718bfcb344ca82661f439b3ecd48e29ee296df7aa8240c5fb9",
@@ -1217,8 +1233,8 @@
       "size": 5767
     },
     "SystemManager/index.html": {
-      "sha256": "db8ffb1333be24ab3ebaea268391d1bc006c95c43c4f8ffed22087c674ce4b88",
-      "size": 2671
+      "sha256": "05bf6f46b68bdc892028b5f8bde46be09cfe22bfb077ef949b8d205ef80b0bc8",
+      "size": 2846
     },
     "SystemManager/assets/css/visitor-analytics.css": {
       "sha256": "54832075333533f1120252edeb4457967cf091fb878832f8e928aae5b1ffa182",
@@ -1332,8 +1348,8 @@
       "size": 8154
     },
     "assets/js/auth-session.js": {
-      "sha256": "1310531e22ec40ee178dee90f2839fee5c43389ba3981aa94e3eecf156448b07",
-      "size": 4654
+      "sha256": "c292ce36f9c3bf2777210455a1c09dfd522f19c48f805d5ca71b5dec0de019e8",
+      "size": 4990
     },
     "assets/js/ai-file-tools.js": {
       "sha256": "ee7e7758b2f4bb2149583f1ab036e3fe46bdb00366c99187834b35eb3dd3b82f",
@@ -1538,21 +1554,88 @@
     "assets/vendor/jodit/4.15.14/README.md": {
       "sha256": "10d759fe21fd1eab6491cded83591a6caf084245499c7fe36d85ef0c0f38ff37",
       "size": 422
+    },
+    "assets/icons/settings-cursor.svg": {
+      "sha256": "628ab8365cca3f8691eaafbed87e2155375126bee19caee8809836d7059036d9",
+      "size": 467
+    },
+    "assets/js/cursor-theme-inline.js": {
+      "sha256": "0c02fee69d94726218ab5e36418c783a6e4406252f5e54942b5cf9f68c9f371a",
+      "size": 67648
+    },
+    "assets/js/cursor-themes.js": {
+      "sha256": "bdb8367360b429453f09c4b6bcfe495ed5d51dd3061175447b5dbf997ccbd408",
+      "size": 15121
+    },
+    "cloud/browser/file-selection.js": {
+      "sha256": "7f1549efc90ae880e7eb4f89efee138995aa3b9b7a2163abfa8088c8f6d23293",
+      "size": 12660
+    },
+    "api/wallpapers.asp": {
+      "sha256": "f176f5d488aa803d21864d0605b924b6002773b275297dd8bcdfbb49756bf0c1",
+      "size": 4095
+    },
+    "admin_api/wallpapers.asp": {
+      "sha256": "40f6023d4ada95469e04e7c617116895158214621aa0408974d4af78660d818f",
+      "size": 9317
+    },
+    "SystemManager/wallpapers.html": {
+      "sha256": "733f7f031361bfb565a772d78a526e8bc0264abb89fab20875e4ee7cf33494b7",
+      "size": 3364
+    },
+    "SystemManager/assets/js/wallpapers.js": {
+      "sha256": "60da2de526549ee97228c53759db0c02cc565e88688c94dd3b6a781309fd7c41",
+      "size": 6328
+    },
+    "assets/data/wallpaper-index.json": {
+      "sha256": "c0712b85f1413d43ddd9c19b424faac2fc008da58ce2dcbd05b8e31bd973588c",
+      "size": 1176
+    },
+    "api/dt_file_transfer.asp": {
+      "sha256": "6dfd928b0e209d82c3bb7a8335ec46f1fe4e6df392c441bd3fcf76cca14aa3d3",
+      "size": 19656
+    },
+    "api/dt_friends.asp": {
+      "sha256": "c22c17729cf36a64a180926c535d9991cb7139c6cfc474b4fc958cde7cbe69fc",
+      "size": 2644
+    },
+    "assets/js/desktalk-file-feedback.js": {
+      "sha256": "0ceb9f6b219695e932599f4786560d77f988c23a372557dc0bc2cfb8ae12c3ae",
+      "size": 2377
+    },
+    "assets/wallpapers/wall7.png": {
+      "sha256": "bf23b764ab872c147be67e3ca5d7e9ea8e493630160884035bde5cff3113b7ce",
+      "size": 1190764
+    },
+    "assets/wallpapers/wall8.png": {
+      "sha256": "c1d91633e340dac6972fa52edc320aabd151edc62cfed7744633061caf4402a9",
+      "size": 1619985
+    },
+    "assets/wallpapers/wall9.png": {
+      "sha256": "e29405749d5055022527ee1e40e58ec1074e4c96a747ed0f59d0bd0aa10e487e",
+      "size": 1315677
+    },
+    "assets/wallpapers/wall10.png": {
+      "sha256": "3c66a68243ec759e75741329230ee0b69fe3e864da3f51d38d6f71b60d06ec53",
+      "size": 1518279
     }
   },
-  "releaseScope": "news-jodit-editor",
+  "releaseScope": "wallpaper-management",
   "uploadFiles": [
-    "assets/vendor/jodit/4.15.14/jodit.min.js",
-    "assets/vendor/jodit/4.15.14/jodit.min.css",
-    "assets/vendor/jodit/4.15.14/LICENSE.txt",
-    "assets/vendor/jodit/4.15.14/SOURCE.json",
-    "assets/vendor/jodit/4.15.14/README.md",
-    "assets/js/news-content.js",
-    "assets/js/admin-richtext.js",
-    "assets/css/admin-richtext.css",
-    "inc/news-html.asp",
-    "SystemManager/news.html",
-    "news_view.html",
+    "SystemManager/index.html",
+    "SystemManager/wallpapers.html",
+    "SystemManager/assets/js/wallpapers.js",
+    "admin_api/wallpapers.asp",
+    "api/wallpapers.asp",
+    "assets/css/main.css",
+    "assets/data/wallpaper-index.json",
+    "assets/js/main.js",
+    "assets/js/wallpaper.js",
+    "assets/wallpapers/wall7.png",
+    "assets/wallpapers/wall8.png",
+    "assets/wallpapers/wall9.png",
+    "assets/wallpapers/wall10.png",
+    "settings.html",
     "deploy/ftp-manifest.json"
   ]
 }

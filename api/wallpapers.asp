@@ -92,6 +92,7 @@ Dim found
 Set found = CreateObject("System.Collections.ArrayList")
 Set fso = Server.CreateObject("Scripting.FileSystemObject")
 rootPath = Server.MapPath("/" & WALLPAPER_URL_ROOT)
+If Right(rootPath, 1) <> "\" Then rootPath = rootPath & "\"
 
 If fso.FolderExists(rootPath) Then
   Set rootFolder = fso.GetFolder(rootPath)

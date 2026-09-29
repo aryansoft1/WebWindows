@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "releaseVersion": "2026.09.29.13",
   "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-29T14:19:29.488Z",
+  "generatedAt": "2026-09-29T14:23:34.520Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -1584,8 +1584,8 @@
       "size": 6328
     },
     "assets/data/wallpaper-index.json": {
-      "sha256": "1b29b31adc5efaea9290bb71b06048f4799385d1ad86265d3876ee58ef4ee3a3",
-      "size": 1176
+      "sha256": "e419cc156ccd47a9700da7f9cd143139b50a99796f94b76574723930044c7011",
+      "size": 761
     },
     "api/dt_file_transfer.asp": {
       "sha256": "6dfd928b0e209d82c3bb7a8335ec46f1fe4e6df392c441bd3fcf76cca14aa3d3",
@@ -1605,7 +1605,6 @@
     "SystemManager/index.html",
     "admin_api/wallpapers.asp",
     "api/wallpapers.asp",
-    "assets/data/wallpaper-index.json",
     "assets/js/main.js",
     "assets/js/wallpaper.js",
     "settings.html",

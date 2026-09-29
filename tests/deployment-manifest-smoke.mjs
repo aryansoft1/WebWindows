@@ -296,12 +296,11 @@ if (manifest.releaseScope === "navigation-map") {
     "deploy/ftp-manifest.json"
   ], "news category fix must upload its JSON dependencies, endpoints, page, and manifest last");
 } else if (manifest.releaseScope === "wallpaper-management") {
-  assert.equal(uploadFiles.length, 8, "wallpaper release must upload seven changed files and manifest");
+  assert.equal(uploadFiles.length, 7, "wallpaper release must upload six changed files and manifest");
   for (const required of [
     "SystemManager/index.html",
     "admin_api/wallpapers.asp",
     "api/wallpapers.asp",
-    "assets/data/wallpaper-index.json",
     "assets/js/main.js",
     "assets/js/wallpaper.js",
     "settings.html"

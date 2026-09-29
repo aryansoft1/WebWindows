@@ -74,6 +74,12 @@ assert.match(script, /MAX_UPLOAD_BYTES = 4 \* 1024 \* 1024/);
 assert.match(script, /result\.bytes !== file\.size/,
   "上传后必须比对服务器保存的字节数");
 assert.match(script, /security\.authorize/);
+assert.match(script, /function imageUrl\(path\)/,
+  "管理员预览必须集中规范化壁纸 URL");
+assert.match(script, /image\.src = imageUrl\(item\.url\)/,
+  "列表缩略图必须从网站根目录加载，避免错误拼到 SystemManager 下");
+assert.match(script, /image\.src = imageUrl\(catalogue\.defaultWallpaper\)/,
+  "默认壁纸预览必须从网站根目录加载");
 assert.match(script, /X-WebWindows-Admin-Request": "system-manager"/);
 assert.match(script, /"delete"/);
 assert.match(script, /"default"/);
@@ -91,7 +97,7 @@ assert.match(main, /dataset\.wwWallpaper/,
   "同一张壁纸重复应用必须是无操作，否则窗口开关会不断取消壁纸请求");
 assert.match(main, /backgroundColor = '#042a57'/,
   "壁纸未加载完成时必须有兜底底色，不能出现纯白桌面");
-assert.match(page, /assets\/js\/wallpapers\.js\?v=/,
+assert.match(page, /assets\/js\/wallpapers\.js\?v=20260929-root-path-1/,
   "壁纸管理页必须带版本号，否则浏览器会继续用旧脚本");
 assert.match(settings, /assets\/js\/wallpaper\.js\?v=/,
   "设置页必须给壁纸脚本加版本号，否则线上改动无法到达用户");
@@ -99,3 +105,4 @@ assert.match(settings, /assets\/js\/wallpaper\.js\?v=/,
 assert.match(shell, /href="wallpapers\.html" target="mainFrame"[^>]*>🖼️ 壁纸管理/, "后台左侧导航必须提供壁纸管理入口");
 
 console.log("wallpaper admin smoke test passed");
+

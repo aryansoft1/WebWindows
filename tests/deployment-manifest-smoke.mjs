@@ -296,11 +296,10 @@ if (manifest.releaseScope === "navigation-map") {
     "deploy/ftp-manifest.json"
   ], "news category fix must upload its JSON dependencies, endpoints, page, and manifest last");
 } else if (manifest.releaseScope === "wallpaper-management") {
-  assert.equal(uploadFiles.length, 4, "wallpaper release must upload three changed files and manifest");
+  assert.equal(uploadFiles.length, 3, "wallpaper path fix must upload the changed admin page, script, and manifest");
   for (const required of [
-    "SystemManager/index.html",
-    "admin_api/wallpapers.asp",
-    "api/wallpapers.asp",
+    "SystemManager/wallpapers.html",
+    "SystemManager/assets/js/wallpapers.js",
   ]) assert.ok(uploadFiles.includes(required), `wallpaper release must upload ${required}`);
   assert.ok(uploadFiles.includes("deploy/ftp-manifest.json"), "deployment manifest must be uploaded last");
 } else if (manifest.releaseScope === "systemmanager-completion") {
@@ -350,3 +349,4 @@ for (const app of appsToVerify) {
 }
 
 console.log(`deployment manifest smoke test passed: ${manifest.requiredFiles.length} files`);
+

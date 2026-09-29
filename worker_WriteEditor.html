@@ -19,31 +19,37 @@
     button,select,input{font:inherit}.appbar{height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;background:#f8fafc;border-bottom:1px solid #d9e1ea;flex:none}
     .appbar button,.toolbar button,.toolbar select,.toolbar input{height:30px;border:1px solid transparent;border-radius:5px;background:transparent;color:#263446;cursor:pointer}
     .appbar button:hover,.toolbar button:hover,.toolbar select:hover{background:#e7edf4}.appbar button:disabled,.toolbar button:disabled{opacity:.45;cursor:not-allowed}
-    .save{padding:0 15px!important;background:#dbeafe!important;color:#1d4ed8!important;font-weight:700}.filename{margin-left:auto;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569;font-size:12px}
+    .save{padding:0 15px!important;background:#dbeafe!important;color:#1d4ed8!important;font-weight:700}.filename{margin-left:auto;max-width:30%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569;font-size:12px}
     .pill{padding:4px 8px;border-radius:999px;background:#fff3cd;color:#805b00;font-size:11px;font-weight:700}.status{min-width:62px;text-align:right;color:#64748b;font-size:11px}.status.error{color:#b91c1c}.status.saved{color:#047857}
     .notice{display:none;padding:7px 12px;background:#fffbeb;border-bottom:1px solid #fde68a;color:#854d0e;font-size:12px;flex:none}.notice.show{display:block}
-    .toolbar{min-height:43px;display:flex;align-items:center;gap:3px;padding:5px 9px;background:#fff;border-bottom:1px solid #d8e0e8;flex:none;overflow-x:auto}
-    .toolbar button{min-width:31px;padding:0 8px;font-weight:600}.toolbar button.active{background:#dbeafe;color:#1d4ed8}.toolbar select{padding:0 25px 0 8px;border-color:#d9e1ea;background:#fff}.toolbar .style{width:112px}.toolbar .font{width:135px}.toolbar .size{width:67px}
-    .toolbar input[type=color]{width:30px;padding:3px;border-color:#d9e1ea;background:#fff}.divider{width:1px;height:24px;margin:0 4px;background:#d9e1ea;flex:none}
+    .toolbar{min-height:43px;display:flex;align-items:center;gap:3px;padding:5px 9px;background:#fff;border-bottom:1px solid #d8e0e8;flex:none;overflow-x:auto;flex-wrap:nowrap}
+    .toolbar button{min-width:31px;padding:0 8px;font-weight:600;white-space:nowrap}.toolbar button.active{background:#dbeafe;color:#1d4ed8}.toolbar select{padding:0 8px;border-color:#d9e1ea;background:#fff;max-width:150px}.toolbar .style{width:112px}.toolbar .font{width:135px}.toolbar .size{width:67px}
+    .toolbar input[data-color-command]{width:30px;padding:3px;border:1px solid #d9e1ea;background:#fff}.divider{width:1px;height:24px;margin:0 4px;background:#d9e1ea;flex:none}
+    .templatebar{display:flex;align-items:center;gap:6px;padding:5px 10px;background:#f1f5f9;border-bottom:1px solid #d8e0e8;font-size:12px;flex:none;overflow-x:auto}
+    .templatebar button{border:1px solid #cbd5e1;border-radius:6px;background:#fff;padding:4px 10px;cursor:pointer;white-space:nowrap}
+    .findpanel{display:none;align-items:center;gap:6px;padding:6px 10px;background:#fffbeb;border-bottom:1px solid #fde68a;font-size:12px;flex:none;flex-wrap:wrap}
+    .findpanel.show{display:flex}.findpanel input{border:1px solid #cbd5e1;border-radius:5px;height:30px;padding:0 8px}
+    .hfbar{display:none;gap:6px;padding:6px 10px;background:#eff6ff;border-bottom:1px solid #bfdbfe;font-size:12px;flex:none;flex-wrap:wrap;align-items:center}
+    .hfbar.show{display:flex}.hfbar input{border:1px solid #93c5fd;border-radius:5px;height:30px;padding:0 8px;min-width:200px}
+    .mainrow{flex:1;min-height:0;display:flex;position:relative}
+    .outline{width:210px;flex:none;background:#f8fafc;border-right:1px solid #d8e0e8;overflow:auto;padding:10px;font-size:12px;display:none}
+    .outline.show{display:block}.outline button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:5px 6px;border-radius:5px;cursor:pointer;color:#334155}
+    .outline button:hover{background:#e7edf4}.outline .lv2{padding-left:16px}.outline .lv3{padding-left:28px}
     .workspace{position:relative;flex:1;min-height:0;overflow:auto;background:#e5e9ef}.view{min-height:100%;padding:28px 20px 48px}
     #preview-host{display:none}.docx-wrapper{background:transparent!important;padding:0!important}.docx-wrapper>section.docx{box-shadow:0 2px 12px rgba(15,23,42,.16)!important;margin:0 auto 24px!important}
     .page{width:794px;min-height:1123px;margin:0 auto;padding:86px 82px;background:#fff;box-shadow:0 2px 12px rgba(15,23,42,.16);outline:none;line-height:1.65;color:#111827;overflow-wrap:anywhere}
     .page:focus{box-shadow:0 3px 18px rgba(37,99,235,.2)}.page p{margin:0 0 10px}.page h1{font-size:28px}.page h2{font-size:23px}.page h3{font-size:19px}.page img{max-width:100%;height:auto}.page table{border-collapse:collapse;width:100%;margin:10px 0}.page td,.page th{border:1px solid #94a3b8;padding:6px 8px}.page blockquote{margin:12px 0;padding:8px 16px;border-left:4px solid #60a5fa;background:#eff6ff}
+    .page pre{background:#0f172a;color:#e2e8f0;padding:12px;border-radius:8px;white-space:pre-wrap}
+    .doc-header,.doc-footer{border:1px dashed #93c5fd;background:#f8fbff;color:#475569;font-size:12px;padding:8px 12px;margin-bottom:12px}
+    .doc-footer{margin-bottom:0;margin-top:16px}.pagebreak{border-top:2px dashed #94a3b8;margin:18px 0;height:0}
     .unsupported{display:none;max-width:620px;margin:70px auto;padding:34px;background:#fff;border:1px solid #dbe3ec;border-radius:14px;text-align:center;box-shadow:0 8px 28px rgba(15,23,42,.08)}.unsupported h2{margin-top:0}.unsupported p{color:#64748b;line-height:1.7}.unsupported button{padding:9px 16px;border:0;border-radius:7px;background:#2563eb;color:#fff;cursor:pointer}
     .loading{position:absolute;inset:0;display:grid;place-items:center;background:rgba(238,242,247,.86);z-index:4;color:#475569}.loading[hidden]{display:none}.spinner{width:28px;height:28px;margin:0 auto 10px;border:3px solid #cbd5e1;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-    .footer{height:31px;display:flex;align-items:center;gap:16px;padding:0 12px;background:#f8fafc;border-top:1px solid #d8e0e8;color:#64748b;font-size:11px;flex:none}.footer .zoom{margin-left:auto}.menu{position:fixed;top:39px;left:8px;z-index:20;display:none;min-width:190px;padding:6px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 10px 30px rgba(15,23,42,.18)}.menu.show{display:block}.menu button{display:block;width:100%;height:34px;padding:0 10px;border:0;border-radius:5px;background:#fff;text-align:left;cursor:pointer}.menu button:hover{background:#eff6ff}.menu button:disabled{color:#94a3b8;cursor:not-allowed}.mode-buttons{display:flex;gap:2px}
+    .footer{height:31px;display:flex;align-items:center;gap:16px;padding:0 12px;background:#f8fafc;border-top:1px solid #d8e0e8;color:#64748b;font-size:11px;flex:none}.footer .zoom{margin-left:auto;display:flex;gap:6px;align-items:center}
+    .footer button{border:0;background:transparent;cursor:pointer;color:#64748b}.footer button:hover{color:#1d4ed8}
+    .menu{position:fixed;top:39px;left:8px;z-index:20;display:none;min-width:220px;padding:6px;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 10px 30px rgba(15,23,42,.18)}.menu.show{display:block}.menu button{display:block;width:100%;height:34px;padding:0 10px;border:0;border-radius:5px;background:#fff;text-align:left;cursor:pointer}.menu button:hover{background:#eff6ff}.menu button:disabled{color:#94a3b8;cursor:not-allowed}.mode-buttons{display:flex;gap:2px}
+    .modal{position:fixed;inset:0;display:none;place-items:center;background:rgba(15,23,42,.4);z-index:50}.modal.show{display:grid}.modal .box{background:#fff;border-radius:10px;padding:18px;min-width:300px;max-width:480px;box-shadow:0 20px 60px rgba(0,0,0,.25)}.modal h3{margin:0 0 10px}.modal .row{display:flex;gap:8px;margin-top:12px;justify-content:flex-end}
     @media(max-width:850px){.page{width:calc(100vw - 36px);min-height:calc((100vw - 36px)*1.414);padding:9vw}.font,.filename{display:none}}
-    @media(max-width:820px),(max-width:1000px) and (max-height:500px){
-      .appbar{height:52px;gap:4px;padding:4px 8px;overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;touch-action:pan-x}
-      .appbar button,.appbar select{height:44px;min-width:44px;flex:0 0 auto}
-      .appbar .status{display:none}
-      .toolbar{min-height:52px;padding:4px 6px;overscroll-behavior-x:contain;touch-action:pan-x}
-      .toolbar button,.toolbar select,.toolbar input{height:44px;min-width:44px;flex:0 0 auto}
-      .menu{top:51px;max-height:calc(100dvh - 60px);overflow:auto}
-      .menu button{height:44px}
-      .view{padding:14px 10px 36px}
-    }
-    @media print{.appbar,.toolbar,.notice,.footer{display:none!important}.workspace{overflow:visible;background:#fff}.view{padding:0}.page{box-shadow:none;margin:0;width:auto;min-height:0}}
+    @media print{.appbar,.toolbar,.notice,.footer,.templatebar,.findpanel,.hfbar,.outline{display:none!important}.workspace{overflow:visible;background:#fff}.view{padding:0}.page{box-shadow:none;margin:0;width:auto;min-height:0}}
   </style>
 </head>
 <body>
@@ -55,6 +61,7 @@
     <div class="mode-buttons">
       <button id="edit-mode-button" type="button">编辑</button>
       <button id="read-mode-button" type="button">阅读</button>
+      <button id="outline-button" type="button" title="大纲导航">大纲</button>
     </div>
     <span id="readonly-pill" class="pill" hidden>只读</span>
     <span id="filename" class="filename">新建文档.docx</span>
@@ -63,7 +70,7 @@
   <div id="notice" class="notice"></div>
   <div id="toolbar" class="toolbar">
     <select class="style" aria-label="段落样式" data-format="formatBlock">
-      <option value="p">正文</option><option value="h1">标题 1</option><option value="h2">标题 2</option><option value="h3">标题 3</option><option value="blockquote">引用</option>
+      <option value="p">正文</option><option value="h1">标题 1</option><option value="h2">标题 2</option><option value="h3">标题 3</option><option value="blockquote">引用</option><option value="pre">代码</option>
     </select>
     <select class="font" aria-label="字体" data-format="fontName">
       <option>Microsoft YaHei</option><option>SimSun</option><option>SimHei</option><option>Arial</option><option>Times New Roman</option>
@@ -76,37 +83,92 @@
     <button type="button" title="斜体" data-command="italic"><i>I</i></button>
     <button type="button" title="下划线" data-command="underline"><u>U</u></button>
     <button type="button" title="删除线" data-command="strikeThrough"><s>S</s></button>
-    <input type="color" value="#111827" title="文字颜色" data-color-command="foreColor">
-    <input type="color" value="#fff59d" title="文字高亮" data-color-command="hiliteColor">
+    <button type="button" title="上标" data-command="superscript">X²</button>
+    <button type="button" title="下标" data-command="subscript">X₂</button>
+    <input data-color-command="foreColor" value="#111827" title="文字颜色" aria-label="文字颜色">
+    <input data-color-command="hiliteColor" value="#fff59d" title="文字高亮" aria-label="文字高亮">
     <div class="divider"></div>
-    <button type="button" title="左对齐" data-command="justifyLeft">≡</button>
-    <button type="button" title="居中" data-command="justifyCenter">≡</button>
-    <button type="button" title="右对齐" data-command="justifyRight">≡</button>
-    <button type="button" title="两端对齐" data-command="justifyFull">☰</button>
+    <button type="button" title="左对齐" data-command="justifyLeft">左</button>
+    <button type="button" title="居中" data-command="justifyCenter">中</button>
+    <button type="button" title="右对齐" data-command="justifyRight">右</button>
+    <button type="button" title="两端对齐" data-command="justifyFull">齐</button>
+    <select id="lineheight-select" aria-label="行距" title="行距">
+      <option value="">行距</option><option value="1.0">1.0</option><option value="1.5">1.5</option><option value="2.0">2.0</option>
+    </select>
     <div class="divider"></div>
     <button type="button" title="项目符号" data-command="insertUnorderedList">• 列表</button>
     <button type="button" title="编号" data-command="insertOrderedList">1. 列表</button>
     <button type="button" title="减少缩进" data-command="outdent">‹</button>
     <button type="button" title="增加缩进" data-command="indent">›</button>
-    <button id="link-button" type="button" title="插入链接">链接</button>
+    <button type="button" title="引用块" id="quote-button">引用</button>
+    <button type="button" title="代码块" id="code-button">代码</button>
     <button type="button" title="清除格式" data-command="removeFormat">清除格式</button>
+    <div class="divider"></div>
+    <button id="table-button" type="button" title="插入表格">表格</button>
+    <button id="image-cloud-button" type="button" title="从云资料插入图片">图片</button>
+    <button id="image-url-button" type="button" title="插入网络图片">图链</button>
+    <button id="link-button" type="button" title="插入链接">链接</button>
+    <button id="hr-button" type="button" title="插入水平线">横线</button>
+    <button id="pagebreak-button" type="button" title="插入分页符">分页</button>
+    <button id="datetime-button" type="button" title="插入日期时间">日期</button>
+    <button id="pagenum-button" type="button" title="插入页码占位">页码</button>
+    <select id="symbol-select" aria-label="插入符号" title="插入符号">
+      <option value="">符号</option><option value="©">©</option><option value="®">®</option><option value="™">™</option><option value="★">★</option><option value="☆">☆</option><option value="→">→</option>
+    </select>
+    <div class="divider"></div>
+    <button id="find-button" type="button" title="查找替换">查找</button>
+    <button id="count-button" type="button" title="字数统计">字数</button>
+    <button id="selectall-button" type="button" title="全选">全选</button>
+    <button id="paste-text-button" type="button" title="粘贴为纯文本">纯粘贴</button>
+    <button id="clear-format-button" type="button" title="选择性清除格式">清格式</button>
   </div>
-  <main class="workspace">
-    <section id="edit-host" class="view">
-      <article id="editor" class="page" contenteditable="true"><p><br></p></article>
-    </section>
-    <section id="preview-host" class="view"></section>
-    <section id="unsupported" class="unsupported">
-      <h2>暂时无法编辑旧版 DOC 文件</h2>
-      <p>Write Editor 第一阶段支持 DOCX。可先将原文件保存到私人云资料，再通过兼容工具转换为 DOCX。</p>
-      <button id="download-original-button" type="button">保存原文件副本到云资料</button>
-    </section>
-    <div id="loading" class="loading"><div><div class="spinner"></div><span id="loading-text">正在打开文档…</span></div></div>
-  </main>
+  <div class="templatebar" id="templatebar">
+    <span>模板：</span>
+    <button type="button" data-template="meeting">会议纪要</button>
+    <button type="button" data-template="report">工作报告</button>
+    <button type="button" data-template="letter">公函</button>
+    <span style="color:#94a3b8">支持把 .docx/.html/.txt 拖入编辑区自动导入</span>
+  </div>
+  <div class="findpanel" id="findpanel">
+    <label>查找 <input id="find-text" placeholder="关键词"></label>
+    <label>替换 <input id="replace-text" placeholder="替换为"></label>
+    <span id="find-count">0 处</span>
+    <button type="button" id="find-next-button">查找下一个</button>
+    <button type="button" id="replace-one-button">替换</button>
+    <button type="button" id="replace-all-button">全部替换</button>
+    <button type="button" id="find-close-button">关闭</button>
+  </div>
+  <div class="hfbar" id="hfbar">
+    <label>页眉 <input id="header-input" placeholder="页眉文本"></label>
+    <label>页脚 <input id="footer-input" placeholder="页脚文本"></label>
+    <button type="button" id="hf-apply-button">应用页眉页脚</button>
+    <button type="button" id="hf-clear-button">清除</button>
+  </div>
+  <div class="mainrow">
+    <aside class="outline" id="outline" aria-label="大纲导航"></aside>
+    <main class="workspace">
+      <section id="edit-host" class="view">
+        <article id="editor" class="page" contenteditable="true"><p><br></p></article>
+      </section>
+      <section id="preview-host" class="view"></section>
+      <section id="unsupported" class="unsupported">
+        <h2>暂时无法编辑旧版 DOC 文件</h2>
+        <p>Write Editor 第一阶段支持 DOCX。可先将原文件保存到私人云资料，再通过兼容工具转换为 DOCX。</p>
+        <button id="download-original-button" type="button">保存原文件副本到云资料</button>
+      </section>
+      <div id="loading" class="loading"><div><div class="spinner"></div><span id="loading-text">正在打开文档…</span></div></div>
+    </main>
+  </div>
   <footer class="footer">
-    <span id="word-count">0 字</span>
+    <button id="word-count" type="button" title="点击查看字数统计">0 字</button>
     <span id="mode-label">编辑模式</span>
-    <span class="zoom">A4 · 100%</span>
+    <label style="display:flex;gap:4px;align-items:center"><input id="autosave-toggle" checked style="width:14px;height:14px" aria-label="自动保存">自动保存</label>
+    <button id="hf-toggle-button" type="button" title="页眉页脚设置">页眉页脚</button>
+    <span class="zoom">A4 ·
+      <select id="zoom-select" aria-label="缩放">
+        <option value="80">80%</option><option value="100" selected>100%</option><option value="120">120%</option><option value="150">150%</option>
+      </select>
+    </span>
   </footer>
   <div id="file-menu" class="menu">
     <button type="button" data-file-action="new">新建空白文档</button>
@@ -114,9 +176,17 @@
     <button type="button" data-file-action="save">保存</button>
     <button type="button" data-file-action="save-as">另存到云资料</button>
     <button type="button" data-file-action="export">另存 DOCX 到云资料</button>
+    <button type="button" data-file-action="export-html">导出HTML到云资料</button>
+    <button type="button" data-file-action="export-txt">导出TXT到云资料</button>
+    <button type="button" data-file-action="props">文档属性</button>
     <button type="button" data-file-action="download-original">保存原文件副本到云资料</button>
     <button type="button" data-file-action="print">打印</button>
   </div>
+  <div class="modal" id="props-modal"><div class="box">
+    <h3>文档属性</h3>
+    <div id="props-body" style="font-size:13px;line-height:1.8;color:#334155"></div>
+    <div class="row"><button type="button" id="props-close-button">关闭</button></div>
+  </div></div>
   <script>
   (function(){
     "use strict";
@@ -143,14 +213,16 @@
     const notice = document.getElementById("notice");
     const fileMenu = document.getElementById("file-menu");
     const saveButton = document.getElementById("save-button");
-    const state = { buffer: null, dirty: false, revision: 0, saving: false, saveAgain: false, timer: 0, mode: "edit", loading: true };
+    const outline = document.getElementById("outline");
+    const findpanel = document.getElementById("findpanel");
+    const state = { buffer: null, dirty: false, revision: 0, saving: false, saveAgain: false, timer: 0, mode: "edit", loading: true, autosave: true, createdAt: new Date().toISOString(), headerText: "", footerText: "" };
 
     document.getElementById("filename").textContent = resource.name;
     document.getElementById("readonly-pill").hidden = !readOnly;
 
     function setStatus(text, type) {
       status.textContent = text;
-      status.className = `status${type ? ` ${type}` : ""}`;
+      status.className = "status" + (type ? " " + type : "");
     }
     function showNotice(text) {
       notice.textContent = text || "";
@@ -168,11 +240,17 @@
         FORBID_ATTR: ["onerror","onload","onclick","onfocus","style"]
       });
     }
-    function updateCount() {
+    function plainStats() {
       const text = (editor.innerText || "").trim();
       const chars = text.replace(/\s/g, "").length;
       const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
-      document.getElementById("word-count").textContent = `${chars} 字 · ${words} 词`;
+      const paras = Array.from(editor.querySelectorAll("p,h1,h2,h3,li")).filter(function(el){ return (el.innerText || "").trim(); }).length;
+      return { text: text, chars: chars, words: words, paras: paras };
+    }
+    function updateCount() {
+      const s = plainStats();
+      document.getElementById("word-count").textContent = s.chars + " 字 · " + s.words + " 词";
+      return s;
     }
     function setEditable(enabled) {
       editor.contentEditable = enabled ? "true" : "false";
@@ -193,16 +271,16 @@
     async function fetchBuffer() {
       if (!resource.readUrl) return null;
       const response = await fetch(resource.readUrl, { credentials: "same-origin", cache: "no-store" });
-      if (!response.ok) throw new Error(`文档读取失败（${response.status}）`);
+      if (!response.ok) throw new Error("文档读取失败（" + response.status + "）");
       const buffer = await response.arrayBuffer();
       if (!buffer.byteLength) throw new Error("文档内容为空。");
       return buffer;
     }
     async function renderPreview() {
       if (!state.buffer) return;
-      if (!window.docx?.renderAsync) throw new Error("DOCX 阅读组件加载失败。");
+      if (!window.docx || !window.docx.renderAsync) throw new Error("DOCX 阅读组件加载失败。");
       previewHost.innerHTML = "";
-      await docx.renderAsync(state.buffer, previewHost, previewHost, {
+      await window.docx.renderAsync(state.buffer, previewHost, previewHost, {
         inWrapper: true,
         breakPages: true,
         ignoreLastRenderedPageBreak: false,
@@ -217,16 +295,16 @@
         .trim();
       const chars = text.replace(/\s/g, "").length;
       const words = text ? text.split(/\s+/).filter(Boolean).length : 0;
-      document.getElementById("word-count").textContent = `${chars} 字 · ${words} 词`;
+      document.getElementById("word-count").textContent = chars + " 字 · " + words + " 词";
     }
     async function importDocx() {
       if (!state.buffer) return "<p><br></p>";
-      if (!window.mammoth?.convertToHtml) throw new Error("DOCX 编辑转换组件加载失败。");
+      if (!window.mammoth || !window.mammoth.convertToHtml) throw new Error("DOCX 编辑转换组件加载失败。");
       const result = await mammoth.convertToHtml(
         { arrayBuffer: state.buffer },
         { styleMap: ["u => u", "p[style-name='Title'] => h1:fresh", "p[style-name='Subtitle'] => h2:fresh"] }
       );
-      if (result.messages?.length) {
+      if (result.messages && result.messages.length) {
         showNotice("此 DOCX 已使用兼容编辑模式打开。复杂分页、文本框、浮动对象及部分样式可能与 Word 不同。");
       }
       return safeHtml(result.value || "<p><br></p>");
@@ -237,13 +315,17 @@
       url.searchParams.set("editor", "write-editor");
       const response = await fetch(url, { credentials: "same-origin", cache: "no-store" });
       if (response.status === 404) return false;
-      if (!response.ok) throw new Error(`编辑副本读取失败（${response.status}）`);
+      if (!response.ok) throw new Error("编辑副本读取失败（" + response.status + "）");
       const payload = await response.json();
-      if (payload?.format !== "webwindows-write-editor" || typeof payload.html !== "string") {
+      if (!payload || payload.format !== "webwindows-write-editor" || typeof payload.html !== "string") {
         throw new Error("Write Editor 编辑副本格式无效。");
       }
       editor.innerHTML = safeHtml(payload.html);
       state.revision = Number(payload.revision) || 0;
+      if (payload.headerText) state.headerText = String(payload.headerText).slice(0, 200);
+      if (payload.footerText) state.footerText = String(payload.footerText).slice(0, 200);
+      if (payload.createdAt) state.createdAt = String(payload.createdAt);
+      renderHeaderFooter();
       showNotice("已恢复上次保存的 Write Editor 编辑副本；原始 DOCX 未被覆盖。");
       return true;
     }
@@ -270,42 +352,43 @@
     }
     function markDirty() {
       if (state.loading || readOnly) return;
+      buildOutline();
       state.dirty = true;
       state.revision += 1;
       setStatus("未保存");
       clearTimeout(state.timer);
-      if (resource.saveEndpoint) state.timer = setTimeout(() => saveCloud(false), 3000);
+      if (resource.saveEndpoint && state.autosave) state.timer = setTimeout(function(){ saveCloud(false); }, 3000);
       updateCount();
     }
     async function apiJson(response) {
       const payload = await response.json().catch(() => null);
-      if (!response.ok || !payload?.ok) throw new Error(payload?.error?.message || `请求失败（${response.status}）`);
+      if (!response.ok || !payload || !payload.ok) throw new Error((payload && payload.error && payload.error.message) || ("请求失败（" + response.status + "）"));
       return payload;
     }
     async function uploadEditorBytes(bytes) {
       const endpoint = new URL(resource.saveEndpoint, location.href);
       const headers = { "X-WebWindows-Request": "private-resource" };
       const body = new URLSearchParams({ mode: "editor", editorType: "write-editor", path: resource.path });
-      const begin = await apiJson(await fetch(`${endpoint}?op=begin`, {
+      const begin = await apiJson(await fetch(endpoint + "?op=begin", {
         method: "POST", credentials: "same-origin",
-        headers: { ...headers, "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body
+        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8", "X-WebWindows-Request": "private-resource" },
+        body: body
       }));
       const chunkSize = 96 * 1024;
       try {
         for (let offset = 0; offset < bytes.byteLength; offset += chunkSize) {
-          await apiJson(await fetch(`${endpoint}?op=chunk&id=${encodeURIComponent(begin.uploadId)}`, {
-            method: "POST", credentials: "same-origin", headers,
+          await apiJson(await fetch(endpoint + "?op=chunk&id=" + encodeURIComponent(begin.uploadId), {
+            method: "POST", credentials: "same-origin", headers: headers,
             body: bytes.slice(offset, Math.min(offset + chunkSize, bytes.byteLength))
           }));
         }
-        await apiJson(await fetch(`${endpoint}?op=commit&id=${encodeURIComponent(begin.uploadId)}`, {
-          method: "POST", credentials: "same-origin", headers
+        await apiJson(await fetch(endpoint + "?op=commit&id=" + encodeURIComponent(begin.uploadId), {
+          method: "POST", credentials: "same-origin", headers: headers
         }));
       } catch (error) {
-        fetch(`${endpoint}?op=cancel&id=${encodeURIComponent(begin.uploadId)}`, {
-          method: "POST", credentials: "same-origin", headers
-        }).catch(() => {});
+        fetch(endpoint + "?op=cancel&id=" + encodeURIComponent(begin.uploadId), {
+          method: "POST", credentials: "same-origin", headers: headers
+        }).catch(function(){});
         throw error;
       }
     }
@@ -326,6 +409,9 @@
           source: { name: resource.name, path: resource.path },
           revision: savingRevision,
           savedAt: new Date().toISOString(),
+          createdAt: state.createdAt,
+          headerText: state.headerText,
+          footerText: state.footerText,
           html: safeHtml(editor.innerHTML)
         };
         await uploadEditorBytes(new TextEncoder().encode(JSON.stringify(payload)));
@@ -333,27 +419,35 @@
         setStatus(state.dirty ? "未保存" : "已保存", state.dirty ? "" : "saved");
       } catch (error) {
         setStatus("保存失败", "error");
-        showNotice(`自动保存失败：${error.message}。当前编辑内容仍保留在页面中。`);
+        showNotice("自动保存失败：" + error.message + "。当前编辑内容仍保留在页面中。");
         if (showErrors) alert(error.message);
       } finally {
         state.saving = false;
         if (state.saveAgain || state.dirty) {
           state.saveAgain = false;
           clearTimeout(state.timer);
-          state.timer = setTimeout(() => saveCloud(false), 500);
+          state.timer = setTimeout(function(){ saveCloud(false); }, 500);
         }
       }
     }
+    function innerBodyHtml() {
+      let head = "";
+      if (state.headerText) head += '<div class="doc-header">' + safeHtml(state.headerText).replace(/\n/g, "<br>") + "</div>";
+      let foot = "";
+      if (state.footerText) foot += '<div class="doc-footer">' + safeHtml(state.footerText).replace(/\n/g, "<br>") + "</div>";
+      return head + safeHtml(editor.innerHTML) + foot;
+    }
     function documentHtml() {
-      return `<!doctype html><html><head><meta charset="utf-8"><style>
-        body{font-family:"Microsoft YaHei",Arial,sans-serif;font-size:12pt;line-height:1.6}
-        h1{font-size:24pt}h2{font-size:18pt}h3{font-size:15pt}
-        table{border-collapse:collapse;width:100%}td,th{border:1px solid #777;padding:5px}
-        img{max-width:100%}
-      </style></head><body>${safeHtml(editor.innerHTML)}</body></html>`;
+      return "<!doctype html><html><head><meta charset=\"utf-8\"><style>\n" +
+        "body{font-family:\"Microsoft YaHei\",Arial,sans-serif;font-size:12pt;line-height:1.6}\n" +
+        "h1{font-size:24pt}h2{font-size:18pt}h3{font-size:15pt}\n" +
+        "table{border-collapse:collapse;width:100%}td,th{border:1px solid #777;padding:5px}\n" +
+        "img{max-width:100%}\n" +
+        ".pagebreak{page-break-before:always}\n" +
+        "</style></head><body>" + innerBodyHtml() + "</body></html>";
     }
     function createDocxBlob() {
-      if (!window.htmlDocx?.asBlob) {
+      if (!window.htmlDocx || !window.htmlDocx.asBlob) {
         throw new Error("DOCX 导出组件加载失败，请检查网络后重试。");
       }
       return htmlDocx.asBlob(documentHtml(), {
@@ -363,6 +457,43 @@
     }
     async function exportDocx() {
       await saveAsCloud();
+    }
+    async function exportHtmlCloud() {
+      try {
+        const base = resource.name.replace(/\.docx?$/i, "") || "新建文档";
+        const target = await WebWindows.fileDialog.save({
+          title: "导出HTML",
+          fileTypes: [{ name: "HTML", extensions: ["html"] }],
+          suggestedName: base + ".html",
+          purpose: "write-editor-export-html"
+        });
+        if (!target) return;
+        const saved = await WebWindows.fileDialog.write(target, new Blob([documentHtml()], { type: "text/html;charset=utf-8" }), { overwrite: target.overwrite });
+        if (saved) showNotice("HTML 已导出到云资料。");
+      } catch (error) { showNotice(error.message); }
+    }
+    async function exportTxtCloud() {
+      try {
+        const base = resource.name.replace(/\.docx?$/i, "") || "新建文档";
+        const target = await WebWindows.fileDialog.save({
+          title: "导出TXT",
+          fileTypes: [{ name: "TXT", extensions: ["txt"] }],
+          suggestedName: base + ".txt",
+          purpose: "write-editor-export-txt"
+        });
+        if (!target) return;
+        const text = editor.innerText || "";
+        const saved = await WebWindows.fileDialog.write(target, new Blob([text], { type: "text/plain;charset=utf-8" }), { overwrite: target.overwrite });
+        if (saved) showNotice("TXT 已导出到云资料。");
+      } catch (error) { showNotice(error.message); }
+    }
+    function showDocProps() {
+      const s = plainStats();
+      document.getElementById("props-body").innerHTML =
+        "文件名：" + safeHtml(resource.name) + "<br>字数（去空白）：" + s.chars + "<br>词数：" + s.words +
+        "<br>段数：" + s.paras + "<br>修订版本：" + state.revision + "<br>创建时间：" + safeHtml(state.createdAt) +
+        "<br>保存状态：" + safeHtml(status.textContent || "");
+      document.getElementById("props-modal").classList.add("show");
     }
     function navigateToCloudResource(selected) {
       const url = new URL(location.pathname, location.href);
@@ -376,7 +507,7 @@
         saveEndpoint: selected.saveEndpoint || "",
         readOnly: selected.scope === "public" ? "1" : "0"
       };
-      Object.entries(values).forEach(([key, value]) => url.searchParams.set(key, value));
+      Object.entries(values).forEach(function(pair){ url.searchParams.set(pair[0], pair[1]); });
       location.href = url.toString();
     }
     async function openCloudDocument() {
@@ -394,7 +525,7 @@
         const target = await WebWindows.fileDialog.save({
           title: "保存文档",
           fileTypes: [{ name: "Word 文档", extensions: ["docx"] }],
-          suggestedName: `${base}.docx`,
+          suggestedName: base + ".docx",
           purpose: "write-editor-save"
         });
         if (!target) return;
@@ -423,11 +554,11 @@
         return;
       }
       try {
-        const extension = (resource.name.split(".").pop() || "doc").toLowerCase();
+        const ext = (resource.name.split(".").pop() || "doc").toLowerCase();
         const content = await WebWindows.fileDialog.read(resource);
         const saved = await WebWindows.fileDialog.saveBlob({
           title: "保存原文件副本",
-          fileTypes: [{ name: "Word 文档", extensions: [extension] }],
+          fileTypes: [{ name: "Word 文档", extensions: [ext] }],
           suggestedName: resource.name,
           purpose: "write-editor-save-original"
         }, content);
@@ -441,6 +572,9 @@
       editor.innerHTML = "<p><br></p>";
       state.dirty = false;
       state.revision = 0;
+      state.headerText = "";
+      state.footerText = "";
+      renderHeaderFooter();
       resource.name = "新建文档.docx";
       resource.path = "";
       resource.readUrl = "";
@@ -452,12 +586,321 @@
       switchMode("edit");
       editor.focus();
       updateCount();
+      buildOutline();
     }
     function runCommand(command, value) {
       if (readOnly) return;
       editor.focus();
-      document.execCommand(command, false, value ?? null);
+      try { document.execCommand("styleWithCSS", false, false); } catch (_) {}
+      document.execCommand(command, false, (value === undefined || value === null) ? null : value);
       markDirty();
+    }
+    function applyLineHeight(value) {
+      if (!value || readOnly) return;
+      editor.focus();
+      const sel = window.getSelection();
+      let node = sel && sel.anchorNode ? (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentNode) : editor;
+      while (node && node !== editor && !/^(P|H1|H2|H3|LI|DIV|BLOCKQUOTE|PRE)$/i.test(node.tagName || "")) node = node.parentNode;
+      if (node && node !== editor) { node.style.lineHeight = value; }
+      else { editor.style.lineHeight = value; }
+      markDirty();
+    }
+    function clearFindMarks() {
+      editor.querySelectorAll("mark[data-find]").forEach(function(m){
+        const parent = m.parentNode;
+        while (m.firstChild) parent.insertBefore(m.firstChild, m);
+        parent.removeChild(m);
+        parent.normalize();
+      });
+    }
+    function findCount(keyword) {
+      if (!keyword) return 0;
+      const text = editor.innerText || "";
+      let count = 0, idx = 0;
+      while ((idx = text.indexOf(keyword, idx)) !== -1) { count += 1; idx += keyword.length; }
+      return count;
+    }
+    function highlightFind(keyword) {
+      clearFindMarks();
+      if (!keyword) { document.getElementById("find-count").textContent = "0 处"; return 0; }
+      const count = findCount(keyword);
+      document.getElementById("find-count").textContent = count + " 处";
+      if (!count) return 0;
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        const parent = node.parentNode;
+        if (!parent || parent.closest("mark[data-find]")) return;
+        const text = node.nodeValue || "";
+        const idx = text.indexOf(keyword);
+        if (idx === -1) return;
+        const frag = document.createDocumentFragment();
+        let rest = text, first = true;
+        while (rest.indexOf(keyword) !== -1) {
+          const i = rest.indexOf(keyword);
+          if (i > 0) frag.appendChild(document.createTextNode(rest.slice(0, i)));
+          const mark = document.createElement("mark");
+          mark.setAttribute("data-find", "1");
+          mark.textContent = keyword;
+          frag.appendChild(mark);
+          rest = rest.slice(i + keyword.length);
+          first = false;
+        }
+        if (rest) frag.appendChild(document.createTextNode(rest));
+        if (!first || frag.childNodes.length) parent.replaceChild(frag, node);
+      });
+      return count;
+    }
+    function findNext(keyword) {
+      const marks = Array.from(editor.querySelectorAll("mark[data-find]"));
+      if (!marks.length) return;
+      const sel = window.getSelection();
+      let idx = 0;
+      if (sel && sel.anchorNode) {
+        for (let i = 0; i < marks.length; i++) {
+          if (sel.anchorNode === marks[i] || marks[i].contains(sel.anchorNode)) { idx = (i + 1) % marks.length; break; }
+        }
+      }
+      const target = marks[idx];
+      const range = document.createRange();
+      range.selectNodeContents(target);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      target.scrollIntoView({ block: "center" });
+    }
+    function replaceOne(keyword, replacement) {
+      if (!keyword) return;
+      const sel = window.getSelection();
+      if (sel && sel.toString() === keyword) {
+        editor.focus();
+        document.execCommand("insertText", false, replacement);
+        markDirty();
+        highlightFind(keyword);
+        return;
+      }
+      highlightFind(keyword);
+      findNext(keyword);
+    }
+    function replaceAll(keyword, replacement) {
+      if (!keyword) return;
+      clearFindMarks();
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      while (walker.nextNode()) nodes.push(walker.currentNode);
+      nodes.forEach(function(node){
+        if ((node.nodeValue || "").indexOf(keyword) !== -1) {
+          node.nodeValue = (node.nodeValue || "").split(keyword).join(replacement);
+        }
+      });
+      markDirty();
+      highlightFind(document.getElementById("find-text").value);
+    }
+    function insertTableAtSelection(rows, cols) {
+      rows = Math.max(1, Math.min(20, rows || 3));
+      cols = Math.max(1, Math.min(10, cols || 3));
+      let html = "<table><tbody>";
+      for (let r = 0; r < rows; r++) {
+        html += "<tr>";
+        for (let c = 0; c < cols; c++) html += "<td>单元格</td>";
+        html += "</tr>";
+      }
+      html += "</tbody></table><p><br></p>";
+      editor.focus();
+      try {
+        if (document.queryCommandSupported && document.queryCommandSupported("insertHTML")) {
+          document.execCommand("insertHTML", false, safeHtml(html));
+        } else {
+          const div = document.createElement("div");
+          div.innerHTML = safeHtml(html);
+          const range = window.getSelection && window.getSelection().rangeCount ? window.getSelection().getRangeAt(0) : null;
+          if (range) { range.deleteContents(); Array.from(div.childNodes).forEach(function(n){ range.insertNode(n); }); }
+          else editor.insertAdjacentHTML("beforeend", safeHtml(html));
+        }
+      } catch (_) { editor.insertAdjacentHTML("beforeend", safeHtml(html)); }
+      markDirty();
+    }
+    function selectedCell() {
+      const sel = window.getSelection();
+      if (!sel || !sel.anchorNode) return null;
+      let node = sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentNode;
+      while (node && node !== editor) {
+        if (node.tagName === "TD" || node.tagName === "TH") return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+    function tableOp(op) {
+      const cell = selectedCell();
+      if (!cell) { alert("请先将光标放入表格单元格。"); return; }
+      const table = cell.closest("table");
+      const row = cell.parentNode;
+      if (op === "row-add") {
+        const clone = row.cloneNode(true);
+        clone.querySelectorAll("td,th").forEach(function(c){ c.textContent = "单元格"; });
+        row.parentNode.insertBefore(clone, row.nextSibling);
+      } else if (op === "row-del") {
+        if (table.rows.length > 1) row.parentNode.removeChild(row);
+        else alert("至少保留一行。");
+      } else if (op === "col-add") {
+        const idx = cell.cellIndex;
+        Array.from(table.rows).forEach(function(r){
+          const c = r.cells[idx] ? r.cells[idx].cloneNode(true) : document.createElement("td");
+          c.textContent = "单元格";
+          const ref = r.cells[idx + 1] || null;
+          r.insertBefore(c, ref);
+        });
+      } else if (op === "col-del") {
+        const idx = cell.cellIndex;
+        if (table.rows[0].cells.length > 1) Array.from(table.rows).forEach(function(r){ if (r.cells[idx]) r.deleteCell(idx); });
+        else alert("至少保留一列。");
+      }
+      markDirty();
+    }
+    function blobToDataUrl(blob) {
+      return new Promise(function(resolve, reject){
+        const reader = new FileReader();
+        reader.onload = function(){ resolve(String(reader.result || "")); };
+        reader.onerror = function(){ reject(new Error("图片读取失败。")); };
+        reader.readAsDataURL(blob);
+      });
+    }
+    async function insertImageFromCloud() {
+      try {
+        const selected = await WebWindows.fileDialog.open({
+          title: "选择图片",
+          fileTypes: [{ name: "图片", extensions: ["png", "jpg", "jpeg", "gif", "webp", "bmp"] }],
+          multiple: false,
+          purpose: "write-editor-insert-image"
+        });
+        if (!selected) return;
+        let src = selected.readUrl || "";
+        try {
+          const blob = await WebWindows.fileDialog.read(selected);
+          if (blob && blob.size) {
+            const dataUrl = await blobToDataUrl(blob);
+            if (dataUrl) src = dataUrl;
+          }
+        } catch (_) {}
+        if (!src) { showNotice("图片读取地址无效。"); return; }
+        editor.focus();
+        document.execCommand("insertImage", false, src);
+        markDirty();
+      } catch (error) { showNotice(error.message); }
+    }
+    function renderHeaderFooter() {
+      editor.querySelectorAll(".doc-header,.doc-footer").forEach(function(n){ n.remove(); });
+      document.getElementById("header-input").value = state.headerText || "";
+      document.getElementById("footer-input").value = state.footerText || "";
+      if (state.headerText) {
+        const head = document.createElement("div");
+        head.className = "doc-header";
+        head.setAttribute("contenteditable", "false");
+        head.textContent = state.headerText;
+        editor.insertBefore(head, editor.firstChild);
+      }
+      if (state.footerText) {
+        const foot = document.createElement("div");
+        foot.className = "doc-footer";
+        foot.setAttribute("contenteditable", "false");
+        foot.textContent = state.footerText;
+        editor.appendChild(foot);
+      }
+    }
+    function buildOutline() {
+      const heads = Array.from(editor.querySelectorAll("h1,h2,h3"));
+      outline.innerHTML = "";
+      if (!heads.length) {
+        const empty = document.createElement("div");
+        empty.style.color = "#94a3b8";
+        empty.textContent = "暂无标题：使用标题 1-3 可生成大纲。";
+        outline.appendChild(empty);
+        return;
+      }
+      heads.forEach(function(h, i){
+        if (!h.id) h.id = "outline-" + i;
+        const btn = document.createElement("button");
+        btn.textContent = h.innerText.slice(0, 40) || ("标题 " + (i + 1));
+        btn.className = h.tagName === "H2" ? "lv2" : (h.tagName === "H3" ? "lv3" : "");
+        btn.addEventListener("click", function(){
+          document.getElementById(h.id).scrollIntoView({ block: "start" });
+          editor.focus();
+        });
+        outline.appendChild(btn);
+      });
+    }
+    function applyZoom(value) {
+      const pct = Number(value) || 100;
+      try { editor.style.zoom = (pct / 100).toString(); }
+      catch (_) { editor.style.fontSize = (pct / 100 * 16) + "px"; }
+      const label = document.querySelector(".footer .zoom");
+      if (label && label.firstChild) label.childNodes[0].textContent = "A4 · ";
+    }
+    function pastePlain() {
+      if (readOnly) return;
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        navigator.clipboard.readText().then(function(text){
+          editor.focus();
+          document.execCommand("insertText", false, text || "");
+          markDirty();
+        }).catch(function(){ alert("剪贴板读取被拒绝，请用 Ctrl+Shift+V 粘贴为纯文本。"); });
+      } else { alert("当前浏览器不支持读取剪贴板，请用 Ctrl+Shift+V 粘贴为纯文本。"); }
+    }
+    const TEMPLATES = {
+      meeting: "<h1>会议纪要</h1><p>会议时间：</p><p>参会人员：</p><p>会议议题：</p><h2>一、会议内容</h2><p>1. </p><h2>二、决议事项</h2><p>1. </p><h2>三、下一步行动</h2><p>负责人：　截止：</p>",
+      report: "<h1>工作报告</h1><p>汇报人：　日期：</p><h2>一、本期工作总结</h2><p>1. </p><h2>二、存在问题</h2><p>1. </p><h2>三、下期计划</h2><p>1. </p>",
+      letter: "<h1 style=\"text-align:center\">公函</h1><p>××单位：</p><p>　　现就××事项函告如下：</p><p>　　一、</p><p>　　特此函达。</p><p style=\"text-align:right\">××单位（盖章）</p><p style=\"text-align:right\">×年×月×日</p>"
+    };
+    function insertTemplate(kind) {
+      if (readOnly) return;
+      editor.focus();
+      const html = safeHtml(TEMPLATES[kind] || "");
+      try { document.execCommand("insertHTML", false, html); }
+      catch (_) { editor.insertAdjacentHTML("beforeend", html); }
+      markDirty();
+    }
+    function readDroppedFile(file) {
+      const name = (file.name || "").toLowerCase();
+      if (/\.docx$/.test(name)) {
+        const reader = new FileReader();
+        reader.onload = function(){
+          const buffer = reader.result;
+          if (!window.mammoth || !window.mammoth.convertToHtml) { showNotice("DOCX 编辑转换组件加载失败。"); return; }
+          mammoth.convertToHtml({ arrayBuffer: buffer }).then(function(result){
+            editor.focus();
+            try { document.execCommand("insertHTML", false, safeHtml(result.value || "")); }
+            catch (_) { editor.insertAdjacentHTML("beforeend", safeHtml(result.value || "")); }
+            markDirty();
+            showNotice("已导入拖入的 DOCX 内容。");
+          }).catch(function(e){ showNotice("DOCX 导入失败：" + e.message); });
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (/\.(html?|txt)$/.test(name) || (file.type || "").indexOf("text") === 0) {
+        const reader = new FileReader();
+        reader.onload = function(){
+          const text = String(reader.result || "");
+          editor.focus();
+          if (/\.html?$/.test(name)) {
+            try { document.execCommand("insertHTML", false, safeHtml(text)); }
+            catch (_) { editor.insertAdjacentHTML("beforeend", safeHtml(text)); }
+          } else {
+            const escaped = safeHtml(text).replace(/\n/g, "<br>");
+            try { document.execCommand("insertHTML", false, "<p>" + escaped + "</p>"); }
+            catch (_) { editor.insertAdjacentHTML("beforeend", "<p>" + escaped + "</p>"); }
+          }
+          markDirty();
+          showNotice("已导入拖入的文档内容。");
+        };
+        reader.readAsText(file, "utf-8");
+      } else if ((file.type || "").indexOf("image/") === 0 || /\.(png|jpe?g|gif|webp|bmp)$/.test(name)) {
+        blobToDataUrl(file).then(function(dataUrl){
+          editor.focus();
+          document.execCommand("insertImage", false, dataUrl);
+          markDirty();
+        }).catch(function(e){ showNotice(e.message); });
+      } else {
+        showNotice("仅支持拖入 .docx/.html/.txt 或图片。");
+      }
     }
     async function initialize() {
       setEditable(!readOnly);
@@ -474,9 +917,10 @@
       if (!resource.readUrl) {
         state.loading = false;
         setLoading(false);
-        switchMode("edit");
+        await switchMode("edit");
         editor.focus();
         updateCount();
+        buildOutline();
         return;
       }
       state.buffer = await fetchBuffer();
@@ -490,27 +934,143 @@
           editor.innerHTML = await importDocx();
           showNotice("此 DOCX 已使用兼容编辑模式打开。原始文件不会被自动保存覆盖。");
         }
+        renderHeaderFooterRestore();
         await switchMode("edit");
         setStatus(restored ? "已恢复" : "未修改");
       }
       if (!readOnly) updateCount();
+      buildOutline();
       state.loading = false;
       setLoading(false);
     }
+    function renderHeaderFooterRestore() {
+      if (!editor.querySelector(".doc-header") && !editor.querySelector(".doc-footer")) renderHeaderFooter();
+      document.getElementById("header-input").value = state.headerText || "";
+      document.getElementById("footer-input").value = state.footerText || "";
+    }
 
     editor.addEventListener("input", markDirty);
+    editor.addEventListener("dragover", function(e){ if (!readOnly) e.preventDefault(); });
+    editor.addEventListener("drop", function(e){
+      if (readOnly) return;
+      e.preventDefault();
+      const items = (e.dataTransfer && e.dataTransfer.files) || [];
+      if (!items.length) return;
+      Array.from(items).forEach(readDroppedFile);
+    });
     document.querySelectorAll("[data-command]").forEach(button => button.addEventListener("click", () => runCommand(button.dataset.command)));
     toolbar.querySelectorAll("[data-format]").forEach(select => select.addEventListener("change", () => runCommand(select.dataset.format, select.value)));
-    toolbar.querySelectorAll("[data-color-command]").forEach(input => input.addEventListener("input", () => runCommand(input.dataset.colorCommand, input.value)));
+    toolbar.querySelectorAll("[data-color-command]").forEach(function(input){
+      const cmd = input.getAttribute("data-color-command");
+      input.addEventListener("input", () => runCommand(cmd, input.value));
+    });
     document.getElementById("link-button").addEventListener("click", () => {
       const value = prompt("请输入链接地址（https://…）");
       if (!value) return;
       try {
         const url = new URL(value, location.href);
-        if (!["http:","https:","mailto:"].includes(url.protocol)) throw new Error();
+        if (["http:","https:","mailto:"].indexOf(url.protocol) === -1) throw new Error();
         runCommand("createLink", url.toString());
       } catch (_) { alert("链接地址无效。"); }
     });
+    document.getElementById("quote-button").addEventListener("click", () => runCommand("formatBlock", "blockquote"));
+    document.getElementById("code-button").addEventListener("click", () => runCommand("formatBlock", "pre"));
+    document.getElementById("lineheight-select").addEventListener("change", function(e){ applyLineHeight(e.target.value); e.target.value = ""; });
+    document.getElementById("table-button").addEventListener("click", () => {
+      const r = Number(prompt("表格行数（1-20）", "3") || "3");
+      const c = Number(prompt("表格列数（1-10）", "3") || "3");
+      if (!r || !c) return;
+      insertTableAtSelection(r, c);
+      const op = prompt("如需调整表格可输入：row-add / row-del / col-add / col-del，直接回车跳过", "");
+      if (op) tableOp(String(op).trim());
+    });
+    document.getElementById("image-cloud-button").addEventListener("click", insertImageFromCloud);
+    document.getElementById("image-url-button").addEventListener("click", () => {
+      const value = prompt("请输入图片地址（https://…）");
+      if (!value) return;
+      try {
+        const url = new URL(value, location.href);
+        if (["http:","https:"].indexOf(url.protocol) === -1) throw new Error();
+        editor.focus();
+        document.execCommand("insertImage", false, url.toString());
+        markDirty();
+      } catch (_) { alert("图片地址无效。"); }
+    });
+    document.getElementById("hr-button").addEventListener("click", () => { editor.focus(); document.execCommand("insertHorizontalRule", false, null); markDirty(); });
+    document.getElementById("pagebreak-button").addEventListener("click", () => {
+      editor.focus();
+      try { document.execCommand("insertHTML", false, safeHtml('<div class="pagebreak"></div><p><br></p>')); }
+      catch (_) { editor.insertAdjacentHTML("beforeend", safeHtml('<div class="pagebreak"></div>')); }
+      markDirty();
+    });
+    document.getElementById("datetime-button").addEventListener("click", () => {
+      const now = new Date();
+      const text = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0") + "-" + String(now.getDate()).padStart(2, "0") + " " + String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+      editor.focus();
+      document.execCommand("insertText", false, text);
+      markDirty();
+    });
+    document.getElementById("pagenum-button").addEventListener("click", () => {
+      editor.focus();
+      document.execCommand("insertText", false, "第 X 页 / 共 Y 页");
+      markDirty();
+    });
+    document.getElementById("symbol-select").addEventListener("change", function(e){
+      if (!e.target.value) return;
+      editor.focus();
+      document.execCommand("insertText", false, e.target.value);
+      markDirty();
+      e.target.value = "";
+    });
+    document.getElementById("find-button").addEventListener("click", () => {
+      findpanel.classList.toggle("show");
+      if (findpanel.classList.contains("show")) document.getElementById("find-text").focus();
+    });
+    document.getElementById("find-close-button").addEventListener("click", () => { findpanel.classList.remove("show"); clearFindMarks(); });
+    document.getElementById("find-text").addEventListener("input", function(e){ highlightFind(e.target.value); });
+    document.getElementById("find-next-button").addEventListener("click", () => { highlightFind(document.getElementById("find-text").value); findNext(document.getElementById("find-text").value); });
+    document.getElementById("replace-one-button").addEventListener("click", () => replaceOne(document.getElementById("find-text").value, document.getElementById("replace-text").value));
+    document.getElementById("replace-all-button").addEventListener("click", () => replaceAll(document.getElementById("find-text").value, document.getElementById("replace-text").value));
+    document.getElementById("count-button").addEventListener("click", () => {
+      const s = updateCount();
+      alert("字数（去空白）：" + s.chars + "\n词数：" + s.words + "\n段数：" + s.paras + "\n修订版本：" + state.revision);
+    });
+    document.getElementById("word-count").addEventListener("click", () => {
+      const s = updateCount();
+      alert("字数（去空白）：" + s.chars + "\n词数：" + s.words + "\n段数：" + s.paras + "\n修订版本：" + state.revision);
+    });
+    document.getElementById("selectall-button").addEventListener("click", () => { editor.focus(); document.execCommand("selectAll", false, null); });
+    document.getElementById("paste-text-button").addEventListener("click", pastePlain);
+    document.getElementById("clear-format-button").addEventListener("click", () => {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount && !sel.isCollapsed) {
+        editor.focus();
+        document.execCommand("removeFormat", false, null);
+        try { document.execCommand("unlink", false, null); } catch (_) {}
+        markDirty();
+      } else { alert("请先选中要清除格式的文本。"); }
+    });
+    document.getElementById("outline-button").addEventListener("click", () => { buildOutline(); outline.classList.toggle("show"); });
+    document.getElementById("zoom-select").addEventListener("change", function(e){ applyZoom(e.target.value); });
+    document.getElementById("autosave-toggle").addEventListener("change", function(e){
+      state.autosave = e.target.checked;
+      showNotice(state.autosave ? "自动保存已开启。" : "自动保存已关闭，请手动保存。");
+    });
+    document.getElementById("hf-toggle-button").addEventListener("click", () => document.getElementById("hfbar").classList.toggle("show"));
+    document.getElementById("hf-apply-button").addEventListener("click", () => {
+      state.headerText = document.getElementById("header-input").value.slice(0, 200);
+      state.footerText = document.getElementById("footer-input").value.slice(0, 200);
+      renderHeaderFooter();
+      markDirty();
+    });
+    document.getElementById("hf-clear-button").addEventListener("click", () => {
+      state.headerText = ""; state.footerText = "";
+      renderHeaderFooter(); markDirty();
+    });
+    document.querySelectorAll("[data-template]").forEach(function(btn){
+      btn.addEventListener("click", function(){ insertTemplate(btn.getAttribute("data-template")); });
+    });
+    document.getElementById("props-close-button").addEventListener("click", () => document.getElementById("props-modal").classList.remove("show"));
     document.getElementById("edit-mode-button").addEventListener("click", () => switchMode("edit"));
     document.getElementById("read-mode-button").addEventListener("click", () => switchMode("read"));
     saveButton.addEventListener("click", () => saveCloud(true));
@@ -521,13 +1081,16 @@
     });
     document.addEventListener("click", () => fileMenu.classList.remove("show"));
     fileMenu.addEventListener("click", event => {
-      const action = event.target.dataset.fileAction;
+      const action = event.target.getAttribute("data-file-action");
       if (!action) return;
       if (action === "new") newDocument();
       if (action === "open") openCloudDocument();
       if (action === "save") saveCloud(true);
       if (action === "save-as") saveAsCloud();
       if (action === "export") exportDocx();
+      if (action === "export-html") exportHtmlCloud();
+      if (action === "export-txt") exportTxtCloud();
+      if (action === "props") showDocProps();
       if (action === "download-original") downloadOriginal();
       if (action === "print") window.print();
     });

@@ -105,4 +105,3 @@ assert.match(settings, /assets\/js\/wallpaper\.js\?v=/,
 assert.match(shell, /href="wallpapers\.html" target="mainFrame"[^>]*>🖼️ 壁纸管理/, "后台左侧导航必须提供壁纸管理入口");
 
 console.log("wallpaper admin smoke test passed");
-

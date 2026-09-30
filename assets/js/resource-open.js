@@ -1,6 +1,15 @@
 (function () {
   "use strict";
 
+  function t(text) {
+    try {
+      if (window.WebWindowsI18n && typeof window.WebWindowsI18n.translate === "function") {
+        return window.WebWindowsI18n.translate(text);
+      }
+    } catch (_) {}
+    return text;
+  }
+
   function stableId(value) {
     let hash = 2166136261;
     const text = String(value || "");
@@ -88,7 +97,7 @@
 
   async function openGeneric(resource, app) {
     if (!resource.url) {
-      window.alert("此文件暂时没有可用的打开方式。");
+      window.alert(t("此文件暂时没有可用的打开方式。"));
       return;
     }
     const identity = [
@@ -106,11 +115,11 @@
 
   window.openResource = async function (resource) {
     if (!resource || resource.protocol !== "webwindows-cloud-resource") {
-      throw new Error("无效的 WebWindows 云资源描述。");
+      throw new Error(t("无效的 WebWindows 云资源描述。"));
     }
     const resolution = await window.WebWindows?.apps?.resolveResource(resource);
     if (!resolution) {
-      window.alert("没有已安装的应用可以打开此文件。");
+      window.alert(t("没有已安装的应用可以打开此文件。"));
       return;
     }
 
@@ -128,7 +137,7 @@
         await openGeneric(resource, resolution.app);
         return;
       default:
-        throw new Error(`应用 ${resolution.app.name} 缺少可用的云资源启动适配器。`);
+        throw new Error(`${t("应用")} ${resolution.app.name} ${t("缺少可用的云资源启动适配器。")}`);
     }
   };
 
@@ -139,7 +148,7 @@
       await window.openResource(event.data.resource);
     } catch (error) {
       console.error("[ResourceOpen]", error);
-      window.alert(error.message || "资料打开失败。");
+      window.alert(t(error.message || "资料打开失败。"));
     }
   });
 })();

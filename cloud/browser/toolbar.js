@@ -70,9 +70,57 @@
   const normalizeLanguage = (value) => {
     const language = String(value || "").toLowerCase();
     if (language === "jp" || language.startsWith("ja")) return "jp";
+    if (language === "tw" || language.startsWith("zh-tw") || language.startsWith("zh-hk") || language.includes("hant")) return "tw";
     if (language.startsWith("en")) return "en";
     return "zh";
   };
+  // Supplemental labels for status/error/selection messages requested via
+  // cloudI18n.text(). Without them the local fallback renders the raw key
+  // (e.g. "copySaved"). Traditional Chinese display names are added here so
+  // the picker no longer falls back to simplified Chinese for lang=tw.
+  Object.assign(uiText, {
+    operationFailed: { zh: "操作失败", tw: "操作失敗", jp: "操作に失敗しました", en: "Operation failed" },
+    folderListUnavailable: { zh: "资料夹列表不可用", tw: "資料夾清單無法使用", jp: "フォルダー一覧を利用できません", en: "The folder list is unavailable" },
+    folderListFailed: { zh: "资料夹列表加载失败", tw: "資料夾清單載入失敗", jp: "フォルダー一覧の読み込みに失敗しました", en: "Failed to load the folder list" },
+    previewUnavailable: { zh: "此文件暂时无法预览", tw: "此檔案暫時無法預覽", jp: "このファイルは現在プレビューできません", en: "Preview is currently unavailable for this file" },
+    fileDialogUnavailable: { zh: "云文件对话框不可用", tw: "雲端檔案對話方塊無法使用", jp: "クラウドファイルダイアログを利用できません", en: "The cloud file dialog is unavailable" },
+    savePublicCopy: { zh: "保存公用文件副本", tw: "儲存公用檔案副本", jp: "公開ファイルのコピーを保存", en: "Save a copy of the public file" },
+    cloudFiles: { zh: "云资料文件", tw: "雲端資料檔案", jp: "クラウドファイル", en: "Cloud files" },
+    copySaved: { zh: "副本已保存到私人云资料", tw: "副本已儲存到私人雲端資料", jp: "コピーをプライベートクラウドに保存しました", en: "The copy was saved to private cloud storage" },
+    copySaveFailed: { zh: "副本保存失败", tw: "副本儲存失敗", jp: "コピーの保存に失敗しました", en: "Failed to save the copy" },
+    openUnavailable: { zh: "此项目暂时无法打开", tw: "此項目暫時無法開啟", jp: "この項目は開けません", en: "This item cannot be opened" },
+    copied: { zh: "已复制", tw: "已複製", jp: "コピーしました", en: "Copied" },
+    wallpaperApplied: { zh: "已设置为桌面壁纸", tw: "已設為桌面桌布", jp: "デスクトップの壁紙に設定しました", en: "Set as desktop wallpaper" },
+    wallpaperSaved: { zh: "已保存到壁纸库", tw: "已儲存到桌布庫", jp: "壁紙ライブラリに保存しました", en: "Saved to the wallpaper library" },
+    infoFolder: { zh: "资料夹", tw: "資料夾", jp: "フォルダー", en: "Folder" },
+    infoFile: { zh: "文件", tw: "檔案", jp: "ファイル", en: "File" },
+    infoTemplate: { zh: "名称：{name}（{displayName}）\n类型：{kind}\n位置：{path}", tw: "名稱：{name}（{displayName}）\n類型：{kind}\n位置：{path}", jp: "名前：{name}（{displayName}）\n種類：{kind}\n場所：{path}", en: "Name: {name} ({displayName})\nType: {kind}\nLocation: {path}" },
+    selectedCount: { zh: "已选择 {count} 项", tw: "已選擇 {count} 項", jp: "選択中：{count} 件", en: "{count} items selected" },
+    invalidReadUrl: { zh: "云资料读取地址无效", tw: "雲端資料讀取位址無效", jp: "クラウドファイルの読み取り先が無効です", en: "The cloud file read address is invalid" }
+  });
+  const twDirectoryNames = { public: "公用區域", welcome: "歡迎", documents: "官方文件", samples: "範例檔案", resources: "官方資源", changelog: "更新日誌", community: "社群", icons: "圖示", wallpapers: "桌布" };
+  Object.entries(twDirectoryNames).forEach(([key, value]) => { if (directoryNames[key]) directoryNames[key].tw = value; });
+  const twFileNames = {
+    "welcome_to_webwindows.docx": "歡迎使用 WebWindows.docx", "developer_guide.docx": "開發者指南.docx",
+    "keyboard_shortcuts.md": "鍵盤快速鍵.md", "user_guide.docx": "使用者指南.docx",
+    "sample_document.docx": "範例文件.docx", "sample_image.png": "範例圖片.png",
+    "sample_presentation.pptx": "範例簡報.pptx", "sample_spreadsheet.xlsx": "範例試算表.xlsx",
+    "webwindows_default_wallpaper.png": "WebWindows 預設桌布.png", "readme.md": "圖示說明.md",
+    "changelog.md": "更新日誌.md", "feedback_and_community.md": "意見回饋與社群.md"
+  };
+  Object.entries(twFileNames).forEach(([key, value]) => { if (fileNames[key]) fileNames[key].tw = value; });
+  const twUiText = {
+    nodeName: "WebWindows 主要雲端資源節點", privateFiles: "我的私人檔案", publicReadOnly: "所有人可檢視",
+    publicAreaReadOnly: "公用區域唯讀", back: "返回", forward: "前進", up: "上一層",
+    sortName: "依名稱", sortDate: "依更新時間", sortSize: "依大小",
+    listView: "清單", compactView: "緊湊", iconView: "圖示", locations: "資料位置",
+    emptyTitle: "此資料夾暫時沒有資料", emptyDescription: "公用資料由維護人員在後台統一管理。",
+    nothingSelected: "尚未選擇資料", cancel: "取消", confirmSelection: "確認選擇", open: "開啟",
+    copyPath: "複製資料位置", saveCopy: "儲存副本到私人雲端資料",
+    setWallpaper: "設為桌面桌布", saveWallpaper: "儲存到桌布庫",
+    info: "資料資訊", refresh: "重新整理", confirm: "確定"
+  };
+  Object.entries(twUiText).forEach(([key, value]) => { if (uiText[key]) uiText[key].tw = value; });
   // The resource page can load independently of the desktop language adapter.
   // Keep directory loading and selection usable with its own existing labels.
   const cloudI18n = window.WebWindowsCloudI18n || {

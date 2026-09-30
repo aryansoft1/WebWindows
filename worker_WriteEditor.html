@@ -6,6 +6,7 @@
   <title>WebWindows Write Editor</title>
   <script src="assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
+  <script defer src="assets/js/i18n-editors.js?v=20260930-1"></script>
   <link rel="icon" href="assets/icons/writeeditor.svg">
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx-preview@0.3.6/dist/docx-preview.min.js"></script>
@@ -420,7 +421,6 @@
       } catch (error) {
         setStatus("保存失败", "error");
         showNotice("自动保存失败：" + error.message + "。当前编辑内容仍保留在页面中。");
-        if (showErrors) alert(error.message);
       } finally {
         state.saving = false;
         if (state.saveAgain || state.dirty) {
@@ -568,7 +568,10 @@
       }
     }
     function newDocument() {
-      if (state.dirty && !confirm("当前文档尚未保存，确定新建空白文档吗？")) return;
+      if (state.dirty) {
+        showNotice("当前文档有未保存的更改，已取消新建。请先保存。");
+        return;
+      }
       editor.innerHTML = "<p><br></p>";
       state.dirty = false;
       state.revision = 0;
@@ -732,7 +735,7 @@
     }
     function tableOp(op) {
       const cell = selectedCell();
-      if (!cell) { alert("请先将光标放入表格单元格。"); return; }
+      if (!cell) { showNotice("请先将光标放入表格单元格。"); return; }
       const table = cell.closest("table");
       const row = cell.parentNode;
       if (op === "row-add") {
@@ -741,7 +744,7 @@
         row.parentNode.insertBefore(clone, row.nextSibling);
       } else if (op === "row-del") {
         if (table.rows.length > 1) row.parentNode.removeChild(row);
-        else alert("至少保留一行。");
+        else showNotice("至少保留一行。");
       } else if (op === "col-add") {
         const idx = cell.cellIndex;
         Array.from(table.rows).forEach(function(r){
@@ -753,7 +756,7 @@
       } else if (op === "col-del") {
         const idx = cell.cellIndex;
         if (table.rows[0].cells.length > 1) Array.from(table.rows).forEach(function(r){ if (r.cells[idx]) r.deleteCell(idx); });
-        else alert("至少保留一列。");
+        else showNotice("至少保留一列。");
       }
       markDirty();
     }
@@ -843,8 +846,8 @@
           editor.focus();
           document.execCommand("insertText", false, text || "");
           markDirty();
-        }).catch(function(){ alert("剪贴板读取被拒绝，请用 Ctrl+Shift+V 粘贴为纯文本。"); });
-      } else { alert("当前浏览器不支持读取剪贴板，请用 Ctrl+Shift+V 粘贴为纯文本。"); }
+        }).catch(function(){ showNotice("剪贴板读取被拒绝，请用 Ctrl+Shift+V 粘贴为纯文本。"); });
+      } else { showNotice("当前浏览器不支持读取剪贴板，请用 Ctrl+Shift+V 粘贴为纯文本。"); }
     }
     const TEMPLATES = {
       meeting: "<h1>会议纪要</h1><p>会议时间：</p><p>参会人员：</p><p>会议议题：</p><h2>一、会议内容</h2><p>1. </p><h2>二、决议事项</h2><p>1. </p><h2>三、下一步行动</h2><p>负责人：　截止：</p>",
@@ -971,7 +974,7 @@
         const url = new URL(value, location.href);
         if (["http:","https:","mailto:"].indexOf(url.protocol) === -1) throw new Error();
         runCommand("createLink", url.toString());
-      } catch (_) { alert("链接地址无效。"); }
+      } catch (_) { showNotice("链接地址无效。"); }
     });
     document.getElementById("quote-button").addEventListener("click", () => runCommand("formatBlock", "blockquote"));
     document.getElementById("code-button").addEventListener("click", () => runCommand("formatBlock", "pre"));
@@ -994,7 +997,7 @@
         editor.focus();
         document.execCommand("insertImage", false, url.toString());
         markDirty();
-      } catch (_) { alert("图片地址无效。"); }
+      } catch (_) { showNotice("图片地址无效。"); }
     });
     document.getElementById("hr-button").addEventListener("click", () => { editor.focus(); document.execCommand("insertHorizontalRule", false, null); markDirty(); });
     document.getElementById("pagebreak-button").addEventListener("click", () => {
@@ -1033,11 +1036,11 @@
     document.getElementById("replace-all-button").addEventListener("click", () => replaceAll(document.getElementById("find-text").value, document.getElementById("replace-text").value));
     document.getElementById("count-button").addEventListener("click", () => {
       const s = updateCount();
-      alert("字数（去空白）：" + s.chars + "\n词数：" + s.words + "\n段数：" + s.paras + "\n修订版本：" + state.revision);
+      showNotice("字数（去空白）：" + s.chars + "　词数：" + s.words + "　段数：" + s.paras + "　修订版本：" + state.revision);
     });
     document.getElementById("word-count").addEventListener("click", () => {
       const s = updateCount();
-      alert("字数（去空白）：" + s.chars + "\n词数：" + s.words + "\n段数：" + s.paras + "\n修订版本：" + state.revision);
+      showNotice("字数（去空白）：" + s.chars + "　词数：" + s.words + "　段数：" + s.paras + "　修订版本：" + state.revision);
     });
     document.getElementById("selectall-button").addEventListener("click", () => { editor.focus(); document.execCommand("selectAll", false, null); });
     document.getElementById("paste-text-button").addEventListener("click", pastePlain);
@@ -1048,7 +1051,7 @@
         document.execCommand("removeFormat", false, null);
         try { document.execCommand("unlink", false, null); } catch (_) {}
         markDirty();
-      } else { alert("请先选中要清除格式的文本。"); }
+      } else { showNotice("请先选中要清除格式的文本。"); }
     });
     document.getElementById("outline-button").addEventListener("click", () => { buildOutline(); outline.classList.toggle("show"); });
     document.getElementById("zoom-select").addEventListener("change", function(e){ applyZoom(e.target.value); });

@@ -6,6 +6,7 @@
   <title>WebWindows Slide Editor</title>
   <script src="assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
+  <script defer src="assets/js/i18n-editors.js?v=20260930-1"></script>
   <link rel="icon" href="assets/icons/slideeditor.svg">
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pptx-preview@1.0.7/dist/pptx-preview.umd.js"></script>
@@ -313,7 +314,6 @@
       } catch (error) {
         setStatus("保存失败", true);
         showNotice("自动保存失败：" + error.message + "。草稿已保留在本地浏览器中。");
-        if (showErrors) alert(error.message);
       } finally { state.saving = false; }
     }
     async function saveDeckAs() {

@@ -6,6 +6,7 @@
   <title>WebWindows Sheet Editor</title>
   <script src="assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
+  <script defer src="assets/js/i18n-editors.js?v=20260930-1"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/css/luckysheet.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/css/pluginsCss.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/assets/iconfont/iconfont.css">
@@ -473,7 +474,6 @@
       .catch(error => {
         setStatus("保存失败", "error");
         showNotice(`自动保存失败：${error.message}。原 Excel 和上一次编辑副本未被覆盖。`);
-        if (showErrors) alert(error.message);
       })
       .finally(() => { state.savePromise = null; });
     await state.savePromise;
@@ -645,7 +645,10 @@
   }
 
   function newSheet() {
-    if (state.dirty && !readOnly && !confirm("新建将丢弃未保存的更改，继续吗？")) return;
+    if (state.dirty && !readOnly) {
+      showNotice("有未保存的更改，已取消新建。请先保存工作表。");
+      return;
+    }
     state.sourceName = "新工作表.xlsx";
     nameHost.textContent = state.sourceName;
     createSheet();
@@ -669,7 +672,7 @@
       setStatus("本地文档");
       showNotice(imported.converted ? "旧版 XLS 将在导出时升级为 XLSX。" : "");
     } catch (error) {
-      alert(error.message);
+      showNotice(error.message);
     } finally {
       state.loading = false;
       loading.style.display = "none";

@@ -85,6 +85,8 @@
 
   const SNAPSHOT_TIMEOUT_MS = 1500;
 
+  const CHROME_SEL = 'header,nav,.window-header,.toolbar,.menubar,.menu,.titlebar,.buttons,[role="toolbar"],[role="menubar"],[role="navigation"]';
+
   function collectWindowText(root, maxChars) {
     const chunks = [];
     let chars = 0;
@@ -103,6 +105,7 @@
       if (node.nodeType !== 1) return;
       const tag = node.tagName;
       if (SKIP.test(tag)) return;
+      if (node.matches && node.matches(CHROME_SEL)) return;
       if (tag === "BR" || tag === "HR") { chunks.push("\n"); return; }
       const newline = BLOCK.test(tag);
       if (newline) chunks.push("\n");
@@ -162,7 +165,8 @@
       bar.appendChild(logo);
     }
     const name = document.createElement("span");
-    name.textContent = icon.title || icon.innerText.trim() || translated("窗口");
+    const label = icon.title || icon.innerText.trim() || translated("窗口");
+    name.textContent = label;
     name.style.flex = "1";
     name.style.minWidth = "0";
     name.style.overflow = "hidden";
@@ -180,6 +184,9 @@
     page.style.padding = "8px 10px";
     page.style.background = "#ffffff";
     let lines = win ? extractMiniLines(win) : [];
+    const norm = (value) => value.replace(/\s+/g, "").toLowerCase();
+    const dup = lines.slice(0, 3).findIndex((line) => norm(line) === norm(label));
+    if (dup >= 0) lines.splice(dup, 1);
     if (!lines.length) lines = [windowSummary(icon)];
     lines.slice(0, 8).forEach((line, index) => {
       const row = document.createElement("div");

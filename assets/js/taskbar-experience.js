@@ -83,43 +83,118 @@
     return preview;
   }
 
-  function snapshotPlaceholder(message) {
-    const fallback = document.createElement("div");
-    fallback.className = "taskbar-window-preview__frame-placeholder";
-    fallback.textContent = message;
-    return fallback;
-  }
-
   const SNAPSHOT_TIMEOUT_MS = 1500;
 
-  function summaryCard(icon) {
-    const card = document.createElement("div");
-    card.className = "taskbar-window-preview__frame-placeholder";
-    const art = icon.querySelector?.("img");
-    if (art?.src) {
+  function collectWindowText(root, maxChars) {
+    const chunks = [];
+    let chars = 0;
+    const BLOCK = /^(ADDRESS|ARTICLE|ASIDE|BLOCKQUOTE|BR|DD|DIALOG|DIV|DL|DT|FIELDSET|FIGCAPTION|FIGURE|FOOTER|FORM|H1|H2|H3|H4|H5|H6|HEADER|HR|LI|MAIN|NAV|OL|P|PRE|SECTION|TABLE|TR|UL)$/;
+    const SKIP = /^(SCRIPT|STYLE|NOSCRIPT|TEMPLATE|SVG)$/;
+    const walk = (node) => {
+      if (!node || chars >= maxChars) return;
+      if (node.nodeType === 3) {
+        const value = (node.nodeValue || "").replace(/\s+/g, " ");
+        if (value.trim()) {
+          chunks.push(value.trim());
+          chars += value.length;
+        }
+        return;
+      }
+      if (node.nodeType !== 1) return;
+      const tag = node.tagName;
+      if (SKIP.test(tag)) return;
+      if (tag === "BR" || tag === "HR") { chunks.push("\n"); return; }
+      const newline = BLOCK.test(tag);
+      if (newline) chunks.push("\n");
+      let child = node.firstChild;
+      while (child) {
+        walk(child);
+        child = child.nextSibling;
+        if (chars >= maxChars) break;
+      }
+      if (newline) chunks.push("\n");
+    };
+    walk(root);
+    return chunks.join(" ").replace(/ *\n */g, "\n").replace(/\n{3,}/g, "\n\n");
+  }
+
+  function extractMiniLines(win) {
+    let source = null;
+    try {
+      const frame = win.querySelector("iframe");
+      const doc = frame ? frame.contentDocument : null;
+      if (doc && doc.body) source = doc.body;
+    } catch (_) { source = null; }
+    if (!source) source = win.querySelector(".window-content, .window-body") || win;
+    return collectWindowText(source, 600).split("\n").map((line) => line.trim()).filter(Boolean);
+  }
+
+  function liveMiniature(icon, win) {
+    const box = document.createElement("div");
+    box.dataset.miniature = "1";
+    box.style.width = "280px";
+    box.style.height = "176px";
+    box.style.overflow = "hidden";
+    box.style.borderRadius = "7px";
+    box.style.background = "#ffffff";
+    box.style.display = "flex";
+    box.style.flexDirection = "column";
+    box.style.textAlign = "left";
+    box.style.pointerEvents = "none";
+
+    const bar = document.createElement("div");
+    bar.style.display = "flex";
+    bar.style.alignItems = "center";
+    bar.style.gap = "6px";
+    bar.style.flex = "0 0 26px";
+    bar.style.padding = "0 8px";
+    bar.style.background = "#eef2f6";
+    bar.style.borderBottom = "1px solid #e2e8f0";
+    const art = icon.querySelector ? icon.querySelector("img") : null;
+    if (art && art.src) {
       const logo = document.createElement("img");
       logo.src = art.src;
       logo.alt = "";
-      logo.style.width = "44px";
-      logo.style.height = "44px";
-      logo.style.borderRadius = "9px";
+      logo.style.width = "14px";
+      logo.style.height = "14px";
+      logo.style.borderRadius = "3px";
       logo.style.objectFit = "contain";
-      card.appendChild(logo);
+      bar.appendChild(logo);
     }
-    const body = document.createElement("div");
-    const name = document.createElement("strong");
+    const name = document.createElement("span");
     name.textContent = icon.title || icon.innerText.trim() || translated("窗口");
-    const excerpt = document.createElement("span");
-    excerpt.textContent = windowSummary(icon).slice(0, 120);
-    excerpt.style.display = "-webkit-box";
-    excerpt.style.webkitLineClamp = "3";
-    excerpt.style.webkitBoxOrient = "vertical";
-    excerpt.style.whiteSpace = "normal";
-    excerpt.style.overflow = "hidden";
-    body.appendChild(name);
-    body.appendChild(excerpt);
-    card.appendChild(body);
-    return card;
+    name.style.flex = "1";
+    name.style.minWidth = "0";
+    name.style.overflow = "hidden";
+    name.style.textOverflow = "ellipsis";
+    name.style.whiteSpace = "nowrap";
+    name.style.fontSize = "11px";
+    name.style.fontWeight = "600";
+    name.style.color = "#24344d";
+    bar.appendChild(name);
+    box.appendChild(bar);
+
+    const page = document.createElement("div");
+    page.style.flex = "1";
+    page.style.overflow = "hidden";
+    page.style.padding = "8px 10px";
+    page.style.background = "#ffffff";
+    let lines = win ? extractMiniLines(win) : [];
+    if (!lines.length) lines = [windowSummary(icon)];
+    lines.slice(0, 8).forEach((line, index) => {
+      const row = document.createElement("div");
+      row.textContent = line.slice(0, 48);
+      row.style.fontSize = index === 0 ? "10px" : "9px";
+      row.style.fontWeight = index === 0 ? "600" : "400";
+      row.style.color = index === 0 ? "#0f172a" : "#475569";
+      row.style.lineHeight = "1.55";
+      row.style.whiteSpace = "nowrap";
+      row.style.overflow = "hidden";
+      row.style.textOverflow = "ellipsis";
+      page.appendChild(row);
+    });
+    box.appendChild(page);
+    return box;
   }
 
   async function buildWindowSnapshot(win, viewport, requestId) {
@@ -153,7 +228,7 @@
       const timeoutTask = new Promise((_, reject) => setTimeout(() => reject(new Error("snapshot timeout")), SNAPSHOT_TIMEOUT_MS));
       rendered = await Promise.race([renderTask, timeoutTask]);
     } catch (error) {
-      console.warn("[TaskbarPreview] Window snapshot skipped, keeping summary", error?.message || error);
+      console.warn("[TaskbarPreview] Window snapshot skipped, keeping miniature", error?.message || error);
       return;
     }
     if (requestId !== previewRequest || viewport.closest(".taskbar-window-preview")?.hidden) return;
@@ -179,17 +254,17 @@
       );
       viewport.replaceChildren(thumbnail);
     } catch (error) {
-      console.warn("[TaskbarPreview] Window snapshot failed, keeping summary", error);
+      console.warn("[TaskbarPreview] Window snapshot failed, keeping miniature", error);
     }
   }
 
-  function renderPreviewShell(icon) {
+  function renderPreviewShell(icon, win) {
     const preview = previewElement();
     const title = preview.querySelector(".taskbar-window-preview__title");
     if (title) title.textContent = icon.title || icon.innerText.trim() || translated("窗口");
     preview.dataset.windowId = icon.dataset.id || "";
     const viewport = preview.querySelector(".taskbar-window-preview__viewport");
-    viewport.replaceChildren(summaryCard(icon));
+    viewport.replaceChildren(liveMiniature(icon, win));
     const rect = icon.getBoundingClientRect();
     preview.hidden = false;
     activePreviewId = icon.dataset.id || null;
@@ -207,12 +282,9 @@
     if (pendingPreviewTimer) { clearTimeout(pendingPreviewTimer); pendingPreviewTimer = null; }
     if (sameVisible) return;
     const requestId = ++previewRequest;
-    const viewport = renderPreviewShell(icon);
     const win = document.getElementById(icon.dataset.id);
-    if (!win) {
-      viewport.replaceChildren(snapshotPlaceholder(translated("窗口内容暂不可用。")));
-      return;
-    }
+    const viewport = renderPreviewShell(icon, win);
+    if (!win) return;
     const runSnapshot = () => {
       pendingPreviewTimer = null;
       buildWindowSnapshot(win, viewport, requestId);

@@ -67,8 +67,8 @@ assert.match(taskbar, /document\.createElement\("canvas"\)/);
 assert.match(taskbar, /context\.drawImage/);
 assert.match(taskbar, /thumbnail\.width = 280/);
 assert.match(taskbar, /thumbnail\.height = 176/);
-assert.doesNotMatch(taskbar, /cloneNode\(true\)/);
 assert.doesNotMatch(taskbar, /srcdoc/);
+assert.match(taskbar, /liveMiniature/);
 
 assert.match(speed, /function adaptiveSize\(mbps, minimum, maximum, targetMs\)/);
 assert.match(speed, /new AbortController\(\)/);

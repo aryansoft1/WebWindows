@@ -132,6 +132,75 @@
     return collectWindowText(source, 600).split("\n").map((line) => line.trim()).filter(Boolean);
   }
 
+  function collectStyleTexts(sourceDoc) {
+    const texts = [];
+    try {
+      const sheets = sourceDoc.styleSheets || [];
+      for (let i = 0; i < sheets.length; i++) {
+        try {
+          const rules = sheets[i].cssRules;
+          if (!rules) continue;
+          let css = "";
+          for (let j = 0; j < rules.length; j++) css += rules[j].cssText + "\n";
+          if (css) texts.push(css);
+        } catch (_) { /* cross-origin sheet: skip */ }
+      }
+    } catch (_) {}
+    try {
+      sourceDoc.querySelectorAll("style").forEach((node) => { if (node.textContent) texts.push(node.textContent); });
+    } catch (_) {}
+    return texts;
+  }
+
+  function visualMiniature(win) {
+    try {
+      const frame = win.querySelector("iframe");
+      const sourceDoc = frame ? frame.contentDocument : document;
+      if (!sourceDoc || !sourceDoc.body) return null;
+      const source = frame ? sourceDoc.body : (win.querySelector(".window-content, .window-body") || win);
+      const naturalW = source.scrollWidth || source.offsetWidth || 0;
+      const naturalH = source.scrollHeight || source.offsetHeight || 0;
+      if (!naturalW || !naturalH) return null;
+      const scale = Math.min(280 / naturalW, 150 / naturalH, 1);
+      if (!(scale >= 0.06)) return null;
+
+      const stage = document.createElement("div");
+      stage.dataset.visual = "1";
+      stage.style.cssText = "position:relative;width:280px;height:150px;overflow:hidden;background:#fff;";
+      const scaler = document.createElement("div");
+      scaler.style.cssText = "position:absolute;left:0;top:0;transform-origin:0 0;";
+      scaler.style.width = `${naturalW}px`;
+      scaler.style.height = `${naturalH}px`;
+      scaler.style.transform = `scale(${scale})`;
+      const shadow = scaler.attachShadow({ mode: "open" });
+      collectStyleTexts(sourceDoc).forEach((css) => {
+        const style = document.createElement("style");
+        style.textContent = css;
+        shadow.appendChild(style);
+      });
+      try {
+        sourceDoc.querySelectorAll('link[rel="stylesheet"]').forEach((link) => {
+          if (!link.href) return;
+          const again = document.createElement("link");
+          again.rel = "stylesheet";
+          again.href = link.href;
+          shadow.appendChild(again);
+        });
+      } catch (_) {}
+      const clone = source.cloneNode(true);
+      clone.querySelectorAll("script").forEach((node) => node.remove());
+      clone.querySelectorAll("video,audio").forEach((media) => {
+        try { media.pause(); } catch (_) {}
+        media.removeAttribute("autoplay");
+      });
+      clone.querySelectorAll("[autofocus]").forEach((node) => node.removeAttribute("autofocus"));
+      shadow.appendChild(clone);
+      stage.appendChild(scaler);
+      if (stage.inert !== undefined) { try { stage.inert = true; } catch (_) {} }
+      return stage;
+    } catch (_) { return null; }
+  }
+
   function liveMiniature(icon, win) {
     const box = document.createElement("div");
     box.dataset.miniature = "1";
@@ -181,8 +250,15 @@
     const page = document.createElement("div");
     page.style.flex = "1";
     page.style.overflow = "hidden";
-    page.style.padding = "8px 10px";
     page.style.background = "#ffffff";
+    const visual = win ? visualMiniature(win) : null;
+    if (visual) {
+      page.style.padding = "0";
+      page.appendChild(visual);
+      box.appendChild(page);
+      return box;
+    }
+    page.style.padding = "8px 10px";
     let lines = win ? extractMiniLines(win) : [];
     const norm = (value) => value.replace(/\s+/g, "").toLowerCase();
     const dup = lines.slice(0, 3).findIndex((line) => norm(line) === norm(label));
@@ -294,7 +370,7 @@
     if (!win) return;
     const runSnapshot = () => {
       pendingPreviewTimer = null;
-      buildWindowSnapshot(win, viewport, requestId);
+      if (!win.querySelector("iframe")) buildWindowSnapshot(win, viewport, requestId);
     };
     if (immediate) runSnapshot();
     else pendingPreviewTimer = setTimeout(runSnapshot, 120);

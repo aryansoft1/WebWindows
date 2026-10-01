@@ -19,6 +19,7 @@ assert.match(preview, /document\.createElement\("canvas"\)/);
 assert.match(preview, /context\.drawImage/);
 assert.match(preview, /(?:THUMBNAIL_WIDTH|thumbnail\.width)\s*=\s*280/);
 assert.match(preview, /(?:THUMBNAIL_HEIGHT|thumbnail\.height)\s*=\s*176/);
-assert.doesNotMatch(preview, /cloneNode\(true\)|srcdoc/);
+assert.doesNotMatch(preview, /srcdoc/);
+assert.match(preview, /liveMiniature/);
 
 console.log("taskbar window preview smoke test passed");

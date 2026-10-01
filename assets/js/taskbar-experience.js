@@ -445,6 +445,7 @@
   }
 
   function applyOrder() {
+    if (dragged) return;
     let order = [];
     try { order = JSON.parse(localStorage.getItem(ORDER_KEY) || "[]"); } catch (_) {}
     const strip = document.querySelector(".taskbar-app-strip");
@@ -490,6 +491,10 @@
   document.addEventListener("dragstart", (event) => {
     dragged = event.target.closest?.(".taskbar-app[data-id]") || null;
     dragged?.classList.add("is-dragging");
+    if (dragged && event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      try { event.dataTransfer.setData("text/plain", dragged.dataset.id || ""); } catch (_) {}
+    }
   });
   document.addEventListener("dragover", (event) => {
     const target = event.target.closest?.(".taskbar-app[data-id]");

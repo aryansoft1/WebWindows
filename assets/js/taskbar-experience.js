@@ -90,24 +90,53 @@
     return fallback;
   }
 
-  async function buildWindowSnapshot(win, viewport, requestId) {
-    if (typeof window.html2canvas !== "function") {
-      viewport.replaceChildren(snapshotPlaceholder(translated("窗口截图组件未加载。")));
-      return;
+  const SNAPSHOT_TIMEOUT_MS = 1500;
+
+  function summaryCard(icon) {
+    const card = document.createElement("div");
+    card.className = "taskbar-window-preview__frame-placeholder";
+    const art = icon.querySelector?.("img");
+    if (art?.src) {
+      const logo = document.createElement("img");
+      logo.src = art.src;
+      logo.alt = "";
+      logo.style.width = "44px";
+      logo.style.height = "44px";
+      logo.style.borderRadius = "9px";
+      logo.style.objectFit = "contain";
+      card.appendChild(logo);
     }
+    const body = document.createElement("div");
+    const name = document.createElement("strong");
+    name.textContent = icon.title || icon.innerText.trim() || translated("窗口");
+    const excerpt = document.createElement("span");
+    excerpt.textContent = windowSummary(icon).slice(0, 120);
+    excerpt.style.display = "-webkit-box";
+    excerpt.style.webkitLineClamp = "3";
+    excerpt.style.webkitBoxOrient = "vertical";
+    excerpt.style.whiteSpace = "normal";
+    excerpt.style.overflow = "hidden";
+    body.appendChild(name);
+    body.appendChild(excerpt);
+    card.appendChild(body);
+    return card;
+  }
+
+  async function buildWindowSnapshot(win, viewport, requestId) {
+    if (typeof window.html2canvas !== "function") return;
 
     const rect = win.getBoundingClientRect();
     const width = rect.width || win.offsetWidth || parseFloat(getComputedStyle(win).width) || 640;
     const height = rect.height || win.offsetHeight || parseFloat(getComputedStyle(win).height) || 420;
-    viewport.replaceChildren(snapshotPlaceholder(translated("正在生成窗口截图…")));
 
+    let rendered;
     try {
-      const rendered = await window.html2canvas(win, {
+      const renderTask = window.html2canvas(win, {
         backgroundColor: null,
         logging: false,
         useCORS: true,
         allowTaint: false,
-        scale: 1,
+        scale: 0.5,
         width,
         height,
         onclone(clonedDocument) {
@@ -121,8 +150,15 @@
           clonedWindow.style.setProperty("transform", "none", "important");
         },
       });
-      if (requestId !== previewRequest || viewport.closest(".taskbar-window-preview")?.hidden) return;
+      const timeoutTask = new Promise((_, reject) => setTimeout(() => reject(new Error("snapshot timeout")), SNAPSHOT_TIMEOUT_MS));
+      rendered = await Promise.race([renderTask, timeoutTask]);
+    } catch (error) {
+      console.warn("[TaskbarPreview] Window snapshot skipped, keeping summary", error?.message || error);
+      return;
+    }
+    if (requestId !== previewRequest || viewport.closest(".taskbar-window-preview")?.hidden) return;
 
+    try {
       const thumbnail = document.createElement("canvas");
       thumbnail.className = "taskbar-window-preview__snapshot";
       thumbnail.width = 280;
@@ -143,10 +179,7 @@
       );
       viewport.replaceChildren(thumbnail);
     } catch (error) {
-      console.warn("[TaskbarPreview] Window screenshot failed", error);
-      if (requestId === previewRequest) {
-        viewport.replaceChildren(snapshotPlaceholder(translated("无法生成窗口截图。")));
-      }
+      console.warn("[TaskbarPreview] Window snapshot failed, keeping summary", error);
     }
   }
 
@@ -156,7 +189,7 @@
     if (title) title.textContent = icon.title || icon.innerText.trim() || translated("窗口");
     preview.dataset.windowId = icon.dataset.id || "";
     const viewport = preview.querySelector(".taskbar-window-preview__viewport");
-    viewport.replaceChildren(snapshotPlaceholder(translated("正在生成窗口截图…")));
+    viewport.replaceChildren(summaryCard(icon));
     const rect = icon.getBoundingClientRect();
     preview.hidden = false;
     activePreviewId = icon.dataset.id || null;

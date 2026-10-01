@@ -18,7 +18,7 @@ assert.match(index, /device-storage-provider\.js\?v=20260825-storage-2/);
 assert.match(index, /device-api\.js\?v=20260823-mobile-parity-1/);
 assert.match(index, /device-controls\.js\?v=20260823-mobile-parity-1/);
 assert.match(index, /vendor\/html2canvas\.min\.js\?v=1\.4\.1/);
-assert.match(index, /taskbar-experience\.js\?v=20261001-taskbar-visual-1/);
+assert.match(index, /taskbar-experience\.js\?v=20261002-taskbar-visual-2/);
 assert.equal(fs.existsSync(path.join(root, "assets/js/vendor/html2canvas.min.js")), true);
 assert.match(index, /dist-window\/window-manager-widget\.js\?v=20260826-window-fit-1/);
 assert.equal(fs.existsSync(path.join(root, "dist-window/window-manager-widget.js")), true);

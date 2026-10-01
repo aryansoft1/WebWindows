@@ -156,13 +156,22 @@
     try {
       const frame = win.querySelector("iframe");
       const sourceDoc = frame ? frame.contentDocument : document;
-      if (!sourceDoc || !sourceDoc.body) return null;
+      if (!sourceDoc || !sourceDoc.body) {
+        console.debug("[TaskbarPreview] visual skipped: content document inaccessible");
+        return null;
+      }
       const source = frame ? sourceDoc.body : (win.querySelector(".window-content, .window-body") || win);
       const naturalW = source.scrollWidth || source.offsetWidth || 0;
       const naturalH = source.scrollHeight || source.offsetHeight || 0;
-      if (!naturalW || !naturalH) return null;
-      const scale = Math.min(280 / naturalW, 150 / naturalH, 1);
-      if (!(scale >= 0.06)) return null;
+      if (!naturalW || !naturalH) {
+        console.debug("[TaskbarPreview] visual skipped: unmeasurable content");
+        return null;
+      }
+      const scale = Math.min(280 / naturalW, 1);
+      if (!(scale >= 0.04)) {
+        console.debug("[TaskbarPreview] visual skipped: page too wide", naturalW);
+        return null;
+      }
 
       const stage = document.createElement("div");
       stage.dataset.visual = "1";
@@ -194,11 +203,23 @@
         media.removeAttribute("autoplay");
       });
       clone.querySelectorAll("[autofocus]").forEach((node) => node.removeAttribute("autofocus"));
+      try {
+        const base = sourceDoc.baseURI || location.href;
+        clone.querySelectorAll("img").forEach((img) => {
+          const raw = img.getAttribute("src");
+          if (raw && !/^(data:|blob:|https?:|\/\/)/i.test(raw)) {
+            try { img.setAttribute("src", new URL(raw, base).href); } catch (_) {}
+          }
+        });
+      } catch (_) {}
       shadow.appendChild(clone);
       stage.appendChild(scaler);
       if (stage.inert !== undefined) { try { stage.inert = true; } catch (_) {} }
       return stage;
-    } catch (_) { return null; }
+    } catch (error) {
+      console.debug("[TaskbarPreview] visual skipped: clone failed", error?.message || error);
+      return null;
+    }
   }
 
   function liveMiniature(icon, win) {

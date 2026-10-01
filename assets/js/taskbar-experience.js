@@ -5,6 +5,8 @@
   let dragged = null;
   let longPressTimer = null;
   let previewRequest = 0;
+  let pendingPreviewTimer = null;
+  let activePreviewId = null;
 
   function taskbarApps() {
     return [...document.querySelectorAll(".taskbar-app[data-id]")];
@@ -39,7 +41,20 @@
     preview.id = "taskbar-window-preview";
     preview.className = "taskbar-window-preview";
     preview.hidden = true;
-    preview.innerHTML = '<strong class="taskbar-window-preview__title"></strong><div class="taskbar-window-preview__viewport"></div>';
+    preview.innerHTML = '<header><strong class="taskbar-window-preview__title"></strong><button type="button" class="taskbar-window-preview__close" aria-label="关闭预览">×</button></header><div class="taskbar-window-preview__viewport"></div>';
+    preview.querySelector(".taskbar-window-preview__close").setAttribute("aria-label", translated("关闭预览"));
+    preview.querySelector(".taskbar-window-preview__close").addEventListener("click", (event) => {
+      event.stopPropagation();
+      hidePreview();
+    });
+    preview.querySelector(".taskbar-window-preview__viewport").addEventListener("click", () => {
+      const id = preview.dataset.windowId;
+      const selector = id && window.CSS?.escape ? `.taskbar-app[data-id="${window.CSS.escape(id)}"]` : (id ? `.taskbar-app[data-id="${id}"]` : null);
+      const target = selector && document.querySelector(selector);
+      hidePreview();
+      if (target) target.click();
+    });
+    preview.addEventListener("pointerleave", hidePreview);
     document.body.appendChild(preview);
     return preview;
   }
@@ -111,23 +126,39 @@
     }
   }
 
-  async function showPreview(icon) {
-    if (matchMedia("(hover: none)").matches) return;
-    const requestId = ++previewRequest;
+  function renderPreview(icon, requestId) {
     const preview = previewElement();
-    preview.querySelector("strong").textContent = icon.title || icon.innerText.trim() || translated("窗口");
+    const title = preview.querySelector(".taskbar-window-preview__title");
+    if (title) title.textContent = icon.title || icon.innerText.trim() || translated("窗口");
+    preview.dataset.windowId = icon.dataset.id || "";
     const win = document.getElementById(icon.dataset.id);
     const viewport = preview.querySelector(".taskbar-window-preview__viewport");
     if (win) buildWindowSnapshot(win, viewport, requestId);
-    else viewport.textContent = translated("窗口内容暂不可用。");
+    else viewport.replaceChildren(snapshotPlaceholder(translated("窗口内容暂不可用。")));
     const rect = icon.getBoundingClientRect();
     preview.hidden = false;
-    const width = preview.offsetWidth || 260;
+    activePreviewId = icon.dataset.id || null;
+    const width = preview.offsetWidth || 304;
     preview.style.left = `${Math.max(8, Math.min(innerWidth - width - 8, rect.left + rect.width / 2 - width / 2))}px`;
     preview.style.bottom = `${Math.max(52, innerHeight - rect.top + 8)}px`;
   }
 
+  function showPreview(icon, immediate) {
+    if (matchMedia("(hover: none)").matches) return;
+    const livePreview = document.getElementById("taskbar-window-preview");
+    if (icon.dataset.id && icon.dataset.id === activePreviewId && livePreview && !livePreview.hidden) return;
+    if (pendingPreviewTimer) { clearTimeout(pendingPreviewTimer); pendingPreviewTimer = null; }
+    const requestId = ++previewRequest;
+    if (immediate) {
+      renderPreview(icon, requestId);
+      return;
+    }
+    pendingPreviewTimer = setTimeout(() => { pendingPreviewTimer = null; renderPreview(icon, requestId); }, 120);
+  }
+
   function hidePreview() {
+    if (pendingPreviewTimer) { clearTimeout(pendingPreviewTimer); pendingPreviewTimer = null; }
+    activePreviewId = null;
     previewRequest += 1;
     const preview = document.getElementById("taskbar-window-preview");
     if (preview) {
@@ -192,13 +223,14 @@
   document.addEventListener("pointerover", (event) => {
     const icon = event.target.closest?.(".taskbar-app[data-id]");
     const previousIcon = event.relatedTarget?.closest?.(".taskbar-app[data-id]");
-    if (icon && icon !== previousIcon) showPreview(icon);
+    if (icon && icon !== previousIcon) showPreview(icon, false);
   });
   document.addEventListener("pointerout", (event) => {
     if (event.target.closest?.(".taskbar-app[data-id]") && !event.relatedTarget?.closest?.(".taskbar-window-preview")) hidePreview();
   });
-  document.addEventListener("focusin", (event) => { const icon = event.target.closest?.(".taskbar-app[data-id]"); if (icon) showPreview(icon); });
+  document.addEventListener("focusin", (event) => { const icon = event.target.closest?.(".taskbar-app[data-id]"); if (icon) showPreview(icon, true); });
   document.addEventListener("focusout", (event) => { if (event.target.closest?.(".taskbar-app[data-id]")) hidePreview(); });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") hidePreview(); });
 
   document.addEventListener("pointerdown", (event) => {
     const icon = event.target.closest?.(".taskbar-app[data-id]");

@@ -85,7 +85,7 @@
 
   const SNAPSHOT_TIMEOUT_MS = 1500;
 
-  const CHROME_SEL = 'header,nav,.window-header,.toolbar,.menubar,.menu,.titlebar,.buttons,[role="toolbar"],[role="menubar"],[role="navigation"]';
+  const CHROME_SEL = 'header,nav,footer,.window-header,.appbar,.toolbar,.menubar,.menu,.titlebar,.buttons,.templatebar,.hfbar,.footer,.outline,.findpanel,.notice,.statusbar,[role="toolbar"],[role="menubar"],[role="navigation"],[role="status"]';
 
   function collectWindowText(root, maxChars) {
     const chunks = [];

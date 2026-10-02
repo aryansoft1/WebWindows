@@ -500,6 +500,7 @@
     const target = event.target.closest?.(".taskbar-app[data-id]");
     if (!dragged || !target || dragged === target) return;
     event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
     const rect = target.getBoundingClientRect();
     target.parentElement.insertBefore(dragged, event.clientX < rect.left + rect.width / 2 ? target : target.nextSibling);
   });
@@ -507,6 +508,9 @@
     dragged?.classList.remove("is-dragging");
     if (dragged) saveOrder();
     dragged = null;
+  });
+  document.addEventListener("drop", (event) => {
+    if (dragged && event.target.closest?.(".taskbar")) event.preventDefault();
   });
 
   const observer = new MutationObserver(applyOrder);

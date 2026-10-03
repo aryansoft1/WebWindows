@@ -11,8 +11,8 @@ Const CLOUD_LEGACY_PUBLIC_ROOT_NAME = "公共区域"
 
 Function CloudPublicRoot()
   Dim fso, canonicalPath, legacyPath
-  canonicalPath = Server.MapPath("../file/" & CLOUD_PUBLIC_ROOT_NAME)
-  legacyPath = Server.MapPath("../file/" & CLOUD_LEGACY_PUBLIC_ROOT_NAME)
+  canonicalPath = Server.MapPath("/cloud/file/" & CLOUD_PUBLIC_ROOT_NAME)
+  legacyPath = Server.MapPath("/cloud/file/" & CLOUD_LEGACY_PUBLIC_ROOT_NAME)
 
   Set fso = Server.CreateObject("Scripting.FileSystemObject")
   If fso.FolderExists(canonicalPath) Then
@@ -55,6 +55,77 @@ Function CloudRequestLanguage()
   language = Trim(CStr(Request.QueryString("lang")))
   If language = "" Then language = Request.ServerVariables("HTTP_ACCEPT_LANGUAGE")
   CloudRequestLanguage = CloudNormalizeLanguage(language)
+End Function
+
+Function CloudUiMessage(ByVal key, ByVal language)
+  Dim normalizedLanguage
+  normalizedLanguage = CloudNormalizeLanguage(language)
+  Select Case LCase(CStr(key))
+    Case "invalid-location"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "ファイルの場所が無効です。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The file location is invalid."
+      Else
+        CloudUiMessage = "资料位置无效。"
+      End If
+    Case "invalid-filter"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "ファイル形式の指定が無効です。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The file type filter is invalid."
+      Else
+        CloudUiMessage = "文件类型筛选无效。"
+      End If
+    Case "invalid-purpose"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "選択の用途が無効です。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The selection purpose is invalid."
+      Else
+        CloudUiMessage = "选择用途无效。"
+      End If
+    Case "invalid-request-id"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "ファイルダイアログのリクエストIDが無効です。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The file dialog request ID is invalid."
+      Else
+        CloudUiMessage = "文件对话框请求编号无效。"
+      End If
+    Case "public-not-deployed"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "パブリックエリアはまだ配置されていません。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The public area has not been deployed."
+      Else
+        CloudUiMessage = "公共区域尚未部署。"
+      End If
+    Case "folder-not-found"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "フォルダーが見つかりません。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The folder does not exist."
+      Else
+        CloudUiMessage = "资料夹不存在。"
+      End If
+    Case "invalid-username"
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "ログイン名をクラウドフォルダーに割り当てられません。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The signed-in user name cannot be mapped to a cloud folder."
+      Else
+        CloudUiMessage = "登录用户名无法映射到云资料目录。"
+      End If
+    Case Else
+      If normalizedLanguage = "jp" Then
+        CloudUiMessage = "操作を完了できませんでした。"
+      ElseIf normalizedLanguage = "en" Then
+        CloudUiMessage = "The operation could not be completed."
+      Else
+        CloudUiMessage = "操作未完成。"
+      End If
+  End Select
 End Function
 
 Function CloudDisplayName(ByVal physicalName, ByVal language)

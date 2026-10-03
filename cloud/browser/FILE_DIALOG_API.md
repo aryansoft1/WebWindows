@@ -5,6 +5,10 @@
 
 `WebWindowsCloudFiles` 是给现有页面保留的同对象别名。
 
+对话框默认标题、按钮、登录提示、错误和状态文案会读取 WebWindows 当前语言。
+应用传入自定义 `title` 时，应先通过 `WebWindowsI18n.translate()` 取得当前语言文本；
+不要使用浏览器系统语言自行判断，也不要直接打开隐藏的 `<input type="file">`。
+
 ## 打开文件
 
 ```js

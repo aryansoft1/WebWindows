@@ -218,6 +218,56 @@ End Function
 Dim isList : isList = (Trim(Request("list")) <> "")
 Dim u  : u  = Trim(Request("u"))
 Dim nm : nm = Trim(Request("name"))
+Dim sessionUserId, sessionNickname
+sessionUserId = Trim(CStr(Session("webwindows_user_id")))
+sessionNickname = Trim(CStr(Session("webwindows_nickname")))
+If LCase(Trim(Request("action"))) = "set-undiscoverable" Then
+  If UCase(Request.ServerVariables("REQUEST_METHOD")) <> "POST" Or sessionUserId = "" Or Not IsNumeric(sessionUserId) Then
+    Response.Status = "401 Unauthorized"
+    Response.Write "{""ok"":false,""error"":""login_required""}"
+    Response.End
+  End If
+  Dim hideValue : hideValue = 0
+  If Request.Form("value") = "1" Then hideValue = 1
+  On Error Resume Next
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_desktalk_preferences (user_id BIGINT UNSIGNED NOT NULL,undiscoverable TINYINT(1) NOT NULL DEFAULT 0,updated_at DATETIME NOT NULL,PRIMARY KEY (user_id),KEY idx_desktalk_undiscoverable (undiscoverable)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number = 0 Then conn.Execute "INSERT INTO webwindows_desktalk_preferences (user_id,undiscoverable,updated_at) VALUES (" & CLng(sessionUserId) & "," & hideValue & ",NOW()) ON DUPLICATE KEY UPDATE undiscoverable=" & hideValue & ",updated_at=NOW()"
+  If Err.Number <> 0 Then
+    Err.Clear
+    Response.Status = "503 Service Unavailable"
+    Response.Write "{""ok"":false,""error"":""privacy_store_unavailable""}"
+  Else
+    Response.Write "{""ok"":true,""undiscoverable"":" & LCase(CStr(CBool(hideValue))) & "}"
+  End If
+  On Error GoTo 0
+  Response.End
+End If
+If LCase(Trim(Request("action"))) = "get-undiscoverable" Then
+  If sessionUserId = "" Or Not IsNumeric(sessionUserId) Then
+    Response.Status = "401 Unauthorized"
+    Response.Write "{""ok"":false,""error"":""login_required""}"
+    Response.End
+  End If
+  Dim prefRs, isUndiscoverable : isUndiscoverable = 0
+  On Error Resume Next
+  conn.Execute "CREATE TABLE IF NOT EXISTS webwindows_desktalk_preferences (user_id BIGINT UNSIGNED NOT NULL,undiscoverable TINYINT(1) NOT NULL DEFAULT 0,updated_at DATETIME NOT NULL,PRIMARY KEY (user_id),KEY idx_desktalk_undiscoverable (undiscoverable)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+  If Err.Number = 0 Then
+    Set prefRs = conn.Execute("SELECT undiscoverable FROM webwindows_desktalk_preferences WHERE user_id=" & CLng(sessionUserId))
+    If Err.Number = 0 Then
+      If Not prefRs.EOF Then isUndiscoverable = CInt(prefRs("undiscoverable"))
+      prefRs.Close
+    End If
+  End If
+  If Err.Number <> 0 Then
+    Err.Clear
+    Response.Status = "503 Service Unavailable"
+    Response.Write "{""ok"":false,""error"":""privacy_store_unavailable""}"
+  Else
+    Response.Write "{""ok"":true,""undiscoverable"":" & LCase(CStr(CBool(isUndiscoverable))) & "}"
+  End If
+  On Error GoTo 0
+  Response.End
+End If
 Dim hidden, privacyReady
 privacyReady = LoadHiddenUsers(hidden)
 If Not privacyReady Then
@@ -238,9 +288,6 @@ If isList Then
   Response.End
 End If
 
-Dim sessionUserId, sessionNickname
-sessionUserId = Trim(CStr(Session("webwindows_user_id")))
-sessionNickname = Trim(CStr(Session("webwindows_nickname")))
 If sessionUserId<>"" And IsNumeric(sessionUserId) Then
   u = CStr(CLng(sessionUserId))
   If sessionNickname<>"" Then nm=sessionNickname

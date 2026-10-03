@@ -4,6 +4,7 @@ Option Explicit
 Response.Buffer = True
 Response.CodePage = 65001
 Response.Charset = "utf-8"
+Response.AddHeader "X-WebWindows-Private-Resource-Version", "2026.08.10.4"
 
 Const MAX_PRIVATE_FILE_BYTES = 15728640
 Const MAX_CHUNK_BYTES = 131072
@@ -40,6 +41,15 @@ If Not TryPrivatePath(usernameFolder, normalizedUsername) Or normalizedUsername 
   JsonError "403 Forbidden", "INVALID_USERNAME", "登录用户名无法映射到云资料目录"
 End If
 operation = LCase(Trim(CStr(Request.QueryString("op"))))
+
+' Only the final write needs database-backed quota information. Reads and
+' non-storage mutations remain available if the quota database is unavailable.
+If operation = "commit" Then
+%>
+<!--#include file="../../inc/conn.asp"-->
+<%
+End If
+On Error GoTo 0
 
 If Request.ServerVariables("REQUEST_METHOD") = "POST" Then
   If CStr(Request.ServerVariables("HTTP_X_WEBWINDOWS_REQUEST")) <> "private-resource" Then
@@ -169,7 +179,7 @@ Function AllowedCloudFile(ByVal fileName)
   Set fso = Server.CreateObject("Scripting.FileSystemObject")
   extension = LCase(fso.GetExtensionName(fileName))
   Set fso = Nothing
-  AllowedCloudFile = (InStr(1, ",xlsx,xls,csv,docx,doc,pptx,ppt,pdf,png,jpg,jpeg,gif,webp,json,md,txt,zip,", _
+  AllowedCloudFile = (InStr(1, ",xlsx,xls,csv,docx,doc,pptx,ppt,pdf,png,jpg,jpeg,gif,webp,json,md,txt,zip,mp3,wav,ogg,oga,m4a,aac,flac,opus,mp4,webm,mov,m4v,ogv,mkv,", _
     "," & extension & ",", vbTextCompare) > 0)
 End Function
 
@@ -225,6 +235,30 @@ Sub SendContent(ByVal editorData)
     contentType = "text/markdown; charset=utf-8"
   ElseIf extension = "txt" Then
     contentType = "text/plain; charset=utf-8"
+  ElseIf extension = "mp3" Then
+    contentType = "audio/mpeg"
+  ElseIf extension = "wav" Then
+    contentType = "audio/wav"
+  ElseIf extension = "ogg" Or extension = "oga" Then
+    contentType = "audio/ogg"
+  ElseIf extension = "m4a" Then
+    contentType = "audio/mp4"
+  ElseIf extension = "aac" Then
+    contentType = "audio/aac"
+  ElseIf extension = "flac" Then
+    contentType = "audio/flac"
+  ElseIf extension = "opus" Then
+    contentType = "audio/opus"
+  ElseIf extension = "mp4" Or extension = "m4v" Then
+    contentType = "video/mp4"
+  ElseIf extension = "webm" Then
+    contentType = "video/webm"
+  ElseIf extension = "mov" Then
+    contentType = "video/quicktime"
+  ElseIf extension = "ogv" Then
+    contentType = "video/ogg"
+  ElseIf extension = "mkv" Then
+    contentType = "video/x-matroska"
   Else
     contentType = "text/csv; charset=utf-8"
   End If
@@ -437,6 +471,7 @@ End Sub
 
 Sub CommitUpload()
   Dim uploadId, targetPath, tempPath, mode, fso, backupPath
+  Dim quotaKnown, quotaLookupOk, legacyDefault, quotaMB, currentBytes, projectedBytes, statsOk
   uploadId = Trim(CStr(Request.QueryString("id")))
   targetPath = CStr(Session("private_upload_target_" & uploadId))
   tempPath = CStr(Session("private_upload_temp_" & uploadId))
@@ -455,6 +490,27 @@ Sub CommitUpload()
     CancelUploadById uploadId
     JsonError "409 Conflict", "NAME_CONFLICT", "私人文件夹中已存在同名文件"
   End If
+  quotaMB = CurrentUserQuotaMB(quotaKnown, legacyDefault, quotaLookupOk)
+  If Not quotaLookupOk Then
+    Set fso = Nothing
+    JsonError "503 Service Unavailable", "QUOTA_LOOKUP_FAILED", "当前无法读取用户空间配额，请稍后重试"
+  End If
+  If quotaKnown Then
+    statsOk = True
+    currentBytes = QuotaFolderBytes(fso.GetFolder(PrivateRoot()), statsOk)
+    If Not statsOk Then
+      Set fso = Nothing
+      JsonError "503 Service Unavailable", "QUOTA_STATS_UNAVAILABLE", "当前无法核对用户空间，请稍后重试"
+    End If
+    projectedBytes = CDbl(currentBytes)
+    backupPath = targetPath & ".bak"
+    If fso.FileExists(backupPath) Then projectedBytes = projectedBytes - CDbl(fso.GetFile(backupPath).Size)
+    If projectedBytes > CDbl(quotaMB) * 1048576 Then
+      Set fso = Nothing
+      CancelUploadById uploadId
+      JsonError "413 Request Entity Too Large", "QUOTA_EXCEEDED", "保存后将超过所属数据中心分配的用户空间"
+    End If
+  End If
   If (mode = "editor" Or mode = "save-as") And fso.FileExists(targetPath) Then
     backupPath = targetPath & ".bak"
     If fso.FileExists(backupPath) Then fso.DeleteFile backupPath, True
@@ -466,6 +522,82 @@ Sub CommitUpload()
   ClearUpload uploadId
   JsonOk """saved"":true"
 End Sub
+
+Function CurrentUserQuotaMB(ByRef quotaKnown, ByRef legacyDefault, ByRef lookupSucceeded)
+  Dim schemaRs, quotaRs, quotaCmd, hasQuotaColumn, quotaSql, value
+  quotaKnown = False
+  lookupSucceeded = False
+  legacyDefault = False
+  value = Null
+  hasQuotaColumn = False
+  Set schemaRs = Nothing
+  Set quotaRs = Nothing
+  On Error Resume Next
+  Set schemaRs = conn.Execute("SHOW COLUMNS FROM webwindows_datacenters LIKE 'user_quota_mb'")
+  If Err.Number = 0 Then
+    If Not schemaRs.EOF Then hasQuotaColumn = True
+  End If
+  If Not schemaRs Is Nothing Then schemaRs.Close
+  Set schemaRs = Nothing
+  Err.Clear
+  If hasQuotaColumn Then
+    quotaSql = "SELECT d.user_quota_mb FROM webwindows_users u " & _
+      "INNER JOIN webwindows_datacenters d ON u.data_center_id=d.id WHERE u.id=? LIMIT 1"
+  Else
+    legacyDefault = True
+    quotaSql = "SELECT 1024 AS user_quota_mb FROM webwindows_users u " & _
+      "INNER JOIN webwindows_datacenters d ON u.data_center_id=d.id WHERE u.id=? LIMIT 1"
+  End If
+  Set quotaCmd = Server.CreateObject("ADODB.Command")
+  Set quotaCmd.ActiveConnection = conn
+  quotaCmd.CommandType = 1
+  quotaCmd.CommandText = quotaSql
+  quotaCmd.Parameters.Append quotaCmd.CreateParameter("user_id", 3, 1, , userId)
+  Set quotaRs = quotaCmd.Execute
+  If Err.Number = 0 Then
+    lookupSucceeded = True
+    If Not quotaRs.EOF Then
+      If Not IsNull(quotaRs("user_quota_mb").Value) Then
+        Err.Clear
+        value = CDbl(quotaRs("user_quota_mb").Value)
+        If Err.Number = 0 Then
+          quotaKnown = (value >= 1024)
+        Else
+          value = Null
+        End If
+        Err.Clear
+      End If
+    End If
+  End If
+  If Not quotaRs Is Nothing Then quotaRs.Close
+  Set quotaRs = Nothing
+  Set quotaCmd = Nothing
+  If Not conn Is Nothing Then conn.Close
+  Set conn = Nothing
+  Err.Clear
+  On Error GoTo 0
+  CurrentUserQuotaMB = value
+End Function
+
+Function QuotaFolderBytes(ByVal folder, ByRef succeeded)
+  Dim total, file, child, childBytes
+  total = 0
+  On Error Resume Next
+  For Each file In folder.Files
+    total = CDbl(total) + CDbl(file.Size)
+    If Err.Number <> 0 Then succeeded = False: Err.Clear: Exit For
+  Next
+  If succeeded Then
+    For Each child In folder.SubFolders
+      childBytes = QuotaFolderBytes(child, succeeded)
+      total = CDbl(total) + CDbl(childBytes)
+      If Not succeeded Then Exit For
+    Next
+  End If
+  If Err.Number <> 0 Then succeeded = False: Err.Clear
+  On Error GoTo 0
+  QuotaFolderBytes = total
+End Function
 
 Sub CancelUpload()
   Dim uploadId

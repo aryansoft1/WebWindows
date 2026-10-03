@@ -78,11 +78,11 @@
 
   function parseDateExpression(text, nowValue) {
     const now = new Date(nowValue || Date.now());
-    if (/今天|今日|きょう|today/i.test(text)) return { from: startOfDay(now), to: nextDay(now), label: "今天" };
+    if (/今天|今日|きょう|today/i.test(text)) return { from: startOfDay(now), to: nextDay(now), kind: "today", label: "今天" };
     if (/昨天|昨日|きのう|yesterday/i.test(text)) {
       const from = startOfDay(now);
       from.setDate(from.getDate() - 1);
-      return { from, to: nextDay(from), label: "昨天" };
+      return { from, to: nextDay(from), kind: "yesterday", label: "昨天" };
     }
     if (/上周|上週|先週|last\s+week/i.test(text)) {
       const to = startOfDay(now);
@@ -90,7 +90,7 @@
       to.setDate(to.getDate() - day + 1);
       const from = new Date(to);
       from.setDate(from.getDate() - 7);
-      return { from, to, label: "上周" };
+      return { from, to, kind: "lastWeek", label: "上周" };
     }
     if (/本周|这周|今週|this\s+week/i.test(text)) {
       const from = startOfDay(now);
@@ -98,7 +98,7 @@
       from.setDate(from.getDate() - day + 1);
       const to = new Date(from);
       to.setDate(to.getDate() + 7);
-      return { from, to, label: "本周" };
+      return { from, to, kind: "thisWeek", label: "本周" };
     }
     const match = text.match(/(?:(\d{4})[年\/-])?(\d{1,2})[月\/-](\d{1,2})日?/);
     if (!match) return null;
@@ -108,7 +108,7 @@
     let from = new Date(year, month, day);
     if (!match[1] && from > nextDay(now)) from = new Date(year - 1, month, day);
     from = startOfDay(from);
-    return { from, to: nextDay(from), label: `${month + 1}月${day}日` };
+    return { from, to: nextDay(from), kind: "date", label: `${month + 1}月${day}日` };
   }
 
   function dateField(text) {
@@ -169,17 +169,18 @@
       criteria.nameContains = String(ast.nameContains).slice(0, 120);
       delete criteria.text;
     }
-    if (ast.fileCategory) criteria.understanding.push(GROUPS[ast.fileCategory]?.label || ast.fileCategory);
-    else if (criteria.extensions?.length) criteria.understanding.push(criteria.extensions.map(item => item.toUpperCase()).join(" / "));
-    if (ast.dateCreated?.label) criteria.understanding.push(`${ast.dateCreated.label} 创建`);
-    if (ast.dateModified?.label) criteria.understanding.push(`${ast.dateModified.label} 修改`);
-    if (ast.dateUploaded?.label) criteria.understanding.push(`${ast.dateUploaded.label} 保存`);
-    if (criteria.nameContains) criteria.understanding.push(`名称包含 ${criteria.nameContains}`);
-    if (ast.path) criteria.understanding.push(`位置 ${ast.path}`);
-    if (ast.sort === "modifiedAt" && !ast.dateModified) {
-      criteria.understanding.push(/最新(?:的)?|最新の|latest/i.test(ast.original || "") ? "最新" : "最近修改");
+    // understanding 只描述「这次实际套用了哪些筛选条件」，并且**不含任何界面文案**：
+    // 语言由 search-ui.js 按当前语言组装，解析器不产出中文/日文/英文标签。
+    // 「最新 / 最近修改」这类纯回声（用户已经写出来的排序意图）不再列入，重复展示没有意义。
+    if (ast.fileCategory) criteria.understanding.push({ kind: "fileCategory", category: ast.fileCategory });
+    else if (criteria.extensions?.length) criteria.understanding.push({ kind: "extensions", value: criteria.extensions.join(",") });
+    for (const kind of ["dateCreated", "dateModified", "dateUploaded"]) {
+      const range = ast[kind];
+      if (range?.from) criteria.understanding.push({ kind, from: range.from, to: range.to });
     }
-    if (ast.unsupported?.includes("openedAt")) criteria.understanding.push("最近打开（暂无元数据）");
+    if (criteria.nameContains) criteria.understanding.push({ kind: "nameContains", value: criteria.nameContains });
+    if (ast.path) criteria.understanding.push({ kind: "path", value: ast.path });
+    if (ast.unsupported?.includes("openedAt")) criteria.understanding.push({ kind: "unsupported", value: "openedAt" });
     return criteria;
   }
 

@@ -36,12 +36,11 @@ Function SafeId(s)
 End Function
 
 Function GetUser()
-  Dim u : u = Session("username")
+  Dim u : u = Trim(CStr(Session("webwindows_user_id")))
   If Len(u) = 0 Then
     u = Request("u")
     If Len(u) > 0 Then
       u = SafeId(u)
-      Session("username") = u
       Response.Cookies("DT_USER") = u
       Response.Cookies("DT_USER").Path = "/"
       Response.Cookies("DT_USER").Expires = DateAdd("d", 30, Now())

@@ -5,7 +5,7 @@ Response.ContentType = "application/json"
 Response.Charset = "UTF-8"
 
 Dim fso, rootPath, username, userFolder, folder, file
-Dim userSize, sysSize, diskTotal, folderCount
+Dim userSize, sysSize
 Dim cpuModel, cpuUsage, memUsed, memTotal
 Set fso = Server.CreateObject("Scripting.FileSystemObject")
 
@@ -14,12 +14,12 @@ rootPath = Server.MapPath("/cloud/file/")
 
 ' 用户名
 username = Request.Cookies("username")
-If username = "" Then username = "admin"
 
 ' 统计用户文件夹大小
-userFolder = rootPath & "\" & username
-userSize = 0
-If fso.FolderExists(userFolder) Then
+userFolder = ""
+userSize = Null
+If username <> "" Then userFolder = rootPath & "\" & username
+If userFolder <> "" And fso.FolderExists(userFolder) Then
     userSize = getFolderSize(fso.GetFolder(userFolder))
 End If
 
@@ -27,18 +27,13 @@ End If
 sysSize = getSystemSize(fso)
 
 ' 用户目录数量
-folderCount = 0
-For Each folder In fso.GetFolder(rootPath).SubFolders
-    folderCount = folderCount + 1
-Next
-If folderCount = 0 Then folderCount = 1 ' 防止除以 0
-
-' 虚拟主机总容量（1229MB）
-diskTotal = 1229
-
-
 ' WMI 获取 CPU 和内存信息
 Dim objWMIService, objItem, colItems, json
+cpuModel = ""
+cpuUsage = Null
+memUsed = 0
+memTotal = 0
+On Error Resume Next
 Set objWMIService = GetObject("winmgmts:\\.\root\cimv2")
 
 If Err.Number = 0 Then
@@ -64,11 +59,15 @@ Else
     memUsed = 0
     memTotal = 0
 End If
+Err.Clear
+On Error GoTo 0
 
 ' 输出 JSON
 
 Response.Write "{"
-Response.Write """cpuModel"":""" & cpuModel & ""","
+Response.Write """ok"":true,"
+Response.Write """scope"":""service-node"","
+Response.Write """cpuModel"":""" & JsonEscape(cpuModel) & ""","
 If IsNull(cpuUsage) Then
     Response.Write """cpuUsage"":null,"
 Else
@@ -77,9 +76,13 @@ End If
 
 Response.Write """memUsed"":" & formatJsonNumber(Round(memUsed / 1024, 2)) & ","
 Response.Write """memTotal"":" & formatJsonNumber(Round(memTotal / 1024, 2)) & ","
-Response.Write """diskUsed"":" & formatJsonNumber(Round(userSize / 1048576, 2)) & ","
+If IsNull(userSize) Then
+    Response.Write """diskUsed"":null,"
+Else
+    Response.Write """diskUsed"":" & formatJsonNumber(Round(userSize / 1048576, 2)) & ","
+End If
 Response.Write """sysUsed"":" & formatJsonNumber(Round(sysSize / 1048576, 2)) & ","
-Response.Write """diskTotal"":" & formatJsonNumber(Round(diskTotal, 2))
+Response.Write """diskTotal"":null"
 
 Response.Write "}"
 %>
@@ -107,7 +110,6 @@ Function getSystemSize(fso)
     ' 获取当前用户名
     Dim username
     username = Request.Cookies("username")
-    If username = "" Then username = "admin"
 
     ' 获取该用户文件夹大小
     userSize = 0
@@ -115,6 +117,14 @@ Function getSystemSize(fso)
         userSize = getFolderSize(fso.GetFolder(filePath & "\" & username))
     End If
     getSystemSize = sysSize
+End Function
+Function JsonEscape(value)
+    Dim text
+    If IsNull(value) Then JsonEscape = "": Exit Function
+    text = CStr(value)
+    text = Replace(text, "\", "\\")
+    text = Replace(text, """", "\""")
+    JsonEscape = text
 End Function
 Function getFolderSize(folder)
     Dim size, f

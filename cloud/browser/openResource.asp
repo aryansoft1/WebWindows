@@ -34,6 +34,18 @@ Select Case extension
   Case "xlsx": mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
   Case "ppt": mimeType = "application/vnd.ms-powerpoint"
   Case "pptx": mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+  Case "mp3": mimeType = "audio/mpeg"
+  Case "wav": mimeType = "audio/wav"
+  Case "ogg", "oga": mimeType = "audio/ogg"
+  Case "m4a": mimeType = "audio/mp4"
+  Case "aac": mimeType = "audio/aac"
+  Case "flac": mimeType = "audio/flac"
+  Case "opus": mimeType = "audio/opus"
+  Case "mp4", "m4v": mimeType = "video/mp4"
+  Case "webm": mimeType = "video/webm"
+  Case "mov": mimeType = "video/quicktime"
+  Case "ogv": mimeType = "video/ogg"
+  Case "mkv": mimeType = "video/x-matroska"
   Case "zip": mimeType = "application/zip"
 End Select
 Set fso = Nothing

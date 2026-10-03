@@ -6,37 +6,81 @@
   <title>登录 - WebWindows</title>
   <script src="assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="assets/js/tw.js?v=20260802-device-experience-3"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.19.0/js/md5.min.js"></script>
   <style>
+    * { box-sizing: border-box; }
+    .hidden { display: none !important; }
+    html, body { min-width: 0; min-height: 100%; }
+    body {
+      min-height: 100vh; margin: 0; padding: 28px 18px;
+      display: grid; place-items: center; font-family: Inter, "Segoe UI", sans-serif;
+      color: #17243b; background: radial-gradient(ellipse at 50% 0%, #e4f4ff 0%, #f1f5fb 52%, #e8eef8 100%);
+    }
+    .login-card {
+      width: min(100%, 420px); padding: 32px; border: 1px solid rgba(255,255,255,.9);
+      border-radius: 20px; background: rgba(255,255,255,.94);
+      box-shadow: 0 20px 55px rgba(23, 52, 94, .16), 0 2px 8px rgba(23, 52, 94, .06);
+    }
+    .brand-mark {
+      width: 46px; height: 46px; display: grid; place-items: center; margin: 0 auto 14px;
+      color: #fff; font-weight: 800; font-size: 21px; border-radius: 14px;
+      background: linear-gradient(145deg, #25b7ec, #2871ed); box-shadow: 0 7px 16px rgba(40,113,237,.22);
+    }
+    .login-title { margin: 0 0 24px; text-align: center; color: #132644; font-size: 23px; font-weight: 700; }
+    .login-input {
+      display: block; width: 100%; height: 48px; margin: 0 0 13px; padding: 0 15px;
+      color: #17243b; background: #fff; border: 1px solid #dce4ef; border-radius: 12px;
+      outline: none; font: inherit; transition: border-color .15s, box-shadow .15s;
+    }
+    .login-input::placeholder { color: #98a5b8; }
+    .login-input:focus { border-color: #4387f5; box-shadow: 0 0 0 3px rgba(67,135,245,.14); }
+    .captcha-row { display: flex; align-items: center; justify-content: center; min-height: 48px; margin: 0 0 12px; }
+    #captchaCanvas { display: block; width: 160px; height: 48px; border: 1px solid #d4dfef; border-radius: 9px; cursor: pointer; }
+    .login-button {
+      width: 100%; min-height: 48px; border: 0; border-radius: 12px; color: #fff; cursor: pointer;
+      background: linear-gradient(100deg, #3985f5, #2867e8); font: inherit; font-weight: 650;
+      box-shadow: 0 7px 16px rgba(40,103,232,.2); transition: filter .15s, transform .15s;
+    }
+    .login-button:hover { filter: brightness(1.04); }
+    .login-button:active { transform: translateY(1px); }
+    #errorMsg { min-height: 18px; margin: 12px 0 0; color: #c43c48; text-align: center; font-size: 13px; }
+    #errorMsg:empty { min-height: 0; margin-top: 0; }
     @media (max-width: 820px), (max-width: 1000px) and (max-height: 500px) {
-      input, button { min-height: 44px; }
-      #captchaCanvas { width: 147px; height: 44px; }
+      body { min-height: 100vh; padding: 16px; }
+      .login-card { padding: 25px 22px; }
+      .login-input, .login-button { min-height: 44px; }
+    }
+    @media (max-height: 500px) {
+      body { padding: 12px; }
+      .login-card { padding: 18px 22px; }
+      .brand-mark { width: 36px; height: 36px; margin-bottom: 8px; }
+      .login-title { margin-bottom: 12px; }
+      .login-input { height: 40px; margin-bottom: 8px; }
+      .captcha-row { min-height: 40px; margin-bottom: 8px; }
+      #captchaCanvas { height: 40px; }
     }
   </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen font-sans">
-  <div class="w-[400px] p-6 bg-white/70 backdrop-blur-md shadow-xl rounded-xl">
-    <h2 class="text-2xl font-semibold text-center mb-6">登录 WebWindows</h2>
+<body>
+  <main class="login-card" id="loginCard" data-i18n-ignore>
+    <div class="brand-mark" aria-hidden="true">W</div>
+    <h2 class="login-title" id="loginHeading">登录 WebWindows</h2>
 
-    <input type="text" id="username" placeholder="用户名"
-      class="w-full px-4 py-2 border rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-400" />
+    <input type="text" id="username" autocomplete="username" placeholder="用户名" class="login-input" />
 
-    <input type="password" id="password" placeholder="密码"
-      class="w-full px-4 py-2 border rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-400" />
+    <input type="password" id="password" autocomplete="current-password" placeholder="密码" class="login-input" />
 
-    <canvas id="captchaCanvas" width="120" height="36" title="点击刷新验证码"
-      class="mb-2 rounded-md cursor-pointer border mx-auto"></canvas>
+    <div class="captcha-row">
+      <canvas id="captchaCanvas" width="160" height="48" title="点击刷新验证码" role="img" aria-label="验证码"></canvas>
+    </div>
 
-    <input type="text" id="captchaInput" placeholder="请输入验证码"
-      class="w-full px-4 py-2 border rounded-xl mb-3 outline-none focus:ring-2 focus:ring-blue-400" />
+    <input type="text" id="captchaInput" autocomplete="off" autocapitalize="characters" placeholder="请输入验证码" class="login-input" />
 
-    <button onclick="login()"
-      class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded-xl transition">登录</button>
+    <button id="loginButton" type="button" onclick="login()" class="login-button">登录</button>
 
-    <div id="errorMsg" class="text-red-500 text-sm text-center mt-3 hidden">登录失败，请检查输入</div>
-  </div>
+    <div id="errorMsg" role="alert" aria-live="polite" class="hidden"></div>
+  </main>
 
-  <script src="assets/js/login.js?v=20260728-1"></script>
+  <script src="assets/js/login.js?v=20260929-login-ui-1"></script>
 </body>
 </html>

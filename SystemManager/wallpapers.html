@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>壁纸管理</title>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
+  <style>
+    body { margin:0; padding:24px; background:#f3f4f6; color:#1f2937; font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:1000px; margin:auto; } section { background:white; border-radius:10px; padding:20px; margin:16px 0; box-shadow:0 2px 8px #0001; }
+    h1 { margin:0 0 4px; } .muted { color:#64748b; }
+    #wallpaperStatus { min-height:22px; margin:12px 0; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:16px; }
+    figure { margin:0; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+    figure img { display:block; width:100%; height:110px; object-fit:cover; background:#0b1220; }
+    figcaption { padding:8px 10px; font-size:12px; word-break:break-all; }
+    .name { display:block; color:#0f172a; } .meta { color:#64748b; }
+    .actions { display:flex; gap:6px; margin-top:8px; }
+    button { border:0; border-radius:6px; padding:7px 12px; background:#2563eb; color:#fff; cursor:pointer; font:inherit; }
+    button.secondary { background:#475569; } button.danger { background:#dc2626; }
+    button[disabled] { opacity:.55; cursor:not-allowed; }
+    label { display:block; margin:12px 0 4px; }
+    input[type=file] { display:block; margin-top:6px; }
+    .row { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; }
+    nav.admin { display:flex; gap:12px; flex-wrap:wrap; margin:0 0 4px; }
+    nav.admin a { color:#1d4ed8; text-decoration:none; }
+    nav.admin a:hover { text-decoration:underline; }
+  </style>
+</head>
+<body>
+  <main>
+    <nav class="admin">
+      <a href="dashboard.html">系统概览</a>
+      <a href="users.html">用户管理</a>
+      <a href="files.html">云资料管理</a>
+      <a href="news.html">新闻管理</a>
+      <a href="feedback.html">用户咨询管理</a>
+      <a href="datacenter.html">数据中心管理</a>
+      <a href="wallpapers.html">壁纸管理</a>
+      <a href="settings.html">系统设置</a>
+    </nav>
+    <h1>壁纸管理</h1>
+    <p class="muted">上传的壁纸保存在服务器的 <code>assets/wallpapers</code> 目录，所有用户的桌面壁纸库会立即看到它们。</p>
+    <p id="wallpaperStatus" role="status">正在加载壁纸列表…</p>
+
+    <section>
+      <h2>上传壁纸</h2>
+      <form id="uploadForm">
+        <label for="wallpaperFile">选择图片（JPG / PNG / WebP / GIF / AVIF / BMP，单张小于 4MB）</label>
+        <input id="wallpaperFile" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,.avif,.bmp" required>
+        <button type="submit">上传</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>当前系统默认壁纸</h2>
+      <p id="defaultWallpaper" class="muted">未设置默认壁纸。</p>
+      <div class="row"><button type="button" class="secondary" id="clearDefault">清除系统默认壁纸</button></div>
+    </section>
+
+    <section>
+      <h2>全部壁纸</h2>
+      <div class="grid" id="wallpaperGrid"></div>
+    </section>
+  </main>
+  <script src="assets/js/wallpapers.js?v=20260929-root-path-1"></script>
+</body>
+</html>

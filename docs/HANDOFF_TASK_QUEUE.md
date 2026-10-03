@@ -147,6 +147,7 @@
 | T-084 | “图标隐藏无效”修复：系统类应用可见性无视用户设置 + 恢复项覆盖注册表，上线 | ✅ 已上传 | 用户报隐藏仍无效。**根因**：`app-registry.js isDesktopVisible` 对系统/不可卸载应用只看 `placement.desktop`，`setDesktopVisible` 写记录成功但读取无视 ⇒ 静默无效果（新闻中心正是系统类）。**修复**：显式记录优先（含系统）、无记录回退 placement；`getInstallation.desktopVisible` 同步统一；桌面恢复项/计数同步覆盖注册表隐藏（`explicit && desktopVisible===false` 才恢复，不碰默认不上桌面的应用）+ 监听 `installation-changed`。**验证**：真机新闻图标藏/恢复闭环、assoc `{visible:false,explicit:true,state:system}`；`--check` 过。**上传** 20261003-025939（app-registry/dist-menus/index，3 文件）。注意：本次上传前用户报“还是没效果”纯因修复版尚未上传（生产仍跑旧字节），传后已告知需 Ctrl+F5 | Codex：同 T-078 ①② | 2026-10-03 | OpenCode |
 | T-085 | 恢复重叠修复 + 恢复位置改顺排，上线 | ✅ 已上传 | 用户报“隐藏→自动排列→显示”图标重叠。**根因**：恢复沿用老格子号，原地显示。**修复**：新增 `window.reinsertDesktopIcon`（`WindowManager.vue`），三恢复入口（桌面菜单恢复、跨标签同步、注册表恢复）统一作废原格、追加持久化；首版倒序找空格在宽屏掉到右下角孤岛（用户截图），改为**顺排第一个空格**（原格空着就回原位，被占跟队尾，Windows 惯例）。新装图标仍就近入格不动。**验证**：1280×1024 高屏隐藏→自动排列→恢复，12 图标零重叠零报错（恢复落第二列队尾）。**上传**：20261003-031549（6 文件）→ 20261003-032822（4 文件，顺排）。repro 在 `TEMP\opencode\ww-icon-overlap-repro.mjs` | Codex：同 T-078 ①② | 2026-10-03 | OpenCode |
 | T-086 | 非系统程序右键“真卸载”方向 | ⏳ 待用户决策 | 用户问：非系统普通程序右键能否真卸载。已查：现有“移除关联”只删用户关联（`uninstall(...,{retainData:true})`），程序文件/云资料按平台设计个人无权删服务器文件（见设置功能管理页文案）。已向用户提问（三选一：改名叫卸载/维持现状/真删文件需鉴权+服务端接口），**问题超时中断，用户未答**。勿擅自开工 | 等用户拍板后再立项 | 2026-10-03 | OpenCode |
+| T-087 | git 大扫除：生产同步→合入 main→删分支（本地29+远端36），11 个脏分支保留 | ✅ | main 现为 `e936983`（merge `49c7755` + 生产对齐 `e936983`，ahead origin/main 337，**未推送**）；生产 `2026.09.28.12` 全量备份 31/31；远端只剩 origin/main。脏分支清单与下一步见本文件末 `## T-087` | Codex：①一律从 main 建新分支再改；②11 个脏分支（T-087 节清单）不要删，先提交其 worktree 工作；③`M WebWindows` 嵌套仓 dirty 别碰 | 2026-10-03 | OpenCode |
 
 ---
 
@@ -164,3 +165,14 @@
 - 2026-09-28：生产 MySQL 5.6.51 缺少冻结迁移 001 及迁移记录表，导致 TRUST_SCHEMA_REQUIRED。目录 61 行，当前 ID61 为 Base64；提交表为空。准备 008 ASCII 版本列前置兼容完整唯一索引，以及只执行 008/001 的定向修复工具。源码校验、DDL 解析与索引长度测试通过；生产执行待进行。
 
 - T-070 完成（2026-09-28）：修复源码 e20715e 已推送。生产执行 008 前置兼容及原封不动的 001，26 条冻结迁移语句成功；真实 schema verifier 返回零缺项，001/008 校验和成功记录已登记，完整唯一索引保留。备份：`.deployment-backups/trust-schema-20260928-140141/before.json`，checkpoint 已记录最后语句。迁移后目录/提交原有数据逐项一致。线上公共目录 HTTP 200、17 项；接口按既有逻辑将内置 2026.09.26.1 目录新增为 ID62 并启用，原61行历史保留。无网站源代码变更，无需 FTP。未执行登录管理员会话写入操作；用户刷新功能仓库“重新读取”确认后台。首个无浏览器 UA 的在线请求被 WAF 403 拦截，使用正常浏览器请求头后200。
+
+## T-087 git 大扫除（生产同步→合入 main→删分支，2026-10-03）
+
+- **目标/约束**：生产同步到本地 → 合并最新到 main → 其它分支全删（本地+远端）→ 通报双方 git 状态；以后修改另建新分支。
+- **完成**：①FTP 凭据已写入本机用户环境变量（不进仓库），重试通过，生产 manifest `2026.09.28.12`（337 文件）与本地一致；②生产 31 个上传文件全量备份到 `.deployment-backups/20261003-104904-2026.09.28.12-prod-sync`（31/31 成功），与本地比对仅 3 个实质差异（`assets/js/desktalk.js`、`mail-center/web.config`、`bin/WebWindows.MailCenter.dll`，均非换行符问题），已按“生产为准”覆盖并提交；③`opencode/session-20261003` 无冲突合入 main（`49c7755`，758 文件），再叠生产对齐提交（`e936983`）；④删除本地 29 分支 + 远端 36 个 `origin/codex/*`（远端只剩 origin/main）；移除 8 个干净 worktree。
+- **测试**：纯 git 操作无代码测试；31 个下载文件哈希入库备份，dll 与生产字节一致（DLL-MATCH=True）。
+- **分支/commit**：`main = e936983`，ahead origin/main 337，**未推送**（推送=正式发布，需另走发布流程）。
+- **FTP**：本次只下载未上传；首次 530 拒绝（旧凭据），凭据更新后通过。不重复、不换方法，符合规则。
+- **未完成/阻塞**：①11 个脏 worktree 绑定的分支出于保数据**未删**：`webwindows-desktop-production-20261003`(8)、`camera-scanner-vertical-slice`(10)、`navigation-provider-v1-restored`(28)、`systemmanager-completion`(61)、`mail-center-deploy-20260928`(6)、`layout-recovery-manifest`(8)、`admin-console-fix-20260927`(3)、`desktalk-file-search-restore`(4)、`network-camera-production-20260913`(7)、`network-speed-test-v2`(10)、`release-integrity-v1`(1)，括号内为未提交文件数；②`C:/Users/aryansoft/.codex/worktrees/{27aa,a0dd,ab8a}` 注销成功但目录删除报 Permission denied，残留文件在仓库外，未再动；③主仓 `M WebWindows`（无 .gitmodules 的 gitlink，嵌套仓 dirty）原样保留；④两个 detached worktree（`0216`、`prod-baseline-20260929`，后者脏 14 个）未动。
+- **不得重复/绕过**：不要删上面 11 个脏分支（先提交其工作）；不要 `push main`（337 commits，需正式发布才推）；FTP 凭据已在用户环境变量里，任何输出/提交不得打印凭据值。
+- **下一步（Codex）**：所有新工作一律从 `main(e936983)` 建新分支；脏 worktree 逐个提交后可再删对应分支；本台账 T-087 行已同步，无需重做。

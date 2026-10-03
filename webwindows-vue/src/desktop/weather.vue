@@ -1,5 +1,5 @@
 <template>
-  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle" @mousedown="onMouseDown"
+  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle" :data-ww-cursor="isDragging ? 'grabbing' : 'move'" @mousedown="onMouseDown"
     @touchstart.prevent="onTouchStart">
     <!-- 顶部：城市在左，关闭在右 -->
     <div class="weather-header">
@@ -20,6 +20,8 @@
 
 
 <script>
+import WeatherLanguage from './weather-language.js'
+
 export default {
   name: "WeatherTimeWidget",
   data() {
@@ -32,7 +34,9 @@ export default {
       weatherIcon: "https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg",
       weatherLocation: "定位中...",
       touchOffset: { x: 0, y: 0 },
-      lang: ({ jp: "ja", tw: "zh" }[localStorage.getItem("lang")] || localStorage.getItem("lang") || (navigator.language || "zh").slice(0, 2)),
+      lang: WeatherLanguage.normalize(
+        localStorage.getItem("lang") || (navigator.language || "zh")
+      ),
       refreshTimer: null,
       isVisible: true,
       hasDragged: false,
@@ -42,7 +46,7 @@ export default {
   },
   computed: {
     rootStyle() {
-      const base = { position: 'absolute', cursor: this.isDragging ? 'move' : 'default' }
+      const base = { position: 'absolute' }
       if (this.hasDragged) {
         base.left = this.position.x + 'px'
         base.top = this.position.y + 'px'
@@ -57,7 +61,7 @@ export default {
     document.addEventListener("mouseup", this.onMouseUp);
     this.onLanguageChanged = (event) => {
       const selected = event.detail?.language || localStorage.getItem("lang") || "zh";
-      this.lang = ({ jp: "ja", tw: "zh" }[selected] || selected);
+      this.lang = WeatherLanguage.normalize(selected);
       this.loadWeather();
     };
     window.addEventListener("webwindows:language-changed", this.onLanguageChanged);
@@ -139,11 +143,14 @@ export default {
         const tempC = cond?.temp_C;
         if (tempC == null) throw new Error('wttr missing temp');
 
-        // 描述：有本地语言优先；否则用映射/英文
+        // 描述：zh/ja 用本地码表（wttr 的 lang_zh/ja 实际仍是英文）
         const mapped = this.mapWttrCode(cond?.weatherCode);
-        const descRaw = (cond[`lang_${this.lang}`]?.[0]?.value?.trim())
-          || (cond.weatherDesc?.[0]?.value?.trim())
-          || this.pickLocalizedDesc(mapped, this.lang);
+        const descRaw = this.resolveDesc(
+          mapped,
+          (cond[`lang_${this.lang}`]?.[0]?.value?.trim())
+            || (cond.weatherDesc?.[0]?.value?.trim()),
+          this.lang
+        );
 
         // 图标：先用关键词匹配，不命中则用映射图标
         const en = (cond.weatherDesc?.[0]?.value || '').toLowerCase();
@@ -186,9 +193,7 @@ export default {
         if (!cur) throw new Error('om weather missing');
 
         const mapped = this.mapWeatherCode ? this.mapWeatherCode(cur.weathercode) : null;
-        const descText = mapped ? (this.pickLocalizedDesc ? this.pickLocalizedDesc(mapped, this.lang)
-          : (this.lang === 'zh' ? mapped.descZh : this.lang === 'ja' ? mapped.descJa : mapped.descEn))
-          : '—';
+        const descText = mapped ? this.resolveDesc(mapped, '', this.lang) : '—';
         const iconFinal = mapped?.iconUrl || 'https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/2601.svg';
 
         this.weatherTemp = `${cur.temperature}°C`;
@@ -245,7 +250,7 @@ export default {
         THUNDER: "https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/26C8.svg",
         FOG: "https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/svg/1f32b.svg",
       };
-      const o = (en, zh, ja, icon) => ({ descEn: en, descZh: zh, descJa: ja, iconUrl: icon });
+      const o = (en, zh, ja, icon) => ({ descEn: en, descZh: zh, descJa: ja, iconUrl: icon, descUnknown: "未知" });
 
       const MAP = {
         0: o("Clear sky", "晴朗", "快晴", ICON.SUN),
@@ -320,6 +325,28 @@ export default {
       if (lang === "ja") return mapped.descJa || mapped.descEn;
       return mapped.descEn;
     },
+
+    /*
+     * wttr.in answers `lang=zh` / `lang=ja` with the *untranslated* English
+     * string (verified: for weatherCode 353 it returns
+     * lang_zh = "Light rain shower", byte-identical to weatherDesc). So the
+     * upstream localized field cannot be trusted for zh/ja, and preferring it
+     * is exactly what made Chinese and Japanese systems show English.
+     *
+     * For zh/ja we therefore resolve from our own WWO code table, which covers
+     * every code wttr can return. Only when the table genuinely has no entry
+     * do we fall back to the provider text. English keeps using the provider
+     * text, because there it is already the target language.
+     */
+    resolveDesc(mapped, providerText, lang) {
+      const provider = String(providerText || "").trim();
+      if (lang === "en" || lang === "xx") return provider || this.pickLocalizedDesc(mapped, lang);
+      const localized = this.pickLocalizedDesc(mapped, lang);
+      // The table's "Unknown" placeholder is not a real translation, so an
+      // unmapped code still deserves the provider text over "未知"/"不明".
+      if (localized && localized !== mapped.descUnknown) return localized;
+      return provider || localized;
+    },
     // ✅ 完整覆盖常见 wttr/weatherCode → 多语言描述 + 图标
     mapWttrCode(code) {
       const ICON = {
@@ -332,7 +359,7 @@ export default {
         THUNDER: "https://cdn.jsdelivr.net/npm/openmoji@14.0.0/color/svg/26C8.svg",
         FOG: "https://cdn.jsdelivr.net/gh/twitter/twemoji/assets/svg/1f32b.svg",
       };
-      const o = (en, zh, ja, icon) => ({ descEn: en, descZh: zh, descJa: ja, iconUrl: icon });
+      const o = (en, zh, ja, icon) => ({ descEn: en, descZh: zh, descJa: ja, iconUrl: icon, descUnknown: "未知" });
 
       const M = {
         // 晴/多云
@@ -452,7 +479,7 @@ export default {
   border: none;
   color: #fff;
   font-size: 14px;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
 /* 下部：天气 */

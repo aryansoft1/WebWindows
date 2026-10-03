@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Developer Studio 工作流</title><desc id="desc">从本地项目编辑到验证、隔离预览和构建导出，不自动发布。</desc>
+  <rect width="960" height="420" rx="28" fill="#111827"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <g fill="#1f2937" stroke="#52627a"><rect x="35" y="120" width="160" height="150" rx="18"/><rect x="220" y="120" width="160" height="150" rx="18"/><rect x="405" y="120" width="160" height="150" rx="18"/><rect x="590" y="120" width="160" height="150" rx="18"/><rect x="775" y="120" width="150" height="150" rx="18"/></g>
+    <g fill="#dbeafe" font-size="21"><text x="115" y="180">新建项目</text><text x="300" y="180">编辑代码</text><text x="485" y="180">验证</text><text x="670" y="180">沙箱预览</text><text x="850" y="180">构建 ZIP</text></g>
+    <g fill="#8fa6c3" font-size="16"><text x="115" y="225">IndexedDB</text><text x="300" y="225">Monaco + Manifest</text><text x="485" y="225">问题与权限</text><text x="670" y="225">不安装</text><text x="850" y="225">云资料/下载</text></g>
+    <g stroke="#60a5fa" stroke-width="6"><path d="M198 195h18M383 195h18M568 195h18M753 195h18"/></g>
+    <text x="480" y="340" fill="#fbbf24" font-size="20">构建成功 ≠ 审核通过 ≠ 已发布</text>
+  </g></svg>

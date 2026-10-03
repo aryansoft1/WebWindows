@@ -49,7 +49,7 @@ const context = vm.createContext({
       ok: true,
       status: 200,
       async json() {
-        return url === "api/function-catalog.asp"
+        return String(url).split("?")[0] === "api/function-catalog.asp"
           ? staleServerManifest
           : manifest;
       }
@@ -83,8 +83,8 @@ await new Promise((resolve) => setTimeout(resolve, 0));
 await windowObject.WebWindows.apps.launch("webwindows.system.guide");
 
 assert.deepEqual(requests, [
-  "api/function-catalog.asp",
-  "data/apps/system-apps.json"
+  "api/function-catalog.asp?v=20260810.2",
+  "data/apps/system-apps.json?v=20260810.2"
 ]);
 assert.equal(openedWindows.at(-1)[0], "guide");
 assert.equal(openedWindows.at(-1)[2], "guide.html");

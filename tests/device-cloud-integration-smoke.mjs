@@ -16,6 +16,8 @@ const window = {
   window: null,
   parent: null,
   document,
+  addEventListener() {},
+  removeEventListener() {},
   localStorage: { getItem() { return "zh"; } },
   Set,
   Object,
@@ -64,8 +66,8 @@ assert.match(page, /If Not pickerMode Then[\s\S]*device-root-button/);
 assert.match(page, /device-storage-provider\.js/);
 assert.match(page, /device-locations\.js/);
 assert.match(styles, /\.device-panel/);
-assert.match(source, /storage\.listVolumes\(\)/);
-assert.match(source, /storage\.pickDirectory\(/);
+assert.match(source, /storageApi\.listVolumes\(\)/);
+assert.match(source, /capabilities\.directoryPicker\?\.supported === true && capabilities\.read\?\.supported === true/);
 assert.match(source, /storage\.listDirectory\(/);
 assert.match(source, /storage\.openFile\(/);
 assert.match(source, /global\.parent\.openResource\(resource\)/);

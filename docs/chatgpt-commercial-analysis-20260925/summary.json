@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-09-25",
+  "product": {
+    "name": "WebWindows",
+    "company": "成都亚原软件有限公司",
+    "category": [
+      "browser desktop",
+      "web application platform",
+      "cloud workspace",
+      "developer platform"
+    ],
+    "positioningBoundary": "A modular browser desktop and application platform; not yet a complete replacement for a host operating system."
+  },
+  "sourceState": {
+    "branch": "codex/WebWindows-开发者工具",
+    "commit": "e24292ac288ff5923573442ef1e01b8a86c097c9",
+    "productionRelease": "2026.09.25.28",
+    "catalogVersion": "2026.09.25.28",
+    "originMainIsAncestor": true,
+    "trackedFilesApprox": 1021,
+    "productionRequiredFiles": 262,
+    "mjsTests": 86,
+    "catalogApps": 17
+  },
+  "capabilities": [
+    "multi-window desktop shell and taskbar",
+    "application catalog, lifecycle and file associations",
+    "cloud files, search and resource opening",
+    "Sheet, Write and Slide editors",
+    "Device API and Storage Adapter",
+    "Chinese, Traditional Chinese, Japanese and English localization",
+    "Developer Studio, manifests, permissions, preview sandbox and capability broker",
+    "DeskTalk, mailbox integration and server-proxied AI",
+    "Wendao navigation, Chinese railway and scoped overseas transit",
+    "admin and developer management surfaces",
+    "versioned FTP deployment manifest, backup and integrity gates"
+  ],
+  "candidateSegmentsToValidate": [
+    "branded cloud workspace for SMEs and trade teams",
+    "education and training browser workspaces",
+    "desktop packaging platform for web application developers",
+    "private deployment and white-label portals",
+    "specialized China-Japan business workspace"
+  ],
+  "factsNotToOverclaim": [
+    "No customer, revenue, retention or market-share data is provided.",
+    "Real host device control requires a trusted native shell.",
+    "Shinkansen and global long-distance schedules lack a confirmed long-term reliable data license.",
+    "The Rome2Rio provider is a disabled integration slot, not an available production feature.",
+    "Running train positions are primarily schedule and route estimates, not guaranteed real-time GPS.",
+    "Some production database and security rollout work remains manual or pending."
+  ],
+  "majorRisks": [
+    "product scope is too broad for an early team",
+    "legacy and modern architectures coexist",
+    "third-party data and API licensing can dominate cost and reliability",
+    "FTP and IIS production operations still include manual steps",
+    "historic credentials require rotation",
+    "market demand and willingness to pay remain unvalidated"
+  ],
+  "recommendedAnalysisLens": "Find the smallest sellable product slice and validate paying users before expanding the general-purpose Web OS vision."
+}

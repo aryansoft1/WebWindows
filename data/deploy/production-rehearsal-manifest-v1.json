@@ -1,0 +1,430 @@
+{
+  "contract": "webwindows-production-rehearsal-manifest-v1",
+  "version": 1,
+  "sourceBaselineCommit": "0a5ff3e64133ea01fb2738d7cc36af231b88d199",
+  "featureGate": {
+    "path": "data/config/runtime-features-v1.json",
+    "key": "productionCapabilityBrokerV1",
+    "requiredValue": false
+  },
+  "deployment": {
+    "targetKind": "production-like-staging",
+    "siteRootAuthority": "operator-supplied",
+    "deployableWithoutTargetEvidence": false
+  },
+  "artifacts": [
+    {
+      "path": ".gitattributes",
+      "target": "operator-bundle:/.gitattributes",
+      "role": "deployment-contract",
+      "bytes": 370,
+      "sha256": "cd06e0d8782ef8988db9a09fd7586ba9e8c59e961393c0c613aa19f02398fbc7"
+    },
+    {
+      "path": "web.config",
+      "target": "site-root:/web.config",
+      "role": "host",
+      "bytes": 3534,
+      "sha256": "8c87d8200ce804df0500b94f8a1a451ecaa8d142c2feb8b0c667084369c0f35a"
+    },
+    {
+      "path": "SystemManager/login.html",
+      "target": "site-root:/SystemManager/login.html",
+      "role": "admin-security",
+      "bytes": 1626,
+      "sha256": "d0d0b58a7d23545b2b99f4ff12ceba178bfb847075dcd846c5744828a143304e"
+    },
+    {
+      "path": "SystemManager/assets/js/admin-security.js",
+      "target": "site-root:/SystemManager/assets/js/admin-security.js",
+      "role": "admin-security",
+      "bytes": 1422,
+      "sha256": "1e5aebf0095af136205fdf446f5c77567fc94c5a13d48269889e6b6b3c12c140"
+    },
+    {
+      "path": "SystemManager/visitor-analytics.html",
+      "target": "site-root:/SystemManager/visitor-analytics.html",
+      "role": "admin-ui",
+      "bytes": 4206,
+      "sha256": "66776461785ea5aad2a45b530bf23458a4f64dd4c43f890d2b9414ad005bdc07"
+    },
+    {
+      "path": "SystemManager/assets/js/visitor-analytics.js",
+      "target": "site-root:/SystemManager/assets/js/visitor-analytics.js",
+      "role": "admin-ui",
+      "bytes": 6681,
+      "sha256": "4e311cbdd900f0ba685f19f73e3386a7579e2123c8ac485215a079bcd8633b60"
+    },
+    {
+      "path": "inc/admin-security.asp",
+      "target": "site-root:/inc/admin-security.asp",
+      "role": "admin-security",
+      "bytes": 10648,
+      "sha256": "29862e816d9765bc842a28a23e06dc353e2cd64059cd44013a2a6b8d959bf5b5"
+    },
+    {
+      "path": "inc/conn.asp",
+      "target": "site-root:/inc/conn.asp",
+      "role": "host-config",
+      "bytes": 1423,
+      "sha256": "733abe5dc3f1d28c2051a443321e7ccbdc29e0d21f0d876191c568a7fdb9e405"
+    },
+    {
+      "path": "inc/trust-schema.asp",
+      "target": "site-root:/inc/trust-schema.asp",
+      "role": "host-config",
+      "bytes": 902,
+      "sha256": "5a525e4edf83a3710a5f3d1794735884aca8d3148a6cef5a03878782733c571e"
+    },
+    {
+      "path": "inc/validator-deployment-config.asp",
+      "target": "site-root:/inc/validator-deployment-config.asp",
+      "role": "host-config",
+      "bytes": 3515,
+      "sha256": "0a70ab12e946cc5f51916ada05518d3e6dbb148cae940f510138b46814a3013e"
+    },
+    {
+      "path": "admin_api/adminAuth.asp",
+      "target": "site-root:/admin_api/adminAuth.asp",
+      "role": "admin-api",
+      "bytes": 6434,
+      "sha256": "09fbfd68fa4b775186afa3b4b3e6bfcd4f66e56f71030afae2e7b19d35dd144d"
+    },
+    {
+      "path": "admin_api/developerPlatform.asp",
+      "target": "site-root:/admin_api/developerPlatform.asp",
+      "role": "admin-api",
+      "bytes": 44959,
+      "sha256": "d7e40c261a6d3aca900ef269c600e721b8771cdf2a178501d5a0066ac368b8b1"
+    },
+    {
+      "path": "admin_api/functionCatalog.asp",
+      "target": "site-root:/admin_api/functionCatalog.asp",
+      "role": "admin-api",
+      "bytes": 8333,
+      "sha256": "e2a2886006f3b147247e01741a83ee1b22a600b6216f7a5add7c79e010c9a586"
+    },
+    {
+      "path": "admin_api/developerPackage.asp",
+      "target": "site-root:/admin_api/developerPackage.asp",
+      "role": "admin-api",
+      "bytes": 2146,
+      "sha256": "4e711b7f13125ae7f9eecd3d694321529a15984daaff8e3d057cd5c989b16bcf"
+    },
+    {
+      "path": "admin_api/visitorAnalytics.asp",
+      "target": "site-root:/admin_api/visitorAnalytics.asp",
+      "role": "admin-api",
+      "bytes": 8418,
+      "sha256": "c78661bbbee9ec46419d4ea410542548a504200ed0eff006ac6c4cad6c2d7cba"
+    },
+    {
+      "path": "developer_api/v1.asp",
+      "target": "site-root:/developer_api/v1.asp",
+      "role": "developer-api",
+      "bytes": 28946,
+      "sha256": "70197fbe6a10c58f6afe89ddb5ca8c2486ea3ae5b34003ef3f3f764ad7a98d44"
+    },
+    {
+      "path": "api/runtime-release.asp",
+      "target": "site-root:/api/runtime-release.asp",
+      "role": "runtime-api",
+      "bytes": 6894,
+      "sha256": "8b43b2fb4884daa6d666549f9bec8f19eeb114825d669b0bd6cb015d954887b5"
+    },
+    {
+      "path": "api/function-package.asp",
+      "target": "site-root:/api/function-package.asp",
+      "role": "runtime-api",
+      "bytes": 5584,
+      "sha256": "25e7a962665b2899897d06cc829b6f9bfaa4e7b67caca704758d95b2dea13703"
+    },
+    {
+      "path": "api/function-catalog.asp",
+      "target": "site-root:/api/function-catalog.asp",
+      "role": "runtime-api",
+      "bytes": 10181,
+      "sha256": "e2085137dee5ef3d823db550f635bf92baa3ca8b3b04e657f272d255365321ea"
+    },
+    {
+      "path": "api/visitor-analytics.asp",
+      "target": "site-root:/api/visitor-analytics.asp",
+      "role": "runtime-api",
+      "bytes": 11514,
+      "sha256": "939d4b2eeff12d6a2ebc0fc5519a677b1e377626204a62a7e28f4a2bd1b87500"
+    },
+    {
+      "path": "assets/js/visitor-analytics.js",
+      "target": "site-root:/assets/js/visitor-analytics.js",
+      "role": "runtime",
+      "bytes": 5617,
+      "sha256": "5bf591c966efe2d175cc30f29d73e8d9dd14fa634743d9f2e55d37eefb8e99ee"
+    },
+    {
+      "path": "package-runtime.html",
+      "target": "site-root:/package-runtime.html",
+      "role": "runtime",
+      "bytes": 1430,
+      "sha256": "8402a4ba51145b3550bc3a99805af25a554da39d8d051874a7fc88e18ea63b9b"
+    },
+    {
+      "path": "assets/css/package-runtime.css",
+      "target": "site-root:/assets/css/package-runtime.css",
+      "role": "runtime",
+      "bytes": 921,
+      "sha256": "e472072499f2c74c318622aef140365dbbdd97c77c4bc608337c4913751fdd4b"
+    },
+    {
+      "path": "assets/js/package-runtime.js",
+      "target": "site-root:/assets/js/package-runtime.js",
+      "role": "runtime",
+      "bytes": 31366,
+      "sha256": "e8101b84264400e046b60c33f22b4302887ec10a25a5ac050b807d8b74d30513"
+    },
+    {
+      "path": "dist-production-broker/production-battery-broker.global.js",
+      "target": "site-root:/dist-production-broker/production-battery-broker.global.js",
+      "role": "runtime",
+      "bytes": 65341,
+      "sha256": "224ed27b85e1fc48ac1058a8267d0a2e6b94af6205fb61e2b3919915ec2d410d"
+    },
+    {
+      "path": "data/config/runtime-features-v1.json",
+      "target": "site-root:/data/config/runtime-features-v1.json",
+      "role": "configuration",
+      "bytes": 225,
+      "sha256": "285653d2742b6c8c13d3088d4fe2a83429d628b77a033c744fd11e9ffa480296"
+    },
+    {
+      "path": "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe",
+      "target": "trusted-validator:/WebWindows.DeveloperPackageValidator.exe",
+      "role": "validator",
+      "bytes": 32256,
+      "sha256": "b4e566d57c58870a68374c5dee228d1e097e421284ed5f3331bec8172b4c32b5"
+    },
+    {
+      "path": "server-tools/developer-package-validator/runtime/WebWindows.DeveloperPackageValidator.exe.config",
+      "target": "trusted-validator:/WebWindows.DeveloperPackageValidator.exe.config",
+      "role": "validator",
+      "bytes": 176,
+      "sha256": "8305f905b29a9202d59bc06753ac1acc00b3b4c8b951d820ca7ac850e7a4f7cc"
+    },
+    {
+      "path": "data/sdk/capability-broker-errors-v1.json",
+      "target": "site-root:/data/sdk/capability-broker-errors-v1.json",
+      "role": "sdk",
+      "bytes": 3147,
+      "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1"
+    },
+    {
+      "path": "data/sdk/capability-broker-methods-v1.json",
+      "target": "site-root:/data/sdk/capability-broker-methods-v1.json",
+      "role": "sdk",
+      "bytes": 3542,
+      "sha256": "c77b1e204e1f46e59a96e31e4b55157b3a1c41f36bc3ebd9f6944606c18a2b63"
+    },
+    {
+      "path": "data/sdk/capability-broker-policy-v1.json",
+      "target": "site-root:/data/sdk/capability-broker-policy-v1.json",
+      "role": "sdk",
+      "bytes": 4235,
+      "sha256": "1ad1b6e63fee05a9cbd481bb7d45f053abb41742afb554aabc8c7111d0f0af6b"
+    },
+    {
+      "path": "data/sdk/capability-broker-v1.schema.json",
+      "target": "site-root:/data/sdk/capability-broker-v1.schema.json",
+      "role": "sdk",
+      "bytes": 10279,
+      "sha256": "474c140b0e29db636315cd5fbe2753bc92a3a31ddee8a13f34066eeadde372c9"
+    },
+    {
+      "path": "data/sdk/catalog-release-binding-v1.json",
+      "target": "site-root:/data/sdk/catalog-release-binding-v1.json",
+      "role": "sdk",
+      "bytes": 2037,
+      "sha256": "791d467411d3333082a338434ec604904268cfad55c99cbdf5715b171546065c"
+    },
+    {
+      "path": "data/sdk/manifest-v1.schema.json",
+      "target": "site-root:/data/sdk/manifest-v1.schema.json",
+      "role": "sdk",
+      "bytes": 7419,
+      "sha256": "7ac345bdd704d0fcaa07b88ef1985aa363c6ece8a47fa0baa9709f618fef068a"
+    },
+    {
+      "path": "data/sdk/manifest-v2.schema.json",
+      "target": "site-root:/data/sdk/manifest-v2.schema.json",
+      "role": "sdk",
+      "bytes": 7864,
+      "sha256": "26eecc0326dc7cf99dd68d11612b16f7a4907e38afba807d7a086c3fd3713cc2"
+    },
+    {
+      "path": "data/sdk/package-runtime-policy-v1.json",
+      "target": "site-root:/data/sdk/package-runtime-policy-v1.json",
+      "role": "sdk",
+      "bytes": 860,
+      "sha256": "f2f2eb104903169bc6312370caf8406a1cd1dace862090da870bd249552de0d9"
+    },
+    {
+      "path": "data/sdk/permission-decision-v1.json",
+      "target": "site-root:/data/sdk/permission-decision-v1.json",
+      "role": "sdk",
+      "bytes": 3054,
+      "sha256": "3e9829365f307c7c49817eabb77b2b0e441a3a748e829375276405c2462674b6"
+    },
+    {
+      "path": "data/sdk/permissions-v1.json",
+      "target": "site-root:/data/sdk/permissions-v1.json",
+      "role": "sdk",
+      "bytes": 5540,
+      "sha256": "293b1cb84989cdf5890d554a5733365fbeef13fc21e96fff51d41495925d7f86"
+    },
+    {
+      "path": "data/sdk/persistent-grant-v1.json",
+      "target": "site-root:/data/sdk/persistent-grant-v1.json",
+      "role": "sdk",
+      "bytes": 2271,
+      "sha256": "e303632549666a55111177c1629dc104acf802da5c09e6a65ae332b9f737e11a"
+    },
+    {
+      "path": "data/sdk/production-broker-context-v1.json",
+      "target": "site-root:/data/sdk/production-broker-context-v1.json",
+      "role": "sdk",
+      "bytes": 3131,
+      "sha256": "fe2ed739b37e304c93e6b9576a5ba72e11e1e8bd6193cf4dcfb05dbcea8ba24a"
+    },
+    {
+      "path": "data/sdk/published-app-identity-v1.json",
+      "target": "site-root:/data/sdk/published-app-identity-v1.json",
+      "role": "sdk",
+      "bytes": 4212,
+      "sha256": "9ff6a0cf78f4a1c277828834c43e8c8683b61e00020750bd081bc2db6e278732"
+    },
+    {
+      "path": "data/sdk/published-release-v1.json",
+      "target": "site-root:/data/sdk/published-release-v1.json",
+      "role": "sdk",
+      "bytes": 1449,
+      "sha256": "fefbd3395f760e731d9b65177a5980545818d4f274d658934754d4833b94928d"
+    },
+    {
+      "path": "data/sdk/review-decision-v1.json",
+      "target": "site-root:/data/sdk/review-decision-v1.json",
+      "role": "sdk",
+      "bytes": 3427,
+      "sha256": "66f0e5b0070ed1296e4cfd14c5ac76af6be19b8d3b26b425457fed71f4d44ae7"
+    },
+    {
+      "path": "data/sdk/runtime-compatibility-v1.json",
+      "target": "site-root:/data/sdk/runtime-compatibility-v1.json",
+      "role": "sdk",
+      "bytes": 6173,
+      "sha256": "c1e6e5274d034432e8ae1a4ed435e91f3e05d7537e60513228b2d48968bcdb3e"
+    },
+    {
+      "path": "data/sdk/server-validation-report-v1.json",
+      "target": "site-root:/data/sdk/server-validation-report-v1.json",
+      "role": "sdk",
+      "bytes": 1481,
+      "sha256": "aeaf013837af60f83da726f8c200c55b2273b17155b8d44fc91e273de6f6cafe"
+    },
+    {
+      "path": "data/sdk/source-manifest-integrity-v1.json",
+      "target": "site-root:/data/sdk/source-manifest-integrity-v1.json",
+      "role": "sdk",
+      "bytes": 1782,
+      "sha256": "e521047cfd043a98d110a2486fab5354996eb55891b10af0dbd1f4b876577c96"
+    },
+    {
+      "path": "data/sdk/studio-validator-rules-v1.json",
+      "target": "site-root:/data/sdk/studio-validator-rules-v1.json",
+      "role": "sdk",
+      "bytes": 4111,
+      "sha256": "37d5aebb7d4f1f17cdc08e53fecd591413c182d3871bee801a356ffa1ed477b7"
+    },
+    {
+      "path": "data/sdk/verified-runtime-package-identity-v1.json",
+      "target": "site-root:/data/sdk/verified-runtime-package-identity-v1.json",
+      "role": "sdk",
+      "bytes": 1855,
+      "sha256": "e361c2ae321e73bb2354971dfbde7c27b60182d2df9f6ce8a280b0d917e6cf33"
+    },
+    {
+      "path": "data/sdk/webwindows-public-api-v1.d.ts",
+      "target": "site-root:/data/sdk/webwindows-public-api-v1.d.ts",
+      "role": "sdk",
+      "bytes": 9307,
+      "sha256": "7a519d574177c7bfae5ad24a0da1a95d23a2b742a45995d80691ea99c77b2e89"
+    },
+    {
+      "path": "database/migrations/001_webwindows_trust_schema.sql",
+      "target": "operator-bundle:/database/migrations/001_webwindows_trust_schema.sql",
+      "role": "database-migration",
+      "bytes": 11405,
+      "sha256": "6cab4f9a9107f03bd6f9dd87ce0a45c0a7a506dc43d339a83d0266008e73b7a9"
+    },
+    {
+      "path": "database/migrations/002_webwindows_visitor_analytics.sql",
+      "target": "operator-bundle:/database/migrations/002_webwindows_visitor_analytics.sql",
+      "role": "database-migration",
+      "bytes": 2403,
+      "sha256": "3f464e86234f3e333e3f934d46587b32d524af2602d14dd9908b1577c06ccc70"
+    },
+    {
+      "path": "database/migrations/verify_webwindows_trust_schema.sql",
+      "target": "operator-bundle:/database/migrations/verify_webwindows_trust_schema.sql",
+      "role": "database-migration",
+      "bytes": 2885,
+      "sha256": "15759d9c2735b61bbf6d0d66d32a67474e4c15fd03fff0e321c9b8e0e00e5ef0"
+    },
+    {
+      "path": "data/deploy/production-environment-config-v1.json",
+      "target": "operator-bundle:/data/deploy/production-environment-config-v1.json",
+      "role": "deployment-contract",
+      "bytes": 2465,
+      "sha256": "ae62773751a7c176e82155eadbf72ccc0f4e856aa939858063c2e09e2f26c159"
+    },
+    {
+      "path": "tools/Invoke-WebWindowsTrustMigration.ps1",
+      "target": "operator-bundle:/tools/Invoke-WebWindowsTrustMigration.ps1",
+      "role": "deployment-tool",
+      "bytes": 3553,
+      "sha256": "48c4635f769ad78dad2533aff021791adeeeed7841c8bccc27344d11bf6b16a1"
+    },
+    {
+      "path": "tools/Backup-WebWindowsTrustDatabase.ps1",
+      "target": "operator-bundle:/tools/Backup-WebWindowsTrustDatabase.ps1",
+      "role": "deployment-tool",
+      "bytes": 1620,
+      "sha256": "13b577394bc4b1001a0c3e9f7f04999685a99efe9f5c0e88a669282efe00fe45"
+    },
+    {
+      "path": "tools/Restore-WebWindowsTrustDatabase.ps1",
+      "target": "operator-bundle:/tools/Restore-WebWindowsTrustDatabase.ps1",
+      "role": "deployment-tool",
+      "bytes": 1341,
+      "sha256": "f08651d4be8f3ba6c484d83d323ad0302a706e6b22ef1a7719f89911ef2ce799"
+    },
+    {
+      "path": "tools/Test-WebWindowsArtifactDeployment.ps1",
+      "target": "operator-bundle:/tools/Test-WebWindowsArtifactDeployment.ps1",
+      "role": "deployment-tool",
+      "bytes": 2251,
+      "sha256": "f1fbf0d7d250c6f836addad0e7db91f4a67767a9db46fbe7fba1934053d8aa4f"
+    },
+    {
+      "path": "tools/Test-WebWindowsValidatorDeployment.ps1",
+      "target": "operator-bundle:/tools/Test-WebWindowsValidatorDeployment.ps1",
+      "role": "deployment-tool",
+      "bytes": 2786,
+      "sha256": "952a3cfdd3855662dbc215b6421b0837fe91252d8e8931301b95c22b1608f9b5"
+    },
+    {
+      "path": "tools/Test-WebWindowsStagingHttp.ps1",
+      "target": "operator-bundle:/tools/Test-WebWindowsStagingHttp.ps1",
+      "role": "deployment-tool",
+      "bytes": 2719,
+      "sha256": "b9b2d7970c07d7366683e411603f57aab82fefc68061ac8d0e111c03601f07ae"
+    }
+  ]
+}

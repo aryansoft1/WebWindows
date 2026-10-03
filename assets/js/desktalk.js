@@ -1070,9 +1070,14 @@ try{
   var __hb = function(){
     var me = (typeof getProfile === 'function') ? getProfile() : null;
     if(!me) return;
-    // 仅用稳定 ID 识别用户；昵称仅作展示（可选）
-    fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(me.name), 
-         { credentials: 'omit', cache: 'no-store', headers: { 'Accept': 'application/json' }});
+    // 必须发布稳定账号 ID：服务端以 Session("webwindows_user_id") 为权威，
+    // 无会话时只接受 guest_ 前缀的 ID，昵称（me.name）会被直接丢弃。
+    // 同时必须带上同源会话 Cookie，否则登录用户永远不会被写入 presence。
+    var pid = String(me.id || '');
+    if(!pid) return;
+    fetch('/api/dt_presence_mem.asp?u=' + encodeURIComponent(pid)
+         + '&name=' + encodeURIComponent(me.name || pid),
+         { credentials: 'include', cache: 'no-store', headers: { 'Accept': 'application/json' }});
   };
   __hb(); setInterval(__hb, 30000);
 }catch(e){}
@@ -1162,10 +1167,10 @@ function saveReadPtr(){ localStorage.setItem(READPTR_KEY, JSON.stringify(READ_PT
 function getConvPtr(convId){ return Number(READ_PTR[convId] || 0) || 0; }
 function setConvPtr(convId, sec){ READ_PTR[convId] = Math.max(getConvPtr(convId), Number(sec)||0); saveReadPtr(); }
 
-/* ===== AI（BigModel OpenAI 兼容接口） ===== */
+/* ===== AI（Groq OpenAI 兼容接口） ===== */
 var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
   var AI_API_URL = '/cloud/desktalk/chatproxy.asp';
-  var AI_MODEL   = 'glm-4.7-flash';
+  var AI_MODEL   = 'openai/gpt-oss-120b';
   var AI_RETRY_DELAYS = [2500, 6000, 12000];
   var AI_HISTORY_LIMIT = 16;
   var aiHistory  = [];
@@ -1222,6 +1227,9 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
     if(status === 401 || code === '1000' || code === '1001' || code === '1003'){
       return '桌讯 AI 的服务凭据暂时不可用，请稍后再试。';
     }
+    if(status === 413){
+      return '对话内容或本次问题过长，已超出模型单次处理上限。我已重置对话上下文，请重新发送。';
+    }
     if(status >= 500){
       return '桌讯 AI 服务暂时不可用，请稍后再试。';
     }
@@ -1244,6 +1252,11 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
       });
     }).then(function(result){
       if(result.ok) return result.data;
+      if(result.status === 413){
+        // 单次请求超出上游 token 上限时重试无意义；清空历史，避免同一条
+        // 超长内容在后续每一条消息上继续触发 413。
+        aiHistory = [];
+      }
       if(isRetryableAIError(result.status, result.data) && attempt < AI_RETRY_DELAYS.length){
         var waitMs = AI_RETRY_DELAYS[attempt];
         if(aiSend) aiSend.textContent = '模型繁忙，' + Math.ceil(waitMs / 1000) + ' 秒后重试…';
@@ -1262,7 +1275,7 @@ var aiBody=$('#ai-body'), aiInput=$('#ai-input'), aiSend=$('#ai-send');
       if(Array.isArray(data)) return data.map(extractAIText).join('\n');
       if(data.choices && data.choices.length){
         var c=data.choices[0];
-        if(c.message && typeof c.message.content==='string') return c.message.content;
+        if(c.message && typeof c.message.content==='string') return c.message.content || '(空响应)';
         if(typeof c.text==='string') return c.text;
         if(c.delta && c.delta.content) return c.delta.content;
       }
@@ -1331,8 +1344,8 @@ function sendAI(){
     model: AI_MODEL,
     messages: [runtimeContextMessage()].concat(aiHistory),
     temperature: 0.6,
-    max_tokens: 1200,
-    thinking: { type:'disabled' },
+    max_completion_tokens: 1200,
+    reasoning_effort: 'low',
     stream: false
   };
   requestAI(payload, 0).then(function(data){
@@ -1349,6 +1362,46 @@ function sendAI(){
     if(aiSend){ aiSend.disabled=false; aiSend.textContent = oldTxt || '发送'; }
   });
 }
+
+// “问道”只在用户主动点击“问桌讯”后调用这里。接口刻意不接受坐标，
+// 避免导航页把精确位置或连续移动轨迹带入 AI 对话。
+window.WebWindowsDeskTalk = Object.freeze({
+  askTravelAdvice: function(context){
+    var data = context && typeof context === 'object' ? context : {};
+    var clean = function(value, fallback){
+      var text = typeof value === 'string' ? value.trim().replace(/[\r\n\t]+/g, ' ') : '';
+      return (text || fallback).slice(0, 120);
+    };
+    var modeNames = { driving:'驾车', transit:'公共交通', walking:'步行', cycling:'骑行' };
+    var distance = Number(data.distanceMeters);
+    var duration = Number(data.durationSeconds);
+    if (!Number.isFinite(distance) || distance < 0 || !Number.isFinite(duration) || duration < 0) return false;
+    var costs = data.costs && typeof data.costs === 'object' ? data.costs : {};
+    var money = function(value){
+      if (value === null || value === undefined || value === '') return '未提供';
+      var amount = Number(value);
+      if (!Number.isFinite(amount) || amount < 0) return '未提供';
+      return clean(costs.currency, 'CNY') + ' ' + amount.toFixed(0);
+    };
+    var prompt = [
+      '请根据以下“问道”路线提供简洁、实用的出行建议。请提示时间安排、安全、天气或换乘注意事项；费用未知时不要猜测。',
+      '起点：' + clean(data.start, '当前位置'),
+      '终点：' + clean(data.destination, '目的地'),
+      '方式：' + (modeNames[data.mode] || '出行'),
+      '距离：' + (distance / 1000).toFixed(1) + ' 公里',
+      '预计耗时：' + Math.max(1, Math.round(duration / 60)) + ' 分钟',
+      '高速/通行费：' + money(costs.toll),
+      'IC 卡费用：' + money(costs.icCard),
+      '现金费用：' + money(costs.cash),
+      data.estimated ? '备注：当前路线或费用含估算，请明确提醒用户复核。' : ''
+    ].filter(Boolean).join('\n');
+    openPanel('ai');
+    if (!aiInput) return false;
+    aiInput.value = prompt;
+    sendAI();
+    return true;
+  }
+});
 
 /* ===== 模拟来消息 ===== */if(false){
 
@@ -1423,9 +1476,10 @@ async function fetchPresenceList(){
   try{
     // 1) 防缓存：cache:no-store + 时间戳参数
     var me  = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
-    var url = '/api/dt_presence_mem.asp?list=1&_=' + Date.now();
+    // 带上自己的 ID：服务端会回显 me，且同源会话 Cookie 必须发送（与心跳保持一致）
+    var url = '/api/dt_presence_mem.asp?list=1&u=' + encodeURIComponent(me.id || '') + '&_=' + Date.now();
     var r = await fetch(url, {
-      credentials: 'omit',     // 你现在的服务端允许 omit 也行，但 include 更不易被代理公用缓存复用
+      credentials: 'include',
       cache: 'no-store'
     });
 
@@ -1465,9 +1519,30 @@ async function fetchPresenceList(){
       p.last   = online ? '在线'  : Math.max(1, Math.round((nowSec - tsSec)/60)) + ' 分钟前';
     }
 
+    migrateLegacyFriendIds();
     renderAll();  // 刷 UI
     if (typeof seedInboxTs === 'function') seedInboxTs();
   }catch(e){}
+}
+
+/* 旧版客户端把“昵称”当作好友 ID 存进 localStorage。presence 改用稳定账号 ID 后，
+   这些旧键会失配导致“好友”页空白。这里按“旧键 === 当前在线用户的昵称”精确回键，
+   仅当该昵称在当前在线列表中唯一时才迁移，避免把两个不同的人合并。 */
+function migrateLegacyFriendIds(){
+  if(!friendSet || friendSet.size===0 || !people.length) return;
+  var byName = new Map();
+  people.forEach(function(p){
+    var k = String(p.name||'').trim().toLowerCase();
+    if(!k) return;
+    byName.set(k, byName.has(k) ? null : p);   // 重名 -> null（不迁移）
+  });
+  var moved = false;
+  Array.from(friendSet).forEach(function(oldId){
+    if(people.some(function(p){ return p.id===oldId })) return;  // 已经是稳定 ID
+    var hit = byName.get(String(oldId).trim().toLowerCase());
+    if(hit && hit.id && hit.id!==oldId){ friendSet.delete(oldId); friendSet.add(hit.id); moved = true; }
+  });
+  if(moved) saveFriends();
 }
 
 
@@ -1931,7 +2006,8 @@ function closeSettingsSheet(){
     var row = document.createElement('button');
     row.type = 'button'; row.className = 'mailbox-message'; row.dataset.mailId = message.id;
     row.style.cssText = 'width:100%;text-align:left;padding:8px 2px;border:0;border-bottom:1px solid #eee;background:' +
-      (message.read || folder === 'sent' ? '#fff' : '#f0f8ff') + ';cursor:pointer;font:inherit;';
+      (message.read || folder === 'sent' ? '#fff' : '#f0f8ff') + ';font:inherit;';
+    row.dataset.wwCursor = 'link';
     var title = document.createElement('div');
     title.style.cssText = 'display:flex;gap:8px;justify-content:space-between;font-weight:' + (message.read || folder === 'sent' ? '400' : '700') + ';';
     setText(title.appendChild(document.createElement('span')), folder === 'sent' ? '至 ' + message.to : message.from);
@@ -1968,7 +2044,10 @@ function closeSettingsSheet(){
     addresses.forEach(function(address){
       var row = document.createElement('div'); row.style.cssText = 'padding:7px 0;border-bottom:1px solid #eee;';
       var name = document.createElement('div'); name.style.fontWeight = '600'; setText(name, address.name || address.address); row.appendChild(name);
-      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;'; setText(value, address.address + (address.isDefault ? ' · 默认讯址' : ' · 尚未连接')); row.appendChild(value);
+      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;';
+      var stateText = address.remote ? ' · 已连接' : ' · 尚未连接';
+      if (address.isDefault) stateText += ' · 默认讯址';
+      setText(value, address.address + stateText); row.appendChild(value);
       var controls = document.createElement('div'); controls.style.cssText = 'display:flex;gap:8px;margin-top:5px;';
       if (!address.isDefault) { var setDefault = document.createElement('button'); setDefault.type = 'button'; setDefault.dataset.addressAction = 'default'; setDefault.dataset.addressId = address.id; setText(setDefault, '设为默认'); controls.appendChild(setDefault); }
       var remove = document.createElement('button'); remove.type = 'button'; remove.dataset.addressAction = 'remove'; remove.dataset.addressId = address.id; setText(remove, '移除'); controls.appendChild(remove); row.appendChild(controls); list.appendChild(row);
@@ -2095,7 +2174,17 @@ function closeSettingsSheet(){
     if (addressAction) {
       var addresses = getAddresses();
       if (addressAction.dataset.addressAction === 'default') { addresses.forEach(function(item){ item.isDefault = item.id === addressAction.dataset.addressId; }); saveAddresses(addresses); render(); return; }
-      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){ addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; }); saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render(); }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
+      var selectedAddress = addresses.filter(function(item){ return item.id === addressAction.dataset.addressId; })[0];
+      if (!selectedAddress || !selectedAddress.remote) {
+        addresses = addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; });
+        if (addresses.length && !addresses.some(function(item){ return item.isDefault; })) addresses[0].isDefault = true;
+        saveAddresses(addresses); render(); return;
+      }
+      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){
+        addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; });
+        if (addresses.length && !addresses.some(function(item){ return item.isDefault; })) addresses[0].isDefault = true;
+        saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render();
+      }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
     }
     var refresh = event.target.closest('[data-mail-refresh]');
     if (refresh) { loadRemoteFolder(refresh.dataset.mailRefresh, true); return; }
@@ -2131,7 +2220,7 @@ function closeSettingsSheet(){
     if (!password) { status.style.color = '#b42318'; setText(status, '请输入邮箱授权码。'); return; }
     status.style.color = '#667085'; setText(status, '正在加密保存并验证收信连接…');
     mailCenter('account-save', { provider:provider, displayName:name || address, email:address, appPassword:password })
-      .then(function(){ saved = true; return loadRemoteAccounts(); })
+      .then(function(){ saved = true; return loadRemoteAccounts(true); })
       .then(function(accounts){ var account=accounts.filter(function(a){return a.address===address;})[0]; if(!account) throw new Error('讯址保存后无法读取'); return mailCenter('test-mailbox',{accountId:account.id}); })
       .then(function(result){ addressForm.reset(); status.style.color='#067647'; setText(status,'讯址已加密保存，收信连接验证通过（当前 ' + result.messageCount + ' 封）。'); render(); })
       .catch(function(error){ status.style.color='#b42318'; setText(status,(saved ? '讯址已保存，但连接验证失败：' : '讯址未保存：') + error.message + (saved ? '。可检查授权码与服务商 IMAP 设置后重新保存。' : '')); });

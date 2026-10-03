@@ -8,6 +8,29 @@
     return window.WebWindows?.apps || null;
   }
 
+  const STATIC_HIDDEN_KEY = "webwindows.desktop.hiddenIcons";
+
+  function readStaticHidden() {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(STATIC_HIDDEN_KEY) || "[]");
+      return Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : [];
+    } catch (_) {
+      return [];
+    }
+  }
+
+  function applyStaticHidden(host) {
+    const hidden = new Set(readStaticHidden());
+    host.querySelectorAll('.icon[id]:not([data-function-id])').forEach((element) => {
+      if (hidden.has(element.id)) element.style.display = "none";
+      else if (element.style.display === "none" && !element.classList.contains("function-desktop-icon")) {
+        // 恢复时按新图标追加到末尾（原格子可能已被自动排列分给别人）
+        if (typeof window.reinsertDesktopIcon === "function") window.reinsertDesktopIcon(element);
+        else element.style.display = "";
+      }
+    });
+  }
+
   function desktop() {
     return document.querySelector(".desktop");
   }
@@ -130,9 +153,13 @@
         placeInFreeDesktopSlot(element, host);
       }
       if (element) {
+        const wasHidden = element.style.display === "none";
         element.style.display = visible ? "" : "none";
         element.setAttribute("aria-hidden", visible ? "false" : "true");
-        if (visible && element.classList.contains("function-desktop-icon") &&
+        if (visible && wasHidden && typeof window.reinsertDesktopIcon === "function") {
+          // 注册表图标恢复显示：同样追加到末尾，避免与原格子的新主人重叠
+          window.reinsertDesktopIcon(element);
+        } else if (visible && element.classList.contains("function-desktop-icon") &&
             !element.dataset.wwGridSlot) {
           placeInFreeDesktopSlot(element, host);
         }
@@ -143,6 +170,9 @@
       .forEach((element) => {
         if (!knownIds.has(element.dataset.functionId)) element.remove();
       });
+
+    // 图标右键“隐藏图标”：静态图标按本地隐藏表应用
+    applyStaticHidden(host);
   }
 
   window.WebWindows = window.WebWindows || {};
@@ -152,6 +182,12 @@
     refresh().catch((error) => {
       console.error("[DesktopFunctions] 桌面功能状态刷新失败。", error);
     });
+  });
+
+  window.addEventListener("storage", (event) => {
+    if (event.key !== STATIC_HIDDEN_KEY) return;
+    const host = desktop();
+    if (host) applyStaticHidden(host);
   });
 
   if (document.readyState === "loading") {

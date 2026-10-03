@@ -18,6 +18,7 @@ const desktopIconCleanup = []
 let desktopLayoutResizeTimer = null
 let desktopLayoutObserver = null
 let desktopIconObserver = null
+let desktopSelection = null
 
 function updateWindowViewportMetrics() {
   const viewportHeight = window.visualViewport?.height || window.innerHeight
@@ -187,6 +188,39 @@ function autoArrangeDesktopIcons() {
   normalizeDesktopIconLayout(true, true)
 }
 
+/* 图标恢复专用：删掉原格子占用，按“新图标”追加到当前布局末尾。
+ * 隐藏 → 自动排列 → 再显示时，原位置大概率已有图标，直接恢复必然重叠。 */
+function reinsertDesktopIcon(el) {
+  const desktop = document.querySelector('.desktop')
+  if (!desktop || !el || !el.isConnected) return false
+  try {
+    el.style.display = ''
+    delete el.dataset.wwGridSlot
+    const positions = readIconPositions()
+    if (el.id) delete positions[el.id]
+    const grid = getDesktopGrid(desktop)
+    const occupied = new Set()
+    grid.icons.forEach(other => {
+      if (other === el) return
+      const slot = Number(other.dataset.wwGridSlot)
+      if (Number.isFinite(slot)) occupied.add(slot)
+    })
+    // 顺着排列顺序找第一个空格：原格子空着就回原位，
+    // 被占了就跟在当前队尾后面（Windows 式从上到下、从左到右）。
+    // 之前倒着找会掉到最后一列底部，在宽屏上变成右下角孤岛。
+    let slot = 0
+    while (slot < grid.slotCount && occupied.has(slot)) slot += 1
+    if (slot >= grid.slotCount || occupied.has(slot)) {
+      slot = findNearestFreeSlot(grid.slotCount - 1, occupied, grid) ?? 0
+    }
+    applyIconSlot(el, slot, grid, positions)
+    writeIconPositions(positions)
+    return true
+  } catch (_) {
+    return false
+  }
+}
+
 function updateIconPositionState(id, x, y, options = {}) {
   if (!id || !Number.isFinite(x) || !Number.isFinite(y)) return
   if (options.userInitiated !== true && !hasSavedIconPositions()) return
@@ -239,6 +273,16 @@ document.addEventListener("DOMContentLoaded", () => {
 function makeDesktopIconsDraggable() {
   const desktop = document.querySelector('.desktop')
   if (!desktop) return
+  if (!desktopSelection && window.WebWindowsFileSelection) {
+    desktopSelection = window.WebWindowsFileSelection.create({
+      container: desktop,
+      itemSelector: '.desktop > .icon[id]',
+      isSelectable: icon => icon.parentElement === desktop && getComputedStyle(icon).display !== 'none',
+      isSurface: target => target === desktop,
+      capture: true,
+      openOnDoubleClick: true
+    })
+  }
 
   const icons = Array.from(desktop.querySelectorAll('.icon[id]'))
   icons.forEach(icon => {
@@ -257,6 +301,7 @@ function makeDesktopIconsDraggable() {
     let startSlot = null
     let dragging = false
     let suppressClickUntil = 0
+    let group = []
 
     const finishDrag = (event) => {
       if (pointerId == null) return
@@ -270,6 +315,34 @@ function makeDesktopIconsDraggable() {
 
       if (dragging) {
         const grid = getDesktopGrid(desktop)
+        const cancelled = event?.type === 'pointercancel' || event?.type === 'blur'
+        if (cancelled) {
+          group.forEach(entry => {
+            entry.icon.style.left = `${entry.x}px`
+            entry.icon.style.top = `${entry.y}px`
+            entry.icon.style.zIndex = ''
+          })
+        } else if (group.length > 1) {
+          const positions = persistCurrentDesktopLayout(desktop)
+          const occupied = new Set()
+          const moving = new Set(group.map(entry => entry.icon))
+          // Reserve the group's snapped cells, then move any displaced icons
+          // into the nearest free cells. Every icon occupies exactly one cell.
+          group.forEach(entry => {
+            const desired = positionToSlot(parseFloat(entry.icon.style.left), parseFloat(entry.icon.style.top), grid)
+            const slot = findNearestFreeSlot(desired, occupied, grid)
+            occupied.add(slot)
+            applyIconSlot(entry.icon, slot, grid, positions)
+          })
+          const stationary = grid.icons.filter(other => !moving.has(other))
+          stationary.sort((a, b) => Number(occupied.has(Number(a.dataset.wwGridSlot))) - Number(occupied.has(Number(b.dataset.wwGridSlot))))
+          stationary.forEach(other => {
+            const slot = findNearestFreeSlot(Number(other.dataset.wwGridSlot), occupied, grid)
+            occupied.add(slot)
+            applyIconSlot(other, slot, grid, positions)
+          })
+          writeIconPositions(positions)
+        } else {
         const desiredSlot = positionToSlot(
           parseFloat(icon.style.left) || grid.originX,
           parseFloat(icon.style.top) || grid.originY,
@@ -302,12 +375,14 @@ function makeDesktopIconsDraggable() {
           applyIconSlot(icon, slot, grid, positions)
         }
         writeIconPositions(positions)
+        }
         suppressClickUntil = Date.now() + 350
       }
 
       dragging = false
       startSlot = null
-      icon.classList.remove('dragging')
+      group.forEach(entry => { entry.icon.classList.remove('dragging'); entry.icon.style.zIndex = '' })
+      group = []
       try {
         if (icon.hasPointerCapture(finishedPointerId)) {
           icon.releasePointerCapture(finishedPointerId)
@@ -317,23 +392,28 @@ function makeDesktopIconsDraggable() {
 
     const moveDrag = (event) => {
       if (event.pointerId !== pointerId) return
-      const deltaX = event.clientX - startClientX
-      const deltaY = event.clientY - startClientY
+      let deltaX = event.clientX - startClientX
+      let deltaY = event.clientY - startClientY
       if (!dragging && Math.hypot(deltaX, deltaY) < ICON_DRAG_THRESHOLD) return
 
       dragging = true
       event.preventDefault()
-      icon.classList.add('dragging')
       const grid = getDesktopGrid(desktop)
       const maxLeft = Math.max(grid.originX, desktop.clientWidth - grid.iconWidth - grid.originX)
       const maxTop = Math.max(grid.originY, desktop.clientHeight - grid.iconHeight - grid.originY)
-      icon.style.left = `${Math.max(grid.originX, Math.min(maxLeft, startLeft + deltaX))}px`
-      icon.style.top = `${Math.max(grid.originY, Math.min(maxTop, startTop + deltaY))}px`
-      icon.style.zIndex = '2'
+      deltaX = Math.max(grid.originX - Math.min(...group.map(entry => entry.x)), Math.min(maxLeft - Math.max(...group.map(entry => entry.x)), deltaX))
+      deltaY = Math.max(grid.originY - Math.min(...group.map(entry => entry.y)), Math.min(maxTop - Math.max(...group.map(entry => entry.y)), deltaY))
+      group.forEach(entry => {
+        entry.icon.classList.add('dragging')
+        entry.icon.style.left = `${entry.x + deltaX}px`
+        entry.icon.style.top = `${entry.y + deltaY}px`
+        entry.icon.style.zIndex = '2'
+      })
     }
 
     const startDrag = (event) => {
       if (isCompactDesktopLayout() || event.button !== 0 || pointerId != null) return
+      if (event.ctrlKey || event.metaKey || event.shiftKey) return
       const desktopRect = desktop.getBoundingClientRect()
       const iconRect = icon.getBoundingClientRect()
       pointerId = event.pointerId
@@ -342,6 +422,11 @@ function makeDesktopIconsDraggable() {
       startLeft = iconRect.left - desktopRect.left + desktop.scrollLeft
       startTop = iconRect.top - desktopRect.top + desktop.scrollTop
       startSlot = Number(icon.dataset.wwGridSlot)
+      group = (desktopSelection?.isSelected(icon) ? desktopSelection.selection : [icon]).map(item => ({
+        icon: item,
+        x: parseFloat(item.style.left) || item.offsetLeft,
+        y: parseFloat(item.style.top) || item.offsetTop
+      }))
       dragging = false
       try { icon.setPointerCapture(pointerId) } catch (_) {}
       window.addEventListener('pointermove', moveDrag, true)
@@ -373,6 +458,7 @@ onMounted(() => {
   restoreIconPositions()
   window.updateIconPositionState = updateIconPositionState
   window.autoArrangeDesktopIcons = autoArrangeDesktopIcons
+  window.reinsertDesktopIcon = reinsertDesktopIcon
   makeDesktopIconsDraggable()
   updateWindowViewportMetrics()
   window.addEventListener('resize', handleDesktopLayoutResize)
@@ -407,11 +493,16 @@ onBeforeUnmount(() => {
   desktopIconObserver = null
   clearTimeout(desktopLayoutResizeTimer)
   desktopIconCleanup.splice(0).forEach(cleanup => cleanup())
+  desktopSelection?.destroy()
+  desktopSelection = null
   if (window.updateIconPositionState === updateIconPositionState) {
     delete window.updateIconPositionState
   }
   if (window.autoArrangeDesktopIcons === autoArrangeDesktopIcons) {
     delete window.autoArrangeDesktopIcons
+  }
+  if (window.reinsertDesktopIcon === reinsertDesktopIcon) {
+    delete window.reinsertDesktopIcon
   }
 })
 </script>
@@ -458,7 +549,7 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   margin-left: 8px;
   background: #e81123;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   transition: filter 0.2s;
 }
 
@@ -469,7 +560,73 @@ onBeforeUnmount(() => {
 
 .window {
   will-change: auto;
+  transition: none;
+}
+
+/* 窗口特效（默认开；个性化 → 特效开关可关）。
+ * 拖拽/缩放期间保持无过渡，保证跟手；只有显式动画类才走过渡。 */
+html[data-ww-effects="off"] .window {
   transition: none !important;
+  animation: none !important;
+}
+
+html[data-ww-effects="on"] .window.ww-anim-open {
+  animation: ww-window-in 0.19s cubic-bezier(0.2, 0.9, 0.25, 1.05);
+}
+
+html[data-ww-effects="on"] .window.ww-anim-close {
+  animation: ww-window-out 0.15s ease-in forwards;
+}
+
+html[data-ww-effects="on"] .window.ww-anim-min {
+  animation: ww-window-min 0.16s ease-in forwards;
+  pointer-events: none;
+}
+
+html[data-ww-effects="on"] .window.ww-anim-unmin {
+  animation: ww-window-in 0.18s cubic-bezier(0.2, 0.9, 0.25, 1.05);
+}
+
+html[data-ww-effects="on"] .window.ww-anim-geom {
+  transition: top 0.22s ease, left 0.22s ease, width 0.22s ease, height 0.22s ease;
+}
+
+@keyframes ww-window-in {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes ww-window-out {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.97) translateY(6px); }
+}
+
+@keyframes ww-window-min {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 0; transform: scale(0.9) translateY(28px); }
+}
+
+/* 个性化：毛玻璃强度（默认 10px，与原值一致；设置 → 个性化可调） */
+.window-header {
+  backdrop-filter: blur(var(--ww-acrylic-blur, 10px));
+  -webkit-backdrop-filter: blur(var(--ww-acrylic-blur, 10px));
+}
+
+/* 个性化：活动窗口标题栏主题色（半透明玻璃质感，任何颜色都透出壁纸模糊） */
+.window.active .window-header {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--ww-accent, #0078d7) 58%, transparent),
+    color-mix(in srgb, var(--ww-accent, #0078d7) 46%, transparent) 55%,
+    color-mix(in srgb, var(--ww-accent, #0078d7) 62%, transparent));
+  border-bottom-color: rgba(0, 0, 0, 0.22);
+  box-shadow: none;
+  backdrop-filter: blur(var(--ww-acrylic-blur, 10px)) saturate(1.35);
+  -webkit-backdrop-filter: blur(var(--ww-acrylic-blur, 10px)) saturate(1.35);
+}
+
+.window.active .window-header,
+.window.active .window-header .title {
+  color: #fff;
 }
 
 .window.is-dragging,
@@ -516,7 +673,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   color:#FFF;
   transition: background 0.2s;
 }

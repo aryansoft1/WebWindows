@@ -1,5 +1,6 @@
 <%@LANGUAGE="VBSCRIPT" CODEPAGE="65001"%>
 <!--#include file="../inc/conn.asp"-->
+<!--#include file="../inc/trust-schema.asp"-->
 <%
 Response.ContentType = "application/json"
 Response.Charset = "utf-8"
@@ -75,48 +76,106 @@ Function ValidCatalog(ByVal value)
     InStr(1, compact, """apps"":[", vbTextCompare) > 0)
 End Function
 
-Function EnsureCatalogTable()
-  Dim schemaSql
-  schemaSql = "CREATE TABLE IF NOT EXISTS webwindows_function_catalog_versions (" & _
-    "id BIGINT NOT NULL AUTO_INCREMENT," & _
-    "catalog_version VARCHAR(40) NOT NULL," & _
-    "catalog_json LONGTEXT NOT NULL," & _
-    "storage_encoding VARCHAR(12) NOT NULL DEFAULT 'base64'," & _
-    "publish_note VARCHAR(255) NOT NULL DEFAULT ''," & _
-    "published_by BIGINT NULL," & _
-    "is_active TINYINT(1) NOT NULL DEFAULT 0," & _
-    "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP," & _
-    "PRIMARY KEY (id)," & _
-    "KEY idx_function_catalog_active (is_active,id)" & _
-    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-
-  On Error Resume Next
-  conn.Execute schemaSql
-  If Err.Number = 0 Then
-    conn.Execute "ALTER TABLE webwindows_function_catalog_versions " & _
-      "ADD COLUMN storage_encoding VARCHAR(12) NOT NULL DEFAULT 'raw' AFTER catalog_json"
-    Err.Clear
-    conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 " & _
-      "WHERE is_active=1 AND storage_encoding<>'base64'"
-    Err.Clear
-    EnsureCatalogTable = True
-  Else
-    EnsureCatalogTable = False
-  End If
-  Err.Clear
-  On Error GoTo 0
+Function CatalogVersion(ByVal catalogText)
+  Dim expression, matches
+  CatalogVersion = ""
+  Set expression = New RegExp
+  expression.Pattern = """catalogVersion""\s*:\s*""([^""]+)"""
+  expression.IgnoreCase = True
+  expression.Global = False
+  Set matches = expression.Execute(CStr(catalogText))
+  If matches.Count > 0 Then CatalogVersion = CStr(matches(0).SubMatches(0))
+  Set matches = Nothing
+  Set expression = Nothing
 End Function
 
-Function ActiveCatalog()
+Function NumericVersionParts(ByVal value)
+  Dim expression, normalized
+  Set expression = New RegExp
+  expression.Pattern = "[^0-9]+"
+  expression.Global = True
+  normalized = expression.Replace(CStr(value), ".")
+  Do While Left(normalized, 1) = ".": normalized = Mid(normalized, 2): Loop
+  Do While Right(normalized, 1) = ".": normalized = Left(normalized, Len(normalized) - 1): Loop
+  NumericVersionParts = normalized
+  Set expression = Nothing
+End Function
+
+Function VersionIsNewer(ByVal candidate, ByVal current)
+  Dim leftValue, rightValue, leftParts, rightParts, index, leftPart, rightPart, maximum
+  leftValue = NumericVersionParts(candidate)
+  rightValue = NumericVersionParts(current)
+  If leftValue = "" Then VersionIsNewer = False: Exit Function
+  If rightValue = "" Then VersionIsNewer = True: Exit Function
+  leftParts = Split(leftValue, ".")
+  rightParts = Split(rightValue, ".")
+  maximum = UBound(leftParts)
+  If UBound(rightParts) > maximum Then maximum = UBound(rightParts)
+  For index = 0 To maximum
+    leftPart = 0: rightPart = 0
+    If index <= UBound(leftParts) Then leftPart = CDbl(leftParts(index))
+    If index <= UBound(rightParts) Then rightPart = CDbl(rightParts(index))
+    If leftPart > rightPart Then VersionIsNewer = True: Exit Function
+    If leftPart < rightPart Then VersionIsNewer = False: Exit Function
+  Next
+  VersionIsNewer = False
+End Function
+
+Function ReleaseBindingsValid(ByVal catalogText, ByVal revisionId)
+  Dim rs, valid, bindingCount, referenceRegex, referenceMatches
+  valid = True
+  bindingCount = 0
+  On Error Resume Next
+  Set rs = conn.Execute("SELECT catalog_entry_id,published_release_identity,package_sha256,source_manifest_integrity_version," & _
+    "review_decision_identity,release_binding_state FROM webwindows_catalog_release_bindings " & _
+    "WHERE catalog_revision_id=" & CLng(revisionId))
+  If Err.Number <> 0 Then
+    Err.Clear
+    ReleaseBindingsValid = (InStr(1, catalogText, """sourceType"":""developer-release""", vbTextCompare) = 0)
+    On Error GoTo 0
+    Exit Function
+  End If
+  Do Until rs.EOF
+    bindingCount = bindingCount + 1
+    If LCase(CStr(rs("release_binding_state"))) <> "verified" Or _
+       InStr(1, catalogText, """id"":""" & CStr(rs("catalog_entry_id")) & """", vbBinaryCompare) = 0 Or _
+       InStr(1, catalogText, """publishedReleaseId"":""" & CStr(rs("published_release_identity")) & """", vbBinaryCompare) = 0 Or _
+       InStr(1, catalogText, """packageSha256"":""" & CStr(rs("package_sha256")) & """", vbTextCompare) = 0 Or _
+       CLng(rs("source_manifest_integrity_version")) <> 1 Or _
+       InStr(1, catalogText, """sourceManifestIntegrityVersion"":1", vbBinaryCompare) = 0 Or _
+       InStr(1, catalogText, """reviewDecisionId"":""" & CStr(rs("review_decision_identity")) & """", vbBinaryCompare) = 0 Then
+      valid = False
+      Exit Do
+    End If
+    rs.MoveNext
+  Loop
+  rs.Close
+  Set rs = Nothing
+  Set referenceRegex = New RegExp
+  referenceRegex.Pattern = """publishedReleaseId""\s*:"
+  referenceRegex.Global = True
+  Set referenceMatches = referenceRegex.Execute(CStr(catalogText))
+  If referenceMatches.Count <> bindingCount Then valid = False
+  Set referenceMatches = Nothing
+  Set referenceRegex = Nothing
+  On Error GoTo 0
+  ReleaseBindingsValid = valid
+End Function
+
+Function ActiveCatalog(ByRef revisionId, ByRef activeVersion)
   Dim rs
   ActiveCatalog = ""
+  revisionId = 0
+  activeVersion = ""
   On Error Resume Next
-  Set rs = conn.Execute("SELECT catalog_json,storage_encoding FROM webwindows_function_catalog_versions " & _
+  Set rs = conn.Execute("SELECT id,catalog_version,catalog_json,storage_encoding FROM webwindows_function_catalog_versions " & _
     "WHERE is_active=1 ORDER BY id DESC LIMIT 1")
   If Err.Number = 0 Then
     If Not rs.EOF Then
       If LCase(CStr(rs("storage_encoding"))) = "base64" Then
         ActiveCatalog = Base64DecodeUtf8(CStr(rs("catalog_json")))
+        revisionId = CLng(rs("id"))
+        activeVersion = CStr(rs("catalog_version"))
       End If
     End If
     rs.Close
@@ -126,7 +185,7 @@ Function ActiveCatalog()
   On Error GoTo 0
 End Function
 
-Sub SeedCatalog(ByVal catalogText)
+Sub SeedCatalog(ByVal catalogText, ByVal catalogVersion, ByVal publishNote)
   Dim encodedCatalog, seedCmd
   encodedCatalog = Base64EncodeUtf8(catalogText)
   On Error Resume Next
@@ -137,10 +196,10 @@ Sub SeedCatalog(ByVal catalogText)
       "(catalog_version,catalog_json,storage_encoding,publish_note,published_by,is_active) " & _
       "VALUES (?,?,?, ?,NULL,1)"
     .CommandType = 1
-    .Parameters.Append .CreateParameter(, 200, 1, 40, "bootstrap-json")
+    .Parameters.Append .CreateParameter(, 200, 1, 40, Left(CStr(catalogVersion), 40))
     .Parameters.Append .CreateParameter(, 201, 1, Len(encodedCatalog), encodedCatalog)
     .Parameters.Append .CreateParameter(, 200, 1, 12, "base64")
-    .Parameters.Append .CreateParameter(, 200, 1, 255, "JSON bootstrap")
+    .Parameters.Append .CreateParameter(, 200, 1, 255, Left(CStr(publishNote), 255))
     .Execute
   End With
   Set seedCmd = Nothing
@@ -148,40 +207,66 @@ Sub SeedCatalog(ByVal catalogText)
   On Error GoTo 0
 End Sub
 
-Dim catalogText, tableReady, catalogSource
+Dim catalogText, tableReady, catalogSource, activeRevisionId, activeVersion, fileCatalog, fileVersion
 catalogText = ""
 catalogSource = "unavailable"
-tableReady = EnsureCatalogTable()
+activeRevisionId = 0
+activeVersion = ""
+fileCatalog = ""
+fileVersion = ""
+tableReady = WebWindowsTrustSchemaReady()
+If Not tableReady Then
+  Response.Status = "503 Service Unavailable"
+  Response.Write "{""ok"":false,""code"":""trust-schema-required"",""message"":""WebWindows 信任数据库结构尚未完成部署迁移。""}"
+  If conn.State <> 0 Then conn.Close
+  Response.End
+End If
+
+On Error Resume Next
+fileCatalog = ReadCatalogFile()
+If Err.Number <> 0 Then
+  Err.Clear
+  fileCatalog = ""
+End If
+On Error GoTo 0
+If fileCatalog <> "" And Not ValidCatalog(fileCatalog) Then fileCatalog = ""
+If fileCatalog <> "" Then fileVersion = CatalogVersion(fileCatalog)
+Response.AddHeader "X-WebWindows-Static-Catalog", LCase(CStr(fileCatalog <> ""))
+Response.AddHeader "X-WebWindows-Static-Catalog-Version", fileVersion
 
 If tableReady Then
-  catalogText = ActiveCatalog()
-  If catalogText <> "" And Not ValidCatalog(catalogText) Then
+  catalogText = ActiveCatalog(activeRevisionId, activeVersion)
+  If catalogText <> "" And (Not ValidCatalog(catalogText) Or _
+     Not ReleaseBindingsValid(catalogText, activeRevisionId)) Then
     On Error Resume Next
     conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
     Err.Clear
     On Error GoTo 0
     catalogText = ""
+    activeRevisionId = 0
+    activeVersion = ""
   End If
   If catalogText <> "" Then catalogSource = "database"
 End If
 
-If catalogText = "" Then
-  On Error Resume Next
-  catalogText = ReadCatalogFile()
-  If Err.Number <> 0 Then
+If fileCatalog <> "" And (catalogText = "" Or _
+   VersionIsNewer(fileVersion, activeVersion)) Then
+  If tableReady Then
+    On Error Resume Next
+    conn.Execute "UPDATE webwindows_function_catalog_versions SET is_active=0 WHERE is_active=1"
     Err.Clear
-    catalogText = ""
+    On Error GoTo 0
+    SeedCatalog fileCatalog, fileVersion, "Static catalog version upgrade"
+    activeRevisionId = 0
   End If
-  On Error GoTo 0
-
-  If catalogText <> "" And Not ValidCatalog(catalogText) Then catalogText = ""
-  If catalogText <> "" And tableReady Then
-    SeedCatalog catalogText
-  End If
-  If catalogText <> "" Then catalogSource = "json-fallback"
+  catalogText = fileCatalog
+  activeVersion = fileVersion
+  If tableReady Then catalogSource = "json-upgrade" Else catalogSource = "json-fallback"
 End If
 
 Response.AddHeader "X-WebWindows-Catalog-Source", catalogSource
+Response.AddHeader "X-WebWindows-Catalog-Release-Binding", "v1"
+Response.AddHeader "X-WebWindows-Catalog-Version", activeVersion
 If catalogText = "" Then
   Response.Status = "503 Service Unavailable"
   Response.Write "{""ok"":false,""message"":""功能仓库目录暂不可用。""}"

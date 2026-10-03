@@ -188,6 +188,8 @@ End If
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>我的私人文件</title>
+  <script src="file-selection.js?v=20260928-selection-3"></script>
+  <script src="open-with.js?v=20260930-openwith-1"></script>
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
@@ -198,10 +200,10 @@ End If
     :root{font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;color:#1f2937;background:#f5f7fb}
     *{box-sizing:border-box}body{margin:0}.top{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#fff;border-bottom:1px solid #dbe3ec}
     h1{margin:0;font-size:21px}.sub{margin-top:4px;color:#64748b;font-size:12px}.actions{display:flex;gap:8px;align-items:center}
-    button,.link{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:inherit;text-decoration:none;cursor:pointer}
+    button,.link{padding:8px 12px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#334155;font:inherit;text-decoration:none;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
     .primary{border-color:#2563eb;background:#2563eb;color:#fff}.bar{display:flex;align-items:center;gap:8px;padding:10px 22px;background:#f8fafc;border-bottom:1px solid #e2e8f0}
     .bar a{color:#2563eb;text-decoration:none}.files{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:22px}
-    .item{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px;border:1px solid #dbe3ec;border-radius:11px;background:#fff;text-align:left;cursor:pointer}
+    .item{display:flex;align-items:center;gap:10px;min-height:62px;padding:10px;border:1px solid #dbe3ec;border-radius:11px;background:#fff;text-align:left;--ww-cursor-state:var(--ww-cursor-link, pointer);cursor:var(--ww-cursor-link, pointer)}
     .item:hover,.item:focus,.item.selected{border-color:#60a5fa;background:#eff6ff}.icon{display:grid;place-items:center;width:40px;height:40px;border-radius:9px;background:#e8f5ee;color:#107c41;font-weight:800}
     .folder .icon{background:#fff4ce;color:#8a5a00}.document .icon{background:#e8f1ff;color:#1d4ed8}.presentation .icon{background:#fff0e6;color:#c2410c}
     .archive .icon{background:#f3e8ff;color:#7e22ce}.image .icon{background:#ecfdf5;color:#047857}.text .icon{background:#f1f5f9;color:#334155}.name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -216,8 +218,12 @@ End If
     .picker-note{padding:6px 10px;border-radius:999px;background:#fff4d8;color:#9a5b00;font-size:12px;font-weight:650}
     .picker-mode{padding-bottom:78px}.picker-mode .context-menu{display:none!important}
     .picker-bar{position:fixed;left:0;right:0;bottom:0;z-index:80;display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:68px;padding:10px 18px;border-top:1px solid #dbe3ec;background:rgba(255,255,255,.97);box-shadow:0 -8px 24px rgba(15,23,42,.08)}
-    .picker-selection strong,.picker-selection span{display:block}.picker-selection span{margin-top:4px;color:#64748b;font-size:12px}.picker-actions{display:flex;gap:8px;align-items:center}.picker-actions button:disabled{opacity:.48;cursor:not-allowed}
+    .picker-selection strong,.picker-selection span{display:block}.picker-selection span{margin-top:4px;color:#64748b;font-size:12px}.picker-actions{display:flex;gap:8px;align-items:center}.picker-actions button:disabled{opacity:.48;--ww-cursor-state:var(--ww-cursor-not-allowed, not-allowed);cursor:var(--ww-cursor-not-allowed, not-allowed)}
     .picker-name{width:min(320px,36vw);padding:8px 10px;border:1px solid #94a3b8;border-radius:7px;font:inherit}
+    .files{position:relative}
+    .ww-selection-surface:focus{outline:none}
+    .files>.item.selected{background:#dbeafe;border-color:#2563eb;box-shadow:inset 0 0 0 1px #2563eb}
+    .files>.selection-marquee{position:absolute;z-index:5;border:1px solid #2563eb;background:rgba(37,99,235,.14);pointer-events:none}
   </style>
 </head>
 <body<% If pickerMode Then Response.Write " class=""picker-mode""" %>
@@ -328,8 +334,21 @@ End If
     </div>
   </footer>
   <% End If %>
+  <style>
+    /* 文件“打开方式”子菜单：菜单内手风琴展开。 */
+    #private-open-with-group > button .ww-ow-caret { margin-left: auto; opacity: .6; }
+    #private-open-with-list { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 2px 18px; }
+    #private-open-with-list button { text-align: left; }
+    #private-open-with-list button:disabled { opacity: .55; cursor: not-allowed; }
+    #private-open-with-list .ww-ow-default { font-weight: 600; }
+  </style>
   <div id="private-context-menu" class="context-menu" role="menu" aria-label="私人文件操作">
     <button type="button" data-action="open" role="menuitem">打开</button>
+    <button type="button" data-action="open-file" role="menuitem" hidden>打开</button>
+    <div id="private-open-with-group" hidden>
+      <button type="button" data-action="open-with" role="menuitem" aria-expanded="false">打开方式 <span class="ww-ow-caret" aria-hidden="true">▸</span></button>
+      <div id="private-open-with-list" role="menu" hidden></div>
+    </div>
     <button type="button" data-action="rename" role="menuitem">重命名</button>
     <button type="button" data-action="delete" class="danger" role="menuitem">删除文件夹</button>
     <hr data-folder-only>
@@ -366,8 +385,33 @@ End If
       const folderName = document.getElementById("folder-name");
       const dialogTitle = document.getElementById("folder-dialog-title");
       let selectedFolder = null;
+      let selectedFile = null;
+      const openFileButton = menu.querySelector("[data-action='open-file']");
+      const owGroup = document.getElementById("private-open-with-group");
+      const owToggle = owGroup ? owGroup.querySelector("[data-action='open-with']") : null;
+      const owList = document.getElementById("private-open-with-list");
+      let owToken = 0;
+      let owData = null;
       let dialogMode = "create";
       const pickerSelections = new Set();
+      if (!pickerMode && window.WebWindowsFileSelection) {
+        const container = document.querySelector('.files');
+        container.querySelectorAll('.item').forEach(item => { item.draggable = true; });
+        window.WebWindowsFileSelection.create({
+          container,
+          itemSelector: '.item',
+          reorder: true,
+          buildPayload: items => ({
+            kind: 'cloud-private',
+            label: items.map(item => item.dataset.name).join(', '),
+            items: items.map(item => ({
+              name: item.dataset.name,
+              path: item.dataset.file || item.dataset.folder,
+              kind: item.hasAttribute('data-folder') ? 'folder' : 'file'
+            }))
+          })
+        });
+      }
 
       function privateUrl(path) {
         const url = new URL("private-files.asp", location.href);
@@ -507,21 +551,107 @@ End If
       function hideMenu() {
         menu.classList.remove("open");
         selectedFolder = null;
+        selectedFile = null;
+        owToken += 1;
+        owData = null;
+        if (owList) {
+          owList.hidden = true;
+          owList.replaceChildren();
+        }
+        if (owGroup) owGroup.hidden = true;
+        if (owToggle) owToggle.setAttribute("aria-expanded", "false");
       }
 
-      function showMenu(event, folderItem) {
+      function showMenu(event, folderItem, fileItem) {
         event.preventDefault();
         event.stopPropagation();
         selectedFolder = folderItem || null;
+        selectedFile = fileItem || null;
+        const isFile = Boolean(selectedFile);
         menu.querySelectorAll("[data-action='open'],[data-action='rename'],[data-action='delete'],[data-folder-only]").forEach(element => {
-          element.hidden = !selectedFolder;
+          element.hidden = !selectedFolder || isFile;
         });
+        if (openFileButton) openFileButton.hidden = !isFile || pickerMode;
+        owToken += 1;
+        owData = null;
+        if (owList) {
+          owList.hidden = true;
+          owList.replaceChildren();
+        }
+        if (owGroup) owGroup.hidden = true;
+        if (isFile && !pickerMode) populateOpenWith(selectedFile);
         menu.classList.add("open");
         const menuWidth = menu.offsetWidth;
         const menuHeight = menu.offsetHeight;
         menu.style.left = `${Math.max(6, Math.min(event.clientX, innerWidth - menuWidth - 6))}px`;
         menu.style.top = `${Math.max(6, Math.min(event.clientY, innerHeight - menuHeight - 6))}px`;
         menu.querySelector("button:not([hidden])")?.focus();
+      }
+
+      // “打开方式”子菜单：registry 报出 2+ Handler 时出现。
+      function populateOpenWith(item) {
+        owToken += 1;
+        if (!owGroup || !owList || !window.WebWindowsOpenWith) return;
+        const token = owToken;
+        window.WebWindowsOpenWith.menuData({ name: item.dataset.name, mimeType: item.dataset.mimeType || "" })
+          .then(data => {
+            if (token !== owToken || !data.available) return;
+            owData = { data, item };
+            // Installed handlers only; unlaunchable entries stay out of the menu.
+            const usable = data.handlers.filter(handler => handler.installed !== false);
+            if (usable.length < 2) return;
+            window.WebWindowsOpenWith.renderMenuEntries(owList, { handlers: usable });
+            owGroup.hidden = false;
+          })
+          .catch(() => {});
+      }
+
+      function buildPrivateResource(item) {
+        const path = item.dataset.file;
+        const base = new URL(api, location.href);
+        const content = new URL(base);
+        content.searchParams.set("op", "content");
+        content.searchParams.set("path", path);
+        const editorData = new URL(base);
+        editorData.searchParams.set("op", "editor-data");
+        editorData.searchParams.set("path", path);
+        return {
+          resource: {
+            protocol: "webwindows-cloud-resource",
+            version: "1.1",
+            nodeId: "local-main",
+            scope: "private",
+            path,
+            name: item.dataset.name,
+            url: content.toString(),
+            editorDataUrl: editorData.toString(),
+            saveEndpoint: base.toString(),
+            permissions: { read: true, download: true, edit: true }
+          },
+          fallbackUrl: content.toString()
+        };
+      }
+
+      function legacyPrivateOpen(built) {
+        if (window.parent && typeof window.parent.openResource === "function") window.parent.openResource(built.resource);
+        else location.href = built.fallbackUrl;
+      }
+
+      async function openPrivateFile(item) {
+        const built = buildPrivateResource(item);
+        // Unknown types show the “无法打开” dialog instead of failing silently.
+        if (window.WebWindowsOpenWith) {
+          try {
+            await window.WebWindowsOpenWith.openDefault(
+              { name: item.dataset.name, mimeType: item.dataset.mimeType || "" },
+              () => legacyPrivateOpen(built)
+            );
+          } catch (error) {
+            console.error("[PrivateFiles]", error);
+          }
+          return;
+        }
+        legacyPrivateOpen(built);
       }
 
       function openFolderDialog(mode) {
@@ -539,7 +669,7 @@ End If
         location.href = privateUrl(item.dataset.folder);
       }));
       document.querySelectorAll("[data-folder]").forEach(item => item.addEventListener("contextmenu", event => showMenu(event, item)));
-      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("dblclick", () => {
+      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("dblclick", async () => {
         if (pickerMode) {
           if (!pickerMultiple) {
             selectPicker(item);
@@ -547,28 +677,7 @@ End If
           }
           return;
         }
-        const path = item.dataset.file;
-        const base = new URL(api, location.href);
-        const content = new URL(base);
-        content.searchParams.set("op", "content");
-        content.searchParams.set("path", path);
-        const editorData = new URL(base);
-        editorData.searchParams.set("op", "editor-data");
-        editorData.searchParams.set("path", path);
-        const resource = {
-          protocol: "webwindows-cloud-resource",
-          version: "1.1",
-          nodeId: "local-main",
-          scope: "private",
-          path,
-          name: item.dataset.name,
-          url: content.toString(),
-          editorDataUrl: editorData.toString(),
-          saveEndpoint: base.toString(),
-          permissions: { read: true, download: true, edit: true }
-        };
-        if (window.parent && typeof window.parent.openResource === "function") window.parent.openResource(resource);
-        else location.href = content.toString();
+        await openPrivateFile(item);
       }));
       if (pickerMode) {
         document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("click", event => {
@@ -586,13 +695,56 @@ End If
           }
         });
       }
-      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("contextmenu", event => showMenu(event, null)));
+      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("contextmenu", event => showMenu(event, null, item)));
       document.querySelector(".files").addEventListener("contextmenu", event => {
         if (!event.target.closest("[data-folder],[data-file]")) showMenu(event, null);
       });
       menu.addEventListener("click", async event => {
+        const owHandler = event.target.closest("[data-ow-handler]");
+        if (owHandler && !owHandler.disabled && owData && window.WebWindowsOpenWith) {
+          const { data, item } = owData;
+          const built = buildPrivateResource(item);
+          hideMenu();
+          try {
+            await window.WebWindowsOpenWith.openWithOneTime(data.typeId, owHandler.dataset.owHandler, () => legacyPrivateOpen(built));
+          } catch (error) {
+            status.className = "error";
+            status.textContent = error.message;
+          }
+          return;
+        }
+        if (event.target.closest("[data-ow-choose]") && owData && window.WebWindowsOpenWith) {
+          const { data, item } = owData;
+          const built = buildPrivateResource(item);
+          hideMenu();
+          await window.WebWindowsOpenWith.showChooseDialog({
+            fileName: data.fileName,
+            extension: data.extLabel,
+            typeId: data.typeId,
+            entries: data.handlers,
+            openFn: () => legacyPrivateOpen(built),
+            onError: error => {
+              status.className = "error";
+              status.textContent = error.message;
+            }
+          });
+          return;
+        }
         const action = event.target.closest("[data-action]")?.dataset.action;
         if (!action) return;
+        if (action === "open-with") {
+          if (owList && owToggle) {
+            owList.hidden = !owList.hidden;
+            owToggle.setAttribute("aria-expanded", String(!owList.hidden));
+          }
+          return;
+        }
+        if (action === "open-file") {
+          const targetFile = selectedFile;
+          hideMenu();
+          if (targetFile) await openPrivateFile(targetFile);
+          return;
+        }
         const targetFolder = selectedFolder;
         hideMenu();
         if (action === "refresh") {

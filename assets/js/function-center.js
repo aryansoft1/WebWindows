@@ -159,6 +159,8 @@
   function createCard(app, association) {
     const card = element("article", "catalog-card");
     card.dataset.functionId = app.id;
+    card.dataset.sourceType = app.sourceType || "system";
+    card.dataset.releaseBinding = app.releaseBinding || "system";
     const icon = document.createElement("img");
     icon.src = app.icon;
     icon.alt = "";

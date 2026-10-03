@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/manifest-v1.schema.json",
+  "title": "WebWindows Source Manifest v1",
+  "description": "Phase 0A fact schema. The root validates third-party source manifests. Published catalog metadata is available under $defs.publishedCatalogManifest.",
+  "$ref": "#/$defs/sourceManifest",
+  "$defs": {
+    "appId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)+$",
+      "maxLength": 160
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+(?:\\.[0-9]+){1,3}(?:[._-][a-z0-9]+)?$",
+      "maxLength": 40
+    },
+    "safePackagePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//).+$"
+    },
+    "htmlEntryPath": {
+      "allOf": [
+        { "$ref": "#/$defs/safePackagePath" },
+        { "pattern": "\\.[Hh][Tt][Mm][Ll]?$" }
+      ]
+    },
+    "install": {
+      "type": "object",
+      "required": ["defaultState", "source", "uninstallable"],
+      "properties": {
+        "defaultState": { "enum": ["available", "installed"] },
+        "source": { "enum": ["repository", "preinstalled", "system"] },
+        "uninstallable": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "placement": {
+      "type": "object",
+      "required": ["desktop", "startMenu", "allFunctions", "taskbar"],
+      "properties": {
+        "desktop": { "type": "boolean" },
+        "startMenu": { "type": "boolean" },
+        "startMenuGroup": { "enum": ["user", "system"] },
+        "startMenuOrder": { "type": "integer", "minimum": 0 },
+        "allFunctions": { "type": "boolean" },
+        "taskbar": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "window": {
+      "type": "object",
+      "required": ["mode", "singleton", "width", "height"],
+      "properties": {
+        "mode": { "enum": ["iframe", "native", "shell"] },
+        "singleton": { "type": "boolean" },
+        "width": { "type": "string", "minLength": 1 },
+        "height": { "type": "string", "minLength": 1 },
+        "className": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "fileHandler": {
+      "type": "object",
+      "required": ["action", "adapter"],
+      "properties": {
+        "action": { "type": "string", "minLength": 1 },
+        "adapter": { "type": "string", "minLength": 1 },
+        "extensions": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^\\.[a-z0-9]+$" },
+          "uniqueItems": true
+        },
+        "mimeTypes": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[^/\\s]+/[^/\\s]+$" },
+          "uniqueItems": true
+        },
+        "priority": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "launch": {
+      "type": "object",
+      "properties": {
+        "adapter": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": true
+    },
+    "catalog": {
+      "type": "object",
+      "readOnly": true,
+      "properties": {
+        "status": { "enum": ["published", "disabled"] }
+      },
+      "additionalProperties": true
+    },
+    "package": {
+      "type": "object",
+      "readOnly": true,
+      "required": ["format", "size", "sha256", "entry", "downloadUrl"],
+      "properties": {
+        "format": { "const": "zip" },
+        "size": { "type": "integer", "minimum": 0 },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "entry": { "$ref": "#/$defs/htmlEntryPath" },
+        "downloadUrl": {
+          "type": "string",
+          "pattern": "^/api/function-package\\.asp\\?"
+        }
+      },
+      "additionalProperties": true
+    },
+    "runtime": {
+      "type": "object",
+      "readOnly": true,
+      "required": ["model", "network", "sameOrigin"],
+      "properties": {
+        "model": { "const": "browser-zip-sandbox-v1" },
+        "network": { "const": "none" },
+        "sameOrigin": { "const": false }
+      },
+      "additionalProperties": true
+    },
+    "sourceManifest": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "version",
+        "icon",
+        "entry",
+        "install",
+        "placement",
+        "window"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/appId" },
+        "legacyIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "default": []
+        },
+        "type": { "enum": ["application", "system"] },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "version": { "$ref": "#/$defs/version" },
+        "icon": { "$ref": "#/$defs/safePackagePath" },
+        "entry": { "$ref": "#/$defs/htmlEntryPath" },
+        "install": { "$ref": "#/$defs/install" },
+        "placement": { "$ref": "#/$defs/placement" },
+        "window": { "$ref": "#/$defs/window" },
+        "fileHandlers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fileHandler" }
+        },
+        "launch": {
+          "$ref": "#/$defs/launch",
+          "description": "Platform-reserved Shell integration metadata."
+        },
+        "catalog": {
+          "$ref": "#/$defs/catalog",
+          "description": "Reserved, server-managed published catalog metadata."
+        },
+        "package": {
+          "$ref": "#/$defs/package",
+          "description": "Reserved, server-generated package metadata."
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime",
+          "description": "Reserved, server-generated runtime metadata."
+        }
+      },
+      "additionalProperties": true
+    },
+    "publishedCatalogManifest": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "name",
+        "version",
+        "icon",
+        "entry",
+        "install",
+        "placement",
+        "window",
+        "catalog",
+        "package",
+        "runtime"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/appId" },
+        "legacyIds": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "type": { "enum": ["application", "system"] },
+        "name": { "type": "string", "minLength": 1 },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "version": { "$ref": "#/$defs/version" },
+        "icon": { "type": "string", "minLength": 1 },
+        "entry": {
+          "type": "string",
+          "pattern": "^/package-runtime\\.html\\?"
+        },
+        "install": { "$ref": "#/$defs/install" },
+        "placement": { "$ref": "#/$defs/placement" },
+        "window": {
+          "allOf": [
+            { "$ref": "#/$defs/window" },
+            {
+              "type": "object",
+              "properties": { "mode": { "const": "iframe" } }
+            }
+          ]
+        },
+        "fileHandlers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/fileHandler" }
+        },
+        "catalog": { "$ref": "#/$defs/catalog" },
+        "package": { "$ref": "#/$defs/package" },
+        "runtime": { "$ref": "#/$defs/runtime" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

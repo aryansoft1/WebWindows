@@ -1,0 +1,112 @@
+{
+  "contract": "webwindows-production-rehearsal-result-v1",
+  "version": 1,
+  "observedAt": "2026-08-31",
+  "sourceBaselineCommit": "d9df03440ac929f7656556486574652bd01e58e9",
+  "overall": "blocked",
+  "deploymentPerformed": false,
+  "productionStateChanged": false,
+  "limitedRolloutEligible": false,
+  "featureGateAfterRehearsal": false,
+  "targets": {
+    "publicProduction": {
+      "origin": "https://www.y0.hk",
+      "use": "read-only baseline observation",
+      "qualifiesAsRehearsalTarget": false
+    },
+    "localIisExpress": {
+      "use": "non-production diagnostic only",
+      "qualifiesAsRehearsalTarget": false,
+      "databaseCompatible": false
+    },
+    "productionLikeStaging": {
+      "status": "not supplied",
+      "required": true
+    }
+  },
+  "publicBaseline": {
+    "httpsRootStatus": 200,
+    "httpAdminLoginStatus": 200,
+    "httpRedirectsToHttps": false,
+    "runtimeFeatureConfigStatus": 404,
+    "runtimeReleaseStatus": 404,
+    "productionBrokerBundleStatus": 404,
+    "manifestV2SchemaStatus": 404,
+    "deployedPackageRuntimeSha256": "9b53971d8bec2f53ea691abe198ee5d881a8fef92195b912411cf19f928e6a9c",
+    "deployedPackageRuntimeHtmlSha256": "182fe2cfd336ba20e70d490b22abfcdb6b9bd979a28a1ff898f49af961db555e"
+  },
+  "localDiagnostic": {
+    "iisVersion": "10",
+    "dotNetFramework": "4.8.09221",
+    "mysqlServerPresent": false,
+    "configuredOdbcDriverPresent": false,
+    "classicAspDatabaseRoute": "worker-crash",
+    "windowsException": "0xc0000374"
+  },
+  "findingCounts": {
+    "critical": 0,
+    "high": 7,
+    "medium": 2,
+    "low": 0
+  },
+  "repositoryVerification": {
+    "testsPassed": 76,
+    "testsFailed": 0,
+    "productionBrokerBuilds": 3,
+    "productionBrokerBuildsByteIdentical": true,
+    "productionBrokerSha256": "224ed27b85e1fc48ac1058a8267d0a2e6b94af6205fb61e2b3919915ec2d410d"
+  },
+  "findings": [
+    {
+      "id": "WWDEP-H001",
+      "severity": "high",
+      "title": "No qualifying production-like staging target or operator authority"
+    },
+    {
+      "id": "WWDEP-H002",
+      "severity": "high",
+      "title": "Public production does not contain the frozen Phase 2 release chain"
+    },
+    {
+      "id": "WWDEP-H003",
+      "severity": "high",
+      "title": "Public HTTP admin login does not redirect to HTTPS"
+    },
+    {
+      "id": "WWDEP-H004",
+      "severity": "high",
+      "title": "Validator quarantine is site-root App_Data and target ACLs are unverified"
+    },
+    {
+      "id": "WWDEP-H005",
+      "severity": "high",
+      "title": "Phase 2 schema uses request-time lazy migration with no rehearsed backup/restore"
+    },
+    {
+      "id": "WWDEP-H006",
+      "severity": "high",
+      "title": "Local Classic ASP database route crashes under the available ODBC environment"
+    },
+    {
+      "id": "WWDEP-H007",
+      "severity": "high",
+      "title": "Authenticated browser, session, CSRF and full release-chain rehearsal cannot run"
+    },
+    {
+      "id": "WWDEP-M001",
+      "severity": "medium",
+      "title": "HSTS was not observed on the public HTTPS baseline"
+    },
+    {
+      "id": "WWDEP-M002",
+      "severity": "medium",
+      "title": "Validator timeout, cleanup and recycle behavior lacks target-host evidence"
+    }
+  ],
+  "decision": {
+    "phase2FPassed": false,
+    "nextCapabilityAllowed": false,
+    "productionBrokerGateMayEnable": false,
+    "requiredNextAction": "Supply an isolated HTTPS IIS and MySQL staging target plus operator-run evidence, then repeat the complete rehearsal."
+  }
+}

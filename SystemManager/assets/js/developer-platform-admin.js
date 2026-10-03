@@ -4,6 +4,7 @@
   const CATALOG_API = "/admin_api/functionCatalog.asp";
   const PLATFORM_HEADERS = { "X-WebWindows-Admin-Request": "developer-platform" };
   const CATALOG_HEADERS = { "X-WebWindows-Admin-Request": "function-catalog" };
+  const RELEASE_ID_PLACEHOLDER = "__WEBWINDOWS_SERVER_RELEASE_ID__";
   let developers = [];
   let submissions = [];
 
@@ -22,10 +23,17 @@
 
   async function request(url, action, options, headers) {
     const separator = url.includes("?") ? "&" : "?";
-    const response = await fetch(`${url}${separator}action=${encodeURIComponent(action)}`, {
+    let requestOptions = {
       credentials: "same-origin", cache: "no-store", ...options,
       headers: { ...(headers || PLATFORM_HEADERS), ...(options?.headers || {}) }
-    });
+    };
+    if (String(requestOptions.method || "GET").toUpperCase() === "POST") {
+      requestOptions = await window.WebWindowsAdminSecurity.authorize(requestOptions);
+    }
+    const response = await fetch(
+      `${url}${separator}action=${encodeURIComponent(action)}`,
+      requestOptions
+    );
     const payload = await response.json();
     if (!response.ok || payload?.ok === false) {
       throw new Error(payload?.message || `请求失败（${response.status}）。`);
@@ -97,6 +105,14 @@
     document.getElementById("manifestDialog").showModal();
   }
 
+  function viewValidationReport(submission) {
+    document.getElementById("manifestTitle").textContent =
+      submission.appId + " " + submission.version + " · Server Validation";
+    document.getElementById("manifestContent").textContent =
+      JSON.stringify(submission.validationReport, null, 2);
+    document.getElementById("manifestDialog").showModal();
+  }
+
   async function downloadPackage(submission) {
     setStatus(`正在读取 ${submission.appId} ${submission.version} 的隔离功能包……`);
     const response = await fetch(
@@ -118,15 +134,23 @@
     setStatus("功能包已下载；请继续在隔离环境中检查内容。", "success");
   }
 
-  async function setSubmissionStatus(submission, status, note) {
+  async function setSubmissionStatus(submission, status, note, approvedPermissions) {
     const body = new URLSearchParams();
     body.set("submissionId", submission.id);
     body.set("status", status);
     body.set("note", note || "");
+    body.set("approvedPermissionsJson", JSON.stringify(approvedPermissions || []));
     await request(API_URL, "submission-status", { method: "POST", body });
   }
 
   async function reviewSubmission(submission, status) {
+    const requested = Array.isArray(submission.validationReport?.requestedPermissions)
+      ? submission.validationReport.requestedPermissions : [];
+    const approved = status === "approved"
+      ? requested.filter((permission) => window.confirm(
+          `批准权限 ${permission} 吗？\n\nReview approved ≠ Runtime enabled；当前 Production Broker 仍保持禁用。`
+        ))
+      : [];
     const note = window.prompt(
       status === "approved" ? "审核说明（可留空）" : "请填写驳回原因",
       status === "approved" ? "Manifest 审核通过" : ""
@@ -136,7 +160,7 @@
       window.alert("驳回时必须填写原因。");
       return;
     }
-    await setSubmissionStatus(submission, status, note);
+    await setSubmissionStatus(submission, status, note, approved);
     await loadPlatform();
     setStatus(`${submission.appId} 已${status === "approved" ? "批准" : "驳回"}。`, "success");
   }
@@ -170,9 +194,31 @@
       size: submission.packageSize,
       sha256: submission.packageSha256,
       entry: originalEntry,
-      downloadUrl: `/api/function-package.asp?appId=${encodeURIComponent(submission.appId)}&version=${encodeURIComponent(submission.version)}`
+      downloadUrl: `/api/function-package.asp?release=${encodeURIComponent(RELEASE_ID_PLACEHOLDER)}`
     };
-    manifest.entry = `/package-runtime.html?runtime=1&appId=${encodeURIComponent(submission.appId)}` +
+    manifest.sourceType = "developer-release";
+    manifest.releaseBinding = "verified";
+    manifest.release = {
+      id: RELEASE_ID_PLACEHOLDER,
+      binding: "verified",
+      status: "active",
+      publishedReleaseId: RELEASE_ID_PLACEHOLDER,
+      publisherId: String(submission.developerId),
+      packageSha256: submission.packageSha256,
+      sourceManifestSha256: submission.reviewDecision.sourceManifestSha256,
+      sourceManifestIntegrityVersion: submission.reviewDecision.sourceManifestIntegrityVersion,
+      manifestVersion: submission.reviewDecision.manifestVersion,
+      sdkVersion: submission.reviewDecision.sdkVersion,
+      reviewDecisionId: submission.reviewDecision.reviewDecisionId,
+      approvedPermissions: [...submission.reviewDecision.approvedPermissions],
+      reviewPolicyVersion: submission.reviewDecision.reviewPolicyVersion,
+      packageDownloadIdentity: {
+        kind: "release-package-v1",
+        downloadUrl: manifest.package.downloadUrl
+      }
+    };
+    manifest.entry = `/package-runtime.html?runtime=1&release=${encodeURIComponent(RELEASE_ID_PLACEHOLDER)}` +
+      `&appId=${encodeURIComponent(submission.appId)}` +
       `&version=${encodeURIComponent(submission.version)}&entry=${encodeURIComponent(originalEntry)}`;
     manifest.window = {
       ...(manifest.window || {}),
@@ -196,17 +242,32 @@
     body.set("version", version);
     body.set("note", `开发者提交：${submission.appId} ${submission.version}`);
     body.set("catalogJson", JSON.stringify(catalog));
-    await request(CATALOG_API, "", { method: "POST", body }, CATALOG_HEADERS);
-    await setSubmissionStatus(submission, "published", "已发布到功能仓库");
+    body.set("submissionId", submission.id);
+    await request(API_URL, "publish-release", { method: "POST", body });
     await loadPlatform();
     setStatus(`${submission.appId} ${submission.version} 已发布。`, "success");
   }
 
-  async function revokeSubmission(submission) {
-    if (!window.confirm("撤销提交状态不会自动删除服务器程序文件，确定继续吗？")) return;
-    await setSubmissionStatus(submission, "revoked", "管理员撤销发布");
+  async function changeReleaseStatus(submission, status) {
+    const label = status === "revoked" ? "撤销" : "下架";
+    if (!window.confirm(`${label} ${submission.appId} ${submission.version} 吗？历史 Release 记录会保留。`)) return;
+    const catalogPayload = await request(CATALOG_API, "", null, CATALOG_HEADERS);
+    const catalog = structuredClone(catalogPayload.catalog);
+    const app = catalog.apps.find((item) => item.release?.id === submission.publishedRelease?.publishedReleaseId);
+    if (!app) throw new Error("当前 Catalog revision 未绑定该 PublishedRelease。");
+    app.catalog = { ...(app.catalog || {}), status: "disabled" };
+    app.release = { ...(app.release || {}), status };
+    const version = catalogVersion();
+    catalog.repository = { ...(catalog.repository || {}), catalogVersion: version, updatedAt: new Date().toISOString() };
+    const body = new URLSearchParams();
+    body.set("submissionId", submission.id);
+    body.set("status", status);
+    body.set("note", `管理员${label} Release`);
+    body.set("version", version);
+    body.set("catalogJson", JSON.stringify(catalog));
+    await request(API_URL, "release-status", { method: "POST", body });
     await loadPlatform();
-    setStatus(`${submission.appId} 已标记为撤销；如需下架，请同时在功能仓库操作。`);
+    setStatus(`${submission.appId} 已${label}，Catalog projection 已同步。`, "success");
   }
 
   function renderSubmissions() {
@@ -229,7 +290,20 @@
           submission.packageReady
             ? `已上传 · ${Math.ceil(submission.packageSize / 1024)} KB`
             : "等待上传"),
-        element("small", "", `${submission.integritySha256.slice(0, 16)}…`)
+        element("small", "", `${submission.integritySha256.slice(0, 16)}…`),
+        element("small", "", "Server validation: " + (submission.validationStatus || "not-validated")),
+        element("small", "", "Requested: " +
+          ((submission.validationReport?.requestedPermissions || []).join(", ") || "none")),
+        element("small", "", submission.reviewDecision
+          ? `Review ${submission.reviewDecision.reviewDecisionId}: ${submission.reviewDecision.decision}`
+          : "Review: none"),
+        element("small", "", submission.reviewDecision
+          ? `Approved: ${submission.reviewDecision.approvedPermissions.join(", ") || "none"}; Denied: ${submission.reviewDecision.deniedPermissions.join(", ") || "none"}`
+          : "Review approved ≠ Runtime enabled"),
+        element("small", "", submission.publishedRelease
+          ? `Release ${submission.publishedRelease.publishedReleaseId}: ${submission.publishedRelease.releaseStatus}`
+          : "Published release: none"),
+        element("small", "", `Package SHA: ${submission.packageSha256 || "none"}`)
       );
       row.appendChild(integrityCell);
       const statusCell = document.createElement("td");
@@ -239,12 +313,15 @@
       const actions = element("div", "actions");
       actions.appendChild(button("查看 Manifest", "", () => viewManifest(submission)));
       actions.appendChild(button(
+        "验证报告", "", () => viewValidationReport(submission), !submission.validationReport
+      ));
+      actions.appendChild(button(
         "下载隔离包", "", () => downloadPackage(submission).catch((error) => setStatus(error.message, "error")),
         !submission.packageReady
       ));
       actions.appendChild(button(
         "批准", "primary", () => reviewSubmission(submission, "approved"),
-        !submission.packageReady ||
+        !submission.serverValidated ||
           (submission.status !== "submitted" && submission.status !== "rejected")
       ));
       actions.appendChild(button(
@@ -256,8 +333,12 @@
         submission.status !== "approved"
       ));
       actions.appendChild(button(
-        "撤销", "danger", () => revokeSubmission(submission),
-        submission.status !== "published"
+        "下架", "", () => changeReleaseStatus(submission, "delisted").catch((error) => setStatus(error.message, "error")),
+        submission.publishedRelease?.releaseStatus !== "active"
+      ));
+      actions.appendChild(button(
+        "撤销", "danger", () => changeReleaseStatus(submission, "revoked").catch((error) => setStatus(error.message, "error")),
+        !submission.publishedRelease || submission.publishedRelease.releaseStatus === "revoked"
       ));
       actionCell.appendChild(actions);
       row.appendChild(actionCell);

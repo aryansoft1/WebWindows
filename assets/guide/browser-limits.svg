@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">Dreama 网页嵌入判断</title><desc id="desc">网址进入 Dreama 后，由目标网站安全策略决定显示或改用完整浏览器。</desc>
+  <rect width="960" height="420" rx="28" fill="#f4f8fc"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <rect x="55" y="135" width="190" height="145" rx="20" fill="#fff" stroke="#bdcedd"/><text x="150" y="195" font-size="38">https://</text><text x="150" y="242" fill="#33445d" font-size="22">网址或搜索词</text><path d="M270 207h110" stroke="#1769aa" stroke-width="7"/>
+    <rect x="405" y="105" width="220" height="205" rx="28" fill="#e6f4ff" stroke="#64a1cf" stroke-width="2"/><text x="515" y="185" font-size="50">◉</text><text x="515" y="250" fill="#075a9b" font-size="28">Dreama</text>
+    <path d="M650 160h95M650 260h95" stroke="#7da8c7" stroke-width="7"/><rect x="770" y="75" width="145" height="120" rx="20" fill="#eaf8f1" stroke="#62b38d"/><text x="842" y="145" fill="#15734d" font-size="22">允许嵌入</text><rect x="770" y="225" width="145" height="120" rx="20" fill="#fff2ee" stroke="#e09a84"/><text x="842" y="282" fill="#a33d25" font-size="22">拒绝嵌入</text><text x="842" y="315" fill="#657087" font-size="16">用完整浏览器</text>
+    <text x="480" y="382" fill="#657087" font-size="18">CSP · X-Frame-Options · Cookie · 登录策略</text>
+  </g></svg>

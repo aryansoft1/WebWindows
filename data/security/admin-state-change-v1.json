@@ -1,0 +1,100 @@
+{
+  "contract": "webwindows-admin-state-change-v1",
+  "version": 1,
+  "canonicalProductionOrigin": "https://www.y0.hk",
+  "method": "POST",
+  "contentTypes": [
+    "application/x-www-form-urlencoded"
+  ],
+  "csrf": {
+    "pattern": "synchronizer-token",
+    "header": "X-WebWindows-CSRF",
+    "entropyBytes": 32,
+    "storage": "classic-asp-server-session",
+    "queryTransport": "forbidden"
+  },
+  "origin": {
+    "origin": "exact-canonical-origin",
+    "refererFallback": "parsed-exact-canonical-origin",
+    "missingBoth": "deny",
+    "fetchMetadataWhenPresent": "same-origin"
+  },
+  "endpoints": [
+    {
+      "path": "/admin_api/adminAuth.asp",
+      "action": "login",
+      "authority": "pre-auth-session-csrf-plus-captcha",
+      "state": "admin-session"
+    },
+    {
+      "path": "/admin_api/adminAuth.asp",
+      "action": "logout",
+      "authority": "authenticated-admin-session",
+      "state": "admin-session"
+    },
+    {
+      "path": "/admin_api/developerPlatform.asp",
+      "action": "developer-status",
+      "authority": "authenticated-admin-session",
+      "state": "developer-approval-and-api-key-revocation"
+    },
+    {
+      "path": "/admin_api/developerPlatform.asp",
+      "action": "submission-status",
+      "authority": "authenticated-admin-session",
+      "state": "append-only-review-decision-and-permission-approval"
+    },
+    {
+      "path": "/admin_api/developerPlatform.asp",
+      "action": "publish-release",
+      "authority": "authenticated-admin-session",
+      "state": "published-release-catalog-binding-and-submission-projection"
+    },
+    {
+      "path": "/admin_api/developerPlatform.asp",
+      "action": "release-status",
+      "authority": "authenticated-admin-session",
+      "state": "delist-or-revoke-release-event-and-catalog-projection"
+    },
+    {
+      "path": "/admin_api/functionCatalog.asp",
+      "action": "catalog-publish",
+      "authority": "authenticated-admin-session",
+      "state": "system-function-catalog-revision"
+    },
+    {
+      "path": "/admin_api/saveUser.asp",
+      "action": "save-user",
+      "authority": "authenticated-admin-session",
+      "state": "user-administration"
+    },
+    {
+      "path": "/admin_api/saveDatacenter.asp",
+      "action": "save-datacenter",
+      "authority": "authenticated-admin-session",
+      "state": "datacenter-administration"
+    },
+    {
+      "path": "/admin_api/deleteDatacenter.asp",
+      "action": "delete-datacenter",
+      "authority": "authenticated-admin-session",
+      "state": "datacenter-administration"
+    }
+  ],
+  "knownDrift": [
+    {
+      "path": "/admin_api/deleteUser.asp",
+      "status": "referenced-by-ui-but-absent-from-repository",
+      "securityDisposition": "no-production-endpoint-created-in-phase-2e-1"
+    },
+    {
+      "area": "classic-asp-session-cookie",
+      "status": "attributes-and-session-id-regeneration-require-production-iis-verification"
+    }
+  ],
+  "excludedAuthorities": [
+    "productionCapabilityBrokerV1",
+    "capability-enablement",
+    "runtime-public-api"
+  ]
+}

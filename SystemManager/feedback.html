@@ -1,136 +1,60 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <title>咨询管理</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>咨询反馈管理</title>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
+  <style>
+    body { margin:0; padding:24px; background:#f3f4f6; color:#1f2937; font:14px/1.5 system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:1200px; margin:auto; background:white; border-radius:10px; padding:20px; }
+    .toolbar { display:flex; align-items:end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:16px 0; }
+    label { display:block; margin:8px 0 4px; } input,select,textarea { border:1px solid #cbd5e1; border-radius:6px; padding:7px; font:inherit; }
+    button { border:0; border-radius:6px; padding:8px 12px; background:#2563eb; color:white; cursor:pointer; }
+    button.secondary { background:#64748b; } table { width:100%; border-collapse:collapse; }
+    th,td { padding:9px; border-bottom:1px solid #e5e7eb; text-align:left; vertical-align:top; }
+    .dialog-backdrop { position:fixed; inset:0; background:#0008; display:grid; place-items:center; padding:14px; }
+    .dialog-backdrop[hidden] { display:none; } .dialog { width:min(760px,100%); max-height:92vh; overflow:auto; background:white; border-radius:10px; padding:20px; }
+    #feedbackHistory { list-style:none; padding:0; } #feedbackHistory li { border-bottom:1px solid #e5e7eb; padding:9px 0; white-space:pre-wrap; }
+    textarea { width:100%; min-height:90px; box-sizing:border-box; } .row { display:flex; gap:12px; flex-wrap:wrap; }
+    #feedbackStatus { min-height:22px; } .muted { color:#64748b; }
+  </style>
 </head>
-<body class="bg-gray-100 text-sm text-gray-800">
-  <div class="p-6">
-    <h1 class="text-2xl font-bold mb-4">📩 咨询管理</h1>
-    <p class="text-gray-600 mb-6">查看用户提交的反馈与问题，支持回复、评级和状态更新。</p>
-
-    <div class="flex justify-between items-center mb-4">
-      <div>
-        <label class="text-gray-700 mr-2">状态筛选：</label>
-        <select class="border rounded px-2 py-1">
-          <option>全部</option>
-          <option>未处理</option>
-          <option>已回复</option>
-        </select>
+<body>
+  <main>
+    <h1>咨询反馈</h1>
+    <p class="muted">查看咨询历史、回复并管理处理状态与评级。</p>
+    <div class="toolbar">
+      <div class="row">
+        <label>状态 <select id="filterStatus"><option value="">全部</option><option value="pending">待回复</option><option value="replied">已回复</option><option value="closed">已关闭</option></select></label>
+        <label>紧急程度 <select id="filterUrgency"><option value="">全部</option><option value="high">紧急</option><option value="normal">普通</option><option value="low">较低</option></select></label>
       </div>
-      <button class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">📤 导出反馈</button>
+      <button type="button" id="exportFeedback">导出 CSV</button>
     </div>
-
-    <table class="w-full table-auto bg-white shadow rounded">
-      <thead class="bg-gray-100 text-left">
-        <tr>
-          <th class="p-3">编号</th>
-          <th class="p-3">提交人</th>
-          <th class="p-3">联系方式</th>
-          <th class="p-3">内容摘要</th>
-          <th class="p-3">提交时间</th>
-          <th class="p-3">紧急程度</th>
-          <th class="p-3">星级</th>
-          <th class="p-3">状态</th>
-          <th class="p-3">操作</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- 示例反馈项 -->
-        <tr class="border-t">
-          <td class="p-3 font-mono">F20250720001</td>
-          <td class="p-3">张三</td>
-          <td class="p-3">zhang@example.com</td>
-          <td class="p-3 truncate max-w-xs">系统登录失败，请求帮助解决...</td>
-          <td class="p-3">2025-07-20</td>
-          <td class="p-3 text-red-600 font-bold">高</td>
-          <td class="p-3 text-yellow-500">⭐⭐⭐⭐☆</td>
-          <td class="p-3 text-red-600">未处理</td>
-          <td class="p-3 space-x-2">
-            <button onclick="openReplyModal('张三', 'F20250720001')" class="text-blue-600 hover:underline">回复</button>
-            <button class="text-gray-600 hover:underline">标记已处理</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- 回复弹窗 -->
-  <div id="replyModal" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-2xl rounded shadow p-6 relative">
-      <h2 class="text-xl font-semibold mb-3">回复咨询 - <span id="modalUser" class="text-blue-600"></span>
-        <span class="text-gray-500 text-sm ml-2" id="modalID"></span></h2>
-
-      <!-- 历史记录 -->
-      <div class="space-y-3 mb-4 max-h-64 overflow-y-auto">
-        <div class="flex items-start space-x-3">
-          <img src="https://i.pravatar.cc/40?img=12" class="w-8 h-8 rounded-full" />
-          <div>
-            <div class="text-xs text-gray-600">管理员 · 2025-07-20 14:32</div>
-            <div class="bg-gray-100 p-2 rounded">您好，我们已修复登录问题，请您重新尝试。</div>
-          </div>
+    <p id="feedbackStatus" role="status">正在加载咨询…</p>
+    <table><thead><tr><th>编号</th><th>提交人</th><th>联系方式</th><th>主题</th><th>时间</th><th>紧急程度</th><th>评级</th><th>状态</th><th>操作</th></tr></thead><tbody id="feedbackRows"></tbody></table>
+  </main>
+  <div id="feedbackDialog" class="dialog-backdrop" hidden>
+    <div class="dialog">
+      <h2 id="feedbackTitle">咨询详情</h2>
+      <p id="feedbackContact"></p>
+      <ul id="feedbackHistory"></ul>
+      <form id="feedbackMetaForm">
+        <div class="row">
+          <label>状态 <select id="editStatus"><option value="pending">待回复</option><option value="replied">已回复</option><option value="closed">已关闭</option></select></label>
+          <label>紧急程度 <select id="editUrgency"><option value="high">紧急</option><option value="normal">普通</option><option value="low">较低</option></select></label>
+          <label>评级 <select id="editRating"><option value="">未评级</option><option value="1">1 星</option><option value="2">2 星</option><option value="3">3 星</option><option value="4">4 星</option><option value="5">5 星</option></select></label>
         </div>
-        <div class="flex items-start space-x-3">
-          <img src="https://i.pravatar.cc/40?img=20" class="w-8 h-8 rounded-full" />
-          <div>
-            <div class="text-xs text-gray-600">张三 · 2025-07-20 15:02</div>
-            <div class="bg-gray-100 p-2 rounded">已尝试，可以正常使用，谢谢！</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 回复输入 -->
-      <div class="space-y-2">
-        <textarea id="replyText" class="w-full border rounded p-2 h-24 resize-none" placeholder="输入内容，可使用 @用户、😀 表情..."></textarea>
-        <div class="flex items-center justify-between">
-          <div class="space-x-2">
-            <button onclick="insertEmoji('😀')" class="text-lg">😀</button>
-            <label class="cursor-pointer text-gray-600 hover:text-black">
-              📎 附件
-              <input type="file" id="fileInput" class="hidden" onchange="handleFileUpload(event)">
-            </label>
-            <span id="fileName" class="text-xs text-gray-500"></span>
-          </div>
-          <div>
-            <button onclick="sendReply()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">发送</button>
-            <button onclick="closeReplyModal()" class="ml-2 text-gray-600 hover:underline">关闭</button>
-          </div>
-        </div>
-      </div>
+        <button type="submit">保存状态</button>
+      </form>
+      <form id="feedbackReplyForm">
+        <label for="replyBody">回复</label><textarea id="replyBody" required maxlength="10000"></textarea>
+        <label for="replyAttachment">附件地址（可选）</label><input id="replyAttachment" type="url" placeholder="https://…" maxlength="1000">
+        <button type="submit">发送回复</button>
+        <button type="button" id="closeFeedback" class="secondary">关闭</button>
+      </form>
     </div>
   </div>
-
-  <!-- JS 控制逻辑 -->
-  <script>
-    function openReplyModal(user, id) {
-      document.getElementById('modalUser').innerText = user;
-      document.getElementById('modalID').innerText = id;
-      document.getElementById('replyModal').classList.remove('hidden');
-      document.getElementById('replyModal').classList.add('flex');
-    }
-
-    function closeReplyModal() {
-      document.getElementById('replyModal').classList.add('hidden');
-    }
-
-    function insertEmoji(emoji) {
-      const textarea = document.getElementById('replyText');
-      textarea.value += emoji;
-    }
-
-    function handleFileUpload(event) {
-      const file = event.target.files[0];
-      document.getElementById('fileName').innerText = file ? file.name : '';
-    }
-
-    function sendReply() {
-      const text = document.getElementById('replyText').value.trim();
-      if (!text) return alert("请输入内容");
-      alert("已发送回复（模拟）：" + text);
-      document.getElementById('replyText').value = '';
-      document.getElementById('fileName').innerText = '';
-    }
-  </script>
+  <script src="assets/js/feedback.js?v=20260926-1"></script>
 </body>
 </html>

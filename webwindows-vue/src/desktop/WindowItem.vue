@@ -5,7 +5,7 @@
     :style="styleObj"
     @mousedown="focusMe"
   >
-    <div class="ww-titlebar" @mousedown.prevent="beginDrag">
+    <div class="ww-titlebar" data-ww-cursor="move" @mousedown.prevent="beginDrag">
       <div class="ww-title">{{ win.title }}</div>
       <div class="ww-actions">
         <button @click.stop="toggleMin">—</button>
@@ -23,7 +23,7 @@
     </div>
 
     <!-- 右下角缩放把手 -->
-    <div class="ww-resizer" @mousedown.stop.prevent="beginResize"></div>
+    <div class="ww-resizer" data-ww-cursor="se-resize" @mousedown.stop.prevent="beginResize"></div>
   </div>
 </template>
 
@@ -95,9 +95,9 @@ onBeforeUnmount(() => { endDrag(); endResize() })
 
 <style>
 .ww-window { background:#fff; border:1px solid #aaa; box-shadow:0 6px 18px rgba(0,0,0,.2); border-radius:8px; overflow:hidden; }
-.ww-titlebar{ height:36px; background:#f2f2f2; display:flex; align-items:center; justify-content:space-between; padding:0 8px; cursor:move; user-select:none; }
+.ww-titlebar{ height:36px; background:#f2f2f2; display:flex; align-items:center; justify-content:space-between; padding:0 8px; user-select:none; }
 .ww-title{ font-weight:600; }
 .ww-actions button{ margin-left:6px; }
 .ww-body{ width:100%; height:calc(100% - 36px); }
-.ww-resizer{ position:absolute; right:0; bottom:0; width:16px; height:16px; cursor:nwse-resize; background:linear-gradient(135deg, transparent 50%, #ccc 50%); }
+.ww-resizer{ position:absolute; right:0; bottom:0; width:16px; height:16px; background:linear-gradient(135deg, transparent 50%, #ccc 50%); }
 </style>

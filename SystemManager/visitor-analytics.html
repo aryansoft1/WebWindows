@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <script src="assets/js/admin-security.js?v=20260926-1"></script>
+  <script src="assets/js/page-guard.js?v=20260926-1"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>访客统计 - WebWindows 管理系统</title>
+  <link href="assets/css/visitor-analytics.css?v=20260926-3" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+  <script defer src="assets/js/visitor-analytics-charts.js?v=20260926-7"></script>
+  <script defer src="assets/js/visitor-analytics.js?v=20260926-4"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-6">
+  <main class="max-w-7xl mx-auto space-y-6">
+    <header class="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h1 class="text-3xl font-bold">访客统计</h1>
+        <p class="mt-2 text-sm text-gray-600">IP 为 IIS 实际收到的请求地址；地区优先来自本机 IIS GeoIP 模块，其次是管理员配置的外部解析 API（同一 IP 复用历史结果、内网地址不外发、每日调用有上限），无法可靠识别时显示“未知”。</p>
+      </div>
+      <label class="text-sm">统计范围
+        <select id="analyticsDays" class="ml-2 border rounded px-3 py-2 bg-white">
+          <option value="1">最近 24 小时</option>
+          <option value="7" selected>最近 7 天</option>
+          <option value="30">最近 30 天</option>
+          <option value="90">最近 90 天</option>
+        </select>
+      </label>
+    </header>
+
+    <div id="analyticsStatus" class="rounded border bg-white px-4 py-3 text-sm" role="status">正在读取统计数据……</div>
+
+    <section class="grid grid-cols-2 lg:grid-cols-6 gap-4" aria-label="统计摘要">
+      <div class="bg-white rounded-xl shadow p-4"><div class="text-sm text-gray-500">访问会话</div><div id="kpiSessions" class="text-3xl font-bold">--</div></div>
+      <div class="bg-white rounded-xl shadow p-4"><div class="text-sm text-gray-500">独立访客</div><div id="kpiVisitors" class="text-3xl font-bold">--</div></div>
+      <div class="bg-white rounded-xl shadow p-4"><div class="text-sm text-gray-500">注册用户</div><div id="kpiRegistered" class="text-3xl font-bold text-blue-600">--</div></div>
+      <div class="bg-white rounded-xl shadow p-4"><div class="text-sm text-gray-500">开发者</div><div id="kpiDevelopers" class="text-3xl font-bold text-purple-600">--</div></div>
+      <div class="bg-white rounded-xl shadow p-4"><div class="text-sm text-gray-500">平均活跃时长</div><div id="kpiAverage" class="text-3xl font-bold text-green-600">--</div></div>
+      <div class="bg-white rounded-xl shadow p-4"><div class="text-sm text-gray-500">总活跃时长</div><div id="kpiTotal" class="text-3xl font-bold text-amber-600">--</div></div>
+    </section>
+
+    <section class="bg-white rounded-xl shadow overflow-hidden">
+      <div class="p-5 border-b flex flex-wrap items-center justify-between gap-2">
+        <h2 class="text-xl font-semibold">每个窗口停留时间</h2>
+        <p class="text-xs text-gray-500">按功能窗口统计：累计活跃停留、打开次数、会话数与平均每次打开时长（停留只计页面可见且未空闲的时间）。</p>
+      </div>
+      <div class="p-5 border-b">
+        <div id="featureChart" class="w-full h-feature" role="img" aria-label="每个窗口停留时间柱状图"></div>
+        <div id="featureSummary" class="mt-2 text-xs text-gray-500"></div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-left"><tr><th class="p-3">功能窗口</th><th class="p-3">打开次数</th><th class="p-3">会话数</th><th class="p-3">累计停留</th><th class="p-3">平均每次</th><th class="p-3">停留占比</th></tr></thead>
+          <tbody id="featureRows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl shadow p-5">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+        <h2 class="text-xl font-semibold">访客地区分布</h2>
+        <nav id="geoBreadcrumb" class="flex items-center gap-2 text-sm" aria-label="地图层级"></nav>
+      </div>
+      <p class="text-xs text-gray-500">世界地图按访问会话着色（Natural Earth 国家边界，ISO 3166-1 alpha-2 对齐）；点击中国可下钻到省与地级市（DataV 阿里云 GeoJSON）。</p>
+      <div class="flex flex-wrap items-center gap-2 mt-2">
+        <button id="geoBackfill" type="button" class="rounded bg-blue-500 text-white px-3 py-1 text-sm">补全历史地区</button>
+        <span id="geoBackfillStatus" class="text-xs text-gray-500"></span>
+      </div>
+      <div id="geoMap" class="w-full h-map" role="img" aria-label="访客地区世界地图"></div>
+      <div id="geoSummary" class="mt-2 text-xs text-gray-500"></div>
+    </section>
+
+    <section class="grid lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-xl font-semibold mb-2">设备分布</h2>
+        <div id="deviceChart" class="w-full h-72" role="img" aria-label="设备分布环形图"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-xl font-semibold mb-2">停留时间分布</h2>
+        <div id="dwellChart" class="w-full h-72" role="img" aria-label="停留时间分布柱状图"></div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl shadow p-5">
+      <h2 class="text-xl font-semibold mb-2">每日趋势</h2>
+      <div id="trendChart" class="w-full h-72" role="img" aria-label="每日会话与活跃时长趋势"></div>
+    </section>
+
+    <section class="grid lg:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-xl font-semibold mb-4">访问时间段</h2>
+        <div id="hourChart" class="grid grid-cols-6 sm:grid-cols-12 gap-2 items-end min-h-48" aria-label="按小时访问量"></div>
+      </div>
+      <div class="bg-white rounded-xl shadow p-5">
+        <h2 class="text-xl font-semibold mb-4">访客身份</h2>
+        <div id="visitorTypes" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <section class="bg-white rounded-xl shadow overflow-hidden">
+      <div class="p-5 border-b"><h2 class="text-xl font-semibold">最近访客</h2></div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-left"><tr><th class="p-3">访问时间</th><th class="p-3">身份</th><th class="p-3">账号</th><th class="p-3">请求 IP</th><th class="p-3">近似地区</th><th class="p-3">设备</th><th class="p-3">活跃时长</th><th class="p-3">功能停留</th><th class="p-3">入口</th></tr></thead>
+          <tbody id="sessionRows"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

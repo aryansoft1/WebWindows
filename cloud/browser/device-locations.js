@@ -7,33 +7,37 @@
   let volumes = [];
   let activeVolume = null;
   let activePath = [];
+  // Shared multi-file selection controller; null when unavailable, in which
+  // case single-item behaviour is unchanged.
+  let fileSelection = null;
 
   const labels = {
     zh: {
-      device: "此设备", add: "添加本地位置", choose: "选择文件夹", empty: "尚未授权本地位置",
-      emptyHint: "选择一个文件夹后，WebWindows 才能读取其中的文件。", loading: "正在读取…",
+      device: "此设备", empty: "没有可访问的本地位置",
+      emptyHint: "当前环境没有已授权给 WebWindows 的本地位置。", loading: "正在读取…",
       readOnly: "只读", readWrite: "可读写", persisted: "持久授权", session: "当前会话授权",
-      revoked: "授权已失效", unknown: "权限未知", reauthorize: "重新授权", unavailable: "本地位置不可访问",
+      revoked: "授权已失效", unknown: "权限未知", unavailable: "本地位置不可访问",
       emptyDirectory: "此文件夹为空", openFailed: "文件无法打开", directoryFailed: "目录无法读取"
     },
     jp: {
-      device: "このデバイス", add: "ローカルの場所を追加", choose: "フォルダーを選択", empty: "許可された場所はありません",
-      emptyHint: "フォルダーを選択すると、その中のファイルを読み取れます。", loading: "読み込み中…",
+      device: "このデバイス", empty: "アクセス可能なローカル場所はありません",
+      emptyHint: "現在の環境には WebWindows が許可済みの場所がありません。", loading: "読み込み中…",
       readOnly: "読み取り専用", readWrite: "読み書き可能", persisted: "永続的な許可", session: "現在のセッション",
-      revoked: "許可が無効です", unknown: "許可は不明です", reauthorize: "再承認", unavailable: "ローカルの場所にアクセスできません",
+      revoked: "許可が無効です", unknown: "許可は不明です", unavailable: "ローカルの場所にアクセスできません",
       emptyDirectory: "このフォルダーは空です", openFailed: "ファイルを開けません", directoryFailed: "フォルダーを読み取れません"
     },
     en: {
-      device: "This device", add: "Add local location", choose: "Choose folder", empty: "No local locations authorized",
-      emptyHint: "Choose a folder before WebWindows can read its files.", loading: "Loading…",
+      device: "This device", empty: "No accessible local locations",
+      emptyHint: "This environment has no local location already granted to WebWindows.", loading: "Loading…",
       readOnly: "Read only", readWrite: "Read and write", persisted: "Persistent grant", session: "Current session",
-      revoked: "Authorization expired", unknown: "Permission unknown", reauthorize: "Authorize again", unavailable: "Local location unavailable",
+      revoked: "Authorization expired", unknown: "Permission unknown", unavailable: "Local location unavailable",
       emptyDirectory: "This folder is empty", openFailed: "The file could not be opened", directoryFailed: "The folder could not be read"
     }
   };
 
   function language() {
-    const value = String(global.localStorage?.getItem("lang") || document.body.dataset.language || "zh").toLowerCase();
+    if (global.WebWindowsCloudI18n) return global.WebWindowsCloudI18n.language();
+    const value = String(global.WebWindowsI18n?.getLanguage?.() || global.localStorage?.getItem("lang") || document.body.dataset.language || "zh").toLowerCase();
     if (value === "jp" || value.startsWith("ja")) return "jp";
     if (value.startsWith("en")) return "en";
     return "zh";
@@ -161,6 +165,16 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = `device-entry${entry.kind === "directory" ? " is-folder" : ""}`;
+    // Windows marks each entry with its absolute location so a drag or a
+    // selection survives a re-render of the grid.
+    button.dataset.kind = entry.kind === "directory" ? "directory" : "file";
+    button.dataset.path = Array.isArray(entry.path) ? entry.path.join("/") : String(entry.path || "");
+    button.dataset.name = entry.name || "";
+    if (entry.kind === "directory") {
+      button.setAttribute("data-drop-target", "directory");
+    } else {
+      button.draggable = true;
+    }
     const icon = document.createElement("span");
     icon.className = "device-entry-icon";
     icon.textContent = entry.kind === "directory" ? "▰" : (String(entry.name || "").split(".").pop() || "FILE").slice(0, 4).toUpperCase();
@@ -177,9 +191,19 @@
     metadata.textContent = details.filter(Boolean).join(" · ");
     copy.append(name, metadata);
     button.append(icon, copy);
-    button.addEventListener("click", () => entry.kind === "directory"
-      ? openDirectory(activeVolume, entry.path || [...activePath, entry.name])
-      : openLocalFile(activeVolume, entry));
+    button.addEventListener("click", (event) => {
+      // Ctrl/Shift clicks belong to the multi-selection controller, so a
+      // modified click must not open the file or enter the directory.
+      if (event.ctrlKey || event.metaKey || event.shiftKey) {
+        event.preventDefault();
+        return;
+      }
+      if (entry.kind === "directory") {
+        openDirectory(activeVolume, entry.path || [...activePath, entry.name]);
+      } else {
+        openLocalFile(activeVolume, entry);
+      }
+    });
     return button;
   }
 
@@ -190,14 +214,7 @@
     const content = elements().content;
     content.replaceChildren();
     if (!volumes.length) {
-      const empty = emptyCard(text("empty"), text("emptyHint"));
-      const choose = document.createElement("button");
-      choose.type = "button";
-      choose.className = "device-primary-action device-empty-action";
-      choose.textContent = text("choose");
-      choose.addEventListener("click", () => authorize(null));
-      empty.appendChild(choose);
-      content.appendChild(empty);
+      content.appendChild(emptyCard(text("empty"), text("emptyHint")));
       setStatus("");
       return;
     }
@@ -224,15 +241,7 @@
         card.addEventListener("click", open);
         card.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") open(); });
       } else {
-        const actions = document.createElement("div");
-        actions.className = "device-location-actions";
-        const retry = document.createElement("button");
-        retry.type = "button";
-        retry.className = "device-secondary-action";
-        retry.textContent = text("reauthorize");
-        retry.addEventListener("click", (event) => { event.stopPropagation(); authorize(volume.id); });
-        actions.appendChild(retry);
-        copy.appendChild(actions);
+        card.setAttribute("aria-disabled", "true");
       }
       card.append(icon, copy);
       content.appendChild(card);
@@ -240,21 +249,31 @@
     setStatus("");
   }
 
-  async function refreshVolumes() {
-    setStatus(text("loading"));
-    volumes = await storage.listVolumes();
-    renderVolumes();
-  }
-
-  async function authorize(replaceVolumeId) {
-    try {
-      setStatus(text("loading"));
-      await storage.pickDirectory({ writable: true, replaceVolumeId: replaceVolumeId || null });
-      await refreshVolumes();
-    } catch (error) {
-      if (error?.name === "AbortError" || /cancel/i.test(String(error?.message))) setStatus("");
-      else setStatus(error?.message || text("unavailable"), true);
-    }
+  /*
+   * Multi-file selection for the on-device panel: marquee, Ctrl/Shift extend,
+   * Ctrl+A, Escape and drag. Wired once against the persistent content
+   * container, so it keeps working across directory re-renders.
+   */
+  function installSelection() {
+    const content = elements().content;
+    if (!content || fileSelection || !global.WebWindowsFileSelection) return;
+    fileSelection = global.WebWindowsFileSelection.create({
+      container: content,
+      itemSelector: ".device-entry",
+      isSelectable: (node) => node.dataset.kind === "file" || node.dataset.kind === "directory",
+      buildPayload: (selection) => ({
+        kind: "device",
+        volumeId: activeVolume?.id || "",
+        label: selection.length === 1
+          ? selection[0].dataset.name
+          : `${selection.length} items`,
+        items: selection.map((node) => ({
+          name: node.dataset.name,
+          path: node.dataset.path,
+          kind: node.dataset.kind,
+        })),
+      }),
+    });
   }
 
   async function openDirectory(volume, path) {
@@ -262,6 +281,9 @@
     activePath = Array.isArray(path) ? [...path] : [];
     renderBreadcrumbs();
     const content = elements().content;
+    // The grid is rebuilt from scratch, so the old selection no longer refers
+    // to anything on screen. Clear it instead of leaving a stale highlight.
+    fileSelection?.clear();
     content.replaceChildren();
     setStatus(text("loading"));
     try {
@@ -317,15 +339,26 @@
     await device.ready?.();
     storage = device.storage;
     const state = await availability(storage);
-    if (state.state === "unsupported") return;
+    if (state.state === "unsupported" || state.state === "empty") return;
     volumes = state.volumes;
+    installSelection();
     ui.root.hidden = false;
+    ui.add.hidden = true;
     ui.root.querySelector("span:last-child").textContent = text("device");
-    ui.add.textContent = text("add");
     ui.root.addEventListener("click", () => { setDeviceView(true); renderVolumes(); });
     ui.publicRoot.addEventListener("click", () => setDeviceView(false));
-    ui.add.addEventListener("click", () => authorize(null));
     renderVolumes();
+  }
+
+  function applyLanguage() {
+    const ui = elements();
+    const label = ui.root?.querySelector("span:last-child");
+    if (label) label.textContent = text("device");
+    installSelection();
+    if (!ui.panel?.hidden) {
+      if (activeVolume) openDirectory(activeVolume, activePath);
+      else renderVolumes();
+    }
   }
 
   global.WebWindowsDeviceLocations = Object.freeze({
@@ -335,6 +368,9 @@
     permissionState,
     deviceUrl
   });
+
+  global.addEventListener("storage", (event) => { if (event.key === "lang") applyLanguage(); });
+  global.addEventListener("message", (event) => { if (event.data?.type === "change-language") applyLanguage(); });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => initialize().catch((error) => console.warn("[DeviceLocations]", error)), { once: true });
   else initialize().catch((error) => console.warn("[DeviceLocations]", error));

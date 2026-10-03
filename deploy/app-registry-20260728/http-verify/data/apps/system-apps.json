@@ -1,0 +1,216 @@
+{
+  "schemaVersion": 1,
+  "repository": {
+    "id": "aryansoft-main",
+    "baseUrl": "/"
+  },
+  "apps": [
+    {
+      "id": "webwindows.system.settings",
+      "legacyIds": ["settings"],
+      "type": "system",
+      "name": "设置",
+      "icon": "assets/icons/settings.png",
+      "entry": "settings.html",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "900px",
+        "height": "640px"
+      }
+    },
+    {
+      "id": "com.aryansoft.webwindows.news",
+      "legacyIds": ["news"],
+      "type": "web-shortcut",
+      "name": "新闻中心",
+      "icon": "assets/icons/news.png",
+      "entry": "news.html",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": false,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "820px",
+        "height": "640px"
+      }
+    },
+    {
+      "id": "com.aryansoft.webwindows.sheet",
+      "legacyIds": ["SheetEditor"],
+      "type": "application",
+      "name": "Sheet Editor",
+      "icon": "assets/icons/sheeteditor.png",
+      "entry": "worker_SheetCreater.html",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": false,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "1100px",
+        "height": "760px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "cloud-sheet",
+          "extensions": [".xlsx", ".xls", ".csv"],
+          "mimeTypes": [
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-excel",
+            "text/csv"
+          ],
+          "priority": 100
+        }
+      ]
+    },
+    {
+      "id": "com.aryansoft.webwindows.write",
+      "legacyIds": ["WriteEditor"],
+      "type": "application",
+      "name": "Write Editor",
+      "icon": "assets/icons/writeeditor.svg",
+      "entry": "worker_WriteEditor.html",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": false,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "1080px",
+        "height": "780px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "cloud-write",
+          "extensions": [".docx", ".doc"],
+          "mimeTypes": [
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/msword"
+          ],
+          "priority": 100
+        }
+      ]
+    },
+    {
+      "id": "com.aryansoft.webwindows.slide",
+      "legacyIds": ["SlideEditor"],
+      "type": "application",
+      "name": "Slide Editor",
+      "icon": "assets/icons/slideeditor.svg",
+      "entry": "worker_SlideEditor.html",
+      "install": {
+        "defaultState": "installed",
+        "source": "preinstalled",
+        "uninstallable": true
+      },
+      "placement": {
+        "desktop": true,
+        "startMenu": false,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "1100px",
+        "height": "780px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "cloud-slide",
+          "extensions": [".pptx", ".ppt"],
+          "mimeTypes": [
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "application/vnd.ms-powerpoint"
+          ],
+          "priority": 100
+        }
+      ]
+    },
+    {
+      "id": "webwindows.system.file-preview",
+      "legacyIds": ["resource-preview"],
+      "type": "system",
+      "name": "文件预览",
+      "icon": "assets/icons/explorer.png",
+      "entry": "about:blank",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": false,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": false,
+        "width": "900px",
+        "height": "680px"
+      },
+      "fileHandlers": [
+        {
+          "action": "open",
+          "adapter": "direct-url",
+          "extensions": [
+            ".jpg",
+            ".jpeg",
+            ".png",
+            ".gif",
+            ".webp",
+            ".pdf",
+            ".txt",
+            ".log",
+            ".md",
+            ".json"
+          ],
+          "mimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+            "application/pdf",
+            "text/plain",
+            "text/markdown",
+            "application/json"
+          ],
+          "priority": 10
+        }
+      ]
+    }
+  ]
+}

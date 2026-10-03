@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">可逆的故障排除顺序</title><desc id="desc">依次记录问题、检查状态、重开窗口、刷新和提交信息。</desc>
+  <rect width="960" height="420" rx="28" fill="#f6f8fb"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <g fill="#fff" stroke="#c2d0dd"><circle cx="115" cy="200" r="72"/><circle cx="300" cy="200" r="72"/><circle cx="485" cy="200" r="72"/><circle cx="670" cy="200" r="72"/><circle cx="845" cy="200" r="72"/></g>
+    <g fill="#1769aa" font-size="23"><text x="115" y="190">记录</text><text x="115" y="222">提示与版本</text><text x="300" y="190">检查</text><text x="300" y="222">网络/登录/权限</text><text x="485" y="190">重开</text><text x="485" y="222">当前窗口</text><text x="670" y="190">刷新</text><text x="670" y="222">恢复 100%</text><text x="845" y="190">提交</text><text x="845" y="222">步骤与截图</text></g>
+    <g stroke="#87a8c0" stroke-width="6"><path d="M190 200h35M375 200h35M560 200h35M745 200h25"/></g><text x="480" y="350" fill="#a05c00" font-size="20">清除全部浏览器数据不是第一步：它可能删除本地项目和消息</text>
+  </g></svg>

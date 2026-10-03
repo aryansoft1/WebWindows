@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "contract": "webwindows-runtime-compatibility-v1",
+  "factualAsOf": "2026-08-29",
+  "publicApiVersion": 1,
+  "publicNamespaces": [
+    "window.WebWindows.device",
+    "window.WebWindows.fileDialog"
+  ],
+  "packageRuntime": {
+    "model": "browser-zip-sandbox-v1",
+    "status": "supported",
+    "source": "package-runtime.html and assets/js/package-runtime.js",
+    "execution": {
+      "container": "sandboxed-srcdoc-iframe",
+      "sameOrigin": false,
+      "network": "none",
+      "scripts": "classic-only",
+      "modules": "unsupported",
+      "externalDependenciesInPackage": "unsupported"
+    },
+    "limits": {
+      "maxFiles": 500,
+      "maxUnpackedBytes": 31457280,
+      "maxPathCharacters": 240
+    }
+  },
+  "hostRuntimes": [
+    {
+      "id": "browser",
+      "runtimeName": "Browser Runtime",
+      "status": "supported",
+      "adapterId": "browser",
+      "runtimeVersion": null,
+      "platform": "browser",
+      "engine": "browser",
+      "activation": "default and fallback",
+      "capabilities": {
+        "system.info": { "status": "supported", "source": "browser" },
+        "runtime.info": { "status": "supported", "source": "browser" },
+        "network.status": { "status": "supported", "source": "browser-online-api" },
+        "network.details": { "status": "conditional", "condition": "Network Information API is present" },
+        "battery.status": { "status": "conditional", "condition": "navigator.getBattery is present and succeeds" },
+        "display.brightness": { "status": "supported", "scope": "visual", "source": "webwindows-visual" },
+        "display.screen": { "status": "conditional", "condition": "window.screen is present" },
+        "audio.volume": { "status": "supported", "scope": "page", "source": "webwindows-page" },
+        "storage.estimate": { "status": "conditional", "condition": "navigator.storage.estimate is present" },
+        "storage.directoryPicker": { "status": "conditional", "condition": "showDirectoryPicker is present" },
+        "storage.read": { "status": "conditional", "condition": "showDirectoryPicker is present and a readable grant exists" },
+        "storage.write": { "status": "unsupported" },
+        "power.source": { "status": "conditional", "condition": "battery.status is supported" },
+        "updater": { "status": "unsupported" }
+      }
+    },
+    {
+      "id": "dreama-android",
+      "runtimeName": "Dreama Runtime",
+      "status": "supported",
+      "adapterId": "android",
+      "platform": "android",
+      "engine": "android-webview",
+      "bridgeMajorVersion": 1,
+      "activation": {
+        "requiresTopLevel": true,
+        "requiresTrustedOrigin": true,
+        "requiresAvailabilityEvent": true,
+        "requiresValidatedRuntimeInfo": true
+      },
+      "reportedCapabilityKeys": [
+        "battery",
+        "network",
+        "display",
+        "audio",
+        "storage",
+        "power",
+        "updater"
+      ],
+      "capabilities": {
+        "system.info": { "status": "supported" },
+        "runtime.info": { "status": "supported" },
+        "network.status": { "status": "conditional", "condition": "reported network capability and required implementation are present", "fallback": "browser" },
+        "network.details": { "status": "conditional", "condition": "same as network.status", "fallback": "browser-or-unsupported" },
+        "battery.status": { "status": "conditional", "condition": "reported battery capability and required implementation are present", "fallback": "browser-or-unsupported" },
+        "display.brightness": { "status": "conditional", "condition": "reported display capability and complete get/set implementation are present", "scope": "native", "fallback": "visual" },
+        "display.screen": { "status": "conditional", "condition": "window.screen is present" },
+        "audio.volume": { "status": "conditional", "condition": "reported audio capability and complete get/set implementation are present", "scope": "native", "fallback": "page" },
+        "storage.estimate": { "status": "conditional", "condition": "navigator.storage.estimate is present" },
+        "storage.directoryPicker": { "status": "conditional", "condition": "reported storage capability and complete Storage v1 implementation are present", "source": "android-saf" },
+        "storage.read": { "status": "conditional", "condition": "same as storage.directoryPicker and a readable persisted grant exists", "source": "android-saf" },
+        "storage.write": { "status": "unsupported" },
+        "power.source": { "status": "conditional", "condition": "public battery state is supported", "note": "currently derived from battery state; the reported power flag is not independently consumed" },
+        "updater": { "status": "unspecified", "note": "reported in runtime info but no stable window.WebWindows.device updater group exists" }
+      },
+      "evidence": [
+        "tests/device-api-smoke.mjs",
+        "tests/native-bridge-runtime-smoke.mjs",
+        "tests/native-bridge-battery-smoke.mjs",
+        "tests/native-bridge-network-smoke.mjs",
+        "tests/native-bridge-display-smoke.mjs",
+        "tests/native-bridge-audio-smoke.mjs",
+        "tests/device-storage-data-contract-smoke.mjs",
+        "tests/device-storage-provider-smoke.mjs"
+      ]
+    },
+    {
+      "id": "dreama-windows",
+      "runtimeName": "Dreama Runtime",
+      "status": "unspecified",
+      "platform": "windows",
+      "engine": "webview2",
+      "note": "The public validator accepts this identity shape, but Phase 0A has no equivalent confirmed host capability baseline. No capability promise is made."
+    },
+    {
+      "id": "linux-native",
+      "status": "unsupported",
+      "note": "No current validated host adapter is implemented."
+    }
+  ],
+  "nonClaims": [
+    "Runtime capability booleans describe implementation availability, not user permission.",
+    "A reported capability does not grant a sandboxed third-party function access.",
+    "The package runtime currently exposes no stable public API broker to the inner unique-origin iframe.",
+    "Unknown or future host capabilities are not implied by this file."
+  ]
+}

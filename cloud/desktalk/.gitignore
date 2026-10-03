@@ -4,3 +4,6 @@
 bigmodel.env
 bigmodel.env.*
 !bigmodel.env.example
+groq.env
+groq.env.*
+!groq.env.example

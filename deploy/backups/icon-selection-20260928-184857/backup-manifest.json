@@ -1,0 +1,46 @@
+[
+  {
+    "path": "index.html",
+    "sha256": "365662AAC66631BFD567D26E1D940797D4FA8A0A95FFE8E2629DD2A9672B4679"
+  },
+  {
+    "path": "assets/css/main.css",
+    "sha256": "16E304A9BE1DD2FB32DE4A19DBD690DD0B80649F25BD2A3CCE7AF8C1ABD788E4"
+  },
+  {
+    "path": "webwindows-vue/src/desktop/WindowManager.vue",
+    "sha256": "43A4700B208315CDBF8F1DB06357CD54AFA29C8F961275AF5A8DD4FBC1D5D2A2"
+  },
+  {
+    "path": "dist-window/window-manager-widget.js",
+    "sha256": "E9878DD3AEA364F1B0CCFE3FCA34AD12A3E1CBCCBD405C4AF93FB53E4F4E4174"
+  },
+  {
+    "path": "dist-window/window-manager-widget.umd.js",
+    "sha256": "AFB3D51C1FEE2BB54C42FBBCA798F61B734B8D2631A554FD39443AFA35184935"
+  },
+  {
+    "path": "dist-window/window-manager-widget.css",
+    "sha256": "AC84AB641FBF0C07013131888ADEDFBD01AE72DA6F83EDDDD435F5A4AB538FB2"
+  },
+  {
+    "path": "cloud/browser/file-selection.js",
+    "sha256": "7F1549EFC90AE880E7EB4F89EFEE138995AA3B9B7A2163ABFA8088C8F6D23293"
+  },
+  {
+    "path": "cloud/browser/toolbar.js",
+    "sha256": "877D56B3902B89F70EE8268E4DEFC11DE24B62D0AC26A1B3D9FDFF954C06AC1E"
+  },
+  {
+    "path": "cloud/browser/files.asp",
+    "sha256": "51593A8F551480FC8B96142E11FEBCFC6978EB08356F6CCE34FED1DAF6074711"
+  },
+  {
+    "path": "cloud/browser/styles.css",
+    "sha256": "77D23E58B53300A8233030D0C248164DF2496A2A7D4216A4087ACA2DBEC47E45"
+  },
+  {
+    "path": "cloud/browser/private-files.asp",
+    "sha256": "74FBF824597166902AE0900FC34F676B88A1429E40236F087F8A0CD3C0E2EF69"
+  }
+]

@@ -16,6 +16,28 @@ function applyDesktopScale(scale) {
 scaleSelect.addEventListener("change", () => applyDesktopScale(scaleSelect.value));
 
 window.addEventListener("DOMContentLoaded", () => {
+    const cursorSelect = document.getElementById("cursorThemeSelect");
+    const cursorManager = window.WebWindows?.cursor;
+    if (cursorSelect && cursorManager) {
+        const renderCursorPreview = (themeId) => {
+            document.querySelectorAll("[data-cursor-preview]").forEach((image) => {
+                image.src = cursorManager.getAsset(image.dataset.cursorPreview, themeId);
+            });
+        };
+        cursorSelect.value = cursorManager.currentTheme;
+        renderCursorPreview(cursorSelect.value);
+        cursorSelect.addEventListener("change", () => {
+            cursorManager.setTheme(cursorSelect.value);
+            const desktopCursor = getDesktopHost().WebWindows?.cursor;
+            if (desktopCursor && desktopCursor !== cursorManager) desktopCursor.setTheme(cursorSelect.value);
+            renderCursorPreview(cursorSelect.value);
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key !== "webwindows.cursor.theme" || !cursorManager.themes[event.newValue]) return;
+            cursorSelect.value = event.newValue;
+            renderCursorPreview(event.newValue);
+        });
+    }
     const savedScale = localStorage.getItem("ui-scale") || 1;
 
     document.getElementById("scaleSelect").value = savedScale;
@@ -31,6 +53,9 @@ window.addEventListener("DOMContentLoaded", () => {
         if (typeof host.setLanguage === "function") {
             host.setLanguage(langSelect.value);
         } else {
+            host.localStorage.setItem("lang", langSelect.value);
+            host.localStorage.setItem("webwindows.language.source", "manual");
+            host.localStorage.setItem("webwindows.language.migration", "2026.08.19.1");
             host.postMessage({ type: "change-language", lang: langSelect.value }, window.location.origin);
         }
     });
@@ -470,5 +495,380 @@ window.addEventListener("DOMContentLoaded", () => {
         } catch (_) {
             // 设置页仍可在独立窗口中使用其余设置功能。
         }
+    });
+})();
+
+// 设置 → 应用 → 启动项（Startup v1）。
+// 数据全部来自主桌面的 WebWindows.startup（StartupManager），
+// 设置页只做展示与用户确认，不直接维护启动列表。
+(function initializeStartupSettings() {
+    "use strict";
+
+    const MODE_LABELS = {
+        background: "后台启动",
+        minimized: "最小化启动",
+        normal: "正常窗口"
+    };
+
+    function startupApi() {
+        return getDesktopHost().WebWindows?.startup || null;
+    }
+
+    function registryApi() {
+        return getDesktopHost().WebWindows?.apps || null;
+    }
+
+    function setStatus(message, isError) {
+        const element = document.getElementById("startupStatus");
+        if (!element) return;
+        element.textContent = message || "";
+        element.classList.toggle("is-error", Boolean(isError));
+    }
+
+    function createElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        if (text != null) element.textContent = text;
+        return element;
+    }
+
+    // 应用 manifest 可以声明 startup.modes 限定可用模式（可选字段）；
+    // 未声明时提供全部三种模式。声明只做限制，绝不自动启用。
+    function allowedModes(app) {
+        const declared = Array.isArray(app.startup?.modes)
+            ? app.startup.modes.filter((mode) =>
+                Object.prototype.hasOwnProperty.call(MODE_LABELS, mode))
+            : [];
+        return declared.length ? declared : ["background", "minimized", "normal"];
+    }
+
+    function createStartupRow(app, item, startup) {
+        const card = createElement("article", "function-manager-card startup-app-card");
+        card.dataset.appId = app.id;
+
+        const icon = document.createElement("img");
+        icon.src = app.icon;
+        icon.alt = "";
+        card.appendChild(icon);
+
+        const information = createElement("div", "function-card-information");
+        information.appendChild(createElement("h5", "function-card-title", app.name));
+        const metadata = createElement("div", "function-card-meta");
+        metadata.appendChild(createElement("span", "", app.id));
+        information.appendChild(metadata);
+        card.appendChild(information);
+
+        const controls = createElement("div", "startup-app-controls");
+
+        const toggle = createElement("label", "startup-enable-toggle");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item?.enabled === true;
+        toggle.appendChild(checkbox);
+        toggle.appendChild(document.createTextNode("启用"));
+        controls.appendChild(toggle);
+
+        const modes = allowedModes(app);
+        const modeSelect = document.createElement("select");
+        modeSelect.className = "startup-mode-select";
+        modeSelect.setAttribute("aria-label", `${app.name} 启动模式`);
+        for (const mode of modes) {
+            const option = document.createElement("option");
+            option.value = mode;
+            option.textContent = MODE_LABELS[mode] || mode;
+            modeSelect.appendChild(option);
+        }
+        const preferredMode = modes.includes(item?.mode)
+            ? item.mode
+            : (modes.includes("background") ? "background" : modes[0]);
+        modeSelect.value = preferredMode;
+        controls.appendChild(modeSelect);
+
+        const delayInput = document.createElement("input");
+        delayInput.type = "number";
+        delayInput.className = "startup-delay-input";
+        delayInput.min = "0";
+        delayInput.max = "60000";
+        delayInput.step = "100";
+        delayInput.value = String(item?.delay ?? 0);
+        delayInput.setAttribute("aria-label", `${app.name} 启动延迟（毫秒）`);
+        controls.appendChild(delayInput);
+        controls.appendChild(createElement("span", "startup-delay-unit", "毫秒"));
+
+        card.appendChild(controls);
+
+        function save() {
+            try {
+                const saved = startup.add({
+                    appId: app.id,
+                    enabled: checkbox.checked,
+                    mode: modeSelect.value,
+                    delay: delayInput.value
+                });
+                delayInput.value = String(saved.delay);
+                setStatus(`${app.name} 的启动项已保存。`);
+            } catch (error) {
+                setStatus(error.message || `${app.name} 的启动项保存失败。`, true);
+            }
+        }
+
+        checkbox.addEventListener("change", save);
+        modeSelect.addEventListener("change", save);
+        delayInput.addEventListener("change", save);
+        return card;
+    }
+
+    async function renderStartupSettings() {
+        const listElement = document.getElementById("startupList");
+        if (!listElement) return;
+        const startup = startupApi();
+        const registry = registryApi();
+        if (!startup || !registry) {
+            setStatus("启动项服务尚未就绪，请重新打开设置。", true);
+            return;
+        }
+        setStatus("正在读取启动项……");
+        try {
+            await registry.ready();
+            const configured = new Map(startup.list().map((item) => [item.appId, item]));
+            const installed = (await registry.listInstalled())
+                .filter((app) => app.startup?.supported !== false)
+                .sort((left, right) =>
+                    String(left.name).localeCompare(String(right.name), "zh-Hans-CN"));
+            listElement.replaceChildren();
+            for (const app of installed) {
+                listElement.appendChild(createStartupRow(app, configured.get(app.id), startup));
+            }
+            if (!installed.length) {
+                listElement.appendChild(createElement(
+                    "div", "function-empty-state", "当前没有可配置的应用。"));
+            }
+            setStatus("");
+        } catch (error) {
+            setStatus(error.message || "启动项读取失败。", true);
+        }
+    }
+
+    window.renderStartupSettings = renderStartupSettings;
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderStartupSettings();
+        try {
+            const host = getDesktopHost();
+            if (host !== window) {
+                host.addEventListener("webwindows:login", renderStartupSettings);
+                host.addEventListener("webwindows:logout", renderStartupSettings);
+                host.addEventListener("webwindows:installation-changed", renderStartupSettings);
+            }
+        } catch (_) {
+            // 设置页独立打开时没有宿主事件源，切换到该页时仍会重新渲染。
+        }
+    });
+})();
+
+// 个性化 → 窗口特效开关（默认开）。
+// 设置页跑在窗口 iframe 里，读写的是宿主桌面的 localStorage，
+// 宿主通过 storage 事件实时生效，无需刷新。
+(function initializeWindowEffectsSetting() {
+    "use strict";
+
+    const EFFECTS_KEY = "webwindows.effects.enabled";
+
+    function readEffectsEnabled(host) {
+        try {
+            const stored = host.localStorage.getItem(EFFECTS_KEY);
+            if (stored == null) return true;
+            return stored !== "0" && stored !== "off" && stored !== "false";
+        } catch (_) {
+            return true;
+        }
+    }
+
+    function writeEffectsEnabled(host, enabled) {
+        try {
+            host.localStorage.setItem(EFFECTS_KEY, enabled ? "1" : "0");
+        } catch (_) {}
+        try {
+            if (typeof host.setWindowEffectsEnabled === "function") {
+                host.setWindowEffectsEnabled(enabled);
+                return;
+            }
+        } catch (_) {}
+        try {
+            host.dispatchEvent(new CustomEvent("webwindows:effects-changed", {
+                detail: { enabled }
+            }));
+        } catch (_) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById("windowEffectsToggle");
+        if (!toggle) return;
+        let host = window;
+        try {
+            host = getDesktopHost();
+        } catch (_) {}
+        toggle.checked = readEffectsEnabled(host);
+        toggle.addEventListener("change", () => {
+            writeEffectsEnabled(host, toggle.checked);
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key !== EFFECTS_KEY) return;
+            try {
+                toggle.checked = readEffectsEnabled(host);
+            } catch (_) {}
+        });
+    });
+})();
+
+// 个性化 → 主题色 / 毛玻璃 / 任务栏 / 开始菜单置顶。
+// 设置页跑在窗口 iframe 里，读写宿主桌面的偏好；
+// 有宿主 helper（WebWindowsPersonalize / functionMenu）就走 helper，保证立即生效，
+// 否则直接读写宿主 localStorage，宿主靠 storage 事件同步。
+(function initializePersonalizeSettings() {
+    "use strict";
+
+    const ACCENTS = ["#0078d7", "#6d4aff", "#0f9d58", "#e81123", "#ff8c00", "#00b7c3"];
+    const STORE_KEYS = {
+        accent: "webwindows.theme.accent",
+        acrylic: "webwindows.theme.acrylic",
+        clock12: "webwindows.taskbar.clock12",
+        icons: "webwindows.taskbar.icons",
+    };
+
+    function hostStorage(host) {
+        try {
+            return host.localStorage || null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function readPrefs(host) {
+        try {
+            if (host.WebWindowsPersonalize) return host.WebWindowsPersonalize.readAll();
+        } catch (_) {}
+        const storage = hostStorage(host);
+        const get = (key) => {
+            try {
+                return storage ? storage.getItem(key) : null;
+            } catch (_) {
+                return null;
+            }
+        };
+        const accent = get(STORE_KEYS.accent);
+        const acrylicRaw = get(STORE_KEYS.acrylic);
+        const acrylic = acrylicRaw == null || acrylicRaw === "" ? NaN : Number(acrylicRaw);
+        return {
+            accent: accent && /^#[0-9a-f]{6}$/i.test(accent) ? accent.toLowerCase() : "#0078d7",
+            acrylic: Number.isFinite(acrylic) ? Math.max(0, Math.min(20, Math.round(acrylic))) : 8,
+            clock12: get(STORE_KEYS.clock12) === "1",
+            icons: get(STORE_KEYS.icons) === "large" ? "large" : "normal",
+        };
+    }
+
+    function notifyHost(host, key, value) {
+        try {
+            host.dispatchEvent(new CustomEvent("webwindows:personalize-changed", {
+                detail: { key, value },
+            }));
+        } catch (_) {}
+    }
+
+    function writePref(host, key, value) {
+        const helper = (() => {
+            try {
+                return host.WebWindowsPersonalize || null;
+            } catch (_) {
+                return null;
+            }
+        })();
+        if (helper) {
+            if (key === STORE_KEYS.accent) helper.setAccent(value);
+            else if (key === STORE_KEYS.acrylic) helper.setAcrylic(value);
+            else if (key === STORE_KEYS.clock12) helper.setClock12(value);
+            else if (key === STORE_KEYS.icons) helper.setIconSize(value);
+            return;
+        }
+        try {
+            hostStorage(host)?.setItem(key, typeof value === "boolean" ? (value ? "1" : "0") : String(value));
+        } catch (_) {}
+        if (key === STORE_KEYS.clock12) {
+            try {
+                if (typeof host.updateTaskbarClock === "function") host.updateTaskbarClock(false);
+            } catch (_) {}
+        }
+        notifyHost(host, key, value);
+    }
+
+    function renderSwatches(container, current) {
+        container.replaceChildren();
+        ACCENTS.forEach((color) => {
+            const swatch = document.createElement("button");
+            swatch.type = "button";
+            swatch.className = `accent-swatch${color === current ? " is-selected" : ""}`;
+            swatch.style.background = color;
+            swatch.style.color = color;
+            swatch.title = color;
+            swatch.setAttribute("role", "radio");
+            swatch.setAttribute("aria-checked", color === current ? "true" : "false");
+            swatch.setAttribute("aria-label", color);
+            container.appendChild(swatch);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!document.getElementById("personalizationTab")) return;
+        let host = window;
+        try {
+            host = getDesktopHost();
+        } catch (_) {}
+        const prefs = readPrefs(host);
+
+        const swatches = document.getElementById("accentSwatches");
+        if (swatches) {
+            renderSwatches(swatches, prefs.accent);
+            swatches.addEventListener("click", (event) => {
+                const button = event.target.closest(".accent-swatch");
+                if (!button) return;
+                writePref(host, STORE_KEYS.accent, button.title);
+                renderSwatches(swatches, button.title.toLowerCase());
+            });
+        }
+
+        const acrylic = document.getElementById("acrylicRange");
+        const acrylicOut = document.getElementById("acrylicRangeValue");
+        if (acrylic) {
+            acrylic.value = String(prefs.acrylic);
+            if (acrylicOut) acrylicOut.value = `${prefs.acrylic}px`;
+            acrylic.addEventListener("input", () => {
+                const next = writePref(host, STORE_KEYS.acrylic, acrylic.value);
+                void next;
+                if (acrylicOut) acrylicOut.value = `${acrylic.value}px`;
+            });
+        }
+
+        const clock = document.getElementById("clockFormatSelect");
+        if (clock) {
+            clock.value = prefs.clock12 ? "12" : "24";
+            clock.addEventListener("change", () => {
+                writePref(host, STORE_KEYS.clock12, clock.value === "12");
+            });
+        }
+
+        const icons = document.getElementById("taskbarIconSizeSelect");
+        if (icons) {
+            icons.value = prefs.icons;
+            icons.addEventListener("change", () => {
+                writePref(host, STORE_KEYS.icons, icons.value);
+            });
+        }
+
+        document.getElementById("clearPinnedButton")?.addEventListener("click", () => {
+            try {
+                if (host.WebWindows?.functionMenu) host.WebWindows.functionMenu.clearPinned();
+                else hostStorage(host)?.removeItem("webwindows.startmenu.pinned");
+            } catch (_) {}
+        });
     });
 })();

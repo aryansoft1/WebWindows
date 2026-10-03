@@ -99,8 +99,8 @@ await apps.ready();
 await new Promise((resolve) => setTimeout(resolve, 0));
 vm.runInContext(resourceOpenSource, context, { filename: "resource-open.js" });
 
-assert.equal((await apps.listInstalled()).length, 15);
-assert.equal((await apps.listCatalog()).length, 15);
+assert.equal((await apps.listInstalled()).length, 17);
+assert.equal((await apps.listCatalog()).length, 17);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), true);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", false);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), false);
@@ -110,7 +110,7 @@ await apps.launch("webwindows.system.settings");
 assert.deepEqual(openedWindows.at(-1), [
   "settings",
   "设置",
-  "settings.html?v=20260729-3",
+  "settings.html?v=20260923-startup-1",
   "assets/icons/settings.png",
   true,
   "",
@@ -130,6 +130,18 @@ assert.deepEqual(openedWindows.at(-1), [
   "700px"
 ]);
 
+await apps.launch("webwindows.system.developer-studio");
+assert.deepEqual(openedWindows.at(-1), [
+  "developer-studio",
+  "Developer Studio",
+  "developer-studio.html?v=20260901-workbench-2",
+  "assets/icons/code.svg",
+  true,
+  "",
+  "1280px",
+  "800px"
+]);
+
 await apps.launch("webwindows.system.guide", { url: "guide.html?topic=cloud-files" });
 assert.deepEqual(openedWindows.at(-1), [
   "guide",
@@ -140,6 +152,18 @@ assert.deepEqual(openedWindows.at(-1), [
   "",
   "1060px",
   "740px"
+]);
+
+await apps.launch("webwindows.system.navigation");
+assert.deepEqual(openedWindows.at(-1), [
+  "road",
+  "问道",
+  "road.html?v=20260924-1",
+  "assets/icons/navigation.svg",
+  true,
+  "",
+  "1120px",
+  "760px"
 ]);
 
 const sheetResource = { name: "budget.xlsx" };

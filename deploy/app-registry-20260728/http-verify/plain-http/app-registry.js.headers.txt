@@ -1,0 +1,12 @@
+HTTP/1.1 200 OK
+Server: wts/1.7.0
+Date: Tue, 28 Jul 2026 12:37:52 GMT
+Content-Type: application/javascript
+Content-Length: 9726
+Connection: keep-alive
+Vary: Accept-Encoding
+Vary: Accept-Encoding
+Last-Modified: Tue, 28 Jul 2026 12:19:08 GMT
+Accept-Ranges: bytes
+ETag: "cf8c44a8b1edd1:0"
+

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">账户和资料安全边界</title><desc id="desc">访客只能访问公共资料，登录账户可以进入私人资料，退出后权限关闭。</desc>
+  <rect width="960" height="420" rx="28" fill="#f4f8fc"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <rect x="55" y="105" width="210" height="210" rx="24" fill="#fff" stroke="#b7c7d9"/><circle cx="160" cy="170" r="34" fill="#dce9f5"/><path d="M100 270c10-52 110-52 120 0" fill="#dce9f5"/><text x="160" y="352" fill="#40516a" font-size="24">访客 / 公共资料</text>
+    <path d="M290 210h105" stroke="#1769aa" stroke-width="8"/><path d="m380 190 25 20-25 20" fill="none" stroke="#1769aa" stroke-width="8"/><text x="348" y="175" fill="#1769aa" font-size="20">登录</text>
+    <rect x="425" y="70" width="480" height="280" rx="28" fill="#e8f4ff" stroke="#6da9d5" stroke-width="2"/><circle cx="545" cy="170" r="42" fill="#1769aa"/><path d="M480 276c12-65 118-65 130 0" fill="#1769aa"/><text x="545" y="322" fill="#075a9b" font-size="24">账户身份</text>
+    <rect x="665" y="125" width="185" height="130" rx="18" fill="#fff" stroke="#86b6dc"/><path d="M713 178h90v58h-90z" fill="#b9ddf7"/><path d="M732 178v-18h52v18" fill="none" stroke="#1769aa" stroke-width="9"/><text x="758" y="292" fill="#075a9b" font-size="24">私人资料</text>
+    <text x="665" y="390" fill="#657087" font-size="20">注销后关闭私人访问；公共设备务必退出</text>
+  </g></svg>

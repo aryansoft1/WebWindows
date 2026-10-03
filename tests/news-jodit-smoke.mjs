@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+const root=new URL('../',import.meta.url),dir=new URL('assets/vendor/jodit/4.15.14/',root);
+const source=JSON.parse(readFileSync(new URL('SOURCE.json',dir),'utf8'));
+assert.equal(source.version,'4.15.14');assert.equal(source.license,'MIT');assert.match(source.source,/^https:\/\/registry.npmjs.org\/jodit\/-\/jodit-4\.15\.14.tgz$/);assert.match(source.repository,/github.com\/xdan\/jodit/);
+for(const [file,metadata] of Object.entries(source.files))assert.equal(createHash('sha256').update(readFileSync(new URL(file,dir))).digest('hex'),metadata.sha256,file);
+assert.match(readFileSync(new URL('LICENSE.txt',dir),'utf8'),/Permission is hereby granted, free of charge/);
+const page=readFileSync(new URL('SystemManager/news.html',root),'utf8'),adapter=readFileSync(new URL('assets/js/admin-richtext.js',root),'utf8');
+assert.match(page,/vendor\/jodit\/4\.15\.14\/jodit.min.js/);assert.match(page,/vendor\/jodit\/4\.15\.14\/jodit.min.css/);assert.ok(page.indexOf('jodit.min.js')<page.indexOf('admin-richtext.js'));
+assert.doesNotMatch(page,/<(?:script|link)[^>]+(?:src|href)="https?:/i);assert.doesNotMatch(adapter,/execCommand\(|ww-rich-toolbar|document.createElement\("button"\)/);
+assert.match(adapter,/Jodit.make\(field/);assert.match(adapter,/sourceEditor: "area", sourceEditorCDNUrlsJS: \[\]/);assert.match(adapter,/insertImageAsBase64URI: false/);assert.match(adapter,/beforeSetNativeEditorValue/);assert.match(adapter,/beforePaste/);
+console.log('Jodit vendor passed: official locked ES5 package, MIT license, exact bytes, self-hosted initialization, sanitized input, no previous custom UI');

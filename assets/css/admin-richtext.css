@@ -1,0 +1,16 @@
+/* Jodit owns the toolbar, dialogs, history and source/fullscreen UI. */
+#newsRichEditor .jodit-container { font-family:system-ui,"Microsoft YaHei",sans-serif; }
+#newsRichEditor .jodit-wysiwyg { padding:16px; }
+#newsRichEditor .jodit-status-bar { font-size:12px; }
+#newsContent { display:none; }
+.ww-news-content { white-space:pre-wrap; overflow-wrap:anywhere; }
+.ww-news-content p { margin:.7em 0; }
+.ww-news-content h1,.ww-news-content h2,.ww-news-content h3,.ww-news-content h4,.ww-news-content h5,.ww-news-content h6 { margin:1em 0 .4em; line-height:1.35; }
+.ww-news-content blockquote { margin:1em 0; border-left:3px solid #cbd5e1; padding-left:16px; color:#475569; }
+.ww-news-content ul,.ww-news-content ol { padding-left:1.6em; }
+.ww-news-content pre { white-space:pre-wrap; padding:12px; background:#f1f5f9; font-family:Consolas,monospace; }
+.ww-news-content img { max-width:100%; height:auto; vertical-align:middle; }
+.ww-news-content table { border-collapse:collapse; width:100%; margin:1em 0; white-space:normal; }
+.ww-news-content th,.ww-news-content td { border:1px solid #94a3b8; padding:8px; min-width:35px; }
+.ww-news-content th { background:#f1f5f9; font-weight:bold; }
+.ww-news-content hr { border:0; border-top:1px solid #cbd5e1; margin:1em 0; }

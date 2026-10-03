@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" role="img" aria-labelledby="title desc">
+  <title id="title">云秘书服务入口</title><desc id="desc">从开始菜单打开云秘书根窗口，再进入已注册的评测中心服务。</desc>
+  <rect width="960" height="420" rx="28" fill="#f5f9fc"/><g font-family="Segoe UI,Microsoft YaHei,sans-serif" text-anchor="middle">
+    <rect x="65" y="130" width="210" height="160" rx="24" fill="#fff" stroke="#bdd0df"/><text x="170" y="192" font-size="36">⊞</text><text x="170" y="245" fill="#33445d" font-size="23">开始菜单</text><path d="M300 210h100" stroke="#1769aa" stroke-width="8"/><path d="m385 190 25 20-25 20" fill="none" stroke="#1769aa" stroke-width="8"/>
+    <rect x="430" y="105" width="220" height="210" rx="28" fill="#e6f4ff" stroke="#63a1cf" stroke-width="2"/><text x="540" y="180" font-size="44">☁</text><text x="540" y="235" fill="#075a9b" font-size="26">云秘书</text><text x="540" y="270" fill="#657087" font-size="18">根窗口</text><path d="M675 210h90" stroke="#1769aa" stroke-width="8"/>
+    <rect x="790" y="130" width="125" height="160" rx="24" fill="#fff" stroke="#bdd0df"/><text x="852" y="187" font-size="34">✓</text><text x="852" y="232" fill="#33445d" font-size="19">评测中心</text><text x="852" y="262" fill="#657087" font-size="15">已注册入口</text>
+    <text x="480" y="370" fill="#657087" font-size="19">仅描述代码已注册的服务，不扩展为规划中的自动化能力</text>
+  </g></svg>

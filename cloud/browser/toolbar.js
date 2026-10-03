@@ -9,6 +9,10 @@
   const pickerAction = document.body.dataset.pickerAction || "open";
   const pickerNodeId = document.body.dataset.nodeId || "local-main";
   const pickerSelections = new Set();
+  // Shared multi-file selection controller (marquee, Ctrl/Shift, drag).
+  // Created during startup; null when the script failed to load, in which case
+  // every call site falls back to the previous single-selection behaviour.
+  let fileSelection = null;
   const directoryNames = {
     public: { zh: "公共区域", jp: "パブリックエリア", en: "Public" },
     welcome: { zh: "欢迎", jp: "ようこそ", en: "Welcome" },
@@ -55,6 +59,10 @@
     cancel: { zh: "取消", jp: "キャンセル", en: "Cancel" },
     confirmSelection: { zh: "确认选择", jp: "選択を確定", en: "Confirm selection" },
     open: { zh: "打开", jp: "開く", en: "Open" },
+    openWith: { zh: "打开方式", jp: "プログラムから開く", en: "Open with" },
+    chooseOther: { zh: "选择其他应用…", jp: "別のアプリを選択…", en: "Choose another app…" },
+    defaultMark: { zh: "（默认）", jp: "（既定）", en: " (default)" },
+    notInstalled: { zh: "尚未安装", jp: "未インストール", en: "Not installed" },
     copyPath: { zh: "复制资料位置", jp: "場所をコピー", en: "Copy location" },
     saveCopy: { zh: "保存副本到私人云资料", jp: "プライベートクラウドにコピーを保存", en: "Save a copy to private cloud" },
     setWallpaper: { zh: "设置为桌面壁纸", jp: "デスクトップの壁紙に設定", en: "Set as desktop wallpaper" },
@@ -66,11 +74,71 @@
   const normalizeLanguage = (value) => {
     const language = String(value || "").toLowerCase();
     if (language === "jp" || language.startsWith("ja")) return "jp";
+    if (language === "tw" || language.startsWith("zh-tw") || language.startsWith("zh-hk") || language.includes("hant")) return "tw";
     if (language.startsWith("en")) return "en";
     return "zh";
   };
+  // Supplemental labels for status/error/selection messages requested via
+  // cloudI18n.text(). Without them the local fallback renders the raw key
+  // (e.g. "copySaved"). Traditional Chinese display names are added here so
+  // the picker no longer falls back to simplified Chinese for lang=tw.
+  Object.assign(uiText, {
+    operationFailed: { zh: "操作失败", tw: "操作失敗", jp: "操作に失敗しました", en: "Operation failed" },
+    folderListUnavailable: { zh: "资料夹列表不可用", tw: "資料夾清單無法使用", jp: "フォルダー一覧を利用できません", en: "The folder list is unavailable" },
+    folderListFailed: { zh: "资料夹列表加载失败", tw: "資料夾清單載入失敗", jp: "フォルダー一覧の読み込みに失敗しました", en: "Failed to load the folder list" },
+    previewUnavailable: { zh: "此文件暂时无法预览", tw: "此檔案暫時無法預覽", jp: "このファイルは現在プレビューできません", en: "Preview is currently unavailable for this file" },
+    fileDialogUnavailable: { zh: "云文件对话框不可用", tw: "雲端檔案對話方塊無法使用", jp: "クラウドファイルダイアログを利用できません", en: "The cloud file dialog is unavailable" },
+    savePublicCopy: { zh: "保存公用文件副本", tw: "儲存公用檔案副本", jp: "公開ファイルのコピーを保存", en: "Save a copy of the public file" },
+    cloudFiles: { zh: "云资料文件", tw: "雲端資料檔案", jp: "クラウドファイル", en: "Cloud files" },
+    copySaved: { zh: "副本已保存到私人云资料", tw: "副本已儲存到私人雲端資料", jp: "コピーをプライベートクラウドに保存しました", en: "The copy was saved to private cloud storage" },
+    copySaveFailed: { zh: "副本保存失败", tw: "副本儲存失敗", jp: "コピーの保存に失敗しました", en: "Failed to save the copy" },
+    openUnavailable: { zh: "此项目暂时无法打开", tw: "此項目暫時無法開啟", jp: "この項目は開けません", en: "This item cannot be opened" },
+    copied: { zh: "已复制", tw: "已複製", jp: "コピーしました", en: "Copied" },
+    wallpaperApplied: { zh: "已设置为桌面壁纸", tw: "已設為桌面桌布", jp: "デスクトップの壁紙に設定しました", en: "Set as desktop wallpaper" },
+    wallpaperSaved: { zh: "已保存到壁纸库", tw: "已儲存到桌布庫", jp: "壁紙ライブラリに保存しました", en: "Saved to the wallpaper library" },
+    infoFolder: { zh: "资料夹", tw: "資料夾", jp: "フォルダー", en: "Folder" },
+    infoFile: { zh: "文件", tw: "檔案", jp: "ファイル", en: "File" },
+    infoTemplate: { zh: "名称：{name}（{displayName}）\n类型：{kind}\n位置：{path}", tw: "名稱：{name}（{displayName}）\n類型：{kind}\n位置：{path}", jp: "名前：{name}（{displayName}）\n種類：{kind}\n場所：{path}", en: "Name: {name} ({displayName})\nType: {kind}\nLocation: {path}" },
+    selectedCount: { zh: "已选择 {count} 项", tw: "已選擇 {count} 項", jp: "選択中：{count} 件", en: "{count} items selected" },
+    invalidReadUrl: { zh: "云资料读取地址无效", tw: "雲端資料讀取位址無效", jp: "クラウドファイルの読み取り先が無効です", en: "The cloud file read address is invalid" }
+  });
+  const twDirectoryNames = { public: "公用區域", welcome: "歡迎", documents: "官方文件", samples: "範例檔案", resources: "官方資源", changelog: "更新日誌", community: "社群", icons: "圖示", wallpapers: "桌布" };
+  Object.entries(twDirectoryNames).forEach(([key, value]) => { if (directoryNames[key]) directoryNames[key].tw = value; });
+  const twFileNames = {
+    "welcome_to_webwindows.docx": "歡迎使用 WebWindows.docx", "developer_guide.docx": "開發者指南.docx",
+    "keyboard_shortcuts.md": "鍵盤快速鍵.md", "user_guide.docx": "使用者指南.docx",
+    "sample_document.docx": "範例文件.docx", "sample_image.png": "範例圖片.png",
+    "sample_presentation.pptx": "範例簡報.pptx", "sample_spreadsheet.xlsx": "範例試算表.xlsx",
+    "webwindows_default_wallpaper.png": "WebWindows 預設桌布.png", "readme.md": "圖示說明.md",
+    "changelog.md": "更新日誌.md", "feedback_and_community.md": "意見回饋與社群.md"
+  };
+  Object.entries(twFileNames).forEach(([key, value]) => { if (fileNames[key]) fileNames[key].tw = value; });
+  const twUiText = {
+    nodeName: "WebWindows 主要雲端資源節點", privateFiles: "我的私人檔案", publicReadOnly: "所有人可檢視",
+    publicAreaReadOnly: "公用區域唯讀", back: "返回", forward: "前進", up: "上一層",
+    sortName: "依名稱", sortDate: "依更新時間", sortSize: "依大小",
+    listView: "清單", compactView: "緊湊", iconView: "圖示", locations: "資料位置",
+    emptyTitle: "此資料夾暫時沒有資料", emptyDescription: "公用資料由維護人員在後台統一管理。",
+    nothingSelected: "尚未選擇資料", cancel: "取消", confirmSelection: "確認選擇", open: "開啟",
+    openWith: "開啟方式", chooseOther: "選擇其他應用程式…",
+    defaultMark: "（預設）", notInstalled: "尚未安裝",
+    copyPath: "複製資料位置", saveCopy: "儲存副本到私人雲端資料",
+    setWallpaper: "設為桌面桌布", saveWallpaper: "儲存到桌布庫",
+    info: "資料資訊", refresh: "重新整理", confirm: "確定"
+  };
+  Object.entries(twUiText).forEach(([key, value]) => { if (uiText[key]) uiText[key].tw = value; });
+  // The resource page can load independently of the desktop language adapter.
+  // Keep directory loading and selection usable with its own existing labels.
+  const cloudI18n = window.WebWindowsCloudI18n || {
+    language: () => window.localStorage.getItem('lang') || document.body.dataset.language,
+    text(key, values, language) {
+      const template = uiText[key]?.[language || currentLanguage] || uiText[key]?.zh || key;
+      return template.replace(/\{([^}]+)\}/g, (match, name) => values?.[name] ?? match);
+    },
+    apply() {} // applyDirectoryDisplayNames already applies the local labels.
+  };
   let currentLanguage = normalizeLanguage(
-    window.localStorage.getItem("lang") || document.body.dataset.language
+    cloudI18n?.language() || window.localStorage.getItem("lang") || document.body.dataset.language
   );
   const navigationStorageKey = `webwindows-cloud-navigation:${window.location.pathname}`;
   const currentUrl = () => new URL(window.location.href);
@@ -86,7 +154,7 @@
   }
 
   function text(key) {
-    return uiText[key]?.[currentLanguage] || uiText[key]?.zh || key;
+    return cloudI18n?.labels?.[currentLanguage]?.[key] || uiText[key]?.[currentLanguage] || uiText[key]?.zh || key;
   }
 
   function displayPath(path) {
@@ -186,7 +254,7 @@
 
   function showMessage(text) {
     const overlay = document.getElementById("message-box");
-    document.getElementById("message-text").textContent = text || "操作未完成";
+    document.getElementById("message-text").textContent = text || cloudI18n.text("operationFailed", null, currentLanguage);
     overlay.hidden = false;
     document.getElementById("message-close").focus();
   }
@@ -231,7 +299,14 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "folder-label";
-    button.textContent = folder.displayName || directoryDisplayName(folder.name);
+    const icon = document.createElement("img");
+    icon.className = "folder-tree-icon";
+    icon.src = "assets/folder.svg";
+    icon.alt = "";
+    icon.setAttribute("aria-hidden", "true");
+    const label = document.createElement("span");
+    label.textContent = folder.displayName || directoryDisplayName(folder.name);
+    button.append(icon, label);
     button.addEventListener("click", () => navigateToResourcePath(folder.path));
     item.appendChild(button);
 
@@ -253,13 +328,13 @@
       });
       const payload = await response.json();
       if (!response.ok || !Array.isArray(payload)) {
-        throw new Error(payload?.error?.message || "资料夹列表不可用");
+        throw new Error(cloudI18n.text("folderListUnavailable", null, currentLanguage));
       }
       payload.forEach((folder) => renderFolderNode(folder, list));
     } catch (error) {
       const item = document.createElement("li");
       item.className = "tree-error";
-      item.textContent = "资料夹列表加载失败";
+      item.textContent = cloudI18n.text("folderListFailed", null, currentLanguage);
       list.appendChild(item);
     }
   }
@@ -282,22 +357,35 @@
       downloadFile(item);
       return;
     }
-    if (openMode !== "preview" && openMode !== "app") {
-      showMessage("此类资料暂时没有可用的预览方式，可使用右键菜单保存副本到私人云资料。");
+    // Registry-driven open: known types go through the shared pipeline (which
+    // prefers the File Type default handler); unknown types get the
+    // "无法打开" dialog instead of a dead preview message.
+    if (window.WebWindowsOpenWith && item.dataset.kind !== "folder") {
+      openFileViaTypes(item, openMode);
       return;
     }
+    if (openMode !== "preview" && openMode !== "app") {
+      showMessage(cloudI18n.text("previewUnavailable", null, currentLanguage));
+      return;
+    }
+    dispatchResource(buildCloudResource(item));
+  }
 
-    const resource = {
+  function buildCloudResource(item) {
+    return {
       protocol: "webwindows-cloud-resource",
       version: "1.0",
       nodeId: "local-main",
       scope: "public",
-      openMode,
+      openMode: item.dataset.openMode || "",
       path: item.dataset.path,
       name: item.dataset.name,
+      mimeType: item.dataset.mimeType || "application/octet-stream",
       url: new URL(item.dataset.resourceUrl, window.location.href).toString()
     };
+  }
 
+  function dispatchResource(resource) {
     try {
       if (window.parent && typeof window.parent.openResource === "function") {
         window.parent.openResource(resource);
@@ -325,6 +413,18 @@
     window.location.href = resource.url;
   }
 
+  function openFileViaTypes(item, openMode) {
+    const helper = window.WebWindowsOpenWith;
+    const resource = buildCloudResource(item);
+    helper.openDefault(
+      { name: item.dataset.name, mimeType: item.dataset.mimeType },
+      () => { dispatchResource(resource); },
+      { onStoreMissing: () => showMessage(cloudI18n.text("openUnavailable", null, currentLanguage)) }
+    ).catch((error) => {
+      showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage));
+    });
+  }
+
   async function downloadFile(item) {
     try {
       let api = window.WebWindows?.fileDialog;
@@ -333,7 +433,7 @@
       } catch (_) {
         // A cross-origin host cannot provide the shared cloud dialog.
       }
-      if (!api) throw new Error("通用云文件对话框尚未加载。");
+      if (!api) throw new Error(cloudI18n.text("fileDialogUnavailable", null, currentLanguage));
       const readUrl = new URL(item.dataset.resourceUrl, window.location.href);
       readUrl.searchParams.set("raw", "1");
       const name = item.dataset.name || "资料";
@@ -347,19 +447,24 @@
       };
       const content = await api.read(resource);
       const saved = await api.saveBlob({
-        title: "保存公共资料副本",
-        fileTypes: [{ name: "云资料", extensions: [extension] }],
+        title: cloudI18n.text("savePublicCopy", null, currentLanguage),
+        fileTypes: [{ name: cloudI18n.text("cloudFiles", null, currentLanguage), extensions: [extension] }],
         suggestedName: name,
         purpose: "public-cloud-save-copy"
       }, content);
-      if (saved) showMessage("资料副本已保存到私人云资料。");
+      if (saved) showMessage(cloudI18n.text("copySaved", null, currentLanguage));
     } catch (error) {
-      showMessage(error.message || "保存资料副本失败。");
+      showMessage(error.message || cloudI18n.text("copySaveFailed", null, currentLanguage));
     }
   }
 
   const contextMenu = document.getElementById("resource-context-menu");
   const contextOpen = contextMenu.querySelector('[data-context-action="open"]');
+  const openWithGroup = document.getElementById("open-with-group");
+  const openWithToggle = openWithGroup ? openWithGroup.querySelector('[data-context-action="open-with"]') : null;
+  const openWithList = document.getElementById("open-with-list");
+  let openWithToken = 0;
+  let openWithData = null;
   const contextCopyPath = contextMenu.querySelector('[data-context-action="copy-path"]');
   const contextDownload = contextMenu.querySelector('[data-context-action="download"]');
   const contextSetWallpaper = contextMenu.querySelector('[data-context-action="set-wallpaper"]');
@@ -371,6 +476,45 @@
   function closeContextMenu() {
     contextMenu.hidden = true;
     contextTarget = null;
+    openWithToken += 1;
+    openWithData = null;
+    if (openWithList) {
+      openWithList.hidden = true;
+      openWithList.replaceChildren();
+    }
+    if (openWithGroup) openWithGroup.hidden = true;
+    if (openWithToggle) openWithToggle.setAttribute("aria-expanded", "false");
+  }
+
+  // "打开方式" submenu: shown only when the registry reports 2+ handlers.
+  // Labels resolve async (best effort); a stale response never overwrites a
+  // newer menu thanks to the token guard.
+  function populateOpenWith(item) {
+    openWithToken += 1;
+    openWithData = null;
+    if (!openWithGroup || !openWithList) return;
+    openWithGroup.hidden = true;
+    openWithList.hidden = true;
+    openWithList.replaceChildren();
+    if (!item || item.dataset.kind !== "file" || !window.WebWindowsOpenWith) return;
+    const token = openWithToken;
+    window.WebWindowsOpenWith.menuData({ name: item.dataset.name, mimeType: item.dataset.mimeType })
+      .then((data) => {
+        if (token !== openWithToken || !data.available) return;
+        openWithData = { data, item };
+        // Only installed handlers are listed: entries that cannot be
+        // launched are noise, not choices. The full registry view stays
+        // available in openWithData for the "choose other" dialog.
+        const usable = data.handlers.filter((handler) => handler.installed !== false);
+        if (usable.length < 2) return;
+        window.WebWindowsOpenWith.renderMenuEntries(openWithList, { handlers: usable }, {
+          defaultMark: text("defaultMark"),
+          notInstalled: text("notInstalled"),
+          chooseOther: text("chooseOther")
+        });
+        openWithGroup.hidden = false;
+      })
+      .catch(() => {});
   }
 
   function placeContextMenu(clientX, clientY) {
@@ -404,9 +548,10 @@
       const canOpen =
         contextTarget.dataset.kind === "folder" || Boolean(contextTarget.dataset.openMode);
       contextOpen.disabled = !canOpen;
-      contextOpen.title = canOpen ? "" : "此类资料暂时没有可用的打开方式";
+      contextOpen.title = canOpen ? "" : cloudI18n.text("openUnavailable", null, currentLanguage);
     }
     placeContextMenu(event.clientX, event.clientY);
+    populateOpenWith(contextTarget);
     const firstAction = contextMenu.querySelector("button:not([hidden]):not(:disabled)");
     if (firstAction) firstAction.focus({ preventScroll: true });
   }
@@ -426,7 +571,7 @@
       document.execCommand("copy");
       input.remove();
     }
-    showMessage("资料位置已复制。");
+    showMessage(cloudI18n.text("copied", null, currentLanguage));
   }
 
   function cloudWallpaper(item) {
@@ -463,13 +608,21 @@
     if (applyNow) {
       host.localStorage?.setItem("selectedWallpaper", wallpaper.url);
       host.setWallpaperByPath?.(wallpaper.url);
-      showMessage("已保存到壁纸库并设置为桌面壁纸。");
+      showMessage(cloudI18n.text("wallpaperApplied", null, currentLanguage));
     } else {
-      showMessage("已保存到设置中的壁纸库。");
+      showMessage(cloudI18n.text("wallpaperSaved", null, currentLanguage));
     }
   }
 
   function runContextAction(action) {
+    // The submenu toggle must not tear down the menu it lives in.
+    if (action === "open-with") {
+      if (openWithList && openWithToggle) {
+        openWithList.hidden = !openWithList.hidden;
+        openWithToggle.setAttribute("aria-expanded", String(!openWithList.hidden));
+      }
+      return;
+    }
     const item = contextTarget;
     closeContextMenu();
 
@@ -493,10 +646,13 @@
         break;
       case "info":
         if (item) {
-          const kind = item.dataset.kind === "folder" ? "资料夹" : "资料";
-          showMessage(
-            `名称：${item.dataset.name}\n显示名称：${item.dataset.kind === "file" ? fileDisplayName(item.dataset.name) : directoryDisplayName(item.dataset.name)}\n类型：${kind}\n位置：${displayPath(item.dataset.path)}`
-          );
+          const kind = cloudI18n.text(item.dataset.kind === "folder" ? "infoFolder" : "infoFile", null, currentLanguage);
+          showMessage(cloudI18n.text("infoTemplate", {
+            name: item.dataset.name,
+            displayName: item.dataset.kind === "file" ? fileDisplayName(item.dataset.name) : directoryDisplayName(item.dataset.name),
+            kind,
+            path: displayPath(item.dataset.path)
+          }, currentLanguage));
         }
         break;
       case "root":
@@ -517,6 +673,10 @@
   }
 
   function activateItem(item) {
+    if (fileSelection) {
+      fileSelection.selectOnly(item);
+      return;
+    }
     document.querySelectorAll(".file-item.selected").forEach((node) => node.classList.remove("selected"));
     item.classList.add("selected");
   }
@@ -528,6 +688,10 @@
       document.querySelectorAll(".file-item.selected").forEach((node) => node.classList.remove("selected"));
       pickerSelections.add(item);
       item.classList.add("selected");
+    } else if (fileSelection) {
+      // The shared controller owns the "selected" class and the anchor rules;
+      // delegating keeps picker mode and browse mode behaving identically.
+      fileSelection.setSelection([item], item);
     } else if (pickerSelections.has(item)) {
       pickerSelections.delete(item);
       item.classList.remove("selected");
@@ -535,13 +699,20 @@
       pickerSelections.add(item);
       item.classList.add("selected");
     }
+    syncPickerSelectionUi();
+  }
+
+  function syncPickerSelectionUi() {
     const selections = Array.from(pickerSelections);
-    document.getElementById("picker-selection-text").textContent = selections.length
+    const label = document.getElementById("picker-selection-text");
+    if (!label) return;
+    label.textContent = selections.length
       ? (pickerMultiple
-        ? `已选择 ${selections.length} 项`
+        ? cloudI18n.text("selectedCount", { count: selections.length }, currentLanguage)
         : `${selections[0].dataset.name} · ${Math.ceil(Number(selections[0].dataset.size || 0) / 1024)} KB`)
-      : "尚未选择资料";
-    document.getElementById("picker-confirm").disabled = selections.length === 0;
+      : cloudI18n.text("nothingSelected", null, currentLanguage);
+    const confirm = document.getElementById("picker-confirm");
+    if (confirm) confirm.disabled = selections.length === 0;
   }
 
   function pickerMessage(type, resources) {
@@ -569,7 +740,7 @@
       readUrl.searchParams.set("raw", "1");
       if (readUrl.origin !== window.location.origin ||
           !readUrl.pathname.endsWith("/cloud/browser/openResource.asp")) {
-        throw new Error("云资料读取地址无效。");
+        throw new Error(cloudI18n.text("invalidReadUrl", null, currentLanguage));
       }
       return {
         name: selection.dataset.name,
@@ -603,6 +774,7 @@
       element.title = label;
       element.setAttribute("aria-label", label);
     });
+    cloudI18n.apply(document, currentLanguage);
     renderBreadcrumbs();
   }
 
@@ -626,6 +798,20 @@
   });
   document.querySelectorAll(".file-item").forEach((item) => {
     item.addEventListener("click", (event) => {
+      // A modified click means "extend the selection", never "open". Without
+      // this a Ctrl+click on a folder would navigate away and destroy the
+      // multi-selection the user is building.
+      const modified = event.ctrlKey || event.metaKey || event.shiftKey;
+      if (modified) {
+        event.preventDefault();
+        return;
+      }
+      if (fileSelection && !pickerMode) {
+        event.preventDefault();
+        if (event.detail === 0) fileSelection.selectOnly(item);
+        if (item.dataset.kind === 'folder' && (event.detail === 0 || event.pointerType === 'touch')) navigateToResourcePath(item.dataset.path);
+        return;
+      }
       if (item.dataset.kind === "folder") {
         activateItem(item);
         event.preventDefault();
@@ -636,7 +822,9 @@
         activateItem(item);
       }
     });
-    if (item.dataset.kind === "file") {
+    if (item.dataset.kind === "folder" && !pickerMode) {
+      item.addEventListener('dblclick', () => navigateToResourcePath(item.dataset.path));
+    } else if (item.dataset.kind === "file") {
       item.addEventListener("dblclick", () => {
         if (pickerMode && item.dataset.pickerEligible === "true") {
           if (!pickerMultiple) {
@@ -662,6 +850,33 @@
     }
   });
   contextMenu.addEventListener("click", (event) => {
+    const owHandler = event.target.closest("[data-ow-handler]");
+    if (owHandler && !owHandler.disabled && openWithData) {
+      const { data, item } = openWithData;
+      const handlerId = owHandler.dataset.owHandler;
+      const resource = buildCloudResource(item);
+      closeContextMenu();
+      window.WebWindowsOpenWith.openWithOneTime(data.typeId, handlerId, () => { dispatchResource(resource); }, {
+        onError: (error) => showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage))
+      }).catch((error) => {
+        showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage));
+      });
+      return;
+    }
+    if (event.target.closest("[data-ow-choose]") && openWithData) {
+      const { data, item } = openWithData;
+      const resource = buildCloudResource(item);
+      closeContextMenu();
+      window.WebWindowsOpenWith.showChooseDialog({
+        fileName: data.fileName,
+        extension: data.extLabel,
+        typeId: data.typeId,
+        entries: data.handlers,
+        openFn: () => { dispatchResource(resource); },
+        onError: (error) => showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage))
+      });
+      return;
+    }
     const action = event.target.closest("[data-context-action]");
     if (action && !action.disabled) runContextAction(action.dataset.contextAction);
   });
@@ -691,4 +906,40 @@
   updateNavigationButtons();
   applyDirectoryDisplayNames();
   loadFolderTree();
+
+  // Multi-file selection: marquee, Ctrl/Shift extend, Ctrl+A, Escape, drag.
+  const listHost = document.querySelector(".file-list") || document.querySelector(".main");
+  if (listHost && window.WebWindowsFileSelection && !pickerMode) {
+    // Reorder only the displayed grid. Public resources remain read-only;
+    // dropping on a folder does not move any server-side files.
+    const isSelectable = (node) => node.dataset.pickerEligible !== "false"
+      || !node.hasAttribute("disabled");
+    document.querySelectorAll(".file-item").forEach((node) => {
+      node.draggable = true;
+    });
+    document.querySelectorAll(".file-item.folder").forEach((node) => {
+      node.setAttribute("data-drop-target", "folder");
+    });
+    fileSelection = window.WebWindowsFileSelection.create({
+      container: listHost,
+      itemSelector: ".file-item",
+      isSelectable,
+      reorder: true,
+      buildPayload: (selection) => ({
+        kind: "cloud-public",
+        nodeId: pickerNodeId,
+        label: selection.length === 1
+          ? selection[0].dataset.name
+          : `${selection.length} items`,
+        items: selection.map((node) => ({
+          name: node.dataset.name,
+          path: node.dataset.path,
+          kind: node.dataset.kind,
+          size: Number(node.dataset.size || 0),
+          mimeType: node.dataset.mimeType || "application/octet-stream",
+          resourceUrl: node.dataset.resourceUrl || "",
+        })),
+      }),
+    });
+  }
 })();

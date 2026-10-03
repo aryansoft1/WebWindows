@@ -73,7 +73,7 @@ input {
   padding: 10px 12px;
   background: transparent;
   color: #465168;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   text-align: left;
 }
 
@@ -177,7 +177,7 @@ input {
   padding: 7px 11px;
   background: #e7f2ff;
   color: #0867c9;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
   font-size: 11px;
 }
 
@@ -209,7 +209,7 @@ input {
   padding: 8px 12px;
   background: #fff;
   color: #344054;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
 .catalog-summary {
@@ -371,7 +371,7 @@ dialog p {
   border-radius: 8px;
   padding: 8px 14px;
   background: #fff;
-  cursor: pointer;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
 .dialog-actions button.danger {

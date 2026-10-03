@@ -189,6 +189,7 @@ End If
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>我的私人文件</title>
   <script src="file-selection.js?v=20260928-selection-3"></script>
+  <script src="open-with.js?v=20260930-openwith-1"></script>
   <script src="../../assets/js/locale-region.js?v=20260802-1"></script>
   <script defer src="../../assets/js/tw.js?v=20260802-device-experience-3"></script>
   <script defer src="../../assets/js/device-api.js?v=20260809-storage-2"></script>
@@ -333,8 +334,21 @@ End If
     </div>
   </footer>
   <% End If %>
+  <style>
+    /* 文件“打开方式”子菜单：菜单内手风琴展开。 */
+    #private-open-with-group > button .ww-ow-caret { margin-left: auto; opacity: .6; }
+    #private-open-with-list { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 2px 18px; }
+    #private-open-with-list button { text-align: left; }
+    #private-open-with-list button:disabled { opacity: .55; cursor: not-allowed; }
+    #private-open-with-list .ww-ow-default { font-weight: 600; }
+  </style>
   <div id="private-context-menu" class="context-menu" role="menu" aria-label="私人文件操作">
     <button type="button" data-action="open" role="menuitem">打开</button>
+    <button type="button" data-action="open-file" role="menuitem" hidden>打开</button>
+    <div id="private-open-with-group" hidden>
+      <button type="button" data-action="open-with" role="menuitem" aria-expanded="false">打开方式 <span class="ww-ow-caret" aria-hidden="true">▸</span></button>
+      <div id="private-open-with-list" role="menu" hidden></div>
+    </div>
     <button type="button" data-action="rename" role="menuitem">重命名</button>
     <button type="button" data-action="delete" class="danger" role="menuitem">删除文件夹</button>
     <hr data-folder-only>
@@ -371,6 +385,13 @@ End If
       const folderName = document.getElementById("folder-name");
       const dialogTitle = document.getElementById("folder-dialog-title");
       let selectedFolder = null;
+      let selectedFile = null;
+      const openFileButton = menu.querySelector("[data-action='open-file']");
+      const owGroup = document.getElementById("private-open-with-group");
+      const owToggle = owGroup ? owGroup.querySelector("[data-action='open-with']") : null;
+      const owList = document.getElementById("private-open-with-list");
+      let owToken = 0;
+      let owData = null;
       let dialogMode = "create";
       const pickerSelections = new Set();
       if (!pickerMode && window.WebWindowsFileSelection) {
@@ -530,21 +551,107 @@ End If
       function hideMenu() {
         menu.classList.remove("open");
         selectedFolder = null;
+        selectedFile = null;
+        owToken += 1;
+        owData = null;
+        if (owList) {
+          owList.hidden = true;
+          owList.replaceChildren();
+        }
+        if (owGroup) owGroup.hidden = true;
+        if (owToggle) owToggle.setAttribute("aria-expanded", "false");
       }
 
-      function showMenu(event, folderItem) {
+      function showMenu(event, folderItem, fileItem) {
         event.preventDefault();
         event.stopPropagation();
         selectedFolder = folderItem || null;
+        selectedFile = fileItem || null;
+        const isFile = Boolean(selectedFile);
         menu.querySelectorAll("[data-action='open'],[data-action='rename'],[data-action='delete'],[data-folder-only]").forEach(element => {
-          element.hidden = !selectedFolder;
+          element.hidden = !selectedFolder || isFile;
         });
+        if (openFileButton) openFileButton.hidden = !isFile || pickerMode;
+        owToken += 1;
+        owData = null;
+        if (owList) {
+          owList.hidden = true;
+          owList.replaceChildren();
+        }
+        if (owGroup) owGroup.hidden = true;
+        if (isFile && !pickerMode) populateOpenWith(selectedFile);
         menu.classList.add("open");
         const menuWidth = menu.offsetWidth;
         const menuHeight = menu.offsetHeight;
         menu.style.left = `${Math.max(6, Math.min(event.clientX, innerWidth - menuWidth - 6))}px`;
         menu.style.top = `${Math.max(6, Math.min(event.clientY, innerHeight - menuHeight - 6))}px`;
         menu.querySelector("button:not([hidden])")?.focus();
+      }
+
+      // “打开方式”子菜单：registry 报出 2+ Handler 时出现。
+      function populateOpenWith(item) {
+        owToken += 1;
+        if (!owGroup || !owList || !window.WebWindowsOpenWith) return;
+        const token = owToken;
+        window.WebWindowsOpenWith.menuData({ name: item.dataset.name, mimeType: item.dataset.mimeType || "" })
+          .then(data => {
+            if (token !== owToken || !data.available) return;
+            owData = { data, item };
+            // Installed handlers only; unlaunchable entries stay out of the menu.
+            const usable = data.handlers.filter(handler => handler.installed !== false);
+            if (usable.length < 2) return;
+            window.WebWindowsOpenWith.renderMenuEntries(owList, { handlers: usable });
+            owGroup.hidden = false;
+          })
+          .catch(() => {});
+      }
+
+      function buildPrivateResource(item) {
+        const path = item.dataset.file;
+        const base = new URL(api, location.href);
+        const content = new URL(base);
+        content.searchParams.set("op", "content");
+        content.searchParams.set("path", path);
+        const editorData = new URL(base);
+        editorData.searchParams.set("op", "editor-data");
+        editorData.searchParams.set("path", path);
+        return {
+          resource: {
+            protocol: "webwindows-cloud-resource",
+            version: "1.1",
+            nodeId: "local-main",
+            scope: "private",
+            path,
+            name: item.dataset.name,
+            url: content.toString(),
+            editorDataUrl: editorData.toString(),
+            saveEndpoint: base.toString(),
+            permissions: { read: true, download: true, edit: true }
+          },
+          fallbackUrl: content.toString()
+        };
+      }
+
+      function legacyPrivateOpen(built) {
+        if (window.parent && typeof window.parent.openResource === "function") window.parent.openResource(built.resource);
+        else location.href = built.fallbackUrl;
+      }
+
+      async function openPrivateFile(item) {
+        const built = buildPrivateResource(item);
+        // Unknown types show the “无法打开” dialog instead of failing silently.
+        if (window.WebWindowsOpenWith) {
+          try {
+            await window.WebWindowsOpenWith.openDefault(
+              { name: item.dataset.name, mimeType: item.dataset.mimeType || "" },
+              () => legacyPrivateOpen(built)
+            );
+          } catch (error) {
+            console.error("[PrivateFiles]", error);
+          }
+          return;
+        }
+        legacyPrivateOpen(built);
       }
 
       function openFolderDialog(mode) {
@@ -562,7 +669,7 @@ End If
         location.href = privateUrl(item.dataset.folder);
       }));
       document.querySelectorAll("[data-folder]").forEach(item => item.addEventListener("contextmenu", event => showMenu(event, item)));
-      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("dblclick", () => {
+      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("dblclick", async () => {
         if (pickerMode) {
           if (!pickerMultiple) {
             selectPicker(item);
@@ -570,28 +677,7 @@ End If
           }
           return;
         }
-        const path = item.dataset.file;
-        const base = new URL(api, location.href);
-        const content = new URL(base);
-        content.searchParams.set("op", "content");
-        content.searchParams.set("path", path);
-        const editorData = new URL(base);
-        editorData.searchParams.set("op", "editor-data");
-        editorData.searchParams.set("path", path);
-        const resource = {
-          protocol: "webwindows-cloud-resource",
-          version: "1.1",
-          nodeId: "local-main",
-          scope: "private",
-          path,
-          name: item.dataset.name,
-          url: content.toString(),
-          editorDataUrl: editorData.toString(),
-          saveEndpoint: base.toString(),
-          permissions: { read: true, download: true, edit: true }
-        };
-        if (window.parent && typeof window.parent.openResource === "function") window.parent.openResource(resource);
-        else location.href = content.toString();
+        await openPrivateFile(item);
       }));
       if (pickerMode) {
         document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("click", event => {
@@ -609,13 +695,56 @@ End If
           }
         });
       }
-      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("contextmenu", event => showMenu(event, null)));
+      document.querySelectorAll("[data-file]").forEach(item => item.addEventListener("contextmenu", event => showMenu(event, null, item)));
       document.querySelector(".files").addEventListener("contextmenu", event => {
         if (!event.target.closest("[data-folder],[data-file]")) showMenu(event, null);
       });
       menu.addEventListener("click", async event => {
+        const owHandler = event.target.closest("[data-ow-handler]");
+        if (owHandler && !owHandler.disabled && owData && window.WebWindowsOpenWith) {
+          const { data, item } = owData;
+          const built = buildPrivateResource(item);
+          hideMenu();
+          try {
+            await window.WebWindowsOpenWith.openWithOneTime(data.typeId, owHandler.dataset.owHandler, () => legacyPrivateOpen(built));
+          } catch (error) {
+            status.className = "error";
+            status.textContent = error.message;
+          }
+          return;
+        }
+        if (event.target.closest("[data-ow-choose]") && owData && window.WebWindowsOpenWith) {
+          const { data, item } = owData;
+          const built = buildPrivateResource(item);
+          hideMenu();
+          await window.WebWindowsOpenWith.showChooseDialog({
+            fileName: data.fileName,
+            extension: data.extLabel,
+            typeId: data.typeId,
+            entries: data.handlers,
+            openFn: () => legacyPrivateOpen(built),
+            onError: error => {
+              status.className = "error";
+              status.textContent = error.message;
+            }
+          });
+          return;
+        }
         const action = event.target.closest("[data-action]")?.dataset.action;
         if (!action) return;
+        if (action === "open-with") {
+          if (owList && owToggle) {
+            owList.hidden = !owList.hidden;
+            owToggle.setAttribute("aria-expanded", String(!owList.hidden));
+          }
+          return;
+        }
+        if (action === "open-file") {
+          const targetFile = selectedFile;
+          hideMenu();
+          if (targetFile) await openPrivateFile(targetFile);
+          return;
+        }
         const targetFolder = selectedFolder;
         hideMenu();
         if (action === "refresh") {

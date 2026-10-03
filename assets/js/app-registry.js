@@ -423,9 +423,7 @@
         : (record?.state || app.install?.defaultState || "available"),
       installed: await isInstalled(app),
       source: record?.source || app.install?.source || "repository",
-      desktopVisible: app.type === "system" || app.install?.uninstallable === false
-        ? app.placement?.desktop === true
-        : record?.desktopVisible ?? (app.placement?.desktop === true),
+      desktopVisible: record?.desktopVisible ?? (app.placement?.desktop === true),
       retainData: record?.retainData !== false,
       syncPending: record?.syncPending === true,
       explicit: Boolean(record)
@@ -435,11 +433,10 @@
   async function isDesktopVisible(appOrId) {
     const app = typeof appOrId === "string" ? await get(appOrId) : appOrId;
     if (!app || !(await isInstalled(app))) return false;
-    if (app.type === "system" || app.install?.uninstallable === false) {
-      return app.placement?.desktop === true;
-    }
+    // 用户显式设置（含系统功能）优先；没有记录时回退到 placement 默认。
     const record = await readInstallation(app.id);
-    return record?.desktopVisible ?? (app.placement?.desktop === true);
+    if (record && typeof record.desktopVisible === "boolean") return record.desktopVisible;
+    return app.placement?.desktop === true;
   }
 
   async function setDesktopVisible(appId, visible) {

@@ -351,10 +351,24 @@ itemCount = subfolders.Count + visibleFileCount
     <% End If %>
   </div>
 
+  <style>
+    /* 打开方式子菜单：菜单内手风琴展开，无需悬停定位。 */
+    #open-with-group > button .ww-ow-caret { margin-left: auto; opacity: .6; }
+    #open-with-list { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 2px 30px; }
+    #open-with-list button { text-align: left; }
+    #open-with-list button:disabled { opacity: .55; cursor: not-allowed; }
+    #open-with-list .ww-ow-default { font-weight: 600; }
+  </style>
   <div id="resource-context-menu" class="context-menu" role="menu" aria-label="云资料操作" hidden>
     <button type="button" role="menuitem" data-context-action="open">
       <img src="assets/open.svg" alt=""><span data-cloud-i18n="open">打开</span>
     </button>
+    <div id="open-with-group" hidden>
+      <button type="button" role="menuitem" data-context-action="open-with" aria-expanded="false">
+        <img src="assets/open.svg" alt=""><span data-cloud-i18n="openWith">打开方式</span><span class="ww-ow-caret" aria-hidden="true">▸</span>
+      </button>
+      <div id="open-with-list" role="menu" hidden></div>
+    </div>
     <button type="button" role="menuitem" data-context-action="copy-path">
       <img src="assets/copy.svg" alt=""><span data-cloud-i18n="copyPath">复制资料位置</span>
     </button>
@@ -393,6 +407,7 @@ itemCount = subfolders.Count + visibleFileCount
   </div>
 
   <script src="file-selection.js?v=20260928-selection-3"></script>
+  <script src="open-with.js?v=20260930-openwith-1"></script>
   <script src="toolbar.js?v=20260928-selection-3"></script>
   <% If Not pickerMode Then %><script src="device-locations.js?v=20260809-device-1"></script><% End If %>
 </body>

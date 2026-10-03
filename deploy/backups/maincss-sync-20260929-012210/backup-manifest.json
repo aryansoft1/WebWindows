@@ -1,0 +1,10 @@
+﻿{
+    "localSha256":  "753c506558b8b8b5c67aee53e4a25663e1cff9868eba2a009b8dab7244ba9046",
+    "head":  "b003657",
+    "prodSha256":  "faf30eae75eb (待完整)",
+    "localSize":  32949,
+    "branch":  "codex/mail-center-production-20260928",
+    "prodSize":  32980,
+    "note":  "本地 main.css 与生产 main.css 差异分析前的本地快照",
+    "createdAt":  "2026-09-29T01:22:10.7810706+09:00"
+}

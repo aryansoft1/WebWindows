@@ -20,6 +20,59 @@
 })();
 const __EXT__ = (typeof window !== 'undefined' ? window : globalThis).__WW_BRIDGE_EXTERNALS__;
 
+/* ---------- 0.5) 窗口特效开关（默认开；个性化设置里可关） ---------- */
+const WW_EFFECTS_KEY = 'webwindows.effects.enabled';
+const WW_ANIM_MS = { open: 200, close: 160, minimize: 170, geometry: 240 };
+
+function isWindowEffectsEnabled() {
+  try {
+    const stored = localStorage.getItem(WW_EFFECTS_KEY);
+    if (stored == null) return true; // 默认开
+    return stored !== '0' && stored !== 'off' && stored !== 'false';
+  } catch (_) {
+    return true;
+  }
+}
+
+function applyWindowEffectsFlag() {
+  try {
+    document.documentElement.dataset.wwEffects = isWindowEffectsEnabled() ? 'on' : 'off';
+  } catch (_) {}
+}
+
+function setWindowEffectsEnabled(enabled) {
+  try {
+    localStorage.setItem(WW_EFFECTS_KEY, enabled ? '1' : '0');
+  } catch (_) {}
+  applyWindowEffectsFlag();
+  try {
+    window.dispatchEvent(new CustomEvent('webwindows:effects-changed', {
+      detail: { enabled: isWindowEffectsEnabled() }
+    }));
+  } catch (_) {}
+}
+
+function playWindowAnimation(winEl, className, duration) {
+  if (!winEl || !isWindowEffectsEnabled()) return false;
+  try {
+    winEl.classList.remove(className);
+    void winEl.offsetWidth; // 强制回流，保证动画可重复触发
+    winEl.classList.add(className);
+    window.setTimeout(() => winEl.classList.remove(className), duration + 60);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+if (typeof window !== 'undefined') {
+  applyWindowEffectsFlag();
+  window.addEventListener('storage', (event) => {
+    if (event.key === WW_EFFECTS_KEY) applyWindowEffectsFlag();
+  });
+  window.addEventListener('webwindows:effects-changed', applyWindowEffectsFlag);
+}
+
 /* ---------- 1) 小工具 ---------- */
 const WZ = { z: 1000 };
 
@@ -326,9 +379,14 @@ function createTaskbarIcon(id, title, iconUrl) {
         const win = document.getElementById('win-' + id);
         if (win) {
             const isVisible = win.style.display !== 'none';
-            win.style.display = isVisible ? 'none' : 'block';
+            if (isVisible) {
+                minimizeTargetWindow(id);
+            } else {
+                win.style.display = 'block';
+                playWindowAnimation(win, 'ww-anim-unmin', WW_ANIM_MS.minimize);
+                focusTargetWindow(win);
+            }
             updateTaskbarActive(id, !isVisible);
-            if (!isVisible) win.style.zIndex = 9998;
         }
     });
     icon.addEventListener('keydown', (event) => {
@@ -340,8 +398,11 @@ function createTaskbarIcon(id, title, iconUrl) {
 function updateTaskbarActive(id, isActive) {
     const icon = document.querySelector('.taskbar-app[data-id="win-' + id + '"]');
     if (icon) {
-        icon.style.backgroundColor = isActive ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)';
-        icon.style.border = isActive ? '1px solid rgba(255,255,255,0.6)' : 'none';
+        // 活动态用主题色点缀（--ww-accent 由个性化设置写入，无设置时回退默认蓝）
+        icon.style.backgroundColor = isActive
+          ? 'color-mix(in srgb, var(--ww-accent, #0078d7) 32%, rgba(255,255,255,0.35))'
+          : 'rgba(255,255,255,0.1)';
+        icon.style.border = isActive ? '1px solid var(--ww-accent, #0078d7)' : 'none';
     }
 }
 /* ---------- 5) 窗口右键（仅转发到旧实现） ---------- */
@@ -398,19 +459,43 @@ function focusTargetWindow(winElOrId){
 function closeTargetWindow(id){
   const el = _winEl(id) || _activeIdFromEl(document.activeElement);
   if (!el) return;
-  el.remove();
+  if (el.dataset.wwClosing === '1') return;
   hideWindowContextMenu()
+  if (playWindowAnimation(el, 'ww-anim-close', WW_ANIM_MS.close)) {
+    el.dataset.wwClosing = '1';
+    window.setTimeout(() => {
+      el.remove();
+      removeTaskbarIcon(el.id);
+    }, WW_ANIM_MS.close);
+    return;
+  }
+  el.remove();
   removeTaskbarIcon(el.id);
 }
 function minimizeTargetWindow(id){
   const el = _winEl(id) || _activeIdFromEl(document.activeElement);
   if (!el) return;
   hideWindowContextMenu()
-  el.style.display = (el.style.display === 'none' ? '' : 'none');
+  // 已最小化 → 还原并播放展开动画
+  if (el.style.display === 'none') {
+    el.style.display = '';
+    playWindowAnimation(el, 'ww-anim-unmin', WW_ANIM_MS.minimize);
+    return;
+  }
+  // 最小化：先播放下沉动画再隐藏
+  if (playWindowAnimation(el, 'ww-anim-min', WW_ANIM_MS.minimize)) {
+    const target = el;
+    window.setTimeout(() => { target.style.display = 'none'; }, WW_ANIM_MS.minimize);
+    return;
+  }
+  el.style.display = 'none';
 }
 function maximizeTargetWindow(id){
   const el = _winEl(id) || _activeIdFromEl(document.activeElement);
   if (!el) return;
+
+  // 最大化/还原走几何过渡（拖拽/缩放期间不带过渡，避免跟手延迟）
+  playWindowAnimation(el, 'ww-anim-geom', WW_ANIM_MS.geometry);
 
   if (!el.classList.contains('maximized')) {
     // 记住原始位置尺寸
@@ -496,13 +581,21 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
         _layout(win);                 // 让内容区顶满
         bindWindowBehavior(win);      // 拖拽/缩放/三键/右键
         createTaskbarIcon(id, title || '云秘书', iconUrl || 'assets/icons/cloud_secretary.png');
+        playWindowAnimation(win, 'ww-anim-open', WW_ANIM_MS.open);
         focusTargetWindow(win);
         return id;
     }
 
     // 已存在 → 聚焦
     const existing = _winEl(id);
-    if (existing){ existing.style.display=''; focusTargetWindow(existing); _layout(existing); return id; }
+    if (existing){
+      const wasHidden = existing.style.display === 'none';
+      existing.style.display='';
+      focusTargetWindow(existing);
+      _layout(existing);
+      if (wasHidden) playWindowAnimation(existing, 'ww-anim-unmin', WW_ANIM_MS.minimize);
+      return id;
+    }
 
     // 根节点（旧类名）
     const win = document.createElement('div');
@@ -565,6 +658,7 @@ function openWindow(id, title, url, iconUrl, useIframe = true, type = '', width 
     _layout(win);
     bindWindowBehavior(win);
     createTaskbarIcon(id, title, iconUrl);
+    playWindowAnimation(win, 'ww-anim-open', WW_ANIM_MS.open);
     focusTargetWindow(win);
     return id;
 }
@@ -643,7 +737,8 @@ export {
   bindWindowBehavior, padTitleBarTouch,
   showWindowContextMenu, hideWindowContextMenu,
   createTaskbarIcon, updateTaskbarActive, removeTaskbarIcon,
-  clearAspSessionCookies, focusTargetWindow, openCloudWindow
+  clearAspSessionCookies, focusTargetWindow, openCloudWindow,
+  isWindowEffectsEnabled, setWindowEffectsEnabled
 };
 
 {
@@ -659,6 +754,8 @@ export {
   g.hideWindowContextMenu = hideWindowContextMenu;
   if (g.openCloudWindow == null) g.openCloudWindow = openCloudWindow;
   if (g.removeTaskbarIcon == null) g.removeTaskbarIcon = removeTaskbarIcon;
+  if (g.isWindowEffectsEnabled == null) g.isWindowEffectsEnabled = isWindowEffectsEnabled;
+  if (g.setWindowEffectsEnabled == null) g.setWindowEffectsEnabled = setWindowEffectsEnabled;
   // 任务栏通常由旧脚本提供，不在此覆盖：
   // if (g.createTaskbarIcon   == null) g.createTaskbarIcon   = createTaskbarIcon;
   // if (g.updateTaskbarActive == null) g.updateTaskbarActive = updateTaskbarActive;

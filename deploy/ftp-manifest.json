@@ -81,6 +81,7 @@
     "assets/js/device-controls.js",
     "assets/js/device-storage-provider.js",
     "assets/js/file-search.js",
+    "assets/js/file-types.js",
     "assets/js/function-center.js",
     "assets/js/function-sync.js",
     "assets/js/guide.js",
@@ -131,6 +132,7 @@
     "cloud/browser/FILE_DIALOG_API.md",
     "cloud/browser/file-search.css",
     "cloud/browser/files.asp",
+    "cloud/browser/open-with.js",
     "cloud/browser/openResource.asp",
     "cloud/browser/private-files.asp",
     "cloud/browser/private-files.css",
@@ -647,6 +649,10 @@
       "sha256": "a289179fa8e184d68cd054419df8403c5bb5d28bda587ab7e898eec66f902092",
       "size": 16610
     },
+    "assets/js/file-types.js": {
+      "sha256": "4401b2a14a1a869b1e7f83b3c76e679e152aad7b72c762e1f476373f4e7d87d3",
+      "size": 55188
+    },
     "assets/js/function-center.js": {
       "sha256": "fe3d31b1e11aff7a82fb9312d4e32e9e5262dc0cfa3c22c82e6ab63e87fafbf0",
       "size": 11336
@@ -844,16 +850,20 @@
       "size": 3673
     },
     "cloud/browser/files.asp": {
-      "sha256": "e8c538b70fd9fd85a0ec3e70b57803bf30ebd8cfa522aa647a31702a7070a5f6",
-      "size": 27709
+      "sha256": "765557bf505d6e627e33e34f49002692c6e4a1ca1ca93ff191ee29d33d4f4bef",
+      "size": 23270
+    },
+    "cloud/browser/open-with.js": {
+      "sha256": "cb014b6769655d2afd670e0c477e352b9a66672891469beb005d52171b96d9e2",
+      "size": 19790
     },
     "cloud/browser/openResource.asp": {
       "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
       "size": 2894
     },
     "cloud/browser/private-files.asp": {
-      "sha256": "aa061245652dc42ba9c10181342a1478a945c940058305b81288d0cd5ad4e8b3",
-      "size": 37373
+      "sha256": "4026f1bb31a38b5e3a16e9bd571b6bd938888f74e367a7abf670c3affef002de",
+      "size": 41364
     },
     "cloud/browser/private-files.css": {
       "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
@@ -876,8 +886,8 @@
       "size": 13667
     },
     "cloud/browser/toolbar.js": {
-      "sha256": "7adf8797d7b2f29285c4f8bef35cce752ce65d698c7983cc290564dd767eb3dc",
-      "size": 29127
+      "sha256": "319e97b283abf4d380a31c583579d514a99502c6dbb2dffc55b71b18dd097aa0",
+      "size": 43531
     },
     "contact.html": {
       "sha256": "2b69822ba45ffbd6866f0cc59c4fd275f86bb5d0e47c9a0e88a1b9acb859de8d",
@@ -988,8 +998,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "7fc362bd362c81c5be560b692321126290411f346e68ab83dcfc143631b340aa",
-      "size": 34922
+      "sha256": "bffc51d2e51b97480116d94ce6820ac0eed26c3b58ae352ee0dc45ffb2e8067a",
+      "size": 35156
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",

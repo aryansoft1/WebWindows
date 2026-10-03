@@ -59,6 +59,10 @@
     cancel: { zh: "取消", jp: "キャンセル", en: "Cancel" },
     confirmSelection: { zh: "确认选择", jp: "選択を確定", en: "Confirm selection" },
     open: { zh: "打开", jp: "開く", en: "Open" },
+    openWith: { zh: "打开方式", jp: "プログラムから開く", en: "Open with" },
+    chooseOther: { zh: "选择其他应用…", jp: "別のアプリを選択…", en: "Choose another app…" },
+    defaultMark: { zh: "（默认）", jp: "（既定）", en: " (default)" },
+    notInstalled: { zh: "尚未安装", jp: "未インストール", en: "Not installed" },
     copyPath: { zh: "复制资料位置", jp: "場所をコピー", en: "Copy location" },
     saveCopy: { zh: "保存副本到私人云资料", jp: "プライベートクラウドにコピーを保存", en: "Save a copy to private cloud" },
     setWallpaper: { zh: "设置为桌面壁纸", jp: "デスクトップの壁紙に設定", en: "Set as desktop wallpaper" },
@@ -116,6 +120,8 @@
     listView: "清單", compactView: "緊湊", iconView: "圖示", locations: "資料位置",
     emptyTitle: "此資料夾暫時沒有資料", emptyDescription: "公用資料由維護人員在後台統一管理。",
     nothingSelected: "尚未選擇資料", cancel: "取消", confirmSelection: "確認選擇", open: "開啟",
+    openWith: "開啟方式", chooseOther: "選擇其他應用程式…",
+    defaultMark: "（預設）", notInstalled: "尚未安裝",
     copyPath: "複製資料位置", saveCopy: "儲存副本到私人雲端資料",
     setWallpaper: "設為桌面桌布", saveWallpaper: "儲存到桌布庫",
     info: "資料資訊", refresh: "重新整理", confirm: "確定"
@@ -351,23 +357,35 @@
       downloadFile(item);
       return;
     }
+    // Registry-driven open: known types go through the shared pipeline (which
+    // prefers the File Type default handler); unknown types get the
+    // "无法打开" dialog instead of a dead preview message.
+    if (window.WebWindowsOpenWith && item.dataset.kind !== "folder") {
+      openFileViaTypes(item, openMode);
+      return;
+    }
     if (openMode !== "preview" && openMode !== "app") {
       showMessage(cloudI18n.text("previewUnavailable", null, currentLanguage));
       return;
     }
+    dispatchResource(buildCloudResource(item));
+  }
 
-    const resource = {
+  function buildCloudResource(item) {
+    return {
       protocol: "webwindows-cloud-resource",
       version: "1.0",
       nodeId: "local-main",
       scope: "public",
-      openMode,
+      openMode: item.dataset.openMode || "",
       path: item.dataset.path,
       name: item.dataset.name,
       mimeType: item.dataset.mimeType || "application/octet-stream",
       url: new URL(item.dataset.resourceUrl, window.location.href).toString()
     };
+  }
 
+  function dispatchResource(resource) {
     try {
       if (window.parent && typeof window.parent.openResource === "function") {
         window.parent.openResource(resource);
@@ -393,6 +411,18 @@
     }
 
     window.location.href = resource.url;
+  }
+
+  function openFileViaTypes(item, openMode) {
+    const helper = window.WebWindowsOpenWith;
+    const resource = buildCloudResource(item);
+    helper.openDefault(
+      { name: item.dataset.name, mimeType: item.dataset.mimeType },
+      () => { dispatchResource(resource); },
+      { onStoreMissing: () => showMessage(cloudI18n.text("openUnavailable", null, currentLanguage)) }
+    ).catch((error) => {
+      showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage));
+    });
   }
 
   async function downloadFile(item) {
@@ -430,6 +460,11 @@
 
   const contextMenu = document.getElementById("resource-context-menu");
   const contextOpen = contextMenu.querySelector('[data-context-action="open"]');
+  const openWithGroup = document.getElementById("open-with-group");
+  const openWithToggle = openWithGroup ? openWithGroup.querySelector('[data-context-action="open-with"]') : null;
+  const openWithList = document.getElementById("open-with-list");
+  let openWithToken = 0;
+  let openWithData = null;
   const contextCopyPath = contextMenu.querySelector('[data-context-action="copy-path"]');
   const contextDownload = contextMenu.querySelector('[data-context-action="download"]');
   const contextSetWallpaper = contextMenu.querySelector('[data-context-action="set-wallpaper"]');
@@ -441,6 +476,45 @@
   function closeContextMenu() {
     contextMenu.hidden = true;
     contextTarget = null;
+    openWithToken += 1;
+    openWithData = null;
+    if (openWithList) {
+      openWithList.hidden = true;
+      openWithList.replaceChildren();
+    }
+    if (openWithGroup) openWithGroup.hidden = true;
+    if (openWithToggle) openWithToggle.setAttribute("aria-expanded", "false");
+  }
+
+  // "打开方式" submenu: shown only when the registry reports 2+ handlers.
+  // Labels resolve async (best effort); a stale response never overwrites a
+  // newer menu thanks to the token guard.
+  function populateOpenWith(item) {
+    openWithToken += 1;
+    openWithData = null;
+    if (!openWithGroup || !openWithList) return;
+    openWithGroup.hidden = true;
+    openWithList.hidden = true;
+    openWithList.replaceChildren();
+    if (!item || item.dataset.kind !== "file" || !window.WebWindowsOpenWith) return;
+    const token = openWithToken;
+    window.WebWindowsOpenWith.menuData({ name: item.dataset.name, mimeType: item.dataset.mimeType })
+      .then((data) => {
+        if (token !== openWithToken || !data.available) return;
+        openWithData = { data, item };
+        // Only installed handlers are listed: entries that cannot be
+        // launched are noise, not choices. The full registry view stays
+        // available in openWithData for the "choose other" dialog.
+        const usable = data.handlers.filter((handler) => handler.installed !== false);
+        if (usable.length < 2) return;
+        window.WebWindowsOpenWith.renderMenuEntries(openWithList, { handlers: usable }, {
+          defaultMark: text("defaultMark"),
+          notInstalled: text("notInstalled"),
+          chooseOther: text("chooseOther")
+        });
+        openWithGroup.hidden = false;
+      })
+      .catch(() => {});
   }
 
   function placeContextMenu(clientX, clientY) {
@@ -477,6 +551,7 @@
       contextOpen.title = canOpen ? "" : cloudI18n.text("openUnavailable", null, currentLanguage);
     }
     placeContextMenu(event.clientX, event.clientY);
+    populateOpenWith(contextTarget);
     const firstAction = contextMenu.querySelector("button:not([hidden]):not(:disabled)");
     if (firstAction) firstAction.focus({ preventScroll: true });
   }
@@ -540,6 +615,14 @@
   }
 
   function runContextAction(action) {
+    // The submenu toggle must not tear down the menu it lives in.
+    if (action === "open-with") {
+      if (openWithList && openWithToggle) {
+        openWithList.hidden = !openWithList.hidden;
+        openWithToggle.setAttribute("aria-expanded", String(!openWithList.hidden));
+      }
+      return;
+    }
     const item = contextTarget;
     closeContextMenu();
 
@@ -767,6 +850,33 @@
     }
   });
   contextMenu.addEventListener("click", (event) => {
+    const owHandler = event.target.closest("[data-ow-handler]");
+    if (owHandler && !owHandler.disabled && openWithData) {
+      const { data, item } = openWithData;
+      const handlerId = owHandler.dataset.owHandler;
+      const resource = buildCloudResource(item);
+      closeContextMenu();
+      window.WebWindowsOpenWith.openWithOneTime(data.typeId, handlerId, () => { dispatchResource(resource); }, {
+        onError: (error) => showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage))
+      }).catch((error) => {
+        showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage));
+      });
+      return;
+    }
+    if (event.target.closest("[data-ow-choose]") && openWithData) {
+      const { data, item } = openWithData;
+      const resource = buildCloudResource(item);
+      closeContextMenu();
+      window.WebWindowsOpenWith.showChooseDialog({
+        fileName: data.fileName,
+        extension: data.extLabel,
+        typeId: data.typeId,
+        entries: data.handlers,
+        openFn: () => { dispatchResource(resource); },
+        onError: (error) => showMessage(error && error.message ? error.message : cloudI18n.text("openUnavailable", null, currentLanguage))
+      });
+      return;
+    }
     const action = event.target.closest("[data-context-action]");
     if (action && !action.disabled) runContextAction(action.dataset.contextAction);
   });

@@ -137,6 +137,11 @@ document.addEventListener("DOMContentLoaded", () => {
               if (window.openWindow)
                 window.openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png', true);
               break;
+            case 'personalize':
+            case 'personalization':
+              if (window.openWindow)
+                window.openWindow('settings', '设置', 'settings.html?tab=personalization', 'assets/icons/settings.png', true);
+              break;
             // 其它命令根据你菜单项继续补
           }
         },
@@ -424,13 +429,17 @@ function updateTaskbarClock(initialRun = false) {
 
     const now = new Date();
     const region = getWebWindowsRegion();
-    
+    let clock12 = false;
+    try {
+      clock12 = window.localStorage.getItem("webwindows.taskbar.clock12") === "1";
+    } catch (_) {}
+
     // 格式化时间 (例如：12:45)
     const timeString = now.toLocaleTimeString(region.locale, {
         timeZone: region.timeZone,
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: false
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: clock12
     });
     
     // 格式化日期 (例如：2025/11/23)

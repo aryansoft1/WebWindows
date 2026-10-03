@@ -553,6 +553,71 @@ body {
   --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
 }
 
+/* 个性化 → 开关行 */
+.settings-switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
+}
+
+.settings-switch {
+  flex: 0 0 auto;
+  appearance: none;
+  width: 46px;
+  height: 26px;
+  border-radius: 13px;
+  background: #c7cdd6;
+  position: relative;
+  outline: none;
+  transition: background 0.2s;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
+}
+
+.settings-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  transition: left 0.2s;
+}
+
+.settings-switch:checked {
+  background: #007aff;
+}
+
+.settings-switch:checked::after {
+  left: 23px;
+}
+
+/* 个性化 → 主题色 */
+.accent-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.accent-swatch {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  padding: 0;
+  --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
+}
+
+.accent-swatch.is-selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px currentcolor;
+}
+
 @media (max-width: 720px) {
   .settings-sidebar {
     width: 170px;

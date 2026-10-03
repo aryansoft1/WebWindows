@@ -9,6 +9,7 @@ html.ww-boot-pending body{background:#042a57!important}
 
 body {
     background: url('/assets/icons/wall_aryan.jpg') no-repeat center center fixed;
+    background-color: #042a57;
     background-size: cover;
     margin: 0;
     padding: 0 !important;
@@ -176,6 +177,11 @@ body.webwindows-visual-brightness::after {
         background: rgba(0, 0, 0, 0.05);
     }
 
+:root {
+    --ww-accent: #0078d7;
+    --ww-acrylic-blur: 8px;
+}
+
 .taskbar-app {
     user-select: none;
     -webkit-user-select: none;
@@ -198,6 +204,16 @@ body.webwindows-visual-brightness::after {
         background-color: rgba(255, 255, 255, 0.35);
         border: 1px solid rgba(255, 255, 255, 0.6);
     }
+
+/* 个性化：任务栏大图标 */
+html[data-ww-taskbar-icons="large"] .taskbar-app > img {
+    width: 26px;
+    height: 26px;
+}
+
+html[data-ww-taskbar-icons="large"] .taskbar-app > span {
+    font-size: 13px;
+}
 
 .folder-view {
     display: flex;
@@ -349,7 +365,7 @@ body.webwindows-visual-brightness::after {
     right: 0;
     height: 42px;
     background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(var(--ww-acrylic-blur, 8px));
     display: flex;
     align-items: center;
     padding: 0 12px;
@@ -600,6 +616,39 @@ body.webwindows-visual-brightness::after {
 .function-grid-item:hover,
 .function-list-item:hover {
     background: rgba(255, 255, 255, 0.52);
+}
+
+/* 个性化：开始菜单置顶 */
+.function-grid-item {
+    position: relative;
+}
+
+.function-grid-item:hover {
+    outline: 1px solid color-mix(in srgb, var(--ww-accent, #0078d7) 55%, transparent);
+}
+
+.function-pin {
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1;
+    --ww-cursor-state: var(--ww-cursor-link, pointer);cursor: var(--ww-cursor-link, pointer);
+}
+
+.function-grid-item:hover .function-pin,
+.function-pin.is-pinned {
+    display: inline-flex;
+}
+
+.function-pin.is-pinned {
+    background: color-mix(in srgb, var(--ww-accent, #0078d7) 22%, white);
 }
 
 .function-grid-item img {

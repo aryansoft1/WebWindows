@@ -665,3 +665,210 @@ window.addEventListener("DOMContentLoaded", () => {
         }
     });
 })();
+
+// 个性化 → 窗口特效开关（默认开）。
+// 设置页跑在窗口 iframe 里，读写的是宿主桌面的 localStorage，
+// 宿主通过 storage 事件实时生效，无需刷新。
+(function initializeWindowEffectsSetting() {
+    "use strict";
+
+    const EFFECTS_KEY = "webwindows.effects.enabled";
+
+    function readEffectsEnabled(host) {
+        try {
+            const stored = host.localStorage.getItem(EFFECTS_KEY);
+            if (stored == null) return true;
+            return stored !== "0" && stored !== "off" && stored !== "false";
+        } catch (_) {
+            return true;
+        }
+    }
+
+    function writeEffectsEnabled(host, enabled) {
+        try {
+            host.localStorage.setItem(EFFECTS_KEY, enabled ? "1" : "0");
+        } catch (_) {}
+        try {
+            if (typeof host.setWindowEffectsEnabled === "function") {
+                host.setWindowEffectsEnabled(enabled);
+                return;
+            }
+        } catch (_) {}
+        try {
+            host.dispatchEvent(new CustomEvent("webwindows:effects-changed", {
+                detail: { enabled }
+            }));
+        } catch (_) {}
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggle = document.getElementById("windowEffectsToggle");
+        if (!toggle) return;
+        let host = window;
+        try {
+            host = getDesktopHost();
+        } catch (_) {}
+        toggle.checked = readEffectsEnabled(host);
+        toggle.addEventListener("change", () => {
+            writeEffectsEnabled(host, toggle.checked);
+        });
+        window.addEventListener("storage", (event) => {
+            if (event.key !== EFFECTS_KEY) return;
+            try {
+                toggle.checked = readEffectsEnabled(host);
+            } catch (_) {}
+        });
+    });
+})();
+
+// 个性化 → 主题色 / 毛玻璃 / 任务栏 / 开始菜单置顶。
+// 设置页跑在窗口 iframe 里，读写宿主桌面的偏好；
+// 有宿主 helper（WebWindowsPersonalize / functionMenu）就走 helper，保证立即生效，
+// 否则直接读写宿主 localStorage，宿主靠 storage 事件同步。
+(function initializePersonalizeSettings() {
+    "use strict";
+
+    const ACCENTS = ["#0078d7", "#6d4aff", "#0f9d58", "#e81123", "#ff8c00", "#00b7c3"];
+    const STORE_KEYS = {
+        accent: "webwindows.theme.accent",
+        acrylic: "webwindows.theme.acrylic",
+        clock12: "webwindows.taskbar.clock12",
+        icons: "webwindows.taskbar.icons",
+    };
+
+    function hostStorage(host) {
+        try {
+            return host.localStorage || null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function readPrefs(host) {
+        try {
+            if (host.WebWindowsPersonalize) return host.WebWindowsPersonalize.readAll();
+        } catch (_) {}
+        const storage = hostStorage(host);
+        const get = (key) => {
+            try {
+                return storage ? storage.getItem(key) : null;
+            } catch (_) {
+                return null;
+            }
+        };
+        const accent = get(STORE_KEYS.accent);
+        const acrylicRaw = get(STORE_KEYS.acrylic);
+        const acrylic = acrylicRaw == null || acrylicRaw === "" ? NaN : Number(acrylicRaw);
+        return {
+            accent: accent && /^#[0-9a-f]{6}$/i.test(accent) ? accent.toLowerCase() : "#0078d7",
+            acrylic: Number.isFinite(acrylic) ? Math.max(0, Math.min(20, Math.round(acrylic))) : 8,
+            clock12: get(STORE_KEYS.clock12) === "1",
+            icons: get(STORE_KEYS.icons) === "large" ? "large" : "normal",
+        };
+    }
+
+    function notifyHost(host, key, value) {
+        try {
+            host.dispatchEvent(new CustomEvent("webwindows:personalize-changed", {
+                detail: { key, value },
+            }));
+        } catch (_) {}
+    }
+
+    function writePref(host, key, value) {
+        const helper = (() => {
+            try {
+                return host.WebWindowsPersonalize || null;
+            } catch (_) {
+                return null;
+            }
+        })();
+        if (helper) {
+            if (key === STORE_KEYS.accent) helper.setAccent(value);
+            else if (key === STORE_KEYS.acrylic) helper.setAcrylic(value);
+            else if (key === STORE_KEYS.clock12) helper.setClock12(value);
+            else if (key === STORE_KEYS.icons) helper.setIconSize(value);
+            return;
+        }
+        try {
+            hostStorage(host)?.setItem(key, typeof value === "boolean" ? (value ? "1" : "0") : String(value));
+        } catch (_) {}
+        if (key === STORE_KEYS.clock12) {
+            try {
+                if (typeof host.updateTaskbarClock === "function") host.updateTaskbarClock(false);
+            } catch (_) {}
+        }
+        notifyHost(host, key, value);
+    }
+
+    function renderSwatches(container, current) {
+        container.replaceChildren();
+        ACCENTS.forEach((color) => {
+            const swatch = document.createElement("button");
+            swatch.type = "button";
+            swatch.className = `accent-swatch${color === current ? " is-selected" : ""}`;
+            swatch.style.background = color;
+            swatch.style.color = color;
+            swatch.title = color;
+            swatch.setAttribute("role", "radio");
+            swatch.setAttribute("aria-checked", color === current ? "true" : "false");
+            swatch.setAttribute("aria-label", color);
+            container.appendChild(swatch);
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        if (!document.getElementById("personalizationTab")) return;
+        let host = window;
+        try {
+            host = getDesktopHost();
+        } catch (_) {}
+        const prefs = readPrefs(host);
+
+        const swatches = document.getElementById("accentSwatches");
+        if (swatches) {
+            renderSwatches(swatches, prefs.accent);
+            swatches.addEventListener("click", (event) => {
+                const button = event.target.closest(".accent-swatch");
+                if (!button) return;
+                writePref(host, STORE_KEYS.accent, button.title);
+                renderSwatches(swatches, button.title.toLowerCase());
+            });
+        }
+
+        const acrylic = document.getElementById("acrylicRange");
+        const acrylicOut = document.getElementById("acrylicRangeValue");
+        if (acrylic) {
+            acrylic.value = String(prefs.acrylic);
+            if (acrylicOut) acrylicOut.value = `${prefs.acrylic}px`;
+            acrylic.addEventListener("input", () => {
+                const next = writePref(host, STORE_KEYS.acrylic, acrylic.value);
+                void next;
+                if (acrylicOut) acrylicOut.value = `${acrylic.value}px`;
+            });
+        }
+
+        const clock = document.getElementById("clockFormatSelect");
+        if (clock) {
+            clock.value = prefs.clock12 ? "12" : "24";
+            clock.addEventListener("change", () => {
+                writePref(host, STORE_KEYS.clock12, clock.value === "12");
+            });
+        }
+
+        const icons = document.getElementById("taskbarIconSizeSelect");
+        if (icons) {
+            icons.value = prefs.icons;
+            icons.addEventListener("change", () => {
+                writePref(host, STORE_KEYS.icons, icons.value);
+            });
+        }
+
+        document.getElementById("clearPinnedButton")?.addEventListener("click", () => {
+            try {
+                if (host.WebWindows?.functionMenu) host.WebWindows.functionMenu.clearPinned();
+                else hostStorage(host)?.removeItem("webwindows.startmenu.pinned");
+            } catch (_) {}
+        });
+    });
+})();

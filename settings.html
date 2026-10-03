@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="assets/css/settings.css?v=20260928-cursor-picker-1" />
+    <link rel="stylesheet" href="assets/css/settings.css?v=20261002-personalize-1" />
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
     <script src="assets/js/cursor-theme-inline.js?v=1"></script>
     <script src="assets/js/cursor-themes.js?v=20260928-loading-pointer-2"></script>
     <script defer src="assets/js/tw.js?v=20260927-cursor-preview-1"></script>
-    <script defer src="assets/js/i18n-shell.js?v=20260929-shell-1"></script>
+    <script defer src="assets/js/i18n-shell.js?v=20261003-iconmenu-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/network-speed.js?v=20260913-camera-network-2"></script>
-    <script defer="True" src="assets/js/settings.js?v=20260927-cursor-preview-1"></script>
+    <script defer="True" src="assets/js/settings.js?v=20261002-personalize-2"></script>
 </head>
 <body>
     <div class="settings-ipad-layout">
@@ -25,6 +25,7 @@
             <ul>
                 <li class="active"><button type="button" data-settings-tab="langTab" onclick="switchTab(this, 'langTab')"><img class="settings-nav-icon" src="assets/icons/settings-language.svg" alt=""><span>语言与区域</span></button></li>
                 <li><button type="button" data-settings-tab="wallpaperTab" onclick="switchTab(this, 'wallpaperTab')"><img class="settings-nav-icon" src="assets/icons/settings-wallpaper.svg" alt=""><span>桌面壁纸</span></button></li>
+                <li><button type="button" data-settings-tab="personalizationTab" onclick="switchTab(this, 'personalizationTab')"><img class="settings-nav-icon" src="assets/icons/theme.png" alt=""><span>个性化</span></button></li>
                 <li><button type="button" data-settings-tab="cursorTab" onclick="switchTab(this, 'cursorTab')"><img class="settings-nav-icon" src="assets/icons/settings-cursor.svg" alt=""><span>鼠标指针</span></button></li>
                 <li><button type="button" data-settings-tab="displayTab" onclick="switchTab(this, 'displayTab')"><img class="settings-nav-icon" src="assets/icons/settings-display.svg" alt=""><span>显示设置</span></button></li>
                 <li><button type="button" data-settings-tab="soundTab" onclick="switchTab(this, 'soundTab')"><img class="settings-nav-icon" src="assets/icons/settings-sound.svg" alt=""><span>声音</span></button></li>
@@ -68,6 +69,59 @@
                 <section class="settings-section">
                     <h3>桌面壁纸</h3>
                     <div id="wallpaperThumbnails" class="wallpaper-grid"></div>
+                </section>
+            </div>
+
+            <div id="personalizationTab" class="tab-content" style="display: none;">
+                <section class="settings-section">
+                    <h3>个性化</h3>
+                    <div class="settings-card">
+                        <label class="settings-switch-row" for="windowEffectsToggle">
+                            <span>窗口特效<span class="settings-help" style="margin:4px 0 0;">打开、关闭、最小化与最大化时的淡入缩放动画。默认开启，关闭后所有窗口动画立即停止。</span></span>
+                            <input id="windowEffectsToggle" type="checkbox" class="settings-switch" checked>
+                        </label>
+                    </div>
+                    <div class="settings-card guide-entry-card">
+                        <div>
+                            <strong>桌面壁纸</strong>
+                            <p>更换桌面背景，去桌面壁纸页挑选。</p>
+                        </div>
+                        <button type="button" onclick="switchTab(document.querySelector('[data-settings-tab=wallpaperTab]'), 'wallpaperTab')">去挑选</button>
+                    </div>
+                    <div class="settings-card">
+                        <label>主题色</label>
+                        <div id="accentSwatches" class="accent-swatches" role="radiogroup" aria-label="主题色"></div>
+                        <p class="settings-help">用于活动窗口标题栏与任务栏活动指示。</p>
+                    </div>
+                    <div class="settings-card device-control-card">
+                        <label for="acrylicRange">毛玻璃强度</label>
+                        <div class="settings-range-row">
+                            <input id="acrylicRange" type="range" min="0" max="20" step="1" value="8">
+                            <output id="acrylicRangeValue" for="acrylicRange">8px</output>
+                        </div>
+                        <p class="settings-help">调节任务栏与窗口标题栏的背景模糊，0 为无模糊。</p>
+                    </div>
+                    <div class="settings-card">
+                        <label for="clockFormatSelect">任务栏时钟</label>
+                        <select id="clockFormatSelect" class="ww-cursor-picker">
+                            <option value="24">24 小时制</option>
+                            <option value="12">12 小时制</option>
+                        </select>
+                    </div>
+                    <div class="settings-card">
+                        <label for="taskbarIconSizeSelect">任务栏图标</label>
+                        <select id="taskbarIconSizeSelect" class="ww-cursor-picker">
+                            <option value="normal">普通</option>
+                            <option value="large">大图标</option>
+                        </select>
+                    </div>
+                    <div class="settings-card guide-entry-card">
+                        <div>
+                            <strong>开始菜单置顶</strong>
+                            <p>把鼠标悬停在开始菜单的功能上，点击 📌 即可置顶到顶部。</p>
+                        </div>
+                        <button type="button" id="clearPinnedButton">清空置顶</button>
+                    </div>
                 </section>
             </div>
 
@@ -342,6 +396,16 @@
         }
 
         document.addEventListener("contextmenu", e => e.preventDefault());
+
+        // 桌面右键“个性化”打开已存在的设置窗口时，直接切页签
+        window.addEventListener("message", (event) => {
+            if (event.origin !== window.location.origin) return;
+            if (event.data?.type !== "open-settings-tab") return;
+            const tabId = event.data.tab;
+            const tabButton = document.querySelector(`[data-settings-tab="${tabId}"]`);
+            const tabPanel = tabId && document.getElementById(tabId);
+            if (tabButton && tabPanel) switchTab(tabButton, tabId);
+        });
 
     </script>
     <script src="assets/js/wallpaper.js"></script>

@@ -176,18 +176,8 @@ function wwGetLogin(){
     return { loggedIn: true, id: id, name: name.trim() };
   }
 
-  // 2) Cookie 兜底：webwindows_user
-  var m = document.cookie.match(/(?:^|;\s*)webwindows_user=([^;]*)/);
-  if (m) {
-    var raw = decodeURIComponent(m[1]);  // 可能是 JSON 或纯用户名
-    var cu = null;
-    try { cu = JSON.parse(raw); } catch(e) { cu = { username: raw }; }
-    var cid = String(cu.id || cu.uid || cu.username || '');
-    var cname = (nick && nick.trim()) || cu.name || cu.nickname || cu.username || '';
-    if (cid) return { loggedIn: true, id: cid, name: cname.trim() };
-  }
-
-  // 3) 未登录
+  // A username cookie can outlive the ASP session; only the server-verified
+  // sessionStorage identity written by auth-session.js counts as signed in.
   return { loggedIn: false };
 }
 
@@ -250,6 +240,11 @@ function savePrefs(){ localStorage.setItem(PREF_KEY,JSON.stringify(prefs)) }
 var FS_KEY='ww_friends'; var friendSet=new Set(JSON.parse(localStorage.getItem(FS_KEY)||'[]'));
 function saveFriends(){ localStorage.setItem(FS_KEY, JSON.stringify(Array.from(friendSet))) }
 function isFriend(id){ return friendSet.has(id) }
+function addFriend(p,after){
+  if(!p||!p.id)return;friendSet.add(p.id);seedInboxOne(p.id);saveFriends();renderAll();if(after)after();
+  if(/^\d+$/.test(String(p.id)))fetch('/api/dt_friends.asp?action=add',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({friendId:p.id}).toString(),cache:'no-store'}).then(function(r){if(!r.ok)throw new Error();return r.json();}).catch(function(){Overlay.HUD.show('好友仅保存在此设备；登录服务不可用时无法同步','warn');});
+}
+fetch('/api/dt_friends.asp',{credentials:'include',cache:'no-store'}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(j){if(j.ok&&Array.isArray(j.friends)){j.friends.forEach(function(id){friendSet.add(String(id));});saveFriends();renderAll();}}).catch(function(){});
 
 /* ===== 悬停信息卡 ===== */
 var pop=$('#profile-pop'); var popTimer=null;
@@ -270,7 +265,7 @@ function showProfile(p,rect){
   var w=pop.offsetWidth||260,h=pop.offsetHeight||140; var x=Math.max(12,rect.right-w); var y=rect.bottom+8; if(y+h>window.innerHeight-12) y=rect.top-h-8;
   pop.style.left=x+'px'; pop.style.top=y+'px'; pop.style.display='block';
   $('#pop-chat').onclick=function(){ openChat(p,rect)};
-  var add=$('#pop-add'); if(add){ add.onclick=function(){ friendSet.add(p.id); seedInboxOne(p.id); saveFriends(); renderAll(); Overlay.HUD.show('已添加「'+p.name+'」为好友','ok'); showProfile(p,rect) } }
+  var add=$('#pop-add'); if(add){ add.onclick=function(){ addFriend(p,function(){Overlay.HUD.show('已添加「'+p.name+'」为好友','ok');showProfile(p,rect);}) } }
 }
 function hideProfile(){ if(pop) pop.style.display='none' }
 
@@ -300,7 +295,7 @@ function personRow(p){
 
   var cta=document.createElement('div');
   var btn=document.createElement('button'); btn.className='btn'; btn.textContent=isFriend(p.id)?'已是好友':'加好友';
-  btn.onclick=function(e){ e.stopPropagation(); if(isFriend(p.id)) return Overlay.HUD.show('已在你的好友列表','info'); friendSet.add(p.id);seedInboxOne(p.id); saveFriends(); Overlay.HUD.show('已添加「'+p.name+'」为好友','ok'); renderAll() };
+  btn.onclick=function(e){ e.stopPropagation(); if(isFriend(p.id)) return Overlay.HUD.show('已在你的好友列表','info'); addFriend(p,function(){Overlay.HUD.show('已添加「'+p.name+'」为好友','ok');}); };
   cta.appendChild(btn);
 
   row.appendChild(av); row.appendChild(main); row.appendChild(cta);
@@ -333,7 +328,7 @@ VList.prototype.setData=function(arr){
 }
 VList.prototype.onScroll=function(force){
   if(!this.el || !this.scrollEl) return;
-  var topOffset = this.el.offsetTop - this.scrollEl.offsetTop;
+  var topOffset = this.el === this.scrollEl ? 0 : this.el.offsetTop - this.scrollEl.offsetTop;
   var y = this.scrollEl.scrollTop - topOffset;
   var viewH=this.scrollEl.clientHeight;
   var start=Math.max(0, Math.floor(Math.max(0,y)/this.rowH)-this.overscan);
@@ -347,8 +342,8 @@ VList.prototype.onScroll=function(force){
 
 /* ===== 实例化 ===== */
 var scroller=$('#sheet-inner');
-var vReco = new VList($('#reco-list'), scroller, 62, 10, personRow);
-var vFriends = new VList($('#friends-list'), scroller, 62, 10, personRow);
+var vReco = new VList($('#reco-list'), $('#reco-list'), 62, 10, personRow);
+var vFriends = new VList($('#friends-list'), $('#friends-list'), 62, 10, personRow);
 
 /* ===== 过滤/渲染 ===== */
 function renderReco(){
@@ -357,6 +352,7 @@ function renderReco(){
   var me = (typeof getProfile === 'function' ? (getProfile()||{}) : {});
 
   var arr = people
+    .filter(function(p){ return !isFriend(p.id) })
     .filter(function(p){ return !(only && p.status!=='online') })
     .filter(function(p){ return p.name.toLowerCase().includes(q) })
     // ← 新增这一段：排除自己
@@ -385,6 +381,45 @@ function renderFriends(){
 
 
 function renderAll(){ renderReco(); renderFriends(); reapplyUnreadFlash(); }
+// 登录窗口在本页已经启动后才完成登录时，同步档案与 DeskTalk 顶栏昵称。
+window.addEventListener('webwindows:login', function(event){
+  var user = event && event.detail;
+  if (user && (user.id || user.uid || user.username)) {
+    sessionStorage.setItem('webwindows_user', JSON.stringify(user));
+    sessionStorage.setItem('webwindows_user_nickname', user.nickname || user.username || '');
+  }
+  bootstrapProfile();
+  updateMeUI();
+  refreshMeId();
+  renderAll();
+});
+window.addEventListener('webwindows:auth-state', function(event){
+  var auth = event && event.detail;
+  if (!auth || auth.state === 'checking') return;
+  if (auth.authenticated && auth.user && auth.user.username) {
+    sessionStorage.setItem('webwindows_user', JSON.stringify(auth.user));
+    sessionStorage.setItem('webwindows_user_nickname', auth.user.nickname || auth.user.username);
+    bootstrapProfile();
+  } else {
+    sessionStorage.removeItem('webwindows_user');
+    sessionStorage.removeItem('webwindows_user_nickname');
+    var current = getProfile();
+    if (current && String(current.id || '').indexOf('guest_') !== 0) {
+      var guestName = localStorage.getItem('DT_GUEST_NAME_BACKUP') || '';
+      var guestColor = localStorage.getItem('DT_GUEST_COLOR_BACKUP') || '';
+      localStorage.removeItem(PROFILE_KEY);
+      current = ensureProfile().me;
+      if (guestName) current.name = guestName;
+      if (guestColor) current.color = guestColor;
+      setProfile(current);
+    } else {
+      bootstrapProfile();
+    }
+  }
+  updateMeUI();
+  refreshMeId();
+  renderAll();
+});
 /* ===== 面板/Tab/不打扰 ===== */
 var fab=$('#fab'), sheet=$('#presence-sheet'), xBtn=$('#presence-close'), mask=$('#overlay-mask');
 var tabBtnReco=$('#tab-btn-reco'), tabBtnFriends=$('#tab-btn-friends'), tabBtnAI=$('#tab-btn-ai'), tabBtnSettings=$('#tab-btn-settings');tabBtnMailbox=$('#tab-btn-mailbox');
@@ -393,9 +428,9 @@ var activeTab='reco';
 function switchTab(t){
   activeTab = t;
   var a=$('#tab-reco'), b=$('#tab-friends'), c=$('#tab-ai'), d=$('#tab-mailbox');
-  if(a) a.style.display = (t==='reco') ? 'block' : 'none';
-  if(b) b.style.display = (t==='friends') ? 'block' : 'none';
-  if(c) c.style.display = (t==='ai') ? 'block' : 'none';
+  if(a) a.style.display = (t==='reco') ? 'flex' : 'none';
+  if(b) b.style.display = (t==='friends') ? 'flex' : 'none';
+  if(c) c.style.display = (t==='ai') ? 'flex' : 'none';
   if(d) d.style.display = (t==='mailbox') ? 'block' : 'none';
 
   var btns=[tabBtnReco,tabBtnFriends,tabBtnAI,tabBtnMailbox];
@@ -463,11 +498,24 @@ document.addEventListener('click', function(e){
 }, true);
 
 if(scroller) scroller.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
+[vReco.scrollEl, vFriends.scrollEl].forEach(function(el){
+  if(el) el.addEventListener('scroll', function(){ hideProfile() }, {passive:true});
+});
 
-var dndToggle=$('#dnd-toggle'); var DND=true;
+var dndToggle=$('#dnd-toggle'); var DND=false;
+function saveUndiscoverable(value){
+  return fetch('/api/dt_presence_mem.asp?action=set-undiscoverable',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'value='+(value?'1':'0'),cache:'no-store'}).then(function(r){return r.json().then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||'保存失败');return j;});});
+}
+function setDnd(value,notify){
+  DND=!!value; prefs.undiscoverable=DND; savePrefs();
+  if(dndToggle) dndToggle.checked=DND; if(chkUndisc) chkUndisc.checked=DND;
+  applyPrefs(false);
+  saveUndiscoverable(DND).then(function(){if(notify) Overlay.HUD.show(DND?'已开启不打扰并从推荐中隐藏':'已允许出现在推荐中','ok');}).catch(function(){DND=!DND;prefs.undiscoverable=DND;savePrefs();if(dndToggle)dndToggle.checked=DND;if(chkUndisc)chkUndisc.checked=DND;applyPrefs(false);if(notify)Overlay.HUD.show('隐私设置未能保存，请登录后重试','warn');});
+}
+if(dndToggle){dndToggle.checked=!!prefs.undiscoverable;DND=dndToggle.checked;}
+fetch('/api/dt_presence_mem.asp?action=get-undiscoverable',{credentials:'include',cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('login required');return r.json();}).then(function(j){if(!j.ok)return;DND=!!j.undiscoverable;prefs.undiscoverable=DND;savePrefs();if(dndToggle)dndToggle.checked=DND;if(chkUndisc)chkUndisc.checked=DND;applyPrefs(false);}).catch(function(){if(privacyHint)privacyHint.textContent='登录后可将“不打扰”同步为“不被推荐”。';});
 if(dndToggle) dndToggle.addEventListener('change',function(){
-  DND=dndToggle.checked;
-  Overlay.HUD.show(DND?'已开启不打扰（仅徽标）':'已关闭不打扰','info');
+  setDnd(dndToggle.checked,true);
 });
 
 /* ===== 设置 ===== */
@@ -477,11 +525,11 @@ function applyPrefs(toast){
   if(tabBtnReco) tabBtnReco.style.display = prefs.hide_reco ? 'none' : '';
   if(prefs.hide_reco && activeTab==='reco') switchTab('friends');
   document.body.classList.toggle('undiscoverable', !!prefs.undiscoverable);
-  if(privacyHint) privacyHint.textContent = prefs.undiscoverable ? '你已选择“不被推荐”。不会出现在附近/推荐/搜索中（演示标记，需后端配合）。' : '你目前允许被发现。';
+  if(privacyHint) privacyHint.textContent = prefs.undiscoverable ? '你已选择“不被推荐”，已从在线推荐列表中隐藏。' : '你目前允许出现在在线推荐列表中。';
   if(toast) Overlay.HUD.show('隐私设置已更新','ok');
 }
 if(chkHideReco){ chkHideReco.checked=!!prefs.hide_reco; chkHideReco.addEventListener('change',function(){ prefs.hide_reco=chkHideReco.checked; savePrefs(); applyPrefs(true) }) }
-if(chkUndisc){ chkUndisc.checked=!!prefs.undiscoverable; chkUndisc.addEventListener('change',function(){ prefs.undiscoverable=chkUndisc.checked; savePrefs(); applyPrefs(true) }) }
+if(chkUndisc){ chkUndisc.checked=!!prefs.undiscoverable; chkUndisc.addEventListener('change',function(){ setDnd(chkUndisc.checked,true) }) }
 
 /* ===== 昵称弹窗 ===== */
 var modal=$('#profile-modal'), modalName=$('#modal-name'), modalColor=$('#modal-color');
@@ -683,7 +731,112 @@ function setCaps(){
   for (var i=0;i<caps.length;i++){ if(caps[i]) caps[i].classList.toggle('lock', !f) }
   if(chatAdd) chatAdd.hidden = f;
 }
-function attempt(label,fn){ if(!currentPeer) return; if(!(typeof isFriend==='function' && isFriend(currentPeer.id))) return Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('请先加「'+currentPeer.name+'」为好友以使用'+label,'warn'); fn() }
+function attempt(label,fn){ if(!currentPeer){showChatFileNotice('请先打开好友会话以使用'+label,'warn',7000);return;} if(!(typeof isFriend==='function' && isFriend(currentPeer.id))){showChatFileNotice('请先加「'+currentPeer.name+'」为好友以使用'+label,'warn',7000);return;} fn() }
+function cloudDialog(){return window.WebWindows&&window.WebWindows.fileDialog}
+var chatFileNoticeTimer=null;
+function showChatFileNotice(message,kind,duration){
+  var activeChat=document.getElementById('chat')||chat;
+  if(!activeChat)return;
+  var notice=$('#chat-file-notice',activeChat);
+  if(!notice){
+    notice=document.createElement('div');notice.id='chat-file-notice';notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
+    var header=activeChat.querySelector('header');
+    if(header&&header.parentNode===activeChat)header.insertAdjacentElement('afterend',notice);else activeChat.insertBefore(notice,activeChat.firstChild);
+  }
+  notice.textContent=String(message||'');notice.dataset.kind=kind||'info';
+  delete notice.dataset.filePickerPending;
+  notice.style.cssText='display:block;padding:8px 12px;font-size:13px;line-height:1.45;border-bottom:1px solid rgba(100,116,139,.2);background:'+(kind==='warn'?'#fff7ed':kind==='ok'?'#ecfdf5':'#eff6ff')+';color:'+(kind==='warn'?'#9a3412':kind==='ok'?'#166534':'#1d4ed8');
+  clearTimeout(chatFileNoticeTimer);
+  if(Number(duration)>0)chatFileNoticeTimer=setTimeout(function(){if(notice.parentNode)notice.remove();},Number(duration));
+}
+async function shareCloudResource(resource,purpose,rightsConfirmed){
+  if(!resource||!resource.path||!currentPeer||!currentPeer.id||!CONV_ID)throw new Error('当前会话或云资源不可用');
+  var form=new URLSearchParams({path:resource.path,recipientId:String(currentPeer.id),convId:CONV_ID,purpose:purpose});if(rightsConfirmed)form.set('rightsConfirmed','1');
+  var response=await fetch(API_ROOT+'dt_file_transfer.asp?op=share',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8','X-WebWindows-Request':'desktalk-file'},body:form});
+  var result=await response.json().catch(function(){return null;});if(!response.ok||!result||!result.ok)throw new Error(result&&result.error&&result.error.message||'文件分享失败（HTTP '+response.status+'）');return result;
+}
+async function sendSharedMessage(result,purpose){
+  var marker=(purpose==='emoji'?'__wwemoji__':'__wwfile__')+JSON.stringify(result);
+  var response=await fetch(API_ROOT+'dt_send_link.asp',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/x-www-form-urlencoded;charset=UTF-8'},body:new URLSearchParams({u:API_ME,convId:CONV_ID,to:API_PEER,content:marker})});
+  var payload=await response.json().catch(function(){return null;});if(!response.ok||!payload||payload.ok===false)throw new Error('云文件已准备，但聊天消息未发送成功');
+  var ts=Math.floor(Date.now()/1000),isEmoji=purpose==='emoji',data;try{data=JSON.parse(marker.slice(isEmoji?'__wwemoji__'.length:'__wwfile__'.length));}catch(_){}recentlySent.push({body:marker,ts:ts});renderSharedCard(data,isEmoji,'me',ts);
+}
+async function chooseAndSendCloudFile(){
+  showChatFileNotice('正在打开云端文件选择器…','info',0);
+  try{var dialog=cloudDialog();if(!dialog)throw new Error('云资料选择器未加载，请刷新页面后重试');
+    var resource=await dialog.open({purpose:'desktalk-file',location:'private',fileTypes:[{name:'允许的文件',extensions:['png','jpg','jpeg','webp','pdf','txt','csv','docx','xlsx','pptx']}]});if(!resource){showChatFileNotice('已取消选择文件','info',3500);return;}
+    if(!resource.path||!Number(resource.size||0)||Number(resource.size)>15*1024*1024)throw new Error('文件必须为 1 字节至 15 MB');
+    showChatFileNotice('文件已选中，正在安全检查并发送…','info',0);
+    var shared=await shareCloudResource(resource,'file',false);await sendSharedMessage(shared,'file');showChatFileNotice('文件已发送','ok',5000);
+  }catch(error){showChatFileNotice(error.message||'文件发送失败','warn',10000);}
+}
+async function sendCustomCloudEmoji(){
+  try{if(!currentPeer||!currentPeer.id)throw new Error('请先打开好友会话');if(!confirm('请确认你拥有该图片的使用权，且内容合法、适宜公开分享。'))return;
+    var dialog=cloudDialog();if(!dialog)throw new Error('云资料选择器尚未加载');var source=await dialog.open({purpose:'desktalk-emoji-source',location:'private',fileTypes:[{name:'PNG 表情',extensions:['png']}]});if(!source)return;
+    var blob=await dialog.read(source);if(blob.type&&blob.type!=='image/png')throw new Error('表情必须是 PNG 图片');if(!blob.size||blob.size>512*1024)throw new Error('PNG 表情最大 512 KB');
+    var bitmap=await createImageBitmap(blob);if(bitmap.width>512||bitmap.height>512||bitmap.width*bitmap.height>262144){bitmap.close();throw new Error('图片尺寸不能超过 512×512');}
+    var canvas=document.createElement('canvas');canvas.width=bitmap.width;canvas.height=bitmap.height;canvas.getContext('2d',{alpha:true}).drawImage(bitmap,0,0);bitmap.close();
+    var normalized=await new Promise(function(resolve,reject){canvas.toBlob(function(value){if(value)resolve(value);else reject(new Error('PNG 图片处理失败'));},'image/png');});
+    var saved=await dialog.saveBlob({purpose:'desktalk-emoji',suggestedName:'emoji-'+Date.now()+'.png',fileTypes:[{name:'PNG 表情',extensions:['png']}]},normalized);if(!saved)return;if(saved.size>512*1024)throw new Error('处理后的 PNG 超过 512 KB');
+    var shared=await shareCloudResource(saved,'emoji',true);await sendSharedMessage(shared,'emoji');if(Overlay&&Overlay.HUD)Overlay.HUD.show('自定义表情已发送','ok');
+  }catch(error){if(Overlay&&Overlay.HUD)Overlay.HUD.show(error.message||'表情发送失败','warn');}
+}
+function renderSharedCard(data,isEmoji,role,ts){
+  if(!data||!/^[a-f0-9]{32}$/.test(String(data.id||'')))return;ensureTimeHeader(ts);var div=document.createElement('div');div.className='msg '+(role==='me'?'me':'peer');
+  var url=API_ROOT+'dt_file_transfer.asp?op=download&id='+encodeURIComponent(data.id);
+  if(isEmoji){var img=document.createElement('img');img.src=url;img.alt='自定义表情';img.width=48;img.height=48;img.loading='lazy';img.style.cssText='object-fit:contain;vertical-align:middle';div.appendChild(img);}
+  else{var title=document.createElement('span');title.textContent=String(data.name||'分享文件')+' ('+Math.max(1,Math.ceil(Number(data.size||0)/1024))+' KB)';var button=document.createElement('button');button.type='button';button.textContent='下载';button.className='icon-btn';
+    button.addEventListener('click',async function(){try{var res=await fetch(url,{credentials:'same-origin',cache:'no-store'});if(!res.ok)throw new Error('文件已过期或无权访问');var blob=await res.blob();var objectUrl=URL.createObjectURL(blob);var a=document.createElement('a');a.href=objectUrl;a.download=String(data.name||'shared-file').replace(/[\\/:*?"<>|]/g,'_');document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(objectUrl)},1000);}catch(error){if(Overlay&&Overlay.HUD)Overlay.HUD.show(error.message||'下载失败','warn');}});div.append(title,button);}
+  chatBody.appendChild(div);chatBody.scrollTop=chatBody.scrollHeight;
+}
+var activeCall=null;
+function callSignal(kind,data){
+  if(!activeCall||!CONV_ID)return Promise.reject(new Error('没有活动通话'));
+  var payload='__wwcall__'+JSON.stringify(Object.assign({kind:kind,callId:activeCall.id},data||{}));
+  return fetch(API_ROOT+'dt_send_link.asp',{method:'POST',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({u:API_ME,convId:CONV_ID,to:API_PEER,content:payload}).toString()});
+}
+function endCall(send){
+  var call=activeCall;if(!call)return;
+  if(send&&call.pc)callSignal('hangup').catch(function(){});activeCall=null;
+  try{call.pc&&call.pc.close();}catch(_){} try{call.stream&&call.stream.getTracks().forEach(function(t){t.stop();});}catch(_){}
+  var box=document.getElementById('dt-call-media');if(box)box.remove();var remote=document.getElementById('dt-call-remote');if(remote)remote.remove();if(call.hang)call.hang.remove();
+  if(Overlay&&Overlay.HUD)Overlay.HUD.show('通话已结束','info');
+}
+function callMedia(kind){
+  attempt(kind==='video'?'视频通话':'语音通话',async function(){
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia||!window.RTCPeerConnection){Overlay.HUD.show('当前浏览器不支持实时通话','warn');return;}
+    try{
+      if(activeCall)endCall(false);
+      activeCall={id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),kind:kind,initiator:true,queue:[]};
+      activeCall.stream=await navigator.mediaDevices.getUserMedia({audio:true,video:kind==='video'});
+      var media=document.createElement(kind==='video'?'video':'audio');media.id='dt-call-media';media.autoplay=true;media.playsInline=true;media.muted=true;media.srcObject=activeCall.stream;media.style.cssText='position:fixed;right:24px;bottom:24px;width:'+(kind==='video'?'280px':'1px')+';height:'+(kind==='video'?'180px':'1px')+';z-index:2147483647;background:#111;border-radius:12px;';document.body.appendChild(media);
+      var hang=document.createElement('button');hang.textContent='结束通话';hang.style.cssText='position:fixed;right:32px;bottom:32px;z-index:2147483647';hang.onclick=function(){endCall(true)};if(kind==='video')media.after(hang);else document.body.appendChild(hang);activeCall.hang=hang;
+      var pc=activeCall.pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]});
+      activeCall.pc.onicecandidate=function(e){if(e.candidate)callSignal('candidate',{candidate:e.candidate.toJSON()}).catch(function(){});};
+      activeCall.pc.ontrack=function(e){var remote=document.getElementById('dt-call-remote');if(!remote){remote=document.createElement(kind==='video'?'video':'audio');remote.id='dt-call-remote';remote.autoplay=true;remote.playsInline=true;remote.style.cssText='position:fixed;right:320px;bottom:24px;width:'+(kind==='video'?'280px':'1px')+';height:'+(kind==='video'?'180px':'1px')+';z-index:2147483646;background:#111;border-radius:12px;';document.body.appendChild(remote);}remote.srcObject=e.streams[0];};
+      activeCall.stream.getTracks().forEach(function(track){pc.addTrack(track,activeCall.stream);});
+      var offer=await pc.createOffer();await pc.setLocalDescription(offer);await callSignal('offer',{description:pc.localDescription.toJSON(),callKind:kind});Overlay.HUD.show('正在呼叫「'+currentPeer.name+'」…','info');
+    }catch(e){endCall(false);Overlay.HUD.show('无法启动通话：'+(e.message||'请检查麦克风/摄像头权限'),'warn');}
+  });
+}
+async function handleCallSignal(message,from){
+  var data;try{data=JSON.parse(message.slice('__wwcall__'.length));}catch(_){return true;}
+  if(data.kind==='hangup'){endCall(false);return true;}
+  if(data.kind==='offer'){
+    if(activeCall){return true;}
+    if(!confirm((data.callKind==='video'?'视频':'语音')+'通话邀请来自 '+(currentPeer&&currentPeer.name||from)+'。接听？')){activeCall={id:data.callId,pc:null};callSignal('hangup').catch(function(){});activeCall=null;return true;}
+    try{
+      activeCall={id:data.callId,kind:data.callKind||'audio',initiator:false,queue:[]};activeCall.stream=await navigator.mediaDevices.getUserMedia({audio:true,video:activeCall.kind==='video'});
+      var media=document.createElement(activeCall.kind==='video'?'video':'audio');media.id='dt-call-media';media.autoplay=true;media.playsInline=true;media.muted=true;media.srcObject=activeCall.stream;media.style.cssText='position:fixed;right:24px;bottom:24px;width:'+(activeCall.kind==='video'?'280px':'1px')+';height:'+(activeCall.kind==='video'?'180px':'1px')+';z-index:2147483647;background:#111;border-radius:12px;';document.body.appendChild(media);
+      var hang=document.createElement('button');hang.textContent='结束通话';hang.style.cssText='position:fixed;right:32px;bottom:32px;z-index:2147483647';hang.onclick=function(){endCall(true)};document.body.appendChild(hang);activeCall.hang=hang;
+      var pc=activeCall.pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun.cloudflare.com:3478'}]});pc.onicecandidate=function(e){if(e.candidate)callSignal('candidate',{candidate:e.candidate.toJSON()}).catch(function(){});};pc.ontrack=function(e){var remote=document.createElement(activeCall.kind==='video'?'video':'audio');remote.id='dt-call-remote';remote.autoplay=true;remote.playsInline=true;remote.style.cssText='position:fixed;right:320px;bottom:24px;width:'+(activeCall.kind==='video'?'280px':'1px')+';height:'+(activeCall.kind==='video'?'180px':'1px')+';z-index:2147483646;background:#111;border-radius:12px;';remote.srcObject=e.streams[0];document.body.appendChild(remote);};
+      activeCall.stream.getTracks().forEach(function(track){pc.addTrack(track,activeCall.stream);});await pc.setRemoteDescription(data.description);for(var i=0;i<activeCall.queue.length;i++)await pc.addIceCandidate(activeCall.queue[i]);var answer=await pc.createAnswer();await pc.setLocalDescription(answer);await callSignal('answer',{description:pc.localDescription.toJSON()});
+    }catch(e){endCall(true);Overlay.HUD.show('接听失败：'+(e.message||'请检查设备权限'),'warn');}return true;
+  }
+  if(!activeCall||data.callId!==activeCall.id)return true;
+  try{if(data.kind==='answer')await activeCall.pc.setRemoteDescription(data.description);else if(data.kind==='candidate'){if(activeCall.pc.remoteDescription)await activeCall.pc.addIceCandidate(data.candidate);else activeCall.queue.push(data.candidate);}}catch(_){}
+  return true;
+}
 async function resolveConvIdFor(peer){
   const meId   = meSlug();                          // 稳定ID
   const meNameSlug = slugId(meName());              // 旧昵称slug
@@ -721,10 +874,10 @@ function refreshMeId(){
   API_ME = meSlug();   // meSlug() 你已有：优先 me.id，回退昵称
 }
 
-if(btnVoice) btnVoice.onclick=function(){ attempt('语音通话',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）开始语音','info') }) };
-if(btnVideo) btnVideo.onclick=function(){ attempt('视频通话',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）开始视频','info') }) };
-if(btnFile)  btnFile.onclick=function(){ attempt('发送文件',function(){ Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('（占位）发送文件','info') }) };
-if(chatAdd) chatAdd.onclick=function(){ if(currentPeer && typeof friendSet!=='undefined'){ friendSet.add(currentPeer.id); saveFriends && saveFriends(); Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('已添加「'+currentPeer.name+'」为好友','ok'); setCaps(); renderAll && renderAll() } };
+if(btnVoice) btnVoice.onclick=function(){ callMedia('audio') };
+if(btnVideo) btnVideo.onclick=function(){ callMedia('video') };
+if(btnFile&&!btnFile._dtFileBound){btnFile._dtFileBound=1;btnFile.addEventListener('click',function(event){event.preventDefault();event.stopPropagation();attempt('发送文件',chooseAndSendCloudFile);});}
+if(chatAdd) chatAdd.onclick=function(){ if(currentPeer && typeof friendSet!=='undefined'){ addFriend(currentPeer,function(){Overlay && Overlay.HUD && Overlay.HUD.show && Overlay.HUD.show('已添加「'+currentPeer.name+'」为好友','ok');setCaps();}); } };
 
 /* === 会话状态 === */
 var API_ME='', API_PEER='', CONV_ID='', lastTs=0, pollTimer=null;
@@ -888,6 +1041,7 @@ function appendServerMsgs(arr){
     var m = arr[i];
     var body = m.body || m.raw || '';
     var fromId = String(m.from || '');
+    if(String(body).indexOf('__wwcall__')===0){handleCallSignal(body,fromId);if(m.id)renderedIds.add(m.id);continue;}
     var tsSec = (typeof m.ts === 'number' || typeof m.ts === 'string')
       ? ((Number(m.ts) > 1e12) ? Math.floor(Number(m.ts)/1000) : Number(m.ts))
       : (m.ts_iso ? Math.floor(new Date(m.ts_iso).getTime()/1000) : 0);
@@ -911,10 +1065,22 @@ function appendServerMsgs(arr){
       }
     }
 
+    var fromRole = fromServerToRole(m.from);
+    if(String(body).indexOf('__wwfile__')===0||String(body).indexOf('__wwemoji__')===0){
+      var isEmoji=String(body).indexOf('__wwemoji__')===0,marker=isEmoji?'__wwemoji__':'__wwfile__',shared=null;
+      try{shared=JSON.parse(String(body).slice(marker.length));}catch(_){}
+      renderSharedCard(shared,isEmoji,fromRole,tsSec);
+      if(fromRole==='peer'){
+        var senderSlug=slugId(m.from),sameOpen=chat&&chat.classList.contains('show')&&currentPeer&&slugId(currentPeer.id)===senderSlug;
+        if(sameOpen)clearUnreadFor(currentPeer.id);else markPeerUnread(senderSlug);
+        if(!sameOpen&&!DND){var sender=people.find(function(x){return x.id===senderSlug;})||{id:senderSlug,name:fromId,color:'#93c5fd'};showIsland(sender,isEmoji?'收到自定义表情':'收到文件');}
+      }
+      if(m.id)renderedIds.add(m.id);seenKeys.add(key);lastTs=Math.max(lastTs,tsSec||0);continue;
+    }
+
     // ③ 真正渲染
- appendMsg({ from: fromServerToRole(m.from), body: m.body||m.raw||'', ts: tsSec }); 
+ appendMsg({ from: fromRole, body: m.body||m.raw||'', ts: tsSec });
     try{
-      var fromRole = fromServerToRole(m.from);     // 'me' | 'peer'
       if (fromRole === 'peer') {
         var senderId = slugId(m.from);             // 统一成 slug
         var isOpenSamePeer = (
@@ -1845,6 +2011,9 @@ function showIsland(peer, text){
     panel.appendChild(b);
   });
 
+  const customEmojiBtn=document.createElement('button');customEmojiBtn.type='button';customEmojiBtn.className='emoji-item';customEmojiBtn.textContent='☁️ 自定义';customEmojiBtn.title='从 WebWindows 云资料选择 PNG 表情';
+  customEmojiBtn.addEventListener('click',function(){panel.classList.remove('show');attempt('自定义表情',sendCustomCloudEmoji);});panel.appendChild(customEmojiBtn);
+
   // 定位 & 开关
   function togglePanel(e){
     e.stopPropagation();
@@ -1980,18 +2149,7 @@ function closeSettingsSheet(){
     return profile.name || profile.nickname || profile.username || '我';
   }
   function makeId(){ return 'mail-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8); }
-  function initialMessages(){
-    var messages = getMessages();
-    if (messages.length) return messages;
-    messages = [{
-      id: makeId(), folder: 'inbox', from: 'WebWindows 桌讯', to: mailboxIdentity(),
-      subject: '欢迎使用讯筒',
-      body: '讯筒已经可以在本机保存收信、写信和邮送记录。连接云同步服务后，邮件将可在设备间同步。',
-      createdAt: new Date().toISOString(), read: false
-    }];
-    saveMessages(messages);
-    return messages;
-  }
+  function initialMessages(){ return getMessages(); }
   function formatTime(value){
     var date = new Date(value);
     if (isNaN(date.getTime())) return '';
@@ -2044,16 +2202,13 @@ function closeSettingsSheet(){
     addresses.forEach(function(address){
       var row = document.createElement('div'); row.style.cssText = 'padding:7px 0;border-bottom:1px solid #eee;';
       var name = document.createElement('div'); name.style.fontWeight = '600'; setText(name, address.name || address.address); row.appendChild(name);
-      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;';
-      var stateText = address.remote ? ' · 已连接' : ' · 尚未连接';
-      if (address.isDefault) stateText += ' · 默认讯址';
-      setText(value, address.address + stateText); row.appendChild(value);
+      var value = document.createElement('div'); value.style.cssText = 'font-size:12px;color:#667085;margin-top:2px;'; setText(value, address.address + (address.isDefault ? ' · 默认讯址' : ' · 尚未连接')); row.appendChild(value);
       var controls = document.createElement('div'); controls.style.cssText = 'display:flex;gap:8px;margin-top:5px;';
       if (!address.isDefault) { var setDefault = document.createElement('button'); setDefault.type = 'button'; setDefault.dataset.addressAction = 'default'; setDefault.dataset.addressId = address.id; setText(setDefault, '设为默认'); controls.appendChild(setDefault); }
       var remove = document.createElement('button'); remove.type = 'button'; remove.dataset.addressAction = 'remove'; remove.dataset.addressId = address.id; setText(remove, '移除'); controls.appendChild(remove); row.appendChild(controls); list.appendChild(row);
     });
     var center = document.getElementById('mailbox-center-status');
-    if (center) setText(center, addresses.length ? '已登记 ' + addresses.length + ' 个讯址；尚未连接。接入讯址中心后可安全配置 SMTP/IMAP 并执行收发。' : '尚未配置讯址。讯址中心接入后负责安全保存连接凭据、收信与邮送。');
+  if (center) setText(center, addresses.length ? '已登记 ' + addresses.length + ' 个邮件服务器讯址。' : '尚未配置讯址；添加后可通过 IMAP 收信、SMTP 发信。');
   }
   function checkMailCenter(){
     var center = document.getElementById('mailbox-center-status');
@@ -2062,7 +2217,7 @@ function closeSettingsSheet(){
     fetch(MAIL_CENTER_API + '?action=health', { credentials: 'same-origin' })
       .then(function(response){ if (!response.ok) throw new Error('status unavailable'); return response.json(); })
       .then(function(status){
-        if (status.ok && status.configured) setText(center, '讯址中心就绪：MailKit ' + (status.mailKitVersion || '') + ' 已可安全连接 QQ、Gmail 等支持 TLS 的讯址。');
+        if (status.ok && status.configured) setText(center, '讯址中心就绪：MailKit ' + (status.mailKitVersion || '') + '；支持预设及自定义 IMAP/SMTP 服务器。');
         else if (status.ok) setText(center, '讯址中心已部署，但尚未完成数据库、数据表或加密密钥配置（' + (status.configurationStatus || 'unknown') + '）。');
         else setText(center, '讯址中心正在启动，请稍后重试。');
       })
@@ -2082,7 +2237,7 @@ function closeSettingsSheet(){
     remoteAccountRequestedAt=now;
     remoteAccountRequest=mailCenter('accounts').then(function(data){
       remoteAccounts = data.accounts || [];
-      var local = getAddresses();
+      var local = getAddresses().filter(function(x){return !!x.remote;});
       remoteAccounts.forEach(function(a){
         var known=local.filter(function(x){return x.address===a.address;})[0];
         if(known) { known.id=a.id; known.name=a.name; known.provider=a.provider; known.remote=true; }
@@ -2137,7 +2292,7 @@ function closeSettingsSheet(){
     if (!message) return;
     if (message.remote) {
       var detailTarget = document.getElementById('mailbox-detail'); detailTarget.textContent='正在读取邮件…'; showTab('detail');
-      mailCenter('message',{accountId:message.accountId,uid:message.remoteId,folder:message.folder}).then(function(data){ detailTarget.textContent=''; [['主题',data.subject],['寄件人',data.from],['时间',new Date(data.date).toLocaleString()]].forEach(function(p){var line=document.createElement('p');line.textContent=p[0]+'：'+p[1];detailTarget.appendChild(line);});var body=document.createElement('div');body.style.whiteSpace='pre-wrap';body.textContent=data.body||'（无正文）';detailTarget.appendChild(body);var actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;margin-top:14px;';var button=document.createElement('button');button.type='button';button.dataset.mailAction=message.folder==='trash'?'restore':'trash';button.dataset.mailId=message.id;setText(button,message.folder==='trash'?'恢复':'移至废纸篓');actions.appendChild(button);detailTarget.appendChild(actions);message.read=true; saveMessages(messages); return mailCenter('mark-read',{accountId:message.accountId,uid:message.uid,folder:message.folder}); }).catch(function(e){detailTarget.textContent='读取失败：'+e.message;}); return;
+      mailCenter('message',{accountId:message.accountId,uid:message.remoteId,folder:message.folder}).then(function(data){ detailTarget.textContent=''; [['主题',data.subject],['寄件人',data.from],['时间',new Date(data.date).toLocaleString()]].forEach(function(p){var line=document.createElement('p');line.textContent=p[0]+'：'+p[1];detailTarget.appendChild(line);});var body=document.createElement('div');body.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;';if(data.body)body.textContent=data.body;else if(data.html&&window.DOMPurify)body.innerHTML=DOMPurify.sanitize(data.html,{USE_PROFILES:{html:true},FORBID_TAGS:['img','iframe','video','audio','form']});else body.textContent='（无正文）';detailTarget.appendChild(body);var actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;margin-top:14px;';var button=document.createElement('button');button.type='button';button.dataset.mailAction=message.folder==='trash'?'restore':'trash';button.dataset.mailId=message.id;setText(button,message.folder==='trash'?'恢复':'移至废纸篓');actions.appendChild(button);detailTarget.appendChild(actions);message.read=true; saveMessages(messages); return mailCenter('mark-read',{accountId:message.accountId,uid:message.uid,folder:message.folder}); }).catch(function(e){detailTarget.textContent='读取失败：'+e.message;}); return;
     }
     if (message.folder === 'inbox' && !message.read) { message.read = true; saveMessages(messages); }
     var target = document.getElementById('mailbox-detail'); if (!target) return;
@@ -2174,17 +2329,7 @@ function closeSettingsSheet(){
     if (addressAction) {
       var addresses = getAddresses();
       if (addressAction.dataset.addressAction === 'default') { addresses.forEach(function(item){ item.isDefault = item.id === addressAction.dataset.addressId; }); saveAddresses(addresses); render(); return; }
-      var selectedAddress = addresses.filter(function(item){ return item.id === addressAction.dataset.addressId; })[0];
-      if (!selectedAddress || !selectedAddress.remote) {
-        addresses = addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; });
-        if (addresses.length && !addresses.some(function(item){ return item.isDefault; })) addresses[0].isDefault = true;
-        saveAddresses(addresses); render(); return;
-      }
-      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){
-        addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; });
-        if (addresses.length && !addresses.some(function(item){ return item.isDefault; })) addresses[0].isDefault = true;
-        saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render();
-      }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
+      mailCenter('account-delete',{accountId:addressAction.dataset.addressId}).then(function(){ addresses=addresses.filter(function(item){ return item.id !== addressAction.dataset.addressId; }); saveAddresses(addresses); remoteAccounts=remoteAccounts.filter(function(item){return item.id!==addressAction.dataset.addressId;}); render(); }).catch(function(error){ var status=document.getElementById('mailbox-address-status'); if(status){status.style.color='#b42318';setText(status,'移除失败：'+error.message);} }); return;
     }
     var refresh = event.target.closest('[data-mail-refresh]');
     if (refresh) { loadRemoteFolder(refresh.dataset.mailRefresh, true); return; }
@@ -2204,14 +2349,18 @@ function closeSettingsSheet(){
     var account=selectedRemoteAccount();
     if(!account){ status.style.color='#b42318'; setText(status,'请先在讯址设置中添加并保存讯址。'); return; }
     status.style.color='#667085'; setText(status,'正在通过讯址中心邮送…');
-    mailCenter('send',{accountId:account.id,to:to,subject:subject,body:body}).then(function(){ var messages=initialMessages(); messages.push({id:makeId(),folder:'sent',from:account.address,to:to,subject:subject,body:body,createdAt:new Date().toISOString(),read:true});saveMessages(messages);form.reset();status.style.color='#067647';setText(status,'邮件已邮送。');render(); }).catch(function(error){status.style.color='#b42318';setText(status,'邮送失败：'+error.message);});
+    mailCenter('send',{accountId:account.id,to:to,subject:subject,body:body}).then(function(){form.reset();status.style.color='#067647';setText(status,'邮件已通过 SMTP 邮送。');remoteFolderRequestedAt[account.id+':sent']=0;loadRemoteFolder('sent',true);render(); }).catch(function(error){status.style.color='#b42318';setText(status,'邮送失败：'+error.message);});
   });
   var addressForm = document.getElementById('mailbox-address-form');
+  var providerSelect=document.getElementById('mailbox-address-provider');
+  if(providerSelect) providerSelect.addEventListener('change',function(){var p=providerSelect.value;var ih=document.getElementById('mailbox-imap-host'),sh=document.getElementById('mailbox-smtp-host');ih.placeholder=p==='qq'?'imap.qq.com':p==='gmail'?'imap.gmail.com':'IMAP 主机名';sh.placeholder=p==='qq'?'smtp.qq.com':p==='gmail'?'smtp.gmail.com':'SMTP 主机名';});
   if (addressForm) addressForm.addEventListener('submit', function(event){
     event.preventDefault();
     var name = document.getElementById('mailbox-address-name').value.trim();
     var address = document.getElementById('mailbox-address-value').value.trim().toLowerCase();
     var provider = document.getElementById('mailbox-address-provider').value;
+    var imapHost=document.getElementById('mailbox-imap-host').value.trim(), imapPort=document.getElementById('mailbox-imap-port').value || '993', imapSecurity=document.getElementById('mailbox-imap-security').value;
+    var smtpHost=document.getElementById('mailbox-smtp-host').value.trim(), smtpPort=document.getElementById('mailbox-smtp-port').value || '465', smtpSecurity=document.getElementById('mailbox-smtp-security').value;
     var password = document.getElementById('mailbox-address-password').value;
     var status = document.getElementById('mailbox-address-status');
     var saved = false;
@@ -2219,10 +2368,13 @@ function closeSettingsSheet(){
     var addresses = getAddresses();
     if (!password) { status.style.color = '#b42318'; setText(status, '请输入邮箱授权码。'); return; }
     status.style.color = '#667085'; setText(status, '正在加密保存并验证收信连接…');
-    mailCenter('account-save', { provider:provider, displayName:name || address, email:address, appPassword:password })
+    if(provider==='qq'){imapHost=imapHost||'imap.qq.com';smtpHost=smtpHost||'smtp.qq.com';}
+    if(provider==='gmail'){imapHost=imapHost||'imap.gmail.com';smtpHost=smtpHost||'smtp.gmail.com';}
+    if(!imapHost||!smtpHost){status.style.color='#b42318';setText(status,'请填写 IMAP 与 SMTP 主机名。');return;}
+    mailCenter('account-save', { provider:provider, displayName:name || address, email:address, appPassword:password, imapHost:imapHost, imapPort:imapPort, imapSecurity:imapSecurity, smtpHost:smtpHost, smtpPort:smtpPort, smtpSecurity:smtpSecurity })
       .then(function(){ saved = true; return loadRemoteAccounts(true); })
       .then(function(accounts){ var account=accounts.filter(function(a){return a.address===address;})[0]; if(!account) throw new Error('讯址保存后无法读取'); return mailCenter('test-mailbox',{accountId:account.id}); })
-      .then(function(result){ addressForm.reset(); status.style.color='#067647'; setText(status,'讯址已加密保存，收信连接验证通过（当前 ' + result.messageCount + ' 封）。'); render(); })
+      .then(function(result){ addressForm.reset(); status.style.color='#067647'; setText(status,'讯址已加密保存，收件与发件服务器连接验证通过（收件箱当前 ' + result.messageCount + ' 封）。'); render(); })
       .catch(function(error){ status.style.color='#b42318'; setText(status,(saved ? '讯址已保存，但连接验证失败：' : '讯址未保存：') + error.message + (saved ? '。可检查授权码与服务商 IMAP 设置后重新保存。' : '')); });
   });
   initialMessages(); render(); showTab('manage');

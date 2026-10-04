@@ -8,6 +8,19 @@
   let pendingPreviewTimer = null;
   let activePreviewId = null;
 
+  function gateWindowRootUntilSessionReady() {
+    const root = document.getElementById("window-root");
+    if (!root || !document.documentElement.classList.contains("ww-boot-pending")) return;
+    root.style.opacity = "0";
+    root.style.pointerEvents = "none";
+    window.addEventListener("webwindows:session-ready", () => {
+      root.style.opacity = "";
+      root.style.pointerEvents = "";
+    }, { once: true });
+  }
+
+  gateWindowRootUntilSessionReady();
+
   function taskbarApps() {
     return [...document.querySelectorAll(".taskbar-app[data-id]")];
   }
@@ -189,8 +202,16 @@
         return null;
       }
       const source = frame ? sourceDoc.body : (win.querySelector(".window-content, .window-body") || win);
-      const naturalW = source.scrollWidth || source.offsetWidth || 0;
-      const naturalH = source.scrollHeight || source.offsetHeight || 0;
+      const winStyle = getComputedStyle(win);
+      const frameStyle = frame ? getComputedStyle(frame) : null;
+      const pixelValue = (value) => {
+        const match = String(value || "").match(/^\s*(\d+(?:\.\d+)?)px\s*$/i);
+        return match ? Number(match[1]) : 0;
+      };
+      const naturalW = source.scrollWidth || source.offsetWidth ||
+        pixelValue(frameStyle?.width) || pixelValue(win.style.width) || pixelValue(winStyle.width) || 640;
+      const naturalH = source.scrollHeight || source.offsetHeight ||
+        pixelValue(frameStyle?.height) || pixelValue(win.style.height) || pixelValue(winStyle.height) || 420;
       if (!naturalW || !naturalH) {
         console.debug("[TaskbarPreview] visual skipped: unmeasurable content");
         return null;
@@ -413,12 +434,22 @@
     const livePreview = document.getElementById("taskbar-window-preview");
     const sameVisible = !!icon.dataset.id && icon.dataset.id === activePreviewId && !!livePreview && !livePreview.hidden;
     if (sameVisible) {
-      if (immediate && pendingPreviewTimer) {
-        clearTimeout(pendingPreviewTimer);
-        pendingPreviewTimer = null;
+      if (immediate) {
         const win = document.getElementById(icon.dataset.id);
         const viewport = livePreview.querySelector(".taskbar-window-preview__viewport");
-        if (win && viewport) buildWindowSnapshot(win, viewport, previewRequest);
+        const current = viewport?.firstElementChild;
+        let needsSnapshot = false;
+        if (win && viewport && current?.dataset?.miniature === "1" && !current.querySelector("[data-visual]")) {
+          const refreshed = liveMiniature(icon, win);
+          viewport.replaceChildren(refreshed);
+          needsSnapshot = !refreshed.querySelector("[data-visual]");
+        }
+        if (pendingPreviewTimer) {
+          clearTimeout(pendingPreviewTimer);
+          pendingPreviewTimer = null;
+          needsSnapshot = true;
+        }
+        if (needsSnapshot && win && viewport) buildWindowSnapshot(win, viewport, previewRequest);
       }
       return;
     }

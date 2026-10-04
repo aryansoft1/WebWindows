@@ -73,14 +73,43 @@
         }, { passive: true });
     }
 
+    function isPointerOverPendingFrame() {
+        if (!mousePoint) return false;
+        for (const frame of pendingFrames) {
+            if (!frame.isConnected) continue;
+            const rect = frame.getBoundingClientRect();
+            let bounds = { left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+            let realm = frame.ownerDocument.defaultView;
+            while (realm && realm !== global) {
+                const parentFrame = realm.frameElement;
+                if (!parentFrame?.isConnected) { bounds = null; break; }
+                const parentRect = parentFrame.getBoundingClientRect();
+                const scaleX = parentRect.width / (parentFrame.offsetWidth || parentRect.width || 1);
+                const scaleY = parentRect.height / (parentFrame.offsetHeight || parentRect.height || 1);
+                bounds = {
+                    left: parentRect.left + (bounds.left + parentFrame.clientLeft) * scaleX,
+                    top: parentRect.top + (bounds.top + parentFrame.clientTop) * scaleY,
+                    width: bounds.width * scaleX,
+                    height: bounds.height * scaleY
+                };
+                realm = parentFrame.ownerDocument.defaultView;
+            }
+            if (bounds && mousePoint.x >= bounds.left && mousePoint.x <= bounds.left + bounds.width &&
+                mousePoint.y >= bounds.top && mousePoint.y <= bounds.top + bounds.height) return true;
+        }
+        return false;
+    }
+
     function updateNavigationPointer() {
         for (const frame of pendingFrames) if (!frame.isConnected) pendingFrames.delete(frame);
-        const active = pendingFrames.size && mousePoint;
+        // The fallback pointer is only needed over an iframe hidden during navigation.
+        // Keeping it active for the entire page leaves a second, lagging pointer over the taskbar.
+        const active = pendingFrames.size && isPointerOverPendingFrame();
         for (const doc of managedDocuments) {
             if (doc !== document && !doc.defaultView?.frameElement?.isConnected) { managedDocuments.delete(doc); continue; }
             doc.documentElement.toggleAttribute('data-ww-cursor-navigation', Boolean(active));
         }
-        if (!pendingFrames.size || !mousePoint || !document.body) {
+        if (!active || !mousePoint || !document.body) {
             document.documentElement.removeAttribute('data-ww-cursor-navigation');
             navigationPointer?.remove();
             navigationPointer = null;
@@ -179,7 +208,7 @@
         if (!doc?.head) return;
         managedDocuments.add(doc);
         bindPointerDocument(doc);
-        doc.documentElement.toggleAttribute('data-ww-cursor-navigation', Boolean(pendingFrames.size && mousePoint));
+        doc.documentElement.toggleAttribute('data-ww-cursor-navigation', Boolean(pendingFrames.size && isPointerOverPendingFrame()));
         let style = doc.getElementById('ww-cursor-theme-style');
         if (!style) {
             style = doc.createElement('style');

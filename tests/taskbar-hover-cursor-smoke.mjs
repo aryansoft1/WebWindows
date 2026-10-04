@@ -14,6 +14,7 @@ try {
   }
   browser = await chromium.launch({ headless: true, executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" });
   const page = await browser.newPage();
+  await page.route("**/delayed-cursor-frame", () => new Promise(() => {}));
   await page.addInitScript(() => {
     document.addEventListener("DOMContentLoaded", () => {
       const windowElement = document.createElement("div");
@@ -52,6 +53,13 @@ try {
     const icon = document.querySelector('.taskbar-app[data-id="cursor-test-a"]');
     return icon?.draggable && getComputedStyle(icon).getPropertyValue("--ww-cursor-render-state").trim() === "default";
   });
+  await page.evaluate(() => {
+    const frame = document.createElement("iframe");
+    frame.src = "/delayed-cursor-frame";
+    frame.style.cssText = "position:fixed;left:120px;top:160px;width:220px;height:140px";
+    document.body.appendChild(frame);
+  });
+  await page.waitForFunction(() => document.querySelector('iframe[src="/delayed-cursor-frame"]')?.hasAttribute("data-ww-cursor-loading"));
   const icon = page.locator('.taskbar-app[data-id="cursor-test-a"]');
   await icon.hover();
   const states = await icon.evaluate((element) => [element, ...element.querySelectorAll("*")].map((node) => ({
@@ -60,6 +68,19 @@ try {
   })));
   assert.equal(states.every(({ state, cursor }) => state === "default" && cursor.includes("classic/default.png")), true,
     "hovering a draggable taskbar item and its children keeps the normal cursor");
+  assert.equal(await page.locator("html").evaluate((element) => element.hasAttribute("data-ww-cursor-navigation")), false,
+    "a pending iframe must not activate the floating cursor while the pointer is over the taskbar");
+  assert.equal(await page.locator("#ww-navigation-pointer").count(), 0,
+    "the floating loading cursor must not remain visible over the taskbar");
+  const frame = page.locator('iframe[src="/delayed-cursor-frame"]');
+  const box = await frame.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  });
+  await page.mouse.move(box.x, box.y);
+  await page.waitForFunction(() => document.documentElement.hasAttribute("data-ww-cursor-navigation"));
+  assert.equal(await page.locator("#ww-navigation-pointer").count(), 1,
+    "the floating cursor remains available over the iframe area hidden during navigation");
   console.log("taskbar hover cursor smoke test passed");
 } finally {
   await browser?.close();

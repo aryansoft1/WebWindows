@@ -40,6 +40,7 @@ button,input{font:inherit}
 .guide-summary{margin:0 0 24px;color:var(--muted);font-size:16px;line-height:1.7}
 .guide-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
 .guide-chip{border-radius:999px;padding:4px 9px;background:#f0f3f7;color:#526078;font-size:11px}
+.guide-language-note{margin:-12px 0 22px;border-left:3px solid #58a6dc;padding:8px 11px;background:#f4f9fd;color:#526078;font-size:12px;line-height:1.65}
 .guide-body{font-size:15px;line-height:1.85}
 .guide-body h2{margin:30px 0 10px;font-size:21px}
 .guide-body h3{margin:24px 0 8px;font-size:17px}

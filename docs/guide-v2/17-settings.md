@@ -1,39 +1,41 @@
 ---
 id: settings-device
-title: 设置、启动项与设备能力
-summary: 调整语言、外观和声音，管理应用启动项，并查看电源与网络状态。
+title: 设置、个性化与设备能力
+summary: 调整语言、壁纸、窗口和指针外观，管理启动项，并查看电源与网络状态。
 category: 设置与设备
 category_order: 80
 order: 10
 status: verified
-product_version: 2026.09
-last_verified: 2026-09-27
-keywords: 设置,语言,地区,壁纸,显示,亮度,音量,应用,启动项,后台,最小化,延迟,电池,网络,测速
+product_version: 2026.10
+last_verified: 2026-10-04
+keywords: 设置,設定,Settings,設定画面,语言,地区,壁纸,Wallpaper,壁紙,个性化,Personalization,パーソナライズ,鼠标指针,Cursor,カーソル,主题色,毛玻璃,任务栏图标,启动项,后台,最小化,延迟,电池,网络,测速
 covers: webwindows.system.settings
 open_url: settings.html
 media: assets/guide/settings.png
 media_alt: 设置中的语言与区域页及左侧显示、声音、电源、网络、功能管理入口
 media_caption: 公开站点实拍；地区会同步影响任务栏时钟、日期和节假日区域。
-tested_by: settings.html,tests/device-experience-smoke.mjs,tests/connectivity-detection-smoke.mjs,assets/js/startup-manager.js,tests/startup-manager-smoke.mjs
+tested_by: settings.html,assets/js/settings.js,assets/js/personalize.js,assets/js/cursor-themes.js,tests/device-experience-smoke.mjs,tests/connectivity-detection-smoke.mjs,tests/startup-manager-smoke.mjs
 ---
 # 设置与设备能力
 
 ## 功能用途
 
-设置包含语言与区域、桌面壁纸、显示、声音、电源管理、网络与连接、应用启动项、功能管理和向导入口。视觉亮度只改变 WebWindows 页面遮罩，页面音量只调节 WebWindows 媒体，不代表硬件背光或系统音量。
+设置包含语言与区域、壁纸库、个性化、鼠标指针、显示、声音、电源与网络、应用启动项和功能管理。个性化可控制窗口特效、主题色、毛玻璃、时钟、任务栏图标和开始菜单置顶；视觉亮度与页面音量只影响 WebWindows，不代表硬件背光或系统音量。
 
 ## 适用场景
 
-切换界面语言和时区、调整桌面外观、安排登录后自动启动的应用、检查电池/网络、进行小流量测速，或控制普通功能是否显示时使用。
+切换界面语言和时区、从内置或个人壁纸库更换背景、调整窗口与指针外观、安排登录后自动启动的应用、检查电池/网络，或控制普通功能是否显示时使用。
 
 ## 操作步骤
 
 1. 打开设置，在“语言与区域”选择显示语言、地区和时区，返回桌面确认文本、日期与时钟已经更新。
-2. 切换到壁纸、显示和声音页，依次选择背景、缩放、视觉亮度与页面音量，并用桌面窗口或媒体播放检查效果。
-3. 打开“应用”页，在目标应用的“启动项”开关中启用自动启动，再选择普通、后台或最小化启动模式。
-4. 在同一启动项中设置延迟时间并保存；下次桌面会话就绪后检查该应用是否按设定模式和顺序启动。
-5. 打开“功能管理”，搜索目标功能后选择添加或移除，返回开始菜单确认入口变化。
-6. 在电源与网络页查看浏览器可检测状态；仅在需要时开始测速，完成后查看下载、上传、延迟曲线和评级。
+2. 打开“桌面壁纸”，从内置与个人壁纸中选择背景；云资料图片需先选择“保存到壁纸库”，随后会出现在这里。
+3. 打开“个性化”，按需开关窗口特效，选择主题色，调节毛玻璃强度、时钟格式和任务栏图标大小，并管理开始菜单置顶项目。
+4. 打开“鼠标指针”，选择指针主题，在预览区检查默认、链接、文本、等待、移动和缩放状态；更改会自动保存。
+5. 在显示和声音页调整缩放、视觉亮度与页面音量，并用桌面窗口或媒体播放检查效果。
+6. 打开“应用”页，在目标应用的“启动项”开关中启用自动启动，选择普通、后台或最小化模式，设置延迟并保存。
+7. 打开“功能管理”，搜索目标功能后选择添加或移除，返回开始菜单确认入口变化。
+8. 在电源与网络页查看可检测状态；仅在需要时开始测速，完成后查看下载、上传、延迟曲线和评级。
 
 ## 操作结果
 
@@ -45,3 +47,4 @@ tested_by: settings.html,tests/device-experience-smoke.mjs,tests/connectivity-de
 - 测速仅在点击后下载测试数据，单次最多约 2 MB；移动网络可能产生流量费。
 - 电池、网络类型等依赖浏览器或客户端能力，桌面浏览器可能只提供部分字段。
 - 启动项只保存当前使用者的应用 ID、模式和延迟；应用被移除或禁用后会跳过，不会直接打开未注册网址。
+- 壁纸库、个性化和指针预览会跟随繁中、English、日本語显示对应名称；主题选择本身在所有语言间共用。

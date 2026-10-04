@@ -7,6 +7,12 @@
   const search = document.getElementById("guideSearch");
   const results = document.getElementById("guideSearchResults");
   const menuButton = document.getElementById("guideMenuButton");
+  const languageNotes = {
+    zh: "界面语言提示：步骤以简体中文名称为基准；切换繁中、English 或日本語后，按钮名称会显示对应翻译，图标和位置保持一致。",
+    tw: "介面語言提示：步驟以簡體中文名稱為基準；切換繁中、English 或日本語後，按鈕名稱會顯示對應翻譯，圖示與位置保持一致。",
+    en: "Language note: Steps use Simplified Chinese labels as the reference. In English, Traditional Chinese, or Japanese, controls are translated while icons and locations stay the same.",
+    jp: "言語について：手順では簡体字中国語の名称を基準にしています。日本語・繁体字中国語・英語では名称が翻訳されますが、アイコンと位置は同じです。"
+  };
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -27,6 +33,11 @@
 
   function requestedTopic() {
     return new URL(location.href).searchParams.get("topic");
+  }
+
+  function currentLanguage() {
+    const language = localStorage.getItem("lang") || "zh";
+    return Object.hasOwn(languageNotes, language) ? language : "zh";
   }
 
   function articleById(id) {
@@ -82,6 +93,7 @@
           <span class="guide-chip">适用版本 ${escapeHtml(article.productVersion)}</span>
           <span class="guide-chip">最后核对 ${escapeHtml(article.lastVerified)}</span>
         </div>
+        <p class="guide-language-note" data-i18n-ignore>${escapeHtml(languageNotes[currentLanguage()])}</p>
         <figure class="guide-figure">
           <img src="${escapeHtml(mediaUrl)}" alt="${escapeHtml(article.mediaAlt)}" loading="eager" decoding="async">
           <p class="guide-media-error" role="status" hidden>图片暂时无法显示。请检查网络后刷新；下方文字步骤仍可正常使用。</p>
@@ -164,7 +176,7 @@
 
   async function initialize() {
     try {
-      const response = await fetch("assets/data/guide-content.json?v=20260927-1", { cache: "no-cache" });
+      const response = await fetch("assets/data/guide-content.json?v=20261004-1", { cache: "no-cache" });
       if (!response.ok) throw new Error(`内容请求失败（${response.status}）`);
       const payload = await response.json();
       state.release = payload.release;

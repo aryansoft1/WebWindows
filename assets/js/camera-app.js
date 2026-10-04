@@ -287,7 +287,8 @@
 
   document.querySelectorAll(".tabs button").forEach((button) => button.onclick = () => {
     document.querySelectorAll(".tabs button,.tab-panel").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active"); $(`#${button.dataset.tab}`).classList.add("active");
+    document.querySelectorAll(".tabs button[aria-current]").forEach((item) => item.removeAttribute("aria-current"));
+    button.classList.add("active"); button.setAttribute("aria-current", "page"); $(`#${button.dataset.tab}`).classList.add("active");
   });
   $("#startCamera").onclick = () => { enterCaptureMode(); startCamera().catch(() => exitCaptureMode()); };
   $("#stopCamera").onclick = () => { stopCamera(); exitCaptureMode(); setStatus("相机已停止。"); };

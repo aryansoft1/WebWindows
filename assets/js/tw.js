@@ -611,6 +611,8 @@ Object.assign(languageCatalog.jp, {
 });
 Object.assign(languageCatalog.en, {
   "照相机与扫描": "Camera & Scanner",
+  "相机": "Camera",
+  "拍摄照片、扫描文档、识别二维码和翻译图片文字。": "Take photos, scan documents, recognize QR codes, and translate text in images.",
   "图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。": "Images stay on this device by default. We will ask before saving to Cloud Files or using an online service.",
   "本地处理": "On-device",
   "功能模式": "Modes",
@@ -672,6 +674,8 @@ Object.assign(languageCatalog.en, {
 });
 Object.assign(languageCatalog.jp, {
   "照相机与扫描": "カメラとスキャナー",
+  "相机": "カメラ",
+  "拍摄照片、扫描文档、识别二维码和翻译图片文字。": "写真撮影、書類スキャン、QRコード認識、画像内テキストの翻訳に対応します。",
   "图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。": "画像は既定でこの端末内で処理します。クラウド資料への保存やオンラインサービスの利用前に確認します。",
   "本地处理": "端末内で処理",
   "功能模式": "モード",
@@ -733,6 +737,8 @@ Object.assign(languageCatalog.jp, {
 });
 Object.assign(languageCatalog.tw, {
   "照相机与扫描": "相機與掃描器",
+  "相机": "相機",
+  "拍摄照片、扫描文档、识别二维码和翻译图片文字。": "拍攝相片、掃描紙本、辨識 QR Code，並翻譯圖片文字。",
   "图像默认只在此设备处理；保存到云资料或使用远程提供方前会明确提示。": "影像預設只在此裝置處理；儲存到雲資料或使用遠端服務前會明確提示。",
   "本地处理": "本機處理",
   "功能模式": "功能模式",

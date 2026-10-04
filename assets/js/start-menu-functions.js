@@ -50,6 +50,10 @@
     return window.WebWindows?.apps || null;
   }
 
+  function localizedAppName(app) {
+    return window.WebWindowsI18n?.translate?.(app.name) || app.name;
+  }
+
   function menuElement() {
     return document.getElementById("start-menu");
   }
@@ -104,11 +108,12 @@
   }
 
   function createFunctionButton(app, listMode, options = {}) {
+    const appName = localizedAppName(app);
     const button = document.createElement("button");
     button.type = "button";
     button.className = listMode ? "function-list-item" : "function-grid-item";
     button.dataset.functionId = app.id;
-    button.title = app.name;
+    button.title = appName;
 
     const icon = document.createElement("img");
     icon.src = app.icon;
@@ -120,7 +125,7 @@
 
     const name = document.createElement("span");
     name.className = "function-item-name";
-    name.textContent = app.name;
+    name.textContent = appName;
     content.appendChild(name);
 
     if (listMode) {
@@ -269,6 +274,15 @@
     if (!host || host.hidden) return;
     (host.dataset.view === "all" ? renderAll() : renderHome()).catch((error) => {
       console.error("[FunctionMenu] 功能状态刷新失败。", error);
+    });
+  });
+
+  window.addEventListener("webwindows:language-changed", () => {
+    const host = hostElement();
+    if (!host) return;
+    const render = host.dataset.view === "all" ? renderAll : renderHome;
+    return render().catch((error) => {
+      console.error("[FunctionMenu] 语言切换后刷新失败。", error);
     });
   });
 

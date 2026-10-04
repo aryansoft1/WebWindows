@@ -29,6 +29,7 @@ assert.match(preview, /(?:THUMBNAIL_WIDTH|thumbnail\.width)\s*=\s*280/);
 assert.match(preview, /(?:THUMBNAIL_HEIGHT|thumbnail\.height)\s*=\s*176/);
 assert.doesNotMatch(preview, /srcdoc/);
 assert.match(preview, /liveMiniature/);
+assert.match(preview, /event\.dataTransfer\.setDragImage\(dragImage,\s*0,\s*0\)/);
 assert.match(preview, /function gateWindowRootUntilSessionReady\(\)/);
 assert.match(preview, /root\.style\.opacity\s*=\s*"0"/);
 assert.match(preview, /root\.style\.pointerEvents\s*=\s*"none"/);

@@ -563,6 +563,12 @@
     if (dragged && event.dataTransfer) {
       event.dataTransfer.effectAllowed = "move";
       try { event.dataTransfer.setData("text/plain", dragged.dataset.id || ""); } catch (_) {}
+      try {
+        const dragImage = document.createElement("canvas");
+        dragImage.width = 1;
+        dragImage.height = 1;
+        event.dataTransfer.setDragImage(dragImage, 0, 0);
+      } catch (_) {}
     }
   });
   document.addEventListener("dragover", (event) => {

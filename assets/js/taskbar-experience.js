@@ -420,7 +420,7 @@
     if (!win) return;
     const runSnapshot = () => {
       pendingPreviewTimer = null;
-      if (!win.querySelector("iframe")) buildWindowSnapshot(win, viewport, requestId);
+      buildWindowSnapshot(win, viewport, requestId);
     };
     if (immediate) runSnapshot();
     else pendingPreviewTimer = setTimeout(runSnapshot, 120);

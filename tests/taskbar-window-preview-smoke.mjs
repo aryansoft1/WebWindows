@@ -15,6 +15,8 @@ assert.match(index, /vendor\/html2canvas\.min\.js\?v=1\.4\.1/);
 assert.match(index, /taskbar-(?:experience|window-preview)\.js/);
 assert.equal(fs.existsSync(path.join(root, "assets/js/vendor/html2canvas.min.js")), true);
 assert.match(preview, /window\.html2canvas\(win/);
+assert.match(preview, /buildWindowSnapshot\(win, viewport, requestId\)/);
+assert.doesNotMatch(preview, /if\s*\(!win\.querySelector\("iframe"\)\)\s*buildWindowSnapshot/);
 assert.match(preview, /document\.createElement\("canvas"\)/);
 assert.match(preview, /context\.drawImage/);
 assert.match(preview, /(?:THUMBNAIL_WIDTH|thumbnail\.width)\s*=\s*280/);

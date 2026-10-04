@@ -1,0 +1,1694 @@
+{
+  "schemaVersion": 1,
+  "releaseVersion": "2026.10.05.1",
+  "catalogVersion": "2026.09.26.1",
+  "generatedAt": "2026-10-04T19:59:02.877Z",
+  "root": "/wwwroot",
+  "requiredFiles": [
+    "admin_api/deleteDatacenter.asp",
+    "admin_api/getDatacenters.asp",
+    "admin_api/saveDatacenter.asp",
+    "api/dt_fetch_links.asp",
+    "api/dt_presence_mem.asp",
+    "api/function-catalog.asp",
+    "api/mobile-version.asp",
+    "api/release-version.asp",
+    "aplay.html",
+    "assets/css/context_menu.css",
+    "assets/css/desktalk.css",
+    "assets/css/developer-studio.css",
+    "assets/css/function-center.css",
+    "assets/css/guide.css",
+    "assets/css/main.css",
+    "assets/css/news.css",
+    "assets/css/settings.css",
+    "assets/css/sysinfo.css",
+    "assets/icons/149071.png",
+    "assets/icons/aplay.png",
+    "assets/icons/cloud_secretary.png",
+    "assets/icons/cloud.png",
+    "assets/icons/code.png",
+    "assets/icons/code.svg",
+    "assets/icons/contact.png",
+    "assets/icons/desktalk.png",
+    "assets/icons/dreama.png",
+    "assets/icons/explorer.png",
+    "assets/icons/function-center.svg",
+    "assets/icons/guide.svg",
+    "assets/icons/japan.png",
+    "assets/icons/logo_large.png",
+    "assets/icons/logo.png",
+    "assets/icons/mailbox.png",
+    "assets/icons/news.png",
+    "assets/icons/power.png",
+    "assets/icons/settings-display.svg",
+    "assets/icons/settings-functions.svg",
+    "assets/icons/settings-guide.svg",
+    "assets/icons/settings-language.svg",
+    "assets/icons/settings-network.svg",
+    "assets/icons/settings-power.svg",
+    "assets/icons/settings-sound.svg",
+    "assets/icons/settings-wallpaper.svg",
+    "assets/icons/settings.png",
+    "assets/icons/sheeteditor.png",
+    "assets/icons/slideeditor.svg",
+    "assets/icons/sysinfo.png",
+    "assets/icons/wall_aryan.jpg",
+    "assets/icons/web.png",
+    "assets/icons/writeeditor.svg",
+    "assets/images/case1.jpg",
+    "assets/images/case2.jpg",
+    "assets/images/case3.jpg",
+    "assets/images/cloud-server.jpg",
+    "assets/images/cloud-website.jpg",
+    "assets/img/japan/japan_client.jpg",
+    "assets/img/japan/japan_features.jpg",
+    "assets/img/japan/japan_process.jpg",
+    "assets/img/japan/japan_service.jpg",
+    "assets/img/software/software1.jpg",
+    "assets/img/software/software2.jpg",
+    "assets/img/software/software3.jpg",
+    "assets/img/software/software4.jpg",
+    "assets/img/software/software5.jpg",
+    "assets/js/ai-tool-registry.js",
+    "assets/js/app-registry.js",
+    "assets/js/cloud-file-dialog.js",
+    "assets/js/connectivity.js",
+    "assets/js/contextmenu-guard.js",
+    "assets/js/desktalk.js",
+    "assets/js/desktop-functions.js",
+    "assets/js/device-api.js",
+    "assets/js/device-controls.js",
+    "assets/js/device-storage-provider.js",
+    "assets/js/file-search.js",
+    "assets/js/file-types.js",
+    "assets/js/function-center.js",
+    "assets/js/function-sync.js",
+    "assets/js/guide.js",
+    "assets/js/locale-region.js",
+    "assets/js/login.js",
+    "assets/js/main.js",
+    "assets/js/network-speed.js",
+    "assets/js/news_view.js",
+    "assets/js/news.js",
+    "assets/js/resource-open.js",
+    "assets/js/settings.js",
+    "assets/js/snap_drag.js",
+    "assets/js/start-menu-functions.js",
+    "assets/js/sysinfo.js",
+    "assets/js/system-session.js",
+    "assets/js/taskbar-experience.js",
+    "assets/js/tw.js",
+    "assets/js/vendor/html2canvas.min.js",
+    "assets/js/wallpaper.js",
+    "assets/js/webwindows-message.js",
+    "cloud.html",
+    "cloud/browser/assets/archive.svg",
+    "cloud/browser/assets/back.svg",
+    "cloud/browser/assets/cloud.svg",
+    "cloud/browser/assets/compact.svg",
+    "cloud/browser/assets/copy.svg",
+    "cloud/browser/assets/download.svg",
+    "cloud/browser/assets/eye.svg",
+    "cloud/browser/assets/file.svg",
+    "cloud/browser/assets/folder.svg",
+    "cloud/browser/assets/forward.svg",
+    "cloud/browser/assets/grid.svg",
+    "cloud/browser/assets/home.svg",
+    "cloud/browser/assets/image.svg",
+    "cloud/browser/assets/info.svg",
+    "cloud/browser/assets/json.svg",
+    "cloud/browser/assets/list.svg",
+    "cloud/browser/assets/markdown.svg",
+    "cloud/browser/assets/open.svg",
+    "cloud/browser/assets/pdf.svg",
+    "cloud/browser/assets/presentation.svg",
+    "cloud/browser/assets/refresh.svg",
+    "cloud/browser/assets/sheet.svg",
+    "cloud/browser/assets/sort.svg",
+    "cloud/browser/assets/up.svg",
+    "cloud/browser/assets/word.svg",
+    "cloud/browser/device-locations.js",
+    "cloud/browser/FILE_DIALOG_API.md",
+    "cloud/browser/file-search.css",
+    "cloud/browser/files.asp",
+    "cloud/browser/open-with.js",
+    "cloud/browser/openResource.asp",
+    "cloud/browser/private-files.asp",
+    "cloud/browser/private-files.css",
+    "cloud/browser/private-resource.asp",
+    "cloud/browser/search-ui.js",
+    "cloud/browser/search.asp",
+    "cloud/browser/styles.css",
+    "cloud/browser/toolbar.js",
+    "contact.html",
+    "data/apps/system-apps.json",
+    "data/sdk/capability-broker-errors-v1.json",
+    "data/sdk/capability-broker-methods-v1.json",
+    "data/sdk/capability-broker-policy-v1.json",
+    "data/sdk/capability-broker-v1.schema.json",
+    "data/sdk/manifest-v1.schema.json",
+    "data/sdk/manifest-v2.schema.json",
+    "data/sdk/package-runtime-policy-v1.json",
+    "data/sdk/permission-decision-v1.json",
+    "data/sdk/permissions-v1.json",
+    "data/sdk/runtime-compatibility-v1.json",
+    "data/sdk/studio-validator-rules-v1.json",
+    "data/sdk/webwindows-public-api-v1.d.ts",
+    "deploy/ftp-manifest.json",
+    "developer-studio.html",
+    "dist-menus/desktop-menus.global.js",
+    "dist-weather/weather-widget.css",
+    "dist-weather/weather-widget.global.js",
+    "dist-weather/weather-widget.umd.js",
+    "dist-widget/weather-widget.css",
+    "dist-window/window-manager-widget.css",
+    "dist-window/window-manager-widget.js",
+    "dist-window/window-manager-widget.umd.js",
+    "dreama.html",
+    "function-center.html",
+    "guide.html",
+    "inc/sysinfo.asp",
+    "index.html",
+    "japan.html",
+    "login.html",
+    "news_view.html",
+    "news.html",
+    "settings.html",
+    "software.html",
+    "sysinfo.html",
+    "SystemManager/assets/css/admin.css",
+    "SystemManager/assets/css/global.css",
+    "SystemManager/assets/js/datacenter.js",
+    "SystemManager/datacenter.html",
+    "web.html",
+    "worker_SheetCreater.html",
+    "worker_SlideEditor.html",
+    "worker_WriteEditor.html",
+    "assets/css/developer-preview-host.css",
+    "assets/js/developer-preview-host.js",
+    "cloud/browser/node-config.asp",
+    "developer-preview-host.html",
+    "docs/SYSTEM_DIALOG_API.md",
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js",
+    "dist-developer-studio/assets/cssMode-CnOg0bur.js",
+    "dist-developer-studio/assets/deterministic-builder-D5B_uga0.js",
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js",
+    "dist-developer-studio/assets/entry-DgBfoI8G.js",
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js",
+    "dist-developer-studio/assets/htmlMode-BpT7noKD.js",
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js",
+    "dist-developer-studio/assets/jsonMode-BDdpFM2J.js",
+    "dist-developer-studio/assets/lspLanguageFeatures-BaOBOmE6.js",
+    "dist-developer-studio/assets/monaco-runtime-D4730T7L.js",
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js",
+    "dist-developer-studio/assets/tsMode-LWAdGrsf.js",
+    "dist-developer-studio/assets/workers-Dure_1W5.js",
+    "dist-developer-studio/developer-studio-bundle.css",
+    "dist-developer-studio/developer-studio.js",
+    "assets/data/guide-content.json",
+    "assets/guide/account-security.svg",
+    "assets/guide/browser-limits.svg",
+    "assets/guide/cloud-files.png",
+    "assets/guide/desktalk-flow.svg",
+    "assets/guide/desktop-overview.png",
+    "assets/guide/developer-flow.svg",
+    "assets/guide/file-lifecycle.svg",
+    "assets/guide/function-center.png",
+    "assets/guide/media-flow.svg",
+    "assets/guide/office-flow.svg",
+    "assets/guide/service-flow.svg",
+    "assets/guide/settings.png",
+    "assets/guide/troubleshooting-flow.svg",
+    "road.html",
+    "assets/css/navigation.css",
+    "assets/icons/navigation.svg",
+    "assets/js/navigation-app.js",
+    "assets/js/navigation-providers.js",
+    "assets/js/flight-providers.js",
+    "assets/js/flight-app.js",
+    "assets/js/navigation-enhancements.js",
+    "SystemManager/visitor-analytics.html",
+    "SystemManager/assets/js/visitor-analytics.js",
+    "assets/css/tailwind.min.css",
+    "admin_api/visitorAnalytics.asp",
+    "api/visitor-analytics.asp",
+    "assets/js/visitor-analytics.js",
+    "SystemManager/index.html",
+    "SystemManager/assets/css/visitor-analytics.css",
+    "assets/js/flight-position.js",
+    "SystemManager/assets/js/admin-security.js",
+    "assets/js/flight-track.js",
+    "assets/js/transit-app.js",
+    "assets/js/transit-position.js",
+    "assets/js/transit-providers.js",
+    "admin_api/adminAuth.asp",
+    "SystemManager/assets/js/admin-shell.js",
+    "SystemManager/dashboard.html",
+    "SystemManager/developer-platform.html",
+    "SystemManager/feedback.html",
+    "SystemManager/files.html",
+    "SystemManager/functions.html",
+    "SystemManager/news.html",
+    "SystemManager/settings.html",
+    "SystemManager/users.html",
+    "SystemManager/assets/css/developer-platform-admin.css",
+    "SystemManager/assets/css/function-catalog-admin.css",
+    "SystemManager/assets/js/dashboard.js",
+    "SystemManager/assets/js/developer-platform-admin.js",
+    "SystemManager/assets/js/function-catalog-admin.js",
+    "SystemManager/assets/js/news.js",
+    "SystemManager/assets/js/news_categories.js",
+    "SystemManager/assets/js/users.js",
+    "cloud/browser/manage.html",
+    "api/railway-proxy.asp",
+    "assets/js/startup-manager.js",
+    "assets/js/auth-session.js",
+    "assets/js/ai-file-tools.js",
+    "assets/js/file-query-parser.js",
+    "api/transit-proxy.asp",
+    "api/longdistance-proxy.asp",
+    "inc/trust-schema.asp",
+    "inc/admin-security.asp",
+    "SystemManager/assets/js/admin-login.js",
+    "SystemManager/assets/css/admin-login.css",
+    "SystemManager/login.html",
+    "SystemManager/assets/js/visitor-analytics-charts.js",
+    "inc/visitor-geo.asp",
+    "api/region-geo.asp",
+    "admin_api/checkDatacenter.asp",
+    "admin_api/dashboardStats.asp",
+    "admin_api/deleteUser.asp",
+    "admin_api/developerContent.asp",
+    "admin_api/feedback.asp",
+    "admin_api/getUserById.asp",
+    "admin_api/getUsers.asp",
+    "admin_api/news.asp",
+    "admin_api/saveUser.asp",
+    "admin_api/settings.asp",
+    "api/feedback.asp",
+    "assets/css/developer-center.css",
+    "assets/js/developer-content.js",
+    "developer_content.asp",
+    "developer-samples/hello-webwindows.zip",
+    "developer.html",
+    "getNews.asp",
+    "getNewsById.asp",
+    "getPrevNextNews.asp",
+    "SystemManager/assets/css/admin-utilities.css",
+    "SystemManager/assets/js/developer-content-admin.js",
+    "SystemManager/assets/js/feedback.js",
+    "SystemManager/assets/js/files.js",
+    "SystemManager/assets/js/page-guard.js",
+    "SystemManager/assets/js/settings.js",
+    "SystemManager/layout.html",
+    "assets/js/developer-center.js",
+    "developer-samples/hello-webwindows/index.html",
+    "developer-samples/hello-webwindows/manifest.json",
+    "inc/json-charset.asp",
+    "assets/js/news-content.js",
+    "assets/css/admin-richtext.css",
+    "assets/js/admin-richtext.js",
+    "inc/news-html.asp",
+    "assets/vendor/jodit/4.15.14/jodit.min.js",
+    "assets/vendor/jodit/4.15.14/jodit.min.css",
+    "assets/vendor/jodit/4.15.14/LICENSE.txt",
+    "assets/vendor/jodit/4.15.14/SOURCE.json",
+    "assets/vendor/jodit/4.15.14/README.md",
+    "assets/icons/settings-cursor.svg",
+    "assets/js/cursor-theme-inline.js",
+    "assets/js/cursor-themes.js",
+    "cloud/browser/file-selection.js",
+    "mail-center/Api.ashx",
+    "mail-center/web.config",
+    "bin/BouncyCastle.Cryptography.dll",
+    "bin/Google.Protobuf.dll",
+    "bin/K4os.Compression.LZ4.dll",
+    "bin/K4os.Compression.LZ4.Streams.dll",
+    "bin/K4os.Hash.xxHash.dll",
+    "bin/MailKit.dll",
+    "bin/Microsoft.Bcl.AsyncInterfaces.dll",
+    "bin/MimeKit.dll",
+    "bin/MySql.Data.dll",
+    "bin/System.Buffers.dll",
+    "bin/System.Configuration.ConfigurationManager.dll",
+    "bin/System.Diagnostics.DiagnosticSource.dll",
+    "bin/System.Formats.Asn1.dll",
+    "bin/System.IO.Pipelines.dll",
+    "bin/System.Memory.dll",
+    "bin/System.Numerics.Vectors.dll",
+    "bin/System.Runtime.CompilerServices.Unsafe.dll",
+    "bin/System.Threading.Tasks.Extensions.dll",
+    "bin/System.ValueTuple.dll",
+    "bin/WebWindows.MailCenter.dll",
+    "bin/ZstdSharp.dll"
+  ],
+  "previousReleaseVersion": "2026.10.04.1",
+  "integrity": {
+    "admin_api/deleteDatacenter.asp": {
+      "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
+      "size": 868
+    },
+    "admin_api/getDatacenters.asp": {
+      "sha256": "8f439d102e1a47f7b7b4cff1e077df75a6f0dde18b3f13e078e439466d07aa11",
+      "size": 1547
+    },
+    "admin_api/saveDatacenter.asp": {
+      "sha256": "bf7cdb721ba9b733dca433d97801c8caed7b1f72ea9c16e1999d60e2438ddec7",
+      "size": 4126
+    },
+    "api/dt_fetch_links.asp": {
+      "sha256": "787b24649aa1a04d4365bb24030a2e0766a91221752fb7c62dec6ee3bd463c28",
+      "size": 2877
+    },
+    "api/dt_presence_mem.asp": {
+      "sha256": "9be07c749dc15c47981aaa24d4fb066dcaa961b3177aaea5bb8de4a4fe74ba60",
+      "size": 7498
+    },
+    "api/function-catalog.asp": {
+      "sha256": "55f822aebe7ee33ec8ce00670d7ad1652b8fa8787cf7a2e5131182857ad5ea79",
+      "size": 10911
+    },
+    "api/mobile-version.asp": {
+      "sha256": "997d12a88a1d18c6a5aed87892667f47ce35d8d82e20bdf43f6288d3c78602c6",
+      "size": 1495
+    },
+    "api/release-version.asp": {
+      "sha256": "1d4b46490a58fd97b390a4de840f327c5fb29ce524b65596866062c688eafd01",
+      "size": 1051
+    },
+    "aplay.html": {
+      "sha256": "af5b12b3cfb2c7f75350e6bde3f44b2547f9da97f08b8d440290683fca2d5e56",
+      "size": 46603
+    },
+    "assets/css/context_menu.css": {
+      "sha256": "b4ebaf5a98e43e5ee9efbfb363ecba2683ba3e5a8eb16e4e9567a23c14461104",
+      "size": 3569
+    },
+    "assets/css/desktalk.css": {
+      "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
+      "size": 22651
+    },
+    "assets/css/developer-studio.css": {
+      "sha256": "f74878a1d78bb72aeea81629b586782fbe25af8665b66dd3dc4364dc5f2452b1",
+      "size": 22180
+    },
+    "assets/css/function-center.css": {
+      "sha256": "65f0c322b418508c26a4622620fa17afe0aaf51ac1226bcbd6f5c0bff92ac224",
+      "size": 7867
+    },
+    "assets/css/guide.css": {
+      "sha256": "71c2524f6287c80511b9755093f29d2d6f11aa2d4db95e2600f7a5e2c025d6d1",
+      "size": 6542
+    },
+    "assets/css/main.css": {
+      "sha256": "5e4f790f66f7e12a8a9637cef0eb4f9512b0fb24efb2874494c4d3e01dcc0aa2",
+      "size": 31739
+    },
+    "assets/css/news.css": {
+      "sha256": "25051efec335935b78287bba240a42a7f1a3ae8fc52a34bc5738cba34bb180fe",
+      "size": 7666
+    },
+    "assets/css/settings.css": {
+      "sha256": "903724370babf8b49e2a53422f0a3338e34ab3fdbfecc1f0ea0452d1a1eebbb0",
+      "size": 16816
+    },
+    "assets/css/sysinfo.css": {
+      "sha256": "5fcb411d4eabafc7548a7cea9352c2956eb57b39091577ad29de24940f673b14",
+      "size": 3113
+    },
+    "assets/icons/149071.png": {
+      "sha256": "def15e8db87d742ae39a15dc62c55e877f88b7f7c058a6bb108f95f2df471605",
+      "size": 19456
+    },
+    "assets/icons/aplay.png": {
+      "sha256": "670bfe992fe38acae20bb24fc6cda2535c92dbc259c67b00fbff291fa9005620",
+      "size": 28732
+    },
+    "assets/icons/cloud_secretary.png": {
+      "sha256": "a5f3bfd32970a7d854126041a5e01b1beaf2f2dd97ae60e9eab7d7dbdb082b19",
+      "size": 4157
+    },
+    "assets/icons/cloud.png": {
+      "sha256": "cfaddd3126b048e443cffca36a5977708d8e8b0203d6f27eef0e94cbb802ae2f",
+      "size": 2713
+    },
+    "assets/icons/code.png": {
+      "sha256": "0509388f39de96776d274f8a0e95eb4af45eac01f8f84e6b9215688db3593886",
+      "size": 2315
+    },
+    "assets/icons/code.svg": {
+      "sha256": "00203861474fdb00cbdd2b677a9813c3cb7b2d7f2ace30c4fbf5f423489e39b8",
+      "size": 162
+    },
+    "assets/icons/contact.png": {
+      "sha256": "35344001011331fa66a96a9e7728a283511c2f2bbd4801519e8d532a716ec141",
+      "size": 434682
+    },
+    "assets/icons/desktalk.png": {
+      "sha256": "5724b50b519031049a5b3e7711147470304105ffb753977ba29eafd8ac15fec8",
+      "size": 150287
+    },
+    "assets/icons/dreama.png": {
+      "sha256": "1cffabb03b68302e76cea53a160424b760aaf0449e16024c969937022d8a3cd9",
+      "size": 1528564
+    },
+    "assets/icons/explorer.png": {
+      "sha256": "2a36d6b2faf0e132fb9ffb32e5fa96b729b52dfbf5a1772fbfe0c2b6ebb49b50",
+      "size": 94769
+    },
+    "assets/icons/function-center.svg": {
+      "sha256": "c4cf40ec6713946d6f1c33eb76956d1a9bcc53342645e6002569ee002c1463f7",
+      "size": 681
+    },
+    "assets/icons/guide.svg": {
+      "sha256": "3f0463dfcea3d5d1e91606cf1be8b34ad3b29fd0ff991500367a6404ea6c1902",
+      "size": 830
+    },
+    "assets/icons/japan.png": {
+      "sha256": "6fa524e45b475ef058b5767e0c46f9686b559514248a5ecf2007cdb6da623860",
+      "size": 9133
+    },
+    "assets/icons/logo_large.png": {
+      "sha256": "57161225afb200058fb64aa2ea7716e47e68bc16fc248ba7a349002d21df4dff",
+      "size": 85815
+    },
+    "assets/icons/logo.png": {
+      "sha256": "57161225afb200058fb64aa2ea7716e47e68bc16fc248ba7a349002d21df4dff",
+      "size": 85815
+    },
+    "assets/icons/mailbox.png": {
+      "sha256": "adffb3d78060bdd1fbfa804c0c1cb68fb8909ceb7a70a64103e90534b7fbe467",
+      "size": 40156
+    },
+    "assets/icons/news.png": {
+      "sha256": "5c38e783457b7e79efa51f60fd379f3d01ad3747984947ce5ce8aa55e21fb2fe",
+      "size": 5053
+    },
+    "assets/icons/power.png": {
+      "sha256": "d4049511cadec91769b7aeee53e7e113322058c161ab62ff07157379e0248469",
+      "size": 1418703
+    },
+    "assets/icons/settings-display.svg": {
+      "sha256": "fed22edb75d5d5f2ef4f2fc1c532469c01f49da60bf07f97d168f502ef5b85db",
+      "size": 619
+    },
+    "assets/icons/settings-functions.svg": {
+      "sha256": "20ba1212316d610e1ca04f726f82c850d4022799f5d2aca328f71cd0709738bd",
+      "size": 623
+    },
+    "assets/icons/settings-guide.svg": {
+      "sha256": "ffb94c3f36668e20a9625c5874cf41db56cd0fb494948d3251cfe35d2c8a1a82",
+      "size": 575
+    },
+    "assets/icons/settings-language.svg": {
+      "sha256": "6dbe61ba21adf2228b1211d06ddaf24c237f798eadac3b23e627efeb04f2ab0c",
+      "size": 557
+    },
+    "assets/icons/settings-network.svg": {
+      "sha256": "3dd27328350ae944fc1cab118146beff48c22493a81c524fa24c3c4db40ca57a",
+      "size": 537
+    },
+    "assets/icons/settings-power.svg": {
+      "sha256": "c073313a30f5ec3f1232b2c24d3cae15d4c1f366134d6793613423606f9cc9c8",
+      "size": 218
+    },
+    "assets/icons/settings-sound.svg": {
+      "sha256": "611dfe36a6fbe57a62bb294ce3301de5bdecc1ffa0e9c429a49ef747777c5aa3",
+      "size": 272
+    },
+    "assets/icons/settings-wallpaper.svg": {
+      "sha256": "5fd2be69f70fb814c76222e83a1e008e0e27ed5466812abafdbe2dee5c37bcef",
+      "size": 557
+    },
+    "assets/icons/settings.png": {
+      "sha256": "01e2b2d715b1a1ae03e86a5e85dc44b6aad91218b1d081958f2470967e73c882",
+      "size": 1456008
+    },
+    "assets/icons/sheeteditor.png": {
+      "sha256": "9c60c8a9521eabc959ec4a55a57bcc6806b749bea360e9c411d8e6645c6a3584",
+      "size": 414024
+    },
+    "assets/icons/slideeditor.svg": {
+      "sha256": "79780be31281bb322e395a224b7ccb69eb50f9163e537d1e15d9a795865f1ac7",
+      "size": 649
+    },
+    "assets/icons/sysinfo.png": {
+      "sha256": "b2154db5e2b8794b4d1b8b08cd8bee0c58c5291b6f9e3d6e1ab7063aadcf03e9",
+      "size": 361046
+    },
+    "assets/icons/wall_aryan.jpg": {
+      "sha256": "276308862891a7b96c6f0f2dd512e178c7f53c8d38748e08b261baec473d0a66",
+      "size": 167948
+    },
+    "assets/icons/web.png": {
+      "sha256": "24b33f81ac587b56ad1bc022102157733022c7948579bbd55cef97ad1d104665",
+      "size": 7284
+    },
+    "assets/icons/writeeditor.svg": {
+      "sha256": "8bf60739be17231b65c04a2c8f6211ddd252b2ed8be117522e6d32462c871b60",
+      "size": 601
+    },
+    "assets/images/case1.jpg": {
+      "sha256": "63fc2370b66b3515c03897d17b6d45708ebb3ff058664a708527cc71debdf33f",
+      "size": 649829
+    },
+    "assets/images/case2.jpg": {
+      "sha256": "9203bf21aa2ebbbc8593cd3f6e4ae9d1769ea929b107b7081bdeb2763345af76",
+      "size": 532214
+    },
+    "assets/images/case3.jpg": {
+      "sha256": "dcd4f53d60b9a73479fb0c6df11ada940f29cceb1093b69ac0a16a99e70d2ff7",
+      "size": 391928
+    },
+    "assets/images/cloud-server.jpg": {
+      "sha256": "6721a47a20118105f2976569ce791f3770f563ee66625bbefa3488288b3b0a62",
+      "size": 114666
+    },
+    "assets/images/cloud-website.jpg": {
+      "sha256": "7922cd53a9f4f5030953b7bf4526f928ee2737953eb1c48edf8b074b1dd0004c",
+      "size": 202765
+    },
+    "assets/img/japan/japan_client.jpg": {
+      "sha256": "f194e5cd36f9b0ba477496a711fdda4e61188628245518365ba21d2fc1e2c8f5",
+      "size": 90379
+    },
+    "assets/img/japan/japan_features.jpg": {
+      "sha256": "e4f903e50f2d1032fc33b346e2bc4b87e0e1588734ac585f12229c302c38ad13",
+      "size": 29925
+    },
+    "assets/img/japan/japan_process.jpg": {
+      "sha256": "179b818c7fa2b246c7a923c45033a2000d73eb3d996e6b2b76a31d68b43d4eeb",
+      "size": 116295
+    },
+    "assets/img/japan/japan_service.jpg": {
+      "sha256": "05662bcd2e7ca2092c305cc46116ccb5bdf747b1769ca7d69fa20148be4dd5be",
+      "size": 25037
+    },
+    "assets/img/software/software1.jpg": {
+      "sha256": "cdc5dc287417d04153d85b3d90ffb5c05f1d162b2daa52081494d198ab890e13",
+      "size": 35969
+    },
+    "assets/img/software/software2.jpg": {
+      "sha256": "dbb75d4d43d6dbb3d8bfdd0d0b311957200392627b6e65e2b1106b0b0008ad45",
+      "size": 29950
+    },
+    "assets/img/software/software3.jpg": {
+      "sha256": "f846ea0071056c52dd6f87cd110fcd304a587d30c5efbd93efc876c6bc7ad54e",
+      "size": 48052
+    },
+    "assets/img/software/software4.jpg": {
+      "sha256": "ba2a3b385b3451aa4b52b4e94d1e256a62696b4f1463d8058d14ae3c85bad84f",
+      "size": 39740
+    },
+    "assets/img/software/software5.jpg": {
+      "sha256": "72fc5db1b6dcf160ca4c0407f7f9a795b74ed5937ace7bc68a2d5885f6c1839e",
+      "size": 51384
+    },
+    "assets/js/ai-tool-registry.js": {
+      "sha256": "25bd95e453132d62ff9b6c0d98c16d87d109e042fa8e235eb5af0c35dde54410",
+      "size": 4868
+    },
+    "assets/js/app-registry.js": {
+      "sha256": "325471fbb17646e0ce2a8c68d85f4290a7c553b88e5e2241988b4efdf698b86e",
+      "size": 22380
+    },
+    "assets/js/cloud-file-dialog.js": {
+      "sha256": "3deef1fc31d464a57dd3396076f64103bee41d62d9b513dff6dc76befba4a351",
+      "size": 12618
+    },
+    "assets/js/connectivity.js": {
+      "sha256": "c000ebb72fd9eedb4b5107fe016746fe6b59acc3f225ba27e5db56469b99fb66",
+      "size": 5356
+    },
+    "assets/js/contextmenu-guard.js": {
+      "sha256": "ce1e2b7c840f69fed0dd7b13389212c51304fcb36312a8355283b81b41f8dd5f",
+      "size": 1897
+    },
+    "assets/js/desktalk.js": {
+      "sha256": "2443171d82515a1f19bb157b00e77f927c18a8c086386d5207d695195705fc5b",
+      "size": 100892
+    },
+    "assets/js/desktop-functions.js": {
+      "sha256": "96ea34b91179f941b3bb4db5bee7b97bdfbe68bac7135e3cf428d5ebbf1ba311",
+      "size": 5503
+    },
+    "assets/js/device-api.js": {
+      "sha256": "08acdd9f6c94753f499d73a6af88a0d04a9f97ae55f811b87013cd4d7177edde",
+      "size": 30542
+    },
+    "assets/js/device-controls.js": {
+      "sha256": "322818e1b37468c17f633603f04005b905e855c1bb87754e941ebe4463e63fd6",
+      "size": 3461
+    },
+    "assets/js/device-storage-provider.js": {
+      "sha256": "5318cb616d738db2bf207338eb488601bab6c4c7383a91ba8d604477df5263e4",
+      "size": 21102
+    },
+    "assets/js/file-search.js": {
+      "sha256": "a289179fa8e184d68cd054419df8403c5bb5d28bda587ab7e898eec66f902092",
+      "size": 16610
+    },
+    "assets/js/file-types.js": {
+      "sha256": "4401b2a14a1a869b1e7f83b3c76e679e152aad7b72c762e1f476373f4e7d87d3",
+      "size": 55188
+    },
+    "assets/js/function-center.js": {
+      "sha256": "1623950c5d062c02ea5562d93e314c8eef65b16cc9946325935d6558d01efc25",
+      "size": 12406
+    },
+    "assets/js/function-sync.js": {
+      "sha256": "87d15643bf9a74db70841fe9dbca960e585f472e39b8809f4740fb3895907b4c",
+      "size": 8929
+    },
+    "assets/js/guide.js": {
+      "sha256": "45b6a13ee7a56172c2c33bebffca058432e46462015edc10a33a018c127b26d9",
+      "size": 7748
+    },
+    "assets/js/locale-region.js": {
+      "sha256": "1c8b4b0d91f29169247b82aa62b55c615c218cbe4b202c521e999d94ba808cb6",
+      "size": 4689
+    },
+    "assets/js/login.js": {
+      "sha256": "d788b24241c18f53201feb4407b63a056256a675ca04618302737ab1bd1a2af2",
+      "size": 4771
+    },
+    "assets/js/main.js": {
+      "sha256": "d6d896ac93c72181ff994363cd3e79ee4603283f78732e8ec83b5fa2c00a00aa",
+      "size": 23398
+    },
+    "assets/js/network-speed.js": {
+      "sha256": "3bae1453ed88635593befe2bba6defbb04a2f6e0a587f38ecbd7de9c6edcc7a1",
+      "size": 22042
+    },
+    "assets/js/news_view.js": {
+      "sha256": "f732d65a513f163d6b341c3b6c9f1a38773b5887080902017e8e64ca50800b3a",
+      "size": 2907
+    },
+    "assets/js/news.js": {
+      "sha256": "ca996cc0322cf1062eb70bf5a4ecd8ea793e9389fe91bf5acb7e9a5ba3dc9d77",
+      "size": 5179
+    },
+    "assets/js/resource-open.js": {
+      "sha256": "0875efe1a83ea62dbcc6739355c104de91f5c20db2b86fb8357150506074c1a1",
+      "size": 7893
+    },
+    "assets/js/settings.js": {
+      "sha256": "813cf120ed07996a6d3dcd666461a51dac61d472c917105541c0e3b80f7f1c52",
+      "size": 28440
+    },
+    "assets/js/snap_drag.js": {
+      "sha256": "db2279015ffce0c7bc57935799262d25a44ee226202607ff5adb03b07119dae5",
+      "size": 2301
+    },
+    "assets/js/start-menu-functions.js": {
+      "sha256": "63ae0dc40736d1ab1cdcd35389dae932013e37ec2545a0328ccfd5963e51e0a6",
+      "size": 6359
+    },
+    "assets/js/sysinfo.js": {
+      "sha256": "1f4c66c6835ccfac78e4cc298747f9759dcd67574750d5b8ac7a9bd3cf71b903",
+      "size": 12768
+    },
+    "assets/js/system-session.js": {
+      "sha256": "0683b18cd513f3ff74697a11f61bb823ab2e73a9808e8bfb03bffacb9f2382a8",
+      "size": 9435
+    },
+    "assets/js/taskbar-experience.js": {
+      "sha256": "003266a098235de8ea6698b02c18f66aa054c21c8b9577efd696f2edd3705350",
+      "size": 10287
+    },
+    "assets/js/tw.js": {
+      "sha256": "38a66eeb8b1db784db6ea64959a1c06bd63a6d5ea1554e2961b562e53088848d",
+      "size": 82634
+    },
+    "assets/js/vendor/html2canvas.min.js": {
+      "sha256": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e",
+      "size": 198690
+    },
+    "assets/js/wallpaper.js": {
+      "sha256": "70593fb83e5d0cc59161347044d2340dd43583e729deb857ff0e36ff2b1a249b",
+      "size": 2982
+    },
+    "assets/js/webwindows-message.js": {
+      "sha256": "bdd1dea9b0f37689697e6fe1a4659cca0ada9f80998c237bd2752c6017ef3f34",
+      "size": 9840
+    },
+    "cloud.html": {
+      "sha256": "3c4fe2ab3284cf099a5f1df7e71c41b60a8ce706c67deec2b275690e6bad6b0c",
+      "size": 1715
+    },
+    "cloud/browser/assets/archive.svg": {
+      "sha256": "9e68283690360fe1b6b197fcb8e8db7e6f62eaddc2fd43b43d6c678e68dc78a8",
+      "size": 395
+    },
+    "cloud/browser/assets/back.svg": {
+      "sha256": "957d7270d440760e159128d5a9a09c77eb43cf5f3f0fb5865c2fe2f33745ba13",
+      "size": 192
+    },
+    "cloud/browser/assets/cloud.svg": {
+      "sha256": "b03c5283fc9314610b1572e15d04eeb65d87381db8beaf9954cc8bbcea683f41",
+      "size": 255
+    },
+    "cloud/browser/assets/compact.svg": {
+      "sha256": "376fa41b9bafb32232be2016019bace6ef55d7bd9ac119e208d89226f568ed1f",
+      "size": 178
+    },
+    "cloud/browser/assets/copy.svg": {
+      "sha256": "72c0d045d9a7b826d9d1491086f9ed0ead0f990cb560c601c2a45cb31e5ee907",
+      "size": 236
+    },
+    "cloud/browser/assets/download.svg": {
+      "sha256": "32fe38f0e1d322d9eb5b5a9ac825360472352f2e737196915ea4ce298d1706b5",
+      "size": 220
+    },
+    "cloud/browser/assets/eye.svg": {
+      "sha256": "bdf04e77385fb508a19ca3454983a144caad05748ba349fdaaa879507c841d24",
+      "size": 271
+    },
+    "cloud/browser/assets/file.svg": {
+      "sha256": "8b7dc305be11a7616003b83d1cafc16d7f492c2d723e6b2a3123dfe640cf7c4c",
+      "size": 283
+    },
+    "cloud/browser/assets/folder.svg": {
+      "sha256": "01172914850dd33ce809921d1de840adf2233fe812525346490ce999c7d76737",
+      "size": 261
+    },
+    "cloud/browser/assets/forward.svg": {
+      "sha256": "482430e8a720dd083e79e196c8ffdd8fd1348897f6311b7db33f9f53832e70bf",
+      "size": 191
+    },
+    "cloud/browser/assets/grid.svg": {
+      "sha256": "f4e050ab894f5b6f42967a178b8b40a76031cccb6270ae1050327fd7c33e6d23",
+      "size": 315
+    },
+    "cloud/browser/assets/home.svg": {
+      "sha256": "5779f8ee1acaba303d619c6f5ef545cb2d692795418b0c3c61dfe93087f794ae",
+      "size": 238
+    },
+    "cloud/browser/assets/image.svg": {
+      "sha256": "0b95a5ed767cc252cee41e293ec9675fd6092964e838da22008ad3811a1f2966",
+      "size": 288
+    },
+    "cloud/browser/assets/info.svg": {
+      "sha256": "8efb1143a5158269b9d969f7145db42381eb5cd716916e1f81f7e0c21efece01",
+      "size": 217
+    },
+    "cloud/browser/assets/json.svg": {
+      "sha256": "6222f21a34ed2134a7df6d35c529836ee415aec0a422294e58653c21f9d4b24c",
+      "size": 426
+    },
+    "cloud/browser/assets/list.svg": {
+      "sha256": "24b88723326278c00f63d8c046aacfc4304e3bfa3ce65f9df5bc2436895cc52e",
+      "size": 276
+    },
+    "cloud/browser/assets/markdown.svg": {
+      "sha256": "9de5685011df09d5c2afc466bf0cfe7b4ac15530690db3dee2868400901dc35c",
+      "size": 395
+    },
+    "cloud/browser/assets/open.svg": {
+      "sha256": "df429f0fd5b67c972a749b1663bb88f43f186f5cd562bf7f49f83b0431f14dd2",
+      "size": 255
+    },
+    "cloud/browser/assets/pdf.svg": {
+      "sha256": "a6721bc0515eb5b2a1cf95ddb748921b115fa2739d08ec79e70eb7fba6ec7e4c",
+      "size": 348
+    },
+    "cloud/browser/assets/presentation.svg": {
+      "sha256": "c7db17c58a2a026942ddf5ad504b3a5f704b212884b6cbae576ea438586e81f9",
+      "size": 402
+    },
+    "cloud/browser/assets/refresh.svg": {
+      "sha256": "a5d2daa4c0ca470a8086ae5bb46c6f7de3cb4a60aa29f7416c1cc9fc8fd3e045",
+      "size": 282
+    },
+    "cloud/browser/assets/sheet.svg": {
+      "sha256": "cd63de0de3550ef1c7cd4f4ab1325484fc4bd7b65d1ec67cf40976fcca879482",
+      "size": 299
+    },
+    "cloud/browser/assets/sort.svg": {
+      "sha256": "fcd92c9ef24746136d1cd81f755c52b26f2f33d77b604e73e24f39cd828a3f1f",
+      "size": 220
+    },
+    "cloud/browser/assets/up.svg": {
+      "sha256": "7e1748844ac5691dacd6ae1ab03ca1a10d2b401c3b86a5e84eac2b7e9d9c2419",
+      "size": 190
+    },
+    "cloud/browser/assets/word.svg": {
+      "sha256": "a047fc244fc352028465d230c2dc4c9de8d660a6609ce9514945e3415212b594",
+      "size": 379
+    },
+    "cloud/browser/device-locations.js": {
+      "sha256": "53224a7f39279107fd9c8444aea2a36ca3841cf79f49c0dc2e425e0b0fd76fd0",
+      "size": 13889
+    },
+    "cloud/browser/FILE_DIALOG_API.md": {
+      "sha256": "bdb31e04230954778a5d8188589eb1000904a711e5bb7fa01a404fdc237702df",
+      "size": 2472
+    },
+    "cloud/browser/file-search.css": {
+      "sha256": "9bc95426547a27d6bf824d218e19b796dbd89e6601a24c2b286b645d148f6db7",
+      "size": 3673
+    },
+    "cloud/browser/files.asp": {
+      "sha256": "765557bf505d6e627e33e34f49002692c6e4a1ca1ca93ff191ee29d33d4f4bef",
+      "size": 23270
+    },
+    "cloud/browser/open-with.js": {
+      "sha256": "cb014b6769655d2afd670e0c477e352b9a66672891469beb005d52171b96d9e2",
+      "size": 19790
+    },
+    "cloud/browser/openResource.asp": {
+      "sha256": "ee7745ecafbcc6d579f4b5e98c62de7a96c0c610afc9600009d44ace0290aab4",
+      "size": 2894
+    },
+    "cloud/browser/private-files.asp": {
+      "sha256": "4026f1bb31a38b5e3a16e9bd571b6bd938888f74e367a7abf670c3affef002de",
+      "size": 41364
+    },
+    "cloud/browser/private-files.css": {
+      "sha256": "7c8cd2f80b2863360736ede546ebd704cd54c8b2d89293db1b85f652c234b49e",
+      "size": 6053
+    },
+    "cloud/browser/private-resource.asp": {
+      "sha256": "6792d580192df1cb5e172d24df5551c725d07e4528a3a35e5e324b0626eefe28",
+      "size": 25629
+    },
+    "cloud/browser/search-ui.js": {
+      "sha256": "b7e6de2453e94036e3956e05ed9f2fa7aae979b4a1a80e221015d926849829e4",
+      "size": 14606
+    },
+    "cloud/browser/search.asp": {
+      "sha256": "86e893bd1558211e5ca76dcddf9f33e4221283a6a1042b8019d8c3149b9df2c7",
+      "size": 15940
+    },
+    "cloud/browser/styles.css": {
+      "sha256": "8773cca30721534b4c1e38aa2c5e3f8a3d1b9a1a16c1cac513412d1ff23c7c9c",
+      "size": 13667
+    },
+    "cloud/browser/toolbar.js": {
+      "sha256": "319e97b283abf4d380a31c583579d514a99502c6dbb2dffc55b71b18dd097aa0",
+      "size": 43531
+    },
+    "contact.html": {
+      "sha256": "2b69822ba45ffbd6866f0cc59c4fd275f86bb5d0e47c9a0e88a1b9acb859de8d",
+      "size": 2908
+    },
+    "data/apps/system-apps.json": {
+      "sha256": "1296a2c5ce23cf8d2b46cb7c8319f82ae5334659bdf991077164581b18fffbdc",
+      "size": 14411
+    },
+    "data/sdk/capability-broker-errors-v1.json": {
+      "sha256": "c92754a60f683f46d5ed01acd4781a4d32a318af3f6e6f4128c9f9b56595c2e1",
+      "size": 3147
+    },
+    "data/sdk/capability-broker-methods-v1.json": {
+      "sha256": "c77b1e204e1f46e59a96e31e4b55157b3a1c41f36bc3ebd9f6944606c18a2b63",
+      "size": 3542
+    },
+    "data/sdk/capability-broker-policy-v1.json": {
+      "sha256": "1ad1b6e63fee05a9cbd481bb7d45f053abb41742afb554aabc8c7111d0f0af6b",
+      "size": 4235
+    },
+    "data/sdk/capability-broker-v1.schema.json": {
+      "sha256": "474c140b0e29db636315cd5fbe2753bc92a3a31ddee8a13f34066eeadde372c9",
+      "size": 10279
+    },
+    "data/sdk/manifest-v1.schema.json": {
+      "sha256": "7ac345bdd704d0fcaa07b88ef1985aa363c6ece8a47fa0baa9709f618fef068a",
+      "size": 7419
+    },
+    "data/sdk/manifest-v2.schema.json": {
+      "sha256": "26eecc0326dc7cf99dd68d11612b16f7a4907e38afba807d7a086c3fd3713cc2",
+      "size": 7864
+    },
+    "data/sdk/package-runtime-policy-v1.json": {
+      "sha256": "f2f2eb104903169bc6312370caf8406a1cd1dace862090da870bd249552de0d9",
+      "size": 860
+    },
+    "data/sdk/permission-decision-v1.json": {
+      "sha256": "3e9829365f307c7c49817eabb77b2b0e441a3a748e829375276405c2462674b6",
+      "size": 3054
+    },
+    "data/sdk/permissions-v1.json": {
+      "sha256": "293b1cb84989cdf5890d554a5733365fbeef13fc21e96fff51d41495925d7f86",
+      "size": 5540
+    },
+    "data/sdk/runtime-compatibility-v1.json": {
+      "sha256": "c1e6e5274d034432e8ae1a4ed435e91f3e05d7537e60513228b2d48968bcdb3e",
+      "size": 6173
+    },
+    "data/sdk/studio-validator-rules-v1.json": {
+      "sha256": "37d5aebb7d4f1f17cdc08e53fecd591413c182d3871bee801a356ffa1ed477b7",
+      "size": 4111
+    },
+    "data/sdk/webwindows-public-api-v1.d.ts": {
+      "sha256": "b5dd5c89b2c5d088b034ae61fa6a83918c7f20f2785d7f1a1089d00d958b1f6a",
+      "size": 9632
+    },
+    "developer-studio.html": {
+      "sha256": "171dcd6b470738414f03c2219012d3791efa1f1bf0b50fbac7958d8bdd90ad0e",
+      "size": 1074
+    },
+    "dist-menus/desktop-menus.global.js": {
+      "sha256": "2fa5d7ebd26722ab7f2f67116a1737ebf75f0e4a692fa8ae7e8ed5512c19e7f0",
+      "size": 5506
+    },
+    "dist-weather/weather-widget.css": {
+      "sha256": "02eccbbc296470b3e803af9bf7e676b6a0ace3e49daf1e8086ed60b7071e1e68",
+      "size": 912
+    },
+    "dist-weather/weather-widget.global.js": {
+      "sha256": "034be561038ef97a76778d96477f3958e5714567727b685e238d0b36978ecd2d",
+      "size": 15572
+    },
+    "dist-weather/weather-widget.umd.js": {
+      "sha256": "9f7b7a07ef084e13dc352271375aca2395cec5b26e8e2391ebcc1575786a0c99",
+      "size": 15775
+    },
+    "dist-widget/weather-widget.css": {
+      "sha256": "8a486580878564b533acb8ac7437df97660d70a23693b0d0537c771ab9c77434",
+      "size": 969
+    },
+    "dist-window/window-manager-widget.css": {
+      "sha256": "a079ba5515895bfde851d21b788150b89ac187334967c005b8f0c873f54f0906",
+      "size": 3634
+    },
+    "dist-window/window-manager-widget.js": {
+      "sha256": "e91d860bfe47ac58ecd395abe67306679f1f30ff94cff90452a748a61daadad3",
+      "size": 88208
+    },
+    "dist-window/window-manager-widget.umd.js": {
+      "sha256": "3f24a847e4467971b31f1dd17e79b35ba8dbb5d4af9d94444589bf16addf1667",
+      "size": 88277
+    },
+    "dreama.html": {
+      "sha256": "19c2b438ef6c77f0481e0d559c68380e8d0d3c0e404f44393b138992b9e420b1",
+      "size": 5614
+    },
+    "function-center.html": {
+      "sha256": "4f17ce9bd9addb2ff447e7262cafed080f9c97c18b19b5f5366d2881a5bac969",
+      "size": 3024
+    },
+    "guide.html": {
+      "sha256": "fc0d3f1ac83e3c0f8cde5c37f6f77b9f6b0a3f1517730621aadc541c3b1c97fd",
+      "size": 2090
+    },
+    "inc/sysinfo.asp": {
+      "sha256": "3cb796a490499418d486d38db97e8837752836e1adfc7635c8e65f83a60f8924",
+      "size": 4500
+    },
+    "index.html": {
+      "sha256": "830df80235dfaad19f4f9af45b736793e6d24454112e52c46c8449c2bdb31e8a",
+      "size": 35295
+    },
+    "japan.html": {
+      "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
+      "size": 3541
+    },
+    "login.html": {
+      "sha256": "dfcf39d4670cf62a79b0d5f4908eadb7a4321e28772d53b20f51703f26678aa8",
+      "size": 1970
+    },
+    "news_view.html": {
+      "sha256": "bf75f70e582d9ece6f96cd727cabc1f52b66ceebb2983a3d2035662f00b3eeaf",
+      "size": 2828
+    },
+    "news.html": {
+      "sha256": "7e12bb5bc3f6411493f2bf6039438772cb3687e7a247628cf8ab0111cfa57fa8",
+      "size": 2554
+    },
+    "settings.html": {
+      "sha256": "7c2491b6a6bbdf4ba33ee9eeceb076dc299fe0ec31339094020160ebc8150e8f",
+      "size": 24015
+    },
+    "software.html": {
+      "sha256": "ace84106a5eef3718bfcb344ca82661f439b3ecd48e29ee296df7aa8240c5fb9",
+      "size": 2908
+    },
+    "sysinfo.html": {
+      "sha256": "883d11d823c1e9985bd4462139aaf2e43534bbbe8cacc1f632183a4fed788aee",
+      "size": 4883
+    },
+    "SystemManager/assets/css/admin.css": {
+      "sha256": "35d03df5b6096af50693ac711ea048dc6e4a5d4f235f261d22c08ad108dde196",
+      "size": 1498
+    },
+    "SystemManager/assets/css/global.css": {
+      "sha256": "127842c11be91f4c31786cfc595b5bcc55e7e109dc24e411479a8aac4122363b",
+      "size": 1504
+    },
+    "SystemManager/assets/js/datacenter.js": {
+      "sha256": "6d16bf2b6ee8e5607669867401f8c6237d2f508543a5626c281c458266f3633b",
+      "size": 4775
+    },
+    "SystemManager/datacenter.html": {
+      "sha256": "bc49c21604aee11867ba2fca2874051c0f84da7166890c534ccab3df5f526090",
+      "size": 3272
+    },
+    "web.html": {
+      "sha256": "f1ad19cad845e7ec575fbfe027aaf2c1608f343b60bd2b4fff077fbcae95e2cd",
+      "size": 3707
+    },
+    "worker_SheetCreater.html": {
+      "sha256": "5e67201b15408891647d0c78c3973c347a93c6ba0d561748ef6d68f8c76dd67c",
+      "size": 21822
+    },
+    "worker_SlideEditor.html": {
+      "sha256": "1e8c7e1b032eaf395aa6e57f2042fbf8aec21355f44aff871a1b7c88bce64024",
+      "size": 17101
+    },
+    "worker_WriteEditor.html": {
+      "sha256": "fbf343f8575965a51ae590d2db22df7af2e4960980052100fad17b2e18242cb3",
+      "size": 29630
+    },
+    "assets/css/developer-preview-host.css": {
+      "sha256": "2913f819f6a10d08f447135fa0b341f22d90c692b48ccbb0a1af9785548fa572",
+      "size": 1088
+    },
+    "assets/js/developer-preview-host.js": {
+      "sha256": "ad9ae6d16634cc42504a1f4229614c91232a46ad025f3d00ed897ca9d21f0338",
+      "size": 9986
+    },
+    "cloud/browser/node-config.asp": {
+      "sha256": "2ae96bc0706b869742ef01de5022e0c2575901a0825d52945cc82bd2e660c0a6",
+      "size": 13673
+    },
+    "developer-preview-host.html": {
+      "sha256": "31ca6e5ec4e4325001e2b9477def1b79853261f39ad12a2f0a4dea820a78a890",
+      "size": 951
+    },
+    "docs/SYSTEM_DIALOG_API.md": {
+      "sha256": "7ec9444f109b749494867fef07b8da5e0a05a734fee6dc611f19a039e2956a99",
+      "size": 1117
+    },
+    "dist-developer-studio/assets/css.worker-CTtMUz-4.js": {
+      "sha256": "67768c1ac2bc5e4d258c18485bfc28c1c47ee411f51cfc0ac26bf01c55fba7f9",
+      "size": 1051356
+    },
+    "dist-developer-studio/assets/cssMode-CnOg0bur.js": {
+      "sha256": "689fe50d363a27be5be3820da60a80113496980a0b3b525646438f73c11a6583",
+      "size": 4314
+    },
+    "dist-developer-studio/assets/deterministic-builder-D5B_uga0.js": {
+      "sha256": "f8f2428bed81f86f358765ed0f3d76c71a47102a9adcfa21b4b79582a9482a78",
+      "size": 147995
+    },
+    "dist-developer-studio/assets/editor.worker-isBbQWeS.js": {
+      "sha256": "c707581cf73d830ceef855895db8ba1dd0af1290130d0815b29f7b7101c82450",
+      "size": 272674
+    },
+    "dist-developer-studio/assets/entry-DgBfoI8G.js": {
+      "sha256": "2f16e7e0cae2943b2c8209296cf489c58f381e3376f73aefcc536668aea07a10",
+      "size": 413584
+    },
+    "dist-developer-studio/assets/html.worker-BQ2fwXLZ.js": {
+      "sha256": "65b817c9823a0454d677523bbe7e01712f1bc8528cb0bfbe49a619899d8d00c8",
+      "size": 714485
+    },
+    "dist-developer-studio/assets/htmlMode-BpT7noKD.js": {
+      "sha256": "092d3c916355f4fdc449d6412f1ba1d0879fb1c0fff0f11cbae69d61df5e1d3a",
+      "size": 4779
+    },
+    "dist-developer-studio/assets/json.worker-BY6TubKN.js": {
+      "sha256": "598139c9a57cd2bb3e96d69dcf4bc70c26fa6219d07346049d01852bead5a76e",
+      "size": 404002
+    },
+    "dist-developer-studio/assets/jsonMode-BDdpFM2J.js": {
+      "sha256": "fc5deef8d6690f233f937f15bbbfe61396f8321ffb01c3eb4660d0b72a6c2c56",
+      "size": 18803
+    },
+    "dist-developer-studio/assets/lspLanguageFeatures-BaOBOmE6.js": {
+      "sha256": "79328edbbcb7ceb00edfbc6ecb90d37276f3d0ef5490a9f4022895842d230fdb",
+      "size": 39857
+    },
+    "dist-developer-studio/assets/monaco-runtime-D4730T7L.js": {
+      "sha256": "da48050875203a5827c2c81e8689cf21e16d8820cf96f57cadbb8244929b08d6",
+      "size": 3695415
+    },
+    "dist-developer-studio/assets/ts.worker-vVNEBeBl.js": {
+      "sha256": "aca437c0b701b9a761c742217b9a86da8c2518e2d17844dc5b8e2b5a4178df1e",
+      "size": 7100662
+    },
+    "dist-developer-studio/assets/tsMode-LWAdGrsf.js": {
+      "sha256": "986da7482a80724740099650b22177fb4d9c196d5fc99c4bda40f01ea3ad5399",
+      "size": 29908
+    },
+    "dist-developer-studio/assets/workers-Dure_1W5.js": {
+      "sha256": "8e2dd6200282369a2ed03a7f8bf99b90e473f7996dfd1ed9ee1da0740b3f6ce9",
+      "size": 1610786
+    },
+    "dist-developer-studio/developer-studio-bundle.css": {
+      "sha256": "518c1109a4d8bf2e8fa5508366415c0dac86bdd10077b24d4e85ef8b9de3f438",
+      "size": 345320
+    },
+    "dist-developer-studio/developer-studio.js": {
+      "sha256": "b57bd6c8fe0bb92526c73568dbb277b5cabf2be6066d0d09bbd8a78035dfb6fa",
+      "size": 38
+    },
+    "assets/data/guide-content.json": {
+      "sha256": "78cc99c8c8f0cb271f265259dbf07fb23797f5306d39201b001bb179d3b301ac",
+      "size": 85648
+    },
+    "assets/guide/account-security.svg": {
+      "sha256": "6d8ffa6d3321fa43e2d471cf1384c0a12b7acf020ec178eed005fc97c476fdc2",
+      "size": 1594
+    },
+    "assets/guide/browser-limits.svg": {
+      "sha256": "c9f10196d95335796b73268722adcde19efb574658581c6fcc3f3acd315bf818",
+      "size": 1502
+    },
+    "assets/guide/cloud-files.png": {
+      "sha256": "abc74889b545ea99daae8c7a108a5880b0a5176fd916df90f8b003baae09ebe4",
+      "size": 37594
+    },
+    "assets/guide/desktalk-flow.svg": {
+      "sha256": "fb368fe9738f1b316717151fbb403bab116b84867ed78aaa283e98ee7f26335c",
+      "size": 1537
+    },
+    "assets/guide/desktop-overview.png": {
+      "sha256": "8eb19d4ac8a385347180958cc81b16fc02c791a83ba5a61a662a5f3e1f8bf475",
+      "size": 674588
+    },
+    "assets/guide/developer-flow.svg": {
+      "sha256": "c40761877f1a7c72e46525545bc6c0188d7bb97899ede6bf1cf40fd246992d77",
+      "size": 1440
+    },
+    "assets/guide/file-lifecycle.svg": {
+      "sha256": "49789b8e4d3bf8e7cd39f1dc0587c222c2ee95ebdd78be23bfea180f3aa401c5",
+      "size": 1868
+    },
+    "assets/guide/function-center.png": {
+      "sha256": "e95d279f2ee0b702ba70366a0f669869d60f5f3c3268dae9c2ae956eafca2a7c",
+      "size": 32185
+    },
+    "assets/guide/media-flow.svg": {
+      "sha256": "4f4c3065e59ea668e1443f8d716668783059eac3450d12e7b0f9a46def4afb6c",
+      "size": 1497
+    },
+    "assets/guide/office-flow.svg": {
+      "sha256": "2736c621088cbf877177a4ac99e1280815699b65bcf1383d7bda0d03fae47d09",
+      "size": 1394
+    },
+    "assets/guide/service-flow.svg": {
+      "sha256": "614047cb1791a458a0fea803841ff111688c291132ef38abe756e681fd8464d2",
+      "size": 1527
+    },
+    "assets/guide/settings.png": {
+      "sha256": "aa50ff778ef0bd5c2473843e1b342fd6fc11322254f74dacd286651f5b20d736",
+      "size": 41465
+    },
+    "assets/guide/troubleshooting-flow.svg": {
+      "sha256": "45cffd3357f2ee599937d4afa13e89202a81ae480f8d1cceabac5939b5a56269",
+      "size": 1297
+    },
+    "road.html": {
+      "sha256": "de55ba10ec25a87ddb25031c90b63558a2ca88e98dbf069a8613125c5cea88f8",
+      "size": 16440
+    },
+    "assets/css/navigation.css": {
+      "sha256": "797631b1dd31d11db3c1fd64032662f72736bc258239c33ced0c9a9162d9a72c",
+      "size": 27846
+    },
+    "assets/icons/navigation.svg": {
+      "sha256": "ed2ba06cbb1d45a8e5bb08a18d241a6a48ce3e038f7b8260acb6e91d4dac9ed2"
+    },
+    "assets/js/navigation-app.js": {
+      "sha256": "d887703cdc31b0d072e73bf4f9603b740d27175582126042f7ff18d09eba8e70",
+      "size": 59221
+    },
+    "assets/js/navigation-providers.js": {
+      "sha256": "b42efafac5ccd3f116f827baa1c7ea96290de4fdeeebb6d3f51d9f0af4b547bf"
+    },
+    "assets/js/flight-providers.js": {
+      "sha256": "2f02556d9638e79c0532336615fdf2d5c35d7f1a4a3127f380a71e3c83d24cf5"
+    },
+    "assets/js/flight-app.js": {
+      "sha256": "9a2940861b509e701ce469787e74be67808f841bc98d104390851ac69e22eea7"
+    },
+    "assets/js/navigation-enhancements.js": {
+      "sha256": "9ce25dfae5f724e40b345d5e85689953ab7a8700982ab1f5e43d37630679d34a",
+      "size": 5549
+    },
+    "SystemManager/visitor-analytics.html": {
+      "sha256": "9d8fe172622014a1ec430a1d3f36b4217b4b1e1a54a0cf95cd0bb0de25211589",
+      "size": 6964
+    },
+    "SystemManager/assets/js/visitor-analytics.js": {
+      "sha256": "ab15a14998b312bf7f38d46ce24847e667dcb12fb46c1cc8a9eb4653ff4a5d04",
+      "size": 11579
+    },
+    "assets/css/tailwind.min.css": {
+      "sha256": "0729906a529caf8b5dbe648cbc3952833afe118a25a841c8ae27e1cd1a8ac14c",
+      "size": 201
+    },
+    "admin_api/visitorAnalytics.asp": {
+      "sha256": "e9502b4d3d3e026e65d215e8d4dc0b912bb0468c833d5c4c6ca8fc54f0273c6c",
+      "size": 19715
+    },
+    "api/visitor-analytics.asp": {
+      "sha256": "4ee25b9b2d92ad0c933ea89b6ce13528cde799c127ebdaf4c89a9d6bce2f05e0",
+      "size": 14373
+    },
+    "assets/js/visitor-analytics.js": {
+      "sha256": "38d433c4e2592c0a2ab8e2730bc343c851cf11c7c902830407433475e359caa1",
+      "size": 5767
+    },
+    "SystemManager/index.html": {
+      "sha256": "db8ffb1333be24ab3ebaea268391d1bc006c95c43c4f8ffed22087c674ce4b88",
+      "size": 2671
+    },
+    "SystemManager/assets/css/visitor-analytics.css": {
+      "sha256": "54832075333533f1120252edeb4457967cf091fb878832f8e928aae5b1ffa182",
+      "size": 3931
+    },
+    "assets/js/flight-position.js": {
+      "sha256": "a4dfac38195cbcd8ca006507f8b11468da7ad8e446e9bd8632dc061a74760b75"
+    },
+    "SystemManager/assets/js/admin-security.js": {
+      "sha256": "d8ce5d540f4921c2fab970ecc7a3f8d9f95cf3e88ca856a07f21f1653d276300",
+      "size": 2439
+    },
+    "assets/js/flight-track.js": {
+      "sha256": "3a3f493ca1be99be1282c880e80f7bdb64c40e10e8d8d5a559734b106e61ecb4",
+      "size": 4186
+    },
+    "assets/js/transit-app.js": {
+      "sha256": "ab00f6745ad9e63ee460543ca6e6e29360670db8cebd9c64d468d97aff9b6976",
+      "size": 78104
+    },
+    "assets/js/transit-position.js": {
+      "sha256": "4c70bba9a6d27710051c35d018b8f6548a76a6e6ec4e7a2b529d11624763950f",
+      "size": 14755
+    },
+    "assets/js/transit-providers.js": {
+      "sha256": "11b13844fa8a5492496f8e3d9ed30c1659f529e34c44f9ebbf55765f187925dc",
+      "size": 124043
+    },
+    "admin_api/adminAuth.asp": {
+      "sha256": "4feb4b18cca1555954e3a26c4dab787e2f9d3f6b9da14d2f1a3ede62fa4e2cf8",
+      "size": 6906
+    },
+    "SystemManager/assets/js/admin-shell.js": {
+      "sha256": "6330c35a3290aaa826f60d0c15ad6437f7a7b19ab8c4081ddf524d9ab1e1c3b3",
+      "size": 837
+    },
+    "SystemManager/dashboard.html": {
+      "sha256": "cfeb62116764e1b470a23db36bcc7ba8021bbbe02bde98d2f26fab4d93cd14b2",
+      "size": 2124
+    },
+    "SystemManager/developer-platform.html": {
+      "sha256": "72ea8621a29082dfc47adbe28da3ca8d0ced8b699696481ca1e698d641fa563e",
+      "size": 4159
+    },
+    "SystemManager/feedback.html": {
+      "sha256": "ff5026269a9461e4d2f3acc80de06d330c98f056838cb4f0b9bde17b1280c012",
+      "size": 4266
+    },
+    "SystemManager/files.html": {
+      "sha256": "005035d9912e7cb09a5f25059928b35ba81ace12d5c717913b6ea3a4f54e7769",
+      "size": 1501
+    },
+    "SystemManager/functions.html": {
+      "sha256": "7a945e4b5860aa67a7842e1c05b785371f299cbf55c62de649a7916b779624f6",
+      "size": 6291
+    },
+    "SystemManager/news.html": {
+      "sha256": "9e0f501171cbfa66e29ffe9656754a6c65ae5e998bd857e69838b84fcd70617f",
+      "size": 4841
+    },
+    "SystemManager/settings.html": {
+      "sha256": "a66a5e97b2c152871d41e277c28cc4a1040a39e636848fa699278e0b054a9458",
+      "size": 2705
+    },
+    "SystemManager/users.html": {
+      "sha256": "a8c4c2cdf029050afdd7821c7ef04498d6356fb9a69241514faef2b6ec8d01b4",
+      "size": 3474
+    },
+    "SystemManager/assets/css/developer-platform-admin.css": {
+      "sha256": "5096356dd005a9a0a046cb732173b3a9dc448ee0586b2ebfdd7ab373e34753b6",
+      "size": 2978
+    },
+    "SystemManager/assets/css/function-catalog-admin.css": {
+      "sha256": "107c46599038aad93f28961b284fc51040465ac08b362bc47b3c5696b0f8c98f",
+      "size": 5893
+    },
+    "SystemManager/assets/js/dashboard.js": {
+      "sha256": "c137331eba6616f8c1a82c6016314a5cc88979d8a1ca28774fd29f44eee31bf4",
+      "size": 1576
+    },
+    "SystemManager/assets/js/developer-platform-admin.js": {
+      "sha256": "a64c3f1317591eb54ba25a6f53b006888aa4b725a8e9e682677d65ab2eeebad3",
+      "size": 16994
+    },
+    "SystemManager/assets/js/function-catalog-admin.js": {
+      "sha256": "99b2e6b24e9c78287242869924fa853d47fdc7601709f674296239085b413cde",
+      "size": 19031
+    },
+    "SystemManager/assets/js/news.js": {
+      "sha256": "fcdd0d02bf041386ab551b5c9c940f346e4535b647894d01409d253355f79982",
+      "size": 9789
+    },
+    "SystemManager/assets/js/news_categories.js": {
+      "sha256": "d2e83103e805f0f6d47dc1c0e4941866b3eb865f8d00e5ad29f68c2857348fc9",
+      "size": 839
+    },
+    "SystemManager/assets/js/users.js": {
+      "sha256": "fec1cbdd1b98f5633a1a61f58e2660c57e2cde8955c4504216f086b618c8fe8c",
+      "size": 6873
+    },
+    "cloud/browser/manage.html": {
+      "sha256": "a27e57ed320cd426474d520f5c14c73530656f40dacd924c26665e3fc91632cf",
+      "size": 13271
+    },
+    "api/railway-proxy.asp": {
+      "sha256": "0b0777c049e7a4d69addb3c157f96daa5bb1376fca39b6da2c9a6b2fa19f2bc2",
+      "size": 30716
+    },
+    "assets/js/startup-manager.js": {
+      "sha256": "39709e2e295726ca9101f64047426180142f96dc0db53d52f3b96382469c219e",
+      "size": 8154
+    },
+    "assets/js/auth-session.js": {
+      "sha256": "1310531e22ec40ee178dee90f2839fee5c43389ba3981aa94e3eecf156448b07",
+      "size": 4654
+    },
+    "assets/js/ai-file-tools.js": {
+      "sha256": "ee7e7758b2f4bb2149583f1ab036e3fe46bdb00366c99187834b35eb3dd3b82f",
+      "size": 10765
+    },
+    "assets/js/file-query-parser.js": {
+      "sha256": "6275d3b1f5eff167e241a1a9e66ee4116aee2ba3c6b75e9260c2396bfed672fb",
+      "size": 20217
+    },
+    "api/transit-proxy.asp": {
+      "sha256": "9307bba8d54712d0a8d62d030ec2c0c6b2989ab3b2da88e9aa2680753532815b",
+      "size": 13398
+    },
+    "api/longdistance-proxy.asp": {
+      "sha256": "a841de069890c298170e89bc034b7a226659e43eb5be3e30f27d5502c68d4388",
+      "size": 18772
+    },
+    "inc/trust-schema.asp": {
+      "sha256": "5a525e4edf83a3710a5f3d1794735884aca8d3148a6cef5a03878782733c571e",
+      "size": 902
+    },
+    "inc/admin-security.asp": {
+      "sha256": "6497f0c8c7453b6e862f89ac66456a6ded01b3fa460cbe67f22defa58e3434d9",
+      "size": 14652
+    },
+    "SystemManager/assets/js/admin-login.js": {
+      "sha256": "687083c99927217b96418a590596f7aae074286cfe861e7fea9352ab6a2cdf95",
+      "size": 3638
+    },
+    "SystemManager/assets/css/admin-login.css": {
+      "sha256": "42e2ace34b77af214165a21681a43332211e91568b6e544bac12bcd59d0f068e",
+      "size": 2115
+    },
+    "SystemManager/login.html": {
+      "sha256": "e2029b9f2698f7d71f95ce65cc524c6d9031e289822bbc8fa98da28c574768a1",
+      "size": 1434
+    },
+    "SystemManager/assets/js/visitor-analytics-charts.js": {
+      "sha256": "fdcded2a51029a43c6c28bf317aae8ab394f738701bf4f52302588869b75c481",
+      "size": 22181
+    },
+    "inc/visitor-geo.asp": {
+      "sha256": "05e4522dc01deec830fed957c4c775eed184f538c76dc798243f8b34b00f6ead",
+      "size": 32665
+    },
+    "api/region-geo.asp": {
+      "sha256": "d780f0813534eae9b8168dc6584db3581061bd50b3db1dadc0f00fc063761af2",
+      "size": 7079
+    },
+    "admin_api/checkDatacenter.asp": {
+      "sha256": "d1c66404c56de86e078198242779e19f8b15edfc787841d8120a0d271dddd0f6",
+      "size": 4227
+    },
+    "admin_api/dashboardStats.asp": {
+      "sha256": "5839576539a84aebe49b207fe45bc9d3d574a72e8e10d1e2314c2eaa08eb6700",
+      "size": 3455
+    },
+    "admin_api/deleteUser.asp": {
+      "sha256": "b99fb98b4846abfbd259705d58167c019453cb72e4e37f3b86c78058acaf6bd4",
+      "size": 1932
+    },
+    "admin_api/developerContent.asp": {
+      "sha256": "19cbf02cc7734f3f128aeb6ae493b18f5888c86443ed382b67b3bca6c2838aca",
+      "size": 11245
+    },
+    "admin_api/feedback.asp": {
+      "sha256": "10a3ebd5b98b5713f9654f0881d9ce6a26c985ed4591acf5930b80cd03fb2ee2",
+      "size": 9811
+    },
+    "admin_api/getUserById.asp": {
+      "sha256": "cae218d8cace4d948914b7aabfecd358828f295a2dfd8637bdbce6c7401b3024",
+      "size": 1812
+    },
+    "admin_api/getUsers.asp": {
+      "sha256": "80e107c46b2f23bfc1c51381e4b0bceacf312b1958b73602805c53c919165bbe",
+      "size": 1192
+    },
+    "admin_api/news.asp": {
+      "sha256": "72e2052fb138967f52a2981e07d97a53132de7c93889faa9a1218eb9c82845f6",
+      "size": 29946
+    },
+    "admin_api/saveUser.asp": {
+      "sha256": "cb6135708c597f2cb49260daafdc45be1206486c3c440aa1671b5178b24d8ced",
+      "size": 5076
+    },
+    "admin_api/settings.asp": {
+      "sha256": "0e6f6791caada7fc9699de46561356425de76287b05418fdc6b3413cd73923ea",
+      "size": 6833
+    },
+    "api/feedback.asp": {
+      "sha256": "aa8607095e66cc0883f737231dd460781ded8144d71d9b434dc7c93cc7535466",
+      "size": 3771
+    },
+    "assets/css/developer-center.css": {
+      "sha256": "509564a7d476e545e2f12d83adb7cfd48ee694aed3791fb064b17feb81f6f6a9",
+      "size": 10227
+    },
+    "assets/js/developer-content.js": {
+      "sha256": "24c8caeba050afd7e8f41f4fdb9ae03083ace86a0d6d4fd28697f3b855fc946d",
+      "size": 1866
+    },
+    "developer_content.asp": {
+      "sha256": "a343c33786441f1f73e1e08aaf0bd4d0f68e2cafd807754010a931c831dc980c",
+      "size": 1358
+    },
+    "developer-samples/hello-webwindows.zip": {
+      "sha256": "53cea2a2fa4ca4859c4bd3297d852cd9cdb3ef9ff47cfdb4dd4e216d0e3afec3",
+      "size": 2338
+    },
+    "developer.html": {
+      "sha256": "22be7ac361025f48b2fac0920d6c863be8c471bb0a31123d5b97be6579751ecc",
+      "size": 12723
+    },
+    "getNews.asp": {
+      "sha256": "0727101ba14f5602a9749a4d3b7b1a7685ec7728f6f5b6fdb9cdd8edf4a9f0af",
+      "size": 1561
+    },
+    "getNewsById.asp": {
+      "sha256": "c5c0bc37a611656bcce693cba0489a4fe3453857d45cd1adc9b5fc15c9771c6e",
+      "size": 4376
+    },
+    "getPrevNextNews.asp": {
+      "sha256": "8a7ac889bd74642bdbe138efd45f983cbf9c7bd226461da184b0bfffdd4a705a",
+      "size": 2000
+    },
+    "SystemManager/assets/css/admin-utilities.css": {
+      "sha256": "b5b5461d520e5f6e1249ac402905d6a8f282478928b82717c9a789634d1701d3",
+      "size": 3643
+    },
+    "SystemManager/assets/js/developer-content-admin.js": {
+      "sha256": "3534b7788c9af52b113359a946d45a3b1b792ef1dbbef3332da4c43857c338c2",
+      "size": 5123
+    },
+    "SystemManager/assets/js/feedback.js": {
+      "sha256": "b04459331419189a44bf9eab127602e81d81fe02362f5cdcb27a36ab92a35826",
+      "size": 5345
+    },
+    "SystemManager/assets/js/files.js": {
+      "sha256": "e597e7db15df664823da270f1ef6607550836027fd3f001b52b2d40a7a55cc75",
+      "size": 1543
+    },
+    "SystemManager/assets/js/page-guard.js": {
+      "sha256": "914e6a25d5b6804f9406ceb05ff551b847559b39900b59080f449fadc545fd21",
+      "size": 403
+    },
+    "SystemManager/assets/js/settings.js": {
+      "sha256": "23b62254784d46c86c837d3eec6560a1259f3a5cb368ddfbf8d660bb0b48accc",
+      "size": 2710
+    },
+    "SystemManager/layout.html": {
+      "sha256": "8ad3f25b2e16c9c92ea623f380fb8a04beae6da2c9d9dd82b26f2c81921243f2",
+      "size": 1493
+    },
+    "assets/js/developer-center.js": {
+      "sha256": "58e7a05f18bdee3a07f0b060881a52ea22dd4ad0c449ef00ddcec141e3e22f4a",
+      "size": 15201
+    },
+    "developer-samples/hello-webwindows/index.html": {
+      "sha256": "512682a675ac57723bd46dc9c77e7291202b7970e03205d27703315e50c26d96",
+      "size": 1449
+    },
+    "developer-samples/hello-webwindows/manifest.json": {
+      "sha256": "ea29732dd4e9be745d9c3a41c004177278ef69a8b86a2314dc2b1103710d1021",
+      "size": 645
+    },
+    "inc/json-charset.asp": {
+      "sha256": "189aeaf9292c4052899202e9267bf4b9d0979a695fd639cd3fb626c7d51b8b91",
+      "size": 1425
+    },
+    "assets/js/news-content.js": {
+      "sha256": "0e7a1016428d306a9cc7fbe16bf74715993254eeef0def8b4aa09e0ec5700b27",
+      "size": 6183
+    },
+    "assets/css/admin-richtext.css": {
+      "sha256": "2b152b804b8551c5c43802a6ee91cae4bc443f7d978e4ed18a9bae7c54fa72b2",
+      "size": 1281
+    },
+    "assets/js/admin-richtext.js": {
+      "sha256": "9822cb3b951ea54a3c152dcb2420a340dead40ec0c3d842a160a3f6c9c8961df",
+      "size": 4475
+    },
+    "inc/news-html.asp": {
+      "sha256": "de8616d95879f3d49969108a87d7dc1e3b81a34a3aed8ae2ff5ff185f1ada14f",
+      "size": 8970
+    },
+    "assets/vendor/jodit/4.15.14/jodit.min.js": {
+      "sha256": "0e5a50cb5f0004bccac4a22eaadfc8faa6d74131e03e28786d157b25f98b1a76",
+      "size": 835895
+    },
+    "assets/vendor/jodit/4.15.14/jodit.min.css": {
+      "sha256": "cb7dfd894fed5116e4a2369c24edd31503c1cc9ddebfa497962554419b13732c",
+      "size": 178889
+    },
+    "assets/vendor/jodit/4.15.14/LICENSE.txt": {
+      "sha256": "b6eccb41553c575c01f6a1261e87fdc7b842a721d6ba9daa88bdbd9259865d55",
+      "size": 1067
+    },
+    "assets/vendor/jodit/4.15.14/SOURCE.json": {
+      "sha256": "b29340991e838b89e43b080981bdfa85e97acd91c25224e0856c0975f5ed8012",
+      "size": 843
+    },
+    "assets/vendor/jodit/4.15.14/README.md": {
+      "sha256": "10d759fe21fd1eab6491cded83591a6caf084245499c7fe36d85ef0c0f38ff37",
+      "size": 422
+    },
+    "assets/icons/settings-cursor.svg": {
+      "sha256": "628ab8365cca3f8691eaafbed87e2155375126bee19caee8809836d7059036d9",
+      "size": 467
+    },
+    "assets/js/cursor-theme-inline.js": {
+      "sha256": "0c02fee69d94726218ab5e36418c783a6e4406252f5e54942b5cf9f68c9f371a",
+      "size": 67648
+    },
+    "assets/js/cursor-themes.js": {
+      "sha256": "bdb8367360b429453f09c4b6bcfe495ed5d51dd3061175447b5dbf997ccbd408",
+      "size": 15121
+    },
+    "cloud/browser/file-selection.js": {
+      "sha256": "7f1549efc90ae880e7eb4f89efee138995aa3b9b7a2163abfa8088c8f6d23293",
+      "size": 12660
+    },
+    "mail-center/Api.ashx": {
+      "sha256": "4123c21b2a941554366dd6d36c1475df17e29838e5321a77fd7768d38b225c4f",
+      "size": 73
+    },
+    "mail-center/web.config": {
+      "sha256": "c462514f4d7148f94d10367d63610ac19f5eeeaad4714094c6528db28d18b4c3",
+      "size": 675
+    },
+    "bin/BouncyCastle.Cryptography.dll": {
+      "sha256": "d9a58c84baa55a12684cd2381bca03c8f2a9cbae21a6bf1e9ebd65f495629721",
+      "size": 4694688
+    },
+    "bin/Google.Protobuf.dll": {
+      "sha256": "878877f77c806ccd4a822b1b65ca04141fc34b0759569ddf7ee96dbe590dfbcd",
+      "size": 489568
+    },
+    "bin/K4os.Compression.LZ4.dll": {
+      "sha256": "6dade79664f48a163d6864c84a0a6c5c55b856bdfaf34ba187c87f18f9167238",
+      "size": 75264
+    },
+    "bin/K4os.Compression.LZ4.Streams.dll": {
+      "sha256": "36f1ca01f12522a0c50f8fe48cd06adc24571ee2a0ff248315b388b8bd00f484",
+      "size": 83456
+    },
+    "bin/K4os.Hash.xxHash.dll": {
+      "sha256": "fd5fbeafb3ae59b45dbc6ac6b867ecdbeb4b4b715adebc5d1766e155e639caf3",
+      "size": 13312
+    },
+    "bin/MailKit.dll": {
+      "sha256": "1a8484dbf3e77429ac3b6b2c3b597e7577addf2052d44f385fa2a0ab8ce6a95d",
+      "size": 973312
+    },
+    "bin/Microsoft.Bcl.AsyncInterfaces.dll": {
+      "sha256": "075ce79e84041137c78885b3738c1b5a03547d0ae2a79916e844196a9d0ec1db",
+      "size": 20872
+    },
+    "bin/MimeKit.dll": {
+      "sha256": "e193fbd5991b6357956902658114f44706a1a16bf956c1e1f373a07b5c206ce9",
+      "size": 1327104
+    },
+    "bin/MySql.Data.dll": {
+      "sha256": "83ad87923b13e3d7a173791a2cd917fd7c96b050c3e1524f6b88d4cd5c2815bc",
+      "size": 1188936
+    },
+    "bin/System.Buffers.dll": {
+      "sha256": "2d78d770c9cb997199154ae8c018b9f1d1efbc86729f7264dde6dbad2a12cac3",
+      "size": 23816
+    },
+    "bin/System.Configuration.ConfigurationManager.dll": {
+      "sha256": "be1068d1af240549afcd48f22cfcf15ac10c4630600a5344ae025d3055029834",
+      "size": 91824
+    },
+    "bin/System.Diagnostics.DiagnosticSource.dll": {
+      "sha256": "1887592615fc08bbc91ad62307c8c11dfc14c45bf120d271d66be4a0d1a149a7",
+      "size": 189104
+    },
+    "bin/System.Formats.Asn1.dll": {
+      "sha256": "84692333cd9e3d9ef2761722a853dc88a412e1e71809744e18639a293c218c8e",
+      "size": 105232
+    },
+    "bin/System.IO.Pipelines.dll": {
+      "sha256": "91d6404aa214aa4ba21e066180a88cbe9565e52316491111cb7f239fc4982f82",
+      "size": 72592
+    },
+    "bin/System.Memory.dll": {
+      "sha256": "d5e8e4866f9cfa66f7765660f84b210198893e55335487afe5ebda342c0e913d",
+      "size": 145200
+    },
+    "bin/System.Numerics.Vectors.dll": {
+      "sha256": "20c2fa81b8c70d651099d762954f285fd4f942e63b2d7217c145dab8d4b2f4c9",
+      "size": 110344
+    },
+    "bin/System.Runtime.CompilerServices.Unsafe.dll": {
+      "sha256": "08cbd7278b66f1e68425a82d4b97181a4130d93e3dd91831407aba7212ccdacf",
+      "size": 19256
+    },
+    "bin/System.Threading.Tasks.Extensions.dll": {
+      "sha256": "af4e13ef418fd89b432de20cd1dfb7fa10a7179c8dd049c9856316e50c5949ca",
+      "size": 27960
+    },
+    "bin/System.ValueTuple.dll": {
+      "sha256": "e4774aead2793f440e0ced6c097048423d118e0b6ed238c6fe5b456acb07817f",
+      "size": 78992
+    },
+    "bin/WebWindows.MailCenter.dll": {
+      "sha256": "0921116a6369fbe7f4b7c834beba54a94c21a8917e8d70e9b2da46054b6dcc8d",
+      "size": 22528
+    },
+    "bin/ZstdSharp.dll": {
+      "sha256": "e69baa507daa5fb47ebcfdd3325eb3f47ccf652eaa63e6181252e7a990e9b10a",
+      "size": 427520
+    }
+  },
+  "releaseScope": "native-bridge-brightness",
+  "uploadFiles": [
+    "assets/js/device-api.js",
+    "index.html",
+    "deploy/ftp-manifest.json"
+  ]
+}

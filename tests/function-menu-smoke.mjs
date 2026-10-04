@@ -23,8 +23,14 @@ const userFunctions = visible.filter(
 
 assert.deepEqual(
   systemFunctions.map((app) => app.name),
-  ["云资料", "设置", "系统信息", "功能中心", "Developer Studio", "云秘书", "讯筒", "认识我", "使用向导", "问道", "新闻中心"]
+  ["云资料", "设置", "系统信息", "相机", "功能中心", "Developer Studio", "云秘书", "讯筒", "认识我", "使用向导", "问道", "新闻中心"]
 );
+const camera = manifest.apps.find((app) => app.id === "webwindows.system.camera");
+assert.equal(camera?.entry, "camera.html?v=20261005-camera-ui-1");
+assert.equal(camera?.placement?.startMenu, true);
+assert.equal(camera?.placement?.allFunctions, true);
+assert.equal(camera?.install?.uninstallable, false);
+await fs.access(new URL("../assets/icons/camera.svg", import.meta.url));
 assert.deepEqual(
   userFunctions.map((app) => app.name),
   ["傲映(APlay)", "Dreama", "Sheet Editor", "Write Editor", "Slide Editor"]

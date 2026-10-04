@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.09.26.1",
-    "updatedAt": "2026-09-26T00:00:00+09:00"
+    "catalogVersion": "2026.10.05.1",
+    "updatedAt": "2026-10-05T00:00:00+09:00"
   },
   "apps": [
     {
@@ -90,6 +90,37 @@
         "singleton": true,
         "width": "700px",
         "height": "705px"
+      }
+    },
+    {
+      "id": "webwindows.system.camera",
+      "legacyIds": [
+        "camera"
+      ],
+      "type": "system",
+      "name": "相机",
+      "description": "拍摄照片、扫描文档、识别二维码和翻译图片文字。",
+      "category": "system",
+      "version": "1.0.0",
+      "icon": "assets/icons/camera.svg",
+      "entry": "camera.html?v=20261005-camera-ui-1",
+      "install": {
+        "defaultState": "installed",
+        "uninstallable": false
+      },
+      "placement": {
+        "desktop": false,
+        "startMenu": true,
+        "startMenuGroup": "system",
+        "startMenuOrder": 35,
+        "allFunctions": true,
+        "taskbar": false
+      },
+      "window": {
+        "mode": "iframe",
+        "singleton": true,
+        "width": "1180px",
+        "height": "780px"
       }
     },
     {

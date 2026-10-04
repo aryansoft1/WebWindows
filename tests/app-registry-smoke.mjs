@@ -53,11 +53,13 @@ const context = vm.createContext({
       this.detail = init?.detail;
     }
   },
-  fetch: async () => ({
+  fetch: async (url) => ({
     ok: true,
     status: 200,
     async json() {
-      return manifest;
+      return String(url).includes("api/function-catalog.asp")
+        ? { ...manifest, apps: manifest.apps.filter((app) => app.id !== "webwindows.system.camera") }
+        : manifest;
     }
   }),
   localStorage: {
@@ -99,12 +101,24 @@ await apps.ready();
 await new Promise((resolve) => setTimeout(resolve, 0));
 vm.runInContext(resourceOpenSource, context, { filename: "resource-open.js" });
 
-assert.equal((await apps.listInstalled()).length, 17);
-assert.equal((await apps.listCatalog()).length, 17);
+assert.equal((await apps.listInstalled()).length, 18);
+assert.equal((await apps.listCatalog()).length, 18);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), true);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", false);
 assert.equal(await apps.isDesktopVisible("com.aryansoft.webwindows.sheet"), false);
 await apps.setDesktopVisible("com.aryansoft.webwindows.sheet", true);
+
+await apps.launch("webwindows.system.camera");
+assert.deepEqual(openedWindows.at(-1), [
+  "camera",
+  "相机",
+  "camera.html?v=20261005-camera-ui-1",
+  "assets/icons/camera.svg",
+  true,
+  "",
+  "1180px",
+  "780px"
+]);
 
 await apps.launch("webwindows.system.settings");
 assert.deepEqual(openedWindows.at(-1), [

@@ -6,8 +6,8 @@ category: 浏览与信息
 category_order: 70
 order: 20
 status: verified
-product_version: 2026.09
-last_verified: 2026-09-15
+product_version: 2026.10
+last_verified: 2026-10-05
 keywords: 系统信息,版本,设备,新闻中心,更新
 covers: webwindows.system.info,com.aryansoft.webwindows.news
 open_url: sysinfo.html
@@ -28,8 +28,8 @@ tested_by: sysinfo.html,news.html,tests/mobile-version-contract-smoke.mjs
 
 ## 操作步骤
 
-1. 从开始菜单打开“系统信息”，记录显示的版本、平台和可用设备信息。
-2. 若页面显示线上发布信息，区分“当前客户端”和“在线版本”。
+1. 从开始菜单打开“系统信息”，分别查看客户端/站点版本、浏览器平台和可用设备信息。
+2. 若页面显示线上发布信息，区分“当前客户端”和“在线版本”，记录标签和版本号。
 3. 打开“新闻中心”，选择分类和文章标题进入详情。
 4. 使用新闻页自身的返回/前后导航，不要依赖浏览器后退关闭整个 WebWindows。
 
@@ -42,3 +42,4 @@ tested_by: sysinfo.html,news.html,tests/mobile-version-contract-smoke.mjs
 - “未知”表示宿主没有提供数据，不代表设备没有该硬件。
 - 新闻为空可能是服务端暂时无数据或网络失败，刷新后再试。
 - 对外报障时可提供版本与错误提示，但不要附带 Cookie、会话 ID 或私人路径。
+- 新闻页没有文章时可先切换分类或返回列表确认筛选条件，再判断是否为服务端暂无内容。

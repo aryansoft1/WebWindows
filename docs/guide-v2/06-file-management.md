@@ -7,7 +7,7 @@ category_order: 30
 order: 30
 status: verified
 product_version: 2026.10
-last_verified: 2026-10-04
+last_verified: 2026-10-05
 keywords: 上传,Upload,アップロード,下載,下载,Download,新建文件夹,重命名,删除,多选,Multiple selection,複数選択,框选,拖放,壁纸库,Wallpaper library,壁紙ライブラリ,备份,15MB
 open_url: cloud/browser/files.asp
 media: assets/guide/file-lifecycle.svg
@@ -27,9 +27,9 @@ tested_by: cloud/browser/private-files.asp,cloud/browser/addResource.ashx,cloud/
 
 ## 操作步骤
 
-1. 正式登录后打开云资料，选择“私人文件”，再用面包屑进入准备保存内容的目标文件夹。
+1. 正式登录后打开云资料，选择“私人文件”，用面包屑进入目标文件夹；需要新位置时先创建文件夹并确认名称。
 2. 需要分类时选择“新建文件夹”，输入名称并确认；刷新列表后打开新文件夹。
-3. 选择“上传”，从设备选取不超过 15 MB 的文件，等待成功提示和列表出现文件名后再离开页面。
+3. 选择“上传”，从设备选取不超过 15 MB 的文件，等待成功提示，再确认列表中出现文件名和正确大小。
 4. 需要批量处理时，用 `Ctrl/Cmd + 单击` 增减项目、`Shift + 单击` 连续选择、`Ctrl/Cmd + A` 全选，或从空白处拖出选择框；按 `Esc` 清除选择。
 5. 拖动任一已选项目即可成组拖动当前选择；移动前核对目标文件夹和界面显示的项目数量。
 6. 要整理单个项目时，右键或长按文件/文件夹，在菜单中选择“重命名”或“删除”，核对对象名称后确认。
@@ -46,3 +46,5 @@ tested_by: cloud/browser/private-files.asp,cloud/browser/addResource.ashx,cloud/
 - 找不到删除：公共文件不可由普通用户删除；先确认位于私人区域。
 - 组合键、选择数量以及“设置为桌面壁纸 / Set as desktop wallpaper / デスクトップの壁紙に設定”会随界面语言显示对应名称。
 - 删除不可撤销时应先下载备份；`.bak` 保护针对写入覆盖，不是通用回收站。
+- 框选和组合键选择适用于文件网格；若焦点正在输入框中，先点回文件区域再用组合键，避免把快捷键输入到搜索框。
+- 上传会把所选文件传至当前登录账户的私人资料；上传前检查目录和文件名，勿将机密文件放入公共区域。

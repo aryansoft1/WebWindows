@@ -7,7 +7,7 @@ category_order: 40
 order: 20
 status: testing
 product_version: 2026.10
-last_verified: 2026-10-04
+last_verified: 2026-10-05
 keywords: Write,Document,ドキュメント,文件,文档,DOCX,DOC,Word,模板,大纲,阅读模式,页眉页脚,自动保存,另存
 covers: com.aryansoft.webwindows.write
 open_url: worker_WriteEditor.html
@@ -45,4 +45,5 @@ Write Editor 主要支持 DOCX，可从云资料读取文档并进行段落、�
 - 保存按钮不可用：确认已登录并选择私人目标目录。
 - 公共文档不会原地覆盖；这是权限边界，不是故障。
 - 编辑、阅读、模板和导出控件已接入繁中、English、日本語；步骤中的中文名称会随当前语言显示对应翻译。
+- 自动保存只在已有可写私人目标时执行；第一次编辑或公共文件请先另存到私人资料。
 

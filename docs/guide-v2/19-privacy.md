@@ -6,8 +6,8 @@ category: 安全与排障
 category_order: 90
 order: 10
 status: verified
-product_version: 2026.09
-last_verified: 2026-09-15
+product_version: 2026.10
+last_verified: 2026-10-05
 keywords: 隐私,安全,权限,私人资料,公共资料,API Key,AI,功能包
 media: assets/guide/account-security.svg
 media_alt: 私人数据保留在账户边界内，公共资料和第三方服务位于外部边界的示意图
@@ -26,8 +26,8 @@ tested_by: docs/WEBWINDOWS_SECURITY_FREEZE_PHASE_2E.md,tests/end-to-end-security
 
 ## 操作步骤
 
-1. 操作前确认当前位置是公共资料还是私人资料；公共区域不要放个人或敏感信息。
-2. 浏览器请求相机、目录等权限时核对功能名称和用途，只选择必要范围。
+1. 上传、分享或删除前确认当前资料位置及可见范围是公共还是私人；公共区域不要放个人或敏感信息。
+2. 浏览器请求相机、目录等权限时核对功能名称、请求范围和用途，只选择完成当前任务所需的权限。
 3. 不把密码、API Key、邮箱授权码、会话 ID 或私人读取地址写入文档、聊天或功能包。
 4. 离开公共设备前注销账户，关闭敏感窗口，并按需要清理浏览器保存的数据。
 
@@ -40,4 +40,5 @@ tested_by: docs/WEBWINDOWS_SECURITY_FREEZE_PHASE_2E.md,tests/end-to-end-security
 - 第三方功能和网页可能有独立数据政策，安装或登录前应核对来源。
 - AI 对话需要发送输入文本到配置的模型服务；不要发送不必要的私人内容。
 - 设备目录公开接口当前不提供创建、删除、重命名或写入，不应把“可读写授权”理解为应用已经会写入。
+- 关闭窗口不一定等同注销；共享设备使用后从账户菜单主动退出，并确认页面回到访客/登录状态。
 

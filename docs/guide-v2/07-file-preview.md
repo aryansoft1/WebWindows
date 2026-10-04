@@ -7,7 +7,7 @@ category_order: 30
 order: 40
 status: verified
 product_version: 2026.10
-last_verified: 2026-10-04
+last_verified: 2026-10-05
 keywords: 文件预览,打开方式,開啟方式,Open with,プログラムから開く,默认应用,Default app,既定のアプリ,图片,PDF,文本,JSON,编辑器
 covers: webwindows.system.file-preview
 open_url: cloud/browser/files.asp
@@ -32,7 +32,7 @@ tested_by: data/apps/system-apps.json,assets/js/app-registry.js,assets/js/file-t
 1. 在云资料中双击文件，系统会使用该文件类型的当前默认应用打开。
 2. 需要临时改用其他应用时，右键或长按文件，展开“打开方式”，然后选择已列出的应用。
 3. 列表中没有目标时选择“选择其他应用…”，检查文件类型和可用应用，再选择本次使用的应用。
-4. 希望以后都用该应用时勾选“始终使用此应用打开”，再确认；不勾选时只影响本次打开。
+4. 希望以后都用该应用时勾选“始终使用此应用打开 {扩展名} 文件”，再确认；不勾选时只影响本次打开。
 5. 打开 Office 文件前确认对应编辑器仍在“我的功能”中；公共文件需要修改时，在编辑器中另存到私人资料。
 6. 完成后重新从私人资料双击保存结果，确认默认应用、格式和内容符合预期。
 
@@ -46,3 +46,4 @@ tested_by: data/apps/system-apps.json,assets/js/app-registry.js,assets/js/file-t
 - 编辑器被移除：到功能中心重新添加后再打开。
 - “打开方式 / 開啟方式 / Open with / プログラムから開く”会随界面语言变化；不同语言下保存的是同一个文件类型默认应用。
 - 预览地址受同源权限保护，不应复制私人读取地址给他人。
+- 设置默认应用会按文件类型保存于当前使用者的文件关联设置；之后安装或移除应用时，可重新从“打开方式”选择。

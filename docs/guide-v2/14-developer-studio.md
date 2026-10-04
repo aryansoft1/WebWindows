@@ -6,8 +6,8 @@ category: 功能与开发
 category_order: 60
 order: 20
 status: testing
-product_version: 2026.09
-last_verified: 2026-09-15
+product_version: 2026.10
+last_verified: 2026-10-05
 keywords: Developer Studio,开发者,Manifest,代码,预览,构建,ZIP,权限
 covers: webwindows.system.developer-studio
 open_url: developer-studio.html
@@ -28,10 +28,11 @@ Developer Studio 提供本地项目、资源管理器、Monaco 编辑器、Manif
 
 ## 操作步骤
 
-1. 打开 Developer Studio，选择“新建功能”，输入项目名称并等待模板建立。
-2. 在资源管理器编辑文件；修改 `manifest.json` 时同时查看检查器和问题面板。
-3. 选择“验证”，修复错误后再“运行”；预览在隔离会话中执行。
-4. 选择“构建”，确认产物就绪后导出 ZIP，或保存 ZIP 到私人云资料。
+1. 打开 Developer Studio，选择“新建功能”，输入项目名称并选择模板；确认项目出现在资源树。
+2. 在资源树选择文件进行编辑，使用 Manifest 表单或 JSON 编辑器配置 ID、名称、入口和权限；检查器与问题面板会显示校验结果。
+3. 先选择“验证”并修复阻止构建的问题，再选择“运行”；在隔离预览中实际操作入口，使用停止/关闭结束预览。
+4. 选择“构建”，检查构建报告和文件清单；成功后下载 ZIP，或保存到私人云资料并确认目标位置。
+5. 重新打开项目确认本地工作区仍可读取；重要改动另行导出 ZIP 备份。
 
 ## 操作结果
 
@@ -42,4 +43,5 @@ Developer Studio 提供本地项目、资源管理器、Monaco 编辑器、Manif
 - 清除浏览器数据会删除本地项目；重要项目应定期导出 ZIP。
 - 预览权限由 Manifest、平台策略和用户授权共同决定；当前能力试点不等于所有设备 API 都开放。
 - “运行成功”不代表审核或生产发布通过，正式发布仍需服务端校验与审核。
+- 项目保存在当前浏览器的本地工作区，不会因登录账户而自动跨设备同步；跨设备迁移请导出并保存 ZIP。
 

@@ -6,9 +6,9 @@ category: 快速入门
 category_order: 10
 order: 20
 status: testing
-product_version: 2026.09
-last_verified: 2026-09-15
-keywords: 账户,登录,注销,同步,线下用户,访客
+product_version: 2026.10
+last_verified: 2026-10-05
+keywords: 账户,帳戶,Account,アカウント,登录,登入,Sign in,ログイン,注销,Sign out,同步,Sync,同期,访客,Guest,ゲスト,私人文件,私密資料
 open_url: login.html
 media: assets/guide/account-security.svg
 media_alt: 访客、登录账户、私人云资料和退出登录之间关系的示意图
@@ -30,7 +30,8 @@ tested_by: assets/js/login.js,tests/function-sync-integration-smoke.mjs,tests/pr
 1. 打开登录页，输入账户凭据并提交；不要把密码交给向导、文档或聊天消息。
 2. 返回桌面，确认头像区域不再显示访客或“正在确认登录状态”。
 3. 打开功能中心，等待“已同步”；离线时可看到“离线待同步”或“等待重试”。
-4. 使用结束后从账户菜单注销，并确认私人云资料无法继续直接打开。
+4. 在公共设备使用时，不要勾选记住密码；工作完成后从头像或账户菜单选择“退出登录”。
+5. 退出后重新进入“私人文件”确认系统要求再次登录；关闭浏览器窗口不能代替退出账户。
 
 ## 操作结果
 
@@ -41,4 +42,6 @@ tested_by: assets/js/login.js,tests/function-sync-integration-smoke.mjs,tests/pr
 - 登录页成功但桌面仍是访客：刷新桌面；若仍不一致，可能是浏览器 Cookie 被拦截。
 - “离线待同步”表示变更仍在本机等待，不代表服务器已保存。
 - 扫码登录在公开最新界面仍明确标为后端未启用，不应依赖该入口。
+- 更换设备后，账户关联和私人云资料可按服务端状态恢复；浏览器本地草稿、DeskTalk 偏好与 Developer Studio 项目不保证自动同步。
+- 访客能打开公开功能不代表有权写入私人空间；需要保存时先确认已登录正确账户。
 

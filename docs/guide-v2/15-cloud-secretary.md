@@ -6,8 +6,8 @@ category: 功能与开发
 category_order: 60
 order: 30
 status: testing
-product_version: 2026.09
-last_verified: 2026-09-15
+product_version: 2026.10
+last_verified: 2026-10-05
 keywords: 云秘书,评测中心,服务入口,对日外贸
 covers: webwindows.system.cloud-secretary
 open_url: index.html
@@ -28,10 +28,10 @@ tested_by: webwindows-vue/src/stores/legacyWindow.js,data/apps/system-apps.json
 
 ## 操作步骤
 
-1. 从桌面或开始菜单打开“云秘书”。
-2. 在根窗口选择“云秘书对日外贸评测中心”。
-3. 等待服务窗口打开，并按页面自身要求继续操作。
-4. 若服务窗口未加载，记录提示并检查网络后重试。
+1. 从桌面或开始菜单打开“云秘书”，确认根窗口已显示服务入口。
+2. 选择“云秘书对日外贸评测中心”磁贴，等待新服务窗口加载。
+3. 在服务页面查看其标题、介绍和页面内操作说明；按服务本身提供的表单和按钮完成任务。
+4. 如需返回云秘书根窗口，关闭服务窗口或切回原窗口；遇到加载错误时记录错误提示并检查网络。
 
 ## 操作结果
 
@@ -42,4 +42,5 @@ tested_by: webwindows-vue/src/stores/legacyWindow.js,data/apps/system-apps.json
 - 根窗口只有一个磁贴不是加载失败，而是当前注册范围。
 - 具体服务可能有自己的账户、网络和数据处理规则，应阅读服务页提示。
 - 向导不把产品构想或历史文档中的能力写成已经上线。
+- 当前入口页不包含可概括所有评测功能的统一操作；具体评测步骤以打开后的服务页面为准。
 

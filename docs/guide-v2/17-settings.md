@@ -7,7 +7,7 @@ category_order: 80
 order: 10
 status: verified
 product_version: 2026.10
-last_verified: 2026-10-04
+last_verified: 2026-10-05
 keywords: 设置,設定,Settings,設定画面,语言,地区,壁纸,Wallpaper,壁紙,个性化,Personalization,パーソナライズ,鼠标指针,Cursor,カーソル,主题色,毛玻璃,任务栏图标,启动项,后台,最小化,延迟,电池,网络,测速
 covers: webwindows.system.settings
 open_url: settings.html

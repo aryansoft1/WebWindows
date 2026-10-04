@@ -7,7 +7,7 @@ category_order: 40
 order: 30
 status: testing
 product_version: 2026.10
-last_verified: 2026-10-04
+last_verified: 2026-10-05
 keywords: Slide,Presentation,プレゼンテーション,簡報,演示文稿,PPTX,PPT,幻灯片,版式,备注,放映,原稿预览
 covers: com.aryansoft.webwindows.slide
 open_url: worker_SlideEditor.html
@@ -45,4 +45,5 @@ Slide Editor 可新建演示文稿或打开 PPTX，在可编辑画布中修改�
 - 复杂动画、音视频、字体和高级布局可能不能完整呈现。
 - 复杂动画、音视频和高级母版仍需用完整演示软件复核，请勿只保留唯一原稿。
 - 幻灯片、主题、放映、视图等菜单已接入繁中、English、日本語；步骤中的中文名称会随当前语言显示对应翻译。
+- 自动布局是可编辑画布内容；“原稿预览”是只读兼容渲染，查看结束后切回编辑画布再做修改。
 

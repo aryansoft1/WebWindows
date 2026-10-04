@@ -6,8 +6,8 @@ category: 安全与排障
 category_order: 90
 order: 20
 status: verified
-product_version: 2026.09
-last_verified: 2026-09-15
+product_version: 2026.10
+last_verified: 2026-10-05
 keywords: 常见问题,故障,打不开,同步失败,空白,刷新,恢复
 media: assets/guide/troubleshooting-flow.svg
 media_alt: 从确认状态、重试、检查权限到记录信息的故障排查流程示意图
@@ -37,7 +37,7 @@ tested_by: tests/guide-smoke.mjs,tests/system-dialog-smoke.mjs,tests/mobile-fron
 
 ## 常见问题与权限提示
 
-- 不要先清除全部浏览器数据：这可能删除 Developer Studio 项目、DeskTalk 本地偏好和讯筒本机消息。
+- 不要先清除全部浏览器数据：这可能删除 Developer Studio 本地项目、DeskTalk 本地偏好和未同步草稿；已连接邮箱的邮件由讯址中心同步，不应描述为仅保存在浏览器。
 - AI 429/503：等待自动重试后稍后再发；重复点击会增加压力。
 - 页面拒绝嵌入：改用完整浏览器；不要尝试绕过目标站点策略。
 - 已明确标为占位、未启用或规划中的入口无法通过刷新变成可用功能。

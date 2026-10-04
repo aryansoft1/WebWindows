@@ -152,6 +152,34 @@
     return texts;
   }
 
+  function copyRenderedState(source, clone) {
+    const sourceNodes = [source, ...source.querySelectorAll("*")].filter((node) => node.tagName !== "SCRIPT");
+    const cloneNodes = [clone, ...clone.querySelectorAll("*")].filter((node) => node.tagName !== "SCRIPT");
+    const count = Math.min(sourceNodes.length, cloneNodes.length);
+    for (let index = 0; index < count; index += 1) {
+      const original = sourceNodes[index];
+      const copy = cloneNodes[index];
+      if (original.tagName !== copy.tagName) continue;
+      try {
+        if (original.tagName === "INPUT") {
+          copy.value = original.value;
+          copy.checked = original.checked;
+        } else if (original.tagName === "TEXTAREA") {
+          copy.value = original.value;
+          copy.textContent = original.value;
+        } else if (original.tagName === "SELECT") {
+          copy.selectedIndex = original.selectedIndex;
+        }
+        if (original.tagName === "CANVAS" && copy.tagName === "CANVAS") {
+          const context = copy.getContext("2d");
+          context?.drawImage(original, 0, 0, copy.width, copy.height);
+        }
+        copy.scrollLeft = original.scrollLeft;
+        copy.scrollTop = original.scrollTop;
+      } catch (_) { /* Some embedded controls do not expose cloneable state. */ }
+    }
+  }
+
   function visualMiniature(win) {
     try {
       const frame = win.querySelector("iframe");
@@ -213,6 +241,7 @@
         });
       } catch (_) {}
       shadow.appendChild(clone);
+      copyRenderedState(source, clone);
       stage.appendChild(scaler);
       if (stage.inert !== undefined) { try { stage.inert = true; } catch (_) {} }
       return stage;

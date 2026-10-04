@@ -17,6 +17,9 @@ assert.equal(fs.existsSync(path.join(root, "assets/js/vendor/html2canvas.min.js"
 assert.match(preview, /window\.html2canvas\(win/);
 assert.match(preview, /buildWindowSnapshot\(win, viewport, requestId\)/);
 assert.doesNotMatch(preview, /if\s*\(!win\.querySelector\("iframe"\)\)\s*buildWindowSnapshot/);
+const sameVisibleBranch = preview.match(/if\s*\(sameVisible\)\s*\{([\s\S]*?)\n\s{4}\}/)?.[1] || "";
+assert.match(sameVisibleBranch, /immediate\s*&&\s*pendingPreviewTimer/);
+assert.match(sameVisibleBranch, /buildWindowSnapshot\(win, viewport, previewRequest\)/);
 assert.match(preview, /document\.createElement\("canvas"\)/);
 assert.match(preview, /context\.drawImage/);
 assert.match(preview, /(?:THUMBNAIL_WIDTH|thumbnail\.width)\s*=\s*280/);

@@ -412,8 +412,17 @@
     if (matchMedia("(hover: none)").matches) return;
     const livePreview = document.getElementById("taskbar-window-preview");
     const sameVisible = !!icon.dataset.id && icon.dataset.id === activePreviewId && !!livePreview && !livePreview.hidden;
+    if (sameVisible) {
+      if (immediate && pendingPreviewTimer) {
+        clearTimeout(pendingPreviewTimer);
+        pendingPreviewTimer = null;
+        const win = document.getElementById(icon.dataset.id);
+        const viewport = livePreview.querySelector(".taskbar-window-preview__viewport");
+        if (win && viewport) buildWindowSnapshot(win, viewport, previewRequest);
+      }
+      return;
+    }
     if (pendingPreviewTimer) { clearTimeout(pendingPreviewTimer); pendingPreviewTimer = null; }
-    if (sameVisible) return;
     const requestId = ++previewRequest;
     const win = document.getElementById(icon.dataset.id);
     const viewport = renderPreviewShell(icon, win);

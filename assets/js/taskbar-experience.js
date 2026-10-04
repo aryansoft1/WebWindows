@@ -21,6 +21,42 @@
 
   gateWindowRootUntilSessionReady();
 
+  function gateBodyWindowsDuringBoot() {
+    if (!document.head || !document.documentElement.classList.contains("ww-boot-pending")) return;
+    const style = document.createElement("style");
+    style.id = "ww-boot-window-gate";
+    style.textContent = `
+      html.ww-boot-pending body > .window {
+        visibility: hidden !important;
+        pointer-events: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  gateBodyWindowsDuringBoot();
+
+  function applyIdleTaskbarCursor() {
+    if (!document.head || document.getElementById("ww-taskbar-idle-cursor")) return;
+    const style = document.createElement("style");
+    style.id = "ww-taskbar-idle-cursor";
+    style.textContent = `
+      html:not([data-ww-cursor-navigation]) body .taskbar-app[data-id]:not(.is-dragging):not(#ww-cursor-manager-specificity),
+      html:not([data-ww-cursor-navigation]) body .taskbar-app[data-id]:not(.is-dragging):not(#ww-cursor-manager-specificity) *,
+      html[data-ww-cursor-navigation] body .taskbar-app[data-id]:not(.is-dragging):not(#ww-cursor-manager-specificity),
+      html[data-ww-cursor-navigation] body .taskbar-app[data-id]:not(.is-dragging):not(#ww-cursor-manager-specificity) * {
+        --ww-cursor-render-state: default !important;
+      }
+      html:not([data-ww-cursor-navigation]) body .taskbar-app[data-id]:not(.is-dragging):not(#ww-cursor-manager-specificity),
+      html:not([data-ww-cursor-navigation]) body .taskbar-app[data-id]:not(.is-dragging):not(#ww-cursor-manager-specificity) * {
+        cursor: var(--ww-cursor-default) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  applyIdleTaskbarCursor();
+
   function taskbarApps() {
     return [...document.querySelectorAll(".taskbar-app[data-id]")];
   }

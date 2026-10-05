@@ -1020,6 +1020,7 @@ export const workspaceManager = Object.freeze({
   setWorkspaceWallpaper,
   getDesktopIconLayout,
   setDesktopIconLayout,
+  applyDesktopWidgets,
   setDesktopWidgetVisibility,
   registerDesktopShortcut,
   applyDesktopShortcuts,

@@ -55,14 +55,26 @@
     document.documentElement.setAttribute("data-auth-state", nextState);
   }
 
+  function publishAuthState() {
+    window.dispatchEvent(new CustomEvent("webwindows:auth-state", {
+      detail: {
+        state: state,
+        authenticated: state === "authenticated",
+        user: currentUser
+      }
+    }));
+  }
+
   function applyServerState(data) {
     if (data && data.authenticated === true && data.user && data.user.username) {
       saveBrowserIdentity(data.user);
       render("authenticated", data.user);
+      publishAuthState();
       return data.user;
     }
     clearBrowserIdentity();
     render("unauthenticated", null);
+    publishAuthState();
     return null;
   }
 
@@ -88,6 +100,7 @@
       // A local sessionStorage value is not proof of an authenticated server session.
       clearBrowserIdentity();
       render("unavailable", null);
+      publishAuthState();
       return null;
     }).finally(function () {
       refreshPromise = null;
@@ -99,6 +112,7 @@
     clearBrowserIdentity();
     lastCheckedAt = Date.now();
     render("unauthenticated", null);
+    publishAuthState();
   }
 
   function logout() {

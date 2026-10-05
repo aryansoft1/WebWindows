@@ -800,6 +800,8 @@ Object.assign(languageCatalog.tw, {
 });
 
 function translateText(text, language) {
+  // Missing input values or removed attributes can be null; keep translation passes non-throwing.
+  text = typeof text === "string" ? text : text == null ? "" : String(text);
   const dictionary = languageCatalog[language];
   if (!dictionary) return text;
   const translated = Object.keys(dictionary)

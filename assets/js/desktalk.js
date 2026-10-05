@@ -143,6 +143,7 @@ function ensureProfile(){
   return { me: me, first: false };
 }
 function getProfile(){ return JSON.parse(localStorage.getItem(PROFILE_KEY)||'null') }
+function isWebWindowsAuthenticated(){ return document.documentElement.getAttribute('data-auth-state') === 'authenticated'; }
 // 在 setProfile(p) 的末尾补这一句
 function setProfile(p){
   localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
@@ -240,11 +241,20 @@ function savePrefs(){ localStorage.setItem(PREF_KEY,JSON.stringify(prefs)) }
 var FS_KEY='ww_friends'; var friendSet=new Set(JSON.parse(localStorage.getItem(FS_KEY)||'[]'));
 function saveFriends(){ localStorage.setItem(FS_KEY, JSON.stringify(Array.from(friendSet))) }
 function isFriend(id){ return friendSet.has(id) }
+var remoteFriendsIdentity = '';
+function syncRemoteFriends(){
+  if(!isWebWindowsAuthenticated()) return;
+  var user = window.WebWindowsAuth && window.WebWindowsAuth.getUser ? window.WebWindowsAuth.getUser() : null;
+  var identity = String((user && (user.id || user.uid || user.username)) || '');
+  if(!identity || identity === remoteFriendsIdentity) return;
+  remoteFriendsIdentity = identity;
+  fetch('/api/dt_friends.asp',{credentials:'include',cache:'no-store'}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(j){if(j.ok&&Array.isArray(j.friends)){j.friends.forEach(function(id){friendSet.add(String(id));});saveFriends();renderAll();}}).catch(function(){remoteFriendsIdentity='';});
+}
 function addFriend(p,after){
   if(!p||!p.id)return;friendSet.add(p.id);seedInboxOne(p.id);saveFriends();renderAll();if(after)after();
-  if(/^\d+$/.test(String(p.id)))fetch('/api/dt_friends.asp?action=add',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({friendId:p.id}).toString(),cache:'no-store'}).then(function(r){if(!r.ok)throw new Error();return r.json();}).catch(function(){Overlay.HUD.show('好友仅保存在此设备；登录服务不可用时无法同步','warn');});
+  if(isWebWindowsAuthenticated()&&/^\d+$/.test(String(p.id)))fetch('/api/dt_friends.asp?action=add',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({friendId:p.id}).toString(),cache:'no-store'}).then(function(r){if(!r.ok)throw new Error();return r.json();}).catch(function(){Overlay.HUD.show('好友仅保存在此设备；登录服务不可用时无法同步','warn');});
 }
-fetch('/api/dt_friends.asp',{credentials:'include',cache:'no-store'}).then(function(r){if(!r.ok)throw new Error();return r.json();}).then(function(j){if(j.ok&&Array.isArray(j.friends)){j.friends.forEach(function(id){friendSet.add(String(id));});saveFriends();renderAll();}}).catch(function(){});
+syncRemoteFriends();
 
 /* ===== 悬停信息卡 ===== */
 var pop=$('#profile-pop'); var popTimer=null;
@@ -400,7 +410,11 @@ window.addEventListener('webwindows:auth-state', function(event){
     sessionStorage.setItem('webwindows_user', JSON.stringify(auth.user));
     sessionStorage.setItem('webwindows_user_nickname', auth.user.nickname || auth.user.username);
     bootstrapProfile();
+    syncRemoteFriends();
+    loadRemoteDndSetting();
   } else {
+    remoteFriendsIdentity = '';
+    remoteDndIdentity = '';
     sessionStorage.removeItem('webwindows_user');
     sessionStorage.removeItem('webwindows_user_nickname');
     var current = getProfile();
@@ -506,14 +520,24 @@ var dndToggle=$('#dnd-toggle'); var DND=false;
 function saveUndiscoverable(value){
   return fetch('/api/dt_presence_mem.asp?action=set-undiscoverable',{method:'POST',credentials:'include',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'value='+(value?'1':'0'),cache:'no-store'}).then(function(r){return r.json().then(function(j){if(!r.ok||!j.ok)throw new Error(j.error||'保存失败');return j;});});
 }
+var remoteDndIdentity = '';
+function loadRemoteDndSetting(){
+  if(!isWebWindowsAuthenticated()) return;
+  var user = window.WebWindowsAuth && window.WebWindowsAuth.getUser ? window.WebWindowsAuth.getUser() : null;
+  var identity = String((user && (user.id || user.uid || user.username)) || '');
+  if(!identity || identity === remoteDndIdentity) return;
+  remoteDndIdentity = identity;
+  fetch('/api/dt_presence_mem.asp?action=get-undiscoverable',{credentials:'include',cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('request failed');return r.json();}).then(function(j){if(!j.ok)return;DND=!!j.undiscoverable;prefs.undiscoverable=DND;savePrefs();if(dndToggle)dndToggle.checked=DND;if(chkUndisc)chkUndisc.checked=DND;applyPrefs(false);}).catch(function(){remoteDndIdentity='';if(privacyHint)privacyHint.textContent='登录后可将“不打扰”同步为“不被推荐”。';});
+}
 function setDnd(value,notify){
   DND=!!value; prefs.undiscoverable=DND; savePrefs();
   if(dndToggle) dndToggle.checked=DND; if(chkUndisc) chkUndisc.checked=DND;
   applyPrefs(false);
+  if(!isWebWindowsAuthenticated()){if(notify)Overlay.HUD.show('设置已保存在此设备；登录后可同步到服务器。','info');return;}
   saveUndiscoverable(DND).then(function(){if(notify) Overlay.HUD.show(DND?'已开启不打扰并从推荐中隐藏':'已允许出现在推荐中','ok');}).catch(function(){DND=!DND;prefs.undiscoverable=DND;savePrefs();if(dndToggle)dndToggle.checked=DND;if(chkUndisc)chkUndisc.checked=DND;applyPrefs(false);if(notify)Overlay.HUD.show('隐私设置未能保存，请登录后重试','warn');});
 }
 if(dndToggle){dndToggle.checked=!!prefs.undiscoverable;DND=dndToggle.checked;}
-fetch('/api/dt_presence_mem.asp?action=get-undiscoverable',{credentials:'include',cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('login required');return r.json();}).then(function(j){if(!j.ok)return;DND=!!j.undiscoverable;prefs.undiscoverable=DND;savePrefs();if(dndToggle)dndToggle.checked=DND;if(chkUndisc)chkUndisc.checked=DND;applyPrefs(false);}).catch(function(){if(privacyHint)privacyHint.textContent='登录后可将“不打扰”同步为“不被推荐”。';});
+loadRemoteDndSetting();
 if(dndToggle) dndToggle.addEventListener('change',function(){
   setDnd(dndToggle.checked,true);
 });
@@ -2125,6 +2149,7 @@ function closeSettingsSheet(){
   var MAILBOX_REFRESH_COOLDOWN = 60000;
   var MAIL_CENTER_API = '/mail-center/Api.ashx';
   function mailCenter(action, data){
+    if(!isWebWindowsAuthenticated()) return Promise.reject(new Error('请先登录 WebWindows。'));
     data = data || {}; data.action = action;
     return fetch(MAIL_CENTER_API, { method:'POST', credentials:'same-origin', headers:{'Content-Type':'application/x-www-form-urlencoded','X-WebWindows-Mail-Center':'1'}, body:new URLSearchParams(data).toString() })
       .then(function(response){ return response.json().then(function(json){ if(!response.ok || !json.ok) throw new Error(json.error || '讯址中心请求失败'); return json; }); });
@@ -2213,6 +2238,7 @@ function closeSettingsSheet(){
   function checkMailCenter(){
     var center = document.getElementById('mailbox-center-status');
     if (!center || center.dataset.checked === 'true') return;
+    if(!isWebWindowsAuthenticated()) { setText(center, '登录后可检查邮件中心连接状态。'); return; }
     center.dataset.checked = 'true';
     fetch(MAIL_CENTER_API + '?action=health', { credentials: 'same-origin' })
       .then(function(response){ if (!response.ok) throw new Error('status unavailable'); return response.json(); })
@@ -2231,6 +2257,7 @@ function closeSettingsSheet(){
     renderAddresses();
   }
   function loadRemoteAccounts(force){
+    if(!isWebWindowsAuthenticated()) return Promise.resolve([]);
     var now=Date.now();
     if(!force && remoteAccountRequest) return remoteAccountRequest;
     if(!force && remoteAccountRequestedAt && now-remoteAccountRequestedAt<MAILBOX_REFRESH_COOLDOWN) return Promise.resolve(remoteAccounts);
@@ -2378,6 +2405,12 @@ function closeSettingsSheet(){
       .catch(function(error){ status.style.color='#b42318'; setText(status,(saved ? '讯址已保存，但连接验证失败：' : '讯址未保存：') + error.message + (saved ? '。可检查授权码与服务商 IMAP 设置后重新保存。' : '')); });
   });
   initialMessages(); render(); showTab('manage');
+  window.addEventListener('webwindows:auth-state', function(event){
+    if(event.detail && event.detail.authenticated) {
+      loadRemoteAccounts();
+      checkMailCenter();
+    }
+  });
   loadRemoteAccounts();
   checkMailCenter();
 })();

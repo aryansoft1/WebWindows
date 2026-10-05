@@ -16,6 +16,7 @@ import { readFile } from "node:fs/promises";
 
 const source = await readFile(new URL("../assets/js/desktalk.js", import.meta.url), "utf8");
 const presenceApi = await readFile(new URL("../api/dt_presence_mem.asp", import.meta.url), "utf8");
+const authSession = await readFile(new URL("../assets/js/auth-session.js", import.meta.url), "utf8");
 
 // --- 1. heartbeat must publish the stable id, nickname only as display data ---
 assert.match(source,
@@ -58,5 +59,19 @@ const migration = source.match(/function migrateLegacyFriendIds\(\)\{[\s\S]*?\n\
 assert.ok(migration, "migrateLegacyFriendIds must be extractable");
 assert.match(migration, /byName\.has\(k\) \? null : p/,
   "an ambiguous display name must block the migration instead of merging two people");
+
+// --- 6. optional authenticated services must wait for verified auth ---------
+assert.match(authSession, /function publishAuthState\(\)[\s\S]*?webwindows:auth-state/,
+  "the auth session must publish its server-verified state for dependent features");
+assert.match(source, /function isWebWindowsAuthenticated\(\)[\s\S]*?data-auth-state/,
+  "DeskTalk must gate account-only requests on the verified auth state");
+assert.match(source, /function syncRemoteFriends\(\)\{\s*if\(!isWebWindowsAuthenticated\(\)\) return;/,
+  "the optional friend sync must not request the server for guests");
+assert.match(source, /function loadRemoteDndSetting\(\)\{\s*if\(!isWebWindowsAuthenticated\(\)\) return;/,
+  "private presence preferences must not be requested for guests");
+assert.match(source, /function mailCenter\(action, data\)\{\s*if\(!isWebWindowsAuthenticated\(\)\)/,
+  "mail center requests must be blocked before the user signs in");
+assert.match(source, /function checkMailCenter\(\)\{[\s\S]*?if\(!isWebWindowsAuthenticated\(\)\)/,
+  "mail center health checks must wait for an authenticated session");
 
 console.log("DeskTalk presence smoke tests passed");

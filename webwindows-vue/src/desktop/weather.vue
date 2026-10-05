@@ -1,15 +1,32 @@
 <template>
-  <div id="weatherTimeWidget" class="weather-widget" :style="rootStyle" :data-ww-cursor="isDragging ? 'grabbing' : 'move'" @mousedown="onMouseDown"
+  <div id="weatherTimeWidget" v-show="isVisible" class="weather-widget" :style="rootStyle" :data-ww-cursor="isDragging ? 'grabbing' : 'move'" @mousedown="onMouseDown"
     @touchstart.prevent="onTouchStart">
     <!-- 顶部：城市在左，关闭在右 -->
     <div class="weather-header">
       <div id="weather-location" class="weather-location">{{ weatherLocation }}</div>
-      <button id="closeWeatherBtn" @click="closeWidget">×</button>
+      <button id="closeWeatherBtn" type="button" aria-label="关闭天气组件" @mousedown.stop @touchstart.stop @click.stop="closeWidget">×</button>
     </div>
 
     <!-- 下部：天气（图标 + 温度 + 描述） -->
     <div class="weather-info">
-      <img id="weather-icon" class="weather-icon" :src="weatherIcon" alt="天气图标" />
+      <svg id="weather-icon" class="weather-icon" :class="[`weather-icon--${weatherIconKind}`, { 'is-heavy-weather': isHeavyWeather }]" viewBox="0 0 48 48" role="img" :aria-label="`${weatherDesc} ${weatherTemp}`" xmlns="http://www.w3.org/2000/svg">
+        <g v-if="weatherIconKind === 'sun' || weatherIconKind === 'partly'" class="weather-sun">
+          <circle cx="17" cy="17" r="6" fill="#FFC857" />
+          <path d="M17 3v4M17 27v4M3 17h4M27 17h4M7.1 7.1 10 10m14 14 2.9 2.9M26.9 7.1 24 10" stroke="#FFC857" stroke-width="2" stroke-linecap="round" />
+        </g>
+        <path v-if="['partly','cloud','drizzle','rain','snow','thunder','fog'].includes(weatherIconKind)" class="weather-cloud" d="M14.1 30.5h20.1a7 7 0 0 0 .4-14 10.5 10.5 0 0 0-20.2 2.1 6 6 0 0 0-.3 11.9Z" fill="#EAF5FF" stroke="#BBDDF7" stroke-width="1.4" stroke-linejoin="round" />
+        <g v-if="weatherIconKind === 'drizzle' || weatherIconKind === 'rain'" class="weather-rain" fill="none" stroke="#57C7F3" stroke-width="2.2" stroke-linecap="round">
+          <path class="rain-drop rain-drop--one" d="m17 35-2 4" /><path class="rain-drop rain-drop--two" d="m25 35-2 4" /><path class="rain-drop rain-drop--three" d="m33 35-2 4" />
+          <path v-if="weatherIconKind === 'rain'" class="rain-drop rain-drop--four" d="m21 41-2 4" /><path v-if="weatherIconKind === 'rain'" class="rain-drop rain-drop--five" d="m30 41-2 4" />
+        </g>
+        <g v-if="weatherIconKind === 'snow'" class="weather-snow" fill="#DDF6FF">
+          <circle class="snow-flake snow-flake--one" cx="16" cy="38" r="1.8" /><circle class="snow-flake snow-flake--two" cx="25" cy="41" r="1.8" /><circle class="snow-flake snow-flake--three" cx="34" cy="37" r="1.8" />
+        </g>
+        <path v-if="weatherIconKind === 'thunder'" class="weather-lightning" d="m25 31-7 10h6l-2 7 10-12h-7l3-5Z" fill="#FFD166" stroke="#F3B53F" stroke-width=".8" stroke-linejoin="round" />
+        <g v-if="weatherIconKind === 'fog'" class="weather-fog" fill="none" stroke="#C9D9E7" stroke-width="2" stroke-linecap="round">
+          <path d="M10 35h27M7 40h25" /><path d="M13 30h22" opacity=".6" />
+        </g>
+      </svg>
       <div class="weather-text">
         <div id="weather-temp" class="weather-temp">{{ weatherTemp }}</div>
         <div id="weather-desc" class="weather-desc">{{ weatherDesc }}</div>
@@ -45,6 +62,20 @@ export default {
     };
   },
   computed: {
+    weatherIconKind() {
+      const icon = String(this.weatherIcon || '')
+      if (icon.includes('26C8')) return 'thunder'
+      if (icon.includes('1F328')) return 'snow'
+      if (icon.includes('1F326')) return 'drizzle'
+      if (icon.includes('1F327')) return 'rain'
+      if (icon.includes('1f32b')) return 'fog'
+      if (icon.includes('26C5')) return 'partly'
+      if (icon.includes('2600')) return 'sun'
+      return 'cloud'
+    },
+    isHeavyWeather() {
+      return /大雨|暴雨|强阵雨|大雪|暴风雪|heavy|torrential|violent|blizzard/i.test(String(this.weatherDesc || ''))
+    },
     rootStyle() {
       const base = { position: 'absolute' }
       if (this.hasDragged) {
@@ -65,6 +96,13 @@ export default {
       this.loadWeather();
     };
     window.addEventListener("webwindows:language-changed", this.onLanguageChanged);
+    this.onWidgetVisibilityChanged = (event) => {
+      if (event.detail?.id === 'weatherTimeWidget') this.isVisible = Boolean(event.detail.visible)
+    }
+    this.$el.addEventListener('webwindows:desktop-widget-visibility', this.onWidgetVisibilityChanged)
+    const activeWorkspace = window.WebWindows?.workspaces?.getActiveWorkspace?.()
+    const savedWidget = activeWorkspace?.widgets?.find((widget) => widget.id === 'weatherTimeWidget')
+    if (savedWidget) this.isVisible = savedWidget.visible !== false
 
     // 初始化加载天气
     this.loadWeather();
@@ -78,6 +116,7 @@ export default {
     document.removeEventListener("mousemove", this.onMouseMove);
     document.removeEventListener("mouseup", this.onMouseUp);
     window.removeEventListener("webwindows:language-changed", this.onLanguageChanged);
+    this.$el.removeEventListener('webwindows:desktop-widget-visibility', this.onWidgetVisibilityChanged)
     clearInterval(this.refreshTimer);
   },
   methods: {
@@ -440,8 +479,13 @@ export default {
       return M[c] || o("Unknown", "未知", "不明", ICON.CLOUD);
     },
 
-    closeWidget() {      // ★ 新增：与旧逻辑等价
-      this.isVisible = false
+    closeWidget() {
+      const manager = window.WebWindows?.workspaces
+      if (manager?.setDesktopWidgetVisibility) {
+        manager.setDesktopWidgetVisibility('weatherTimeWidget', false)
+      } else {
+        this.isVisible = false
+      }
     },
   },
 };
@@ -491,10 +535,28 @@ export default {
 }
 
 .weather-icon {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  overflow: visible;
+}
+
+.weather-sun { transform-origin: 17px 17px; animation: weather-sun-turn 18s linear infinite; }
+.weather-cloud { transform-origin: center; animation: weather-cloud-drift 3.2s ease-in-out infinite alternate; }
+.weather-rain .rain-drop, .weather-snow .snow-flake { animation: weather-fall .9s ease-in-out infinite; }
+.weather-rain .rain-drop--two, .weather-snow .snow-flake--two { animation-delay: -.35s; }
+.weather-rain .rain-drop--three, .weather-rain .rain-drop--five, .weather-snow .snow-flake--three { animation-delay: -.65s; }
+.weather-lightning { transform-origin: center; animation: weather-flash 2.8s ease-in-out infinite; }
+.weather-fog path { animation: weather-fog-drift 3s ease-in-out infinite alternate; }
+.weather-fog path:nth-child(2) { animation-delay: -.8s; }
+.is-heavy-weather .weather-rain .rain-drop { animation-duration: .52s; }
+@keyframes weather-sun-turn { to { transform: rotate(360deg); } }
+@keyframes weather-cloud-drift { to { transform: translateX(1.5px); } }
+@keyframes weather-fall { 0%, 100% { opacity: .45; transform: translateY(-1px); } 55% { opacity: 1; transform: translateY(2px); } }
+@keyframes weather-flash { 0%, 42%, 48%, 100% { opacity: 1; } 45% { opacity: .35; } }
+@keyframes weather-fog-drift { to { transform: translateX(2px); opacity: .55; } }
+@media (prefers-reduced-motion: reduce) {
+  .weather-icon *, .weather-icon::before, .weather-icon::after { animation: none !important; }
 }
 
 /* 文本细节（按你喜好微调） */

@@ -872,3 +872,22 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     });
 })();
+
+// 桌面组件按工作空间保存显示状态；设置窗口始终提供恢复入口。
+window.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("weatherWidgetToggle");
+    if (!toggle) return;
+    const host = getDesktopHost();
+    const manager = host.WebWindows?.workspaces;
+    const widgetId = "weatherTimeWidget";
+    const sync = () => {
+        const widget = manager?.getActiveWorkspace?.()?.widgets?.find((item) => item.id === widgetId);
+        toggle.checked = widget?.visible !== false;
+        toggle.disabled = typeof manager?.setDesktopWidgetVisibility !== "function";
+    };
+    toggle.addEventListener("change", () => {
+        if (!manager?.setDesktopWidgetVisibility?.(widgetId, toggle.checked)) sync();
+    });
+    host.addEventListener("webwindows:workspace-changed", sync);
+    sync();
+});

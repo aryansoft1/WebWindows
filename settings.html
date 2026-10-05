@@ -8,14 +8,14 @@
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
     <script src="assets/js/cursor-theme-inline.js?v=1"></script>
     <script src="assets/js/cursor-themes.js?v=20260928-loading-pointer-2"></script>
-    <script defer src="assets/js/tw.js?v=20260927-cursor-preview-1"></script>
+    <script defer src="assets/js/tw.js?v=20261005-weather-widget-i18n-1"></script>
     <script defer src="assets/js/i18n-shell.js?v=20261003-iconmenu-1"></script>
     <script defer src="assets/js/device-storage-provider.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/device-api.js?v=20260809-storage-1"></script>
     <script defer src="assets/js/connectivity.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/network-speed.js?v=20260913-camera-network-2"></script>
-    <script defer="True" src="assets/js/settings.js?v=20261002-personalize-2"></script>
+    <script defer="True" src="assets/js/settings.js?v=20261005-weather-widget-visibility-1"></script>
 </head>
 <body>
     <div class="settings-ipad-layout">
@@ -79,6 +79,12 @@
                         <label class="settings-switch-row" for="windowEffectsToggle">
                             <span>窗口特效<span class="settings-help" style="margin:4px 0 0;">打开、关闭、最小化与最大化时的淡入缩放动画。默认开启，关闭后所有窗口动画立即停止。</span></span>
                             <input id="windowEffectsToggle" type="checkbox" class="settings-switch" checked>
+                        </label>
+                    </div>
+                    <div class="settings-card">
+                        <label class="settings-switch-row" for="weatherWidgetToggle">
+                            <span>天气组件<span class="settings-help" style="margin:4px 0 0;">控制当前工作空间天气卡片的显示；关闭后仍可在这里重新打开。</span></span>
+                            <input id="weatherWidgetToggle" type="checkbox" class="settings-switch" checked>
                         </label>
                     </div>
                     <div class="settings-card guide-entry-card">

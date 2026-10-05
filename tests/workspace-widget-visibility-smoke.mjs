@@ -11,6 +11,7 @@ globalThis.localStorage = {
 globalThis.CustomEvent = class CustomEvent {
   constructor(type, init = {}) { this.type = type; this.detail = init.detail }
 }
+globalThis.getComputedStyle = () => ({ visibility: 'visible', display: 'block' })
 globalThis.window = {
   innerWidth: 1200,
   innerHeight: 800,
@@ -59,11 +60,13 @@ assert.equal(widget['aria-hidden'], 'true')
 assert.equal(widgetEvents.at(-1).detail.visible, false)
 assert.equal(JSON.parse(storage.get(workspaceManager.storageKey)).workspaces[0].widgets[0].visible, false)
 
+workspaceManager.captureWorkspaceScene()
 assert.equal(workspaceManager.setDesktopWidgetVisibility('weatherTimeWidget', true), true)
 assert.equal(classes.has('ww-workspace-widget-hidden'), false)
 assert.equal(widget.inert, false)
 assert.equal(widget['aria-hidden'], 'false')
 assert.equal(widgetEvents.at(-1).detail.visible, true)
+assert.deepEqual(widgetEvents.at(-1).detail.geometry, { x: 20 / 1200, y: 30 / 800 })
 assert.ok(workspaceEvents.some((event) => event.type === workspaceManager.events.changed && event.detail.visible === false))
 assert.equal(workspaceManager.getActiveWorkspace().id, workspaceId)
 

@@ -262,7 +262,7 @@ function applyDesktopWidgets(workspaceId = state.activeWorkspaceId) {
     element.inert = !visible
     element.setAttribute('aria-hidden', visible ? 'false' : 'true')
     element.dispatchEvent(new CustomEvent('webwindows:desktop-widget-visibility', {
-      detail: { id, visible, workspaceId }
+      detail: { id, visible, workspaceId, geometry: widget?.geometry || null }
     }))
     if (widget?.geometry && element.style.setProperty) {
       element.style.setProperty('--ww-workspace-widget-x', `${Math.max(0, Math.min(1, widget.geometry.x)) * 100}%`)

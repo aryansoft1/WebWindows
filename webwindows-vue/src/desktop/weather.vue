@@ -97,18 +97,26 @@ export default {
     };
     window.addEventListener("webwindows:language-changed", this.onLanguageChanged);
     this.onWidgetVisibilityChanged = (event) => {
-      if (event.detail?.id === 'weatherTimeWidget') this.isVisible = Boolean(event.detail.visible)
+      if (event.detail?.id !== 'weatherTimeWidget') return
+      this.isVisible = Boolean(event.detail.visible)
+      this.restoreWidgetGeometry(event.detail.geometry)
     }
     this.$el.addEventListener('webwindows:desktop-widget-visibility', this.onWidgetVisibilityChanged)
     const activeWorkspace = window.WebWindows?.workspaces?.getActiveWorkspace?.()
     const savedWidget = activeWorkspace?.widgets?.find((widget) => widget.id === 'weatherTimeWidget')
-    if (savedWidget) this.isVisible = savedWidget.visible !== false
+    if (savedWidget) {
+      this.isVisible = savedWidget.visible !== false
+      this.restoreWidgetGeometry(savedWidget.geometry)
+    }
     else {
       try {
         const state = JSON.parse(localStorage.getItem('webwindows.workspaces.v1') || 'null')
         const workspace = state?.workspaces?.find((item) => item.id === state.activeWorkspaceId)
         const widget = workspace?.widgets?.find((item) => item.id === 'weatherTimeWidget')
-        if (widget) this.isVisible = widget.visible !== false
+        if (widget) {
+          this.isVisible = widget.visible !== false
+          this.restoreWidgetGeometry(widget.geometry)
+        }
       } catch (_) {}
     }
 
@@ -128,10 +136,18 @@ export default {
     clearInterval(this.refreshTimer);
   },
   methods: {
+    restoreWidgetGeometry(geometry) {
+      if (!geometry || !Number.isFinite(Number(geometry.x)) || !Number.isFinite(Number(geometry.y))) return
+      this.position.x = Math.max(0, Math.min(1, Number(geometry.x))) * (window.innerWidth || document.documentElement.clientWidth)
+      this.position.y = Math.max(0, Math.min(1, Number(geometry.y))) * (window.innerHeight || document.documentElement.clientHeight)
+      this.hasDragged = true
+    },
     onMouseDown(e) {
+      if (e.button !== 0) return
       this.isDragging = true;
-      this.dragOffset.x = e.offsetX;
-      this.dragOffset.y = e.offsetY;
+      const rect = this.$el.getBoundingClientRect()
+      this.dragOffset.x = e.clientX - rect.left
+      this.dragOffset.y = e.clientY - rect.top
     },
     onMouseMove(e) {
       if (!this.isDragging) return
@@ -144,13 +160,14 @@ export default {
     },
     onTouchStart(e) {
       const touch = e.touches[0];
-      this.touchOffset.x = touch.clientX - this.position.x;
-      this.touchOffset.y = touch.clientY - this.position.y;
+      const rect = this.$el.getBoundingClientRect()
+      this.touchOffset.x = touch.clientX - rect.left
+      this.touchOffset.y = touch.clientY - rect.top
 
       const onTouchMove = (e) => {
         const touch = e.touches[0];
-        this.position.x = touch.clientX - this.touchOffset.x;
-        this.position.y = touch.clientY - this.touchOffset.y;
+        this.position.x = touch.pageX - this.touchOffset.x;
+        this.position.y = touch.pageY - this.touchOffset.y;
         if (!this.hasDragged) this.hasDragged = true
         e.preventDefault(); // 禁止默认滚动
       };

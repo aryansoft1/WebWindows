@@ -237,6 +237,10 @@ async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
 
     const result = {};
 
+    // 元旦是固定法定节日。年度安排 API 可能尚未发布或尚未收录未来年份，仍应标记 1 月 1 日。
+    const newYearDate = `${year}-01-01`;
+    result[newYearDate] = { cnHoliday: true, cnName: '元旦' };
+
     // ✅ 遍历中国节假日，保留完整日期作为 key
     for (const date in cnHolidayMap) {
         const cn = cnHolidayMap[date];
@@ -287,6 +291,7 @@ async function getChinaHolidayMap(year) {
     if (!json.holiday || typeof json.holiday !== 'object' || Array.isArray(json.holiday)) {
         throw new Error('China holiday API returned an invalid response');
     }
+    if (Object.keys(json.holiday).length === 0) throw new Error(`No China holiday data published for ${year}`);
     const result = {};
     for (const k in json.holiday) {
         const item = json.holiday[k];

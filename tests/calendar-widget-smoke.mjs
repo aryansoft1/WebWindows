@@ -17,6 +17,10 @@ try {
   const page = await browser.newPage();
   await page.route("**/api/holiday/year/*", async (route) => {
     const year = new URL(route.request().url()).pathname.split("/").at(-1);
+    if (year === "2027") {
+      await route.fulfill({ status: 200, headers: { "access-control-allow-origin": "*" }, contentType: "application/json", body: JSON.stringify({ code: 0, holiday: {} }) });
+      return;
+    }
     if (year === "2028" && china2028Attempts++ === 0) {
       await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
       return;
@@ -75,6 +79,12 @@ try {
   await page.waitForFunction(() => document.querySelector("#calendar-today")?.textContent === "今日");
   assert.match(await page.locator(".calendar-legend").innerText(), /中国の祝日\s+現地の祝日/,
     "the legend also updates when the interface language changes while the calendar is open");
+  await page.locator("#calendar-month-picker").fill("2027-01");
+  await page.locator("#calendar-data-status:not([hidden])").waitFor();
+  const newYear = page.locator('#calendar-days [data-date="2027-01-01"]');
+  assert.equal(await newYear.locator(".holiday-marker--cn").count(), 1, "January 1 remains a China holiday when the API has no future-year schedule yet");
+  assert.equal(await newYear.locator(".holiday-marker--local").count(), 1, "a local holiday on the same date retains its separate color");
+  assert.match(await newYear.getAttribute("title"), /中国の祝日：元旦/, "the fallback still identifies China’s New Year’s Day");
   await page.locator("#calendar-month-picker").fill("2028-05");
   await page.locator("#calendar-data-status:not([hidden])").waitFor();
   assert.match(await page.locator("#calendar-data-status").innerText(), /取得できません/, "failed API data is reported in the active language");

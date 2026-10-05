@@ -66,9 +66,9 @@
     return Number.isNaN(date.getTime()) ? unavailable : date.toLocaleString(selectedLocale());
   }
   function runtimeLabel(adapter) {
-    if (adapter === "android") return "Android Host / WebView";
-    if (adapter && adapter !== "browser") return `WebWindows Host (${adapter})`;
-    return "Browser / WebWindows OS";
+    if (adapter === "android") return "Android 宿主 / WebView";
+    if (adapter && adapter !== "browser") return `WebWindows 宿主 (${adapter})`;
+    return "浏览器 / WebWindows OS";
   }
   function deviceType() {
     const ua = navigator.userAgent || "";
@@ -120,10 +120,10 @@
       const item = document.createElement("div"); item.className = `capability ${supported ? "supported" : "unsupported"}`;
       const sources = [...new Set(Object.values(entries || {}).map((entry) => entry?.source).filter((source) => source && source !== "unsupported"))];
       item.innerHTML = `<strong>${group}</strong><span>${supported ? "可用" : unavailable}</span><small></small>`;
-      item.querySelector("small").textContent = sources.join(" / ") || "unsupported";
+      item.querySelector("small").textContent = sources.join(" / ") || "不支持";
       root.appendChild(item);
     });
-    if (!root.childElementCount) root.textContent = "Device API 不可用";
+    if (!root.childElementCount) root.textContent = "设备接口不可用";
   }
 
   async function refreshDevice() {
@@ -140,7 +140,7 @@
     if (!device) { renderCapabilities(null); return; }
     try {
       const network = device.network?.getState?.();
-      setText("networkState", network ? `${network.online ? "在线" : "离线"} · ${network.kind || "unknown"}` : unavailable);
+      setText("networkState", network ? `${network.online ? "在线" : "离线"} · ${network.kind || "未知"}` : unavailable);
     } catch (_) { setText("networkState", unavailable); }
     try {
       await device.battery?.refresh?.();

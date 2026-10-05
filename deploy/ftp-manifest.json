@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.10.05.2",
+  "releaseVersion": "2026.10.06.1",
   "catalogVersion": "2026.10.05.1",
-  "generatedAt": "2026-10-05T05:40:59.919Z",
+  "generatedAt": "2026-10-05T17:36:56.285Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -342,9 +342,10 @@
     "bin/System.ValueTuple.dll",
     "bin/WebWindows.MailCenter.dll",
     "bin/ZstdSharp.dll",
-    "assets/js/i18n-shell.js"
+    "assets/js/i18n-shell.js",
+    "assets/js/sysinfo-i18n.js"
   ],
-  "previousReleaseVersion": "2026.10.05.1",
+  "previousReleaseVersion": "2026.10.05.2",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -707,8 +708,8 @@
       "size": 6359
     },
     "assets/js/sysinfo.js": {
-      "sha256": "1f4c66c6835ccfac78e4cc298747f9759dcd67574750d5b8ac7a9bd3cf71b903",
-      "size": 12768
+      "sha256": "c9069ae0909b09da3e1bbc8e7e241b5473db9eeeffbeb1197119f9b9aa3e800e",
+      "size": 12772
     },
     "assets/js/system-session.js": {
       "sha256": "0683b18cd513f3ff74697a11f61bb823ab2e73a9808e8bfb03bffacb9f2382a8",
@@ -1027,8 +1028,8 @@
       "size": 2908
     },
     "sysinfo.html": {
-      "sha256": "883d11d823c1e9985bd4462139aaf2e43534bbbe8cacc1f632183a4fed788aee",
-      "size": 4883
+      "sha256": "e4ac792e86e816d9e956fb50fe4db3f28de09f2c3777936ac2d7c82b509bd2e3",
+      "size": 4957
     },
     "SystemManager/assets/css/admin.css": {
       "sha256": "35d03df5b6096af50693ac711ea048dc6e4a5d4f235f261d22c08ad108dde196",
@@ -1688,12 +1689,17 @@
     "assets/js/i18n-shell.js": {
       "sha256": "97c0f74b526843a88ab987ef473047b1be67dcb4e24d252afe6ef5ff57c738ab",
       "size": 41231
+    },
+    "assets/js/sysinfo-i18n.js": {
+      "sha256": "243f3024ca63202c1a6747bef28e7f3b2ac5295977d45151812aee001586f405",
+      "size": 11959
     }
   },
-  "releaseScope": "workspace-menu-i18n",
+  "releaseScope": "sysinfo-i18n",
   "uploadFiles": [
-    "assets/js/i18n-shell.js",
-    "index.html",
+    "sysinfo.html",
+    "assets/js/sysinfo.js",
+    "assets/js/sysinfo-i18n.js",
     "deploy/ftp-manifest.json"
   ]
 }

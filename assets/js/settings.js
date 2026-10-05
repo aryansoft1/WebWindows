@@ -878,15 +878,54 @@ window.addEventListener("DOMContentLoaded", () => {
     const toggle = document.getElementById("weatherWidgetToggle");
     if (!toggle) return;
     const host = getDesktopHost();
-    const manager = host.WebWindows?.workspaces;
     const widgetId = "weatherTimeWidget";
+    const manager = () => host.WebWindows?.workspaces;
+    const readSavedVisibility = () => {
+        try {
+            const state = JSON.parse(host.localStorage.getItem("webwindows.workspaces.v1") || "null");
+            const activeId = state?.activeWorkspaceId;
+            const workspace = state?.workspaces?.find((item) => item.id === activeId);
+            return workspace?.widgets?.find((item) => item.id === widgetId)?.visible !== false;
+        } catch (_) {
+            return true;
+        }
+    };
+    const applyVisibilityFallback = (visible) => {
+        try {
+            const state = JSON.parse(host.localStorage.getItem("webwindows.workspaces.v1") || "null");
+            const workspace = state?.workspaces?.find((item) => item.id === state.activeWorkspaceId);
+            if (workspace) {
+                workspace.widgets ||= [];
+                const widget = workspace.widgets.find((item) => item.id === widgetId);
+                if (widget) widget.visible = visible;
+                else workspace.widgets.push({ id: widgetId, visible });
+                workspace.updatedAt = new Date().toISOString();
+                host.localStorage.setItem("webwindows.workspaces.v1", JSON.stringify(state));
+            }
+        } catch (_) {}
+        const element = host.document?.getElementById(widgetId);
+        if (element) {
+            element.classList.toggle("ww-workspace-widget-hidden", !visible);
+            element.inert = !visible;
+            element.setAttribute("aria-hidden", visible ? "false" : "true");
+            element.dispatchEvent(new host.CustomEvent("webwindows:desktop-widget-visibility", {
+                detail: { id: widgetId, visible, workspaceId: manager()?.getActiveWorkspace?.()?.id }
+            }));
+        }
+    };
     const sync = () => {
-        const widget = manager?.getActiveWorkspace?.()?.widgets?.find((item) => item.id === widgetId);
-        toggle.checked = widget?.visible !== false;
-        toggle.disabled = typeof manager?.setDesktopWidgetVisibility !== "function";
+        const activeManager = manager();
+        const widget = activeManager?.getActiveWorkspace?.()?.widgets?.find((item) => item.id === widgetId);
+        toggle.checked = widget ? widget.visible !== false : readSavedVisibility();
+        // Keep the control operable even while the workspace bundle initializes.
+        toggle.disabled = false;
     };
     toggle.addEventListener("change", () => {
-        if (!manager?.setDesktopWidgetVisibility?.(widgetId, toggle.checked)) sync();
+        const activeManager = manager();
+        if (!activeManager?.setDesktopWidgetVisibility?.(widgetId, toggle.checked)) {
+            applyVisibilityFallback(toggle.checked);
+        }
+        sync();
     });
     host.addEventListener("webwindows:workspace-changed", sync);
     sync();

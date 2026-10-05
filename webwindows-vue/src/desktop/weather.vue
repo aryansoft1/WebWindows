@@ -103,6 +103,14 @@ export default {
     const activeWorkspace = window.WebWindows?.workspaces?.getActiveWorkspace?.()
     const savedWidget = activeWorkspace?.widgets?.find((widget) => widget.id === 'weatherTimeWidget')
     if (savedWidget) this.isVisible = savedWidget.visible !== false
+    else {
+      try {
+        const state = JSON.parse(localStorage.getItem('webwindows.workspaces.v1') || 'null')
+        const workspace = state?.workspaces?.find((item) => item.id === state.activeWorkspaceId)
+        const widget = workspace?.widgets?.find((item) => item.id === 'weatherTimeWidget')
+        if (widget) this.isVisible = widget.visible !== false
+      } catch (_) {}
+    }
 
     // 初始化加载天气
     this.loadWeather();
@@ -480,12 +488,22 @@ export default {
     },
 
     closeWidget() {
+      this.isVisible = false
       const manager = window.WebWindows?.workspaces
-      if (manager?.setDesktopWidgetVisibility) {
-        manager.setDesktopWidgetVisibility('weatherTimeWidget', false)
-      } else {
-        this.isVisible = false
-      }
+      if (manager?.setDesktopWidgetVisibility?.('weatherTimeWidget', false)) return
+      // The close button remains usable if the workspace bundle failed to expose its API.
+      try {
+        const state = JSON.parse(localStorage.getItem('webwindows.workspaces.v1') || 'null')
+        const workspace = state?.workspaces?.find((item) => item.id === state.activeWorkspaceId)
+        if (workspace) {
+          workspace.widgets ||= []
+          const widget = workspace.widgets.find((item) => item.id === 'weatherTimeWidget')
+          if (widget) widget.visible = false
+          else workspace.widgets.push({ id: 'weatherTimeWidget', visible: false })
+          workspace.updatedAt = new Date().toISOString()
+          localStorage.setItem('webwindows.workspaces.v1', JSON.stringify(state))
+        }
+      } catch (_) {}
     },
   },
 };

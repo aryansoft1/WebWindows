@@ -228,10 +228,12 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
 async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
-    const [cnHolidayMap, localHolidayMap] = await Promise.all([
-        getChinaHolidayMap(year).catch(() => ({})),
-        getLocalHolidayMap(year, userCountryCode).catch(() => ({}))
+    const [cnResult, localResult] = await Promise.allSettled([
+        holidaySourceFor(`cn:${year}`, () => getChinaHolidayMap(year)),
+        holidaySourceFor(`local:${year}:${userCountryCode}`, () => getLocalHolidayMap(year, userCountryCode))
     ]);
+    const cnHolidayMap = cnResult.status === 'fulfilled' ? cnResult.value : {};
+    const localHolidayMap = localResult.status === 'fulfilled' ? localResult.value : {};
 
     const result = {};
 
@@ -269,31 +271,34 @@ async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
         }
     }
 
-    return result;
+    return {
+        holidays: result,
+        unavailable: [
+            ...(cnResult.status === 'rejected' ? ['cn'] : []),
+            ...(localResult.status === 'rejected' ? ['local'] : [])
+        ]
+    };
 }
 async function getChinaHolidayMap(year) {
-    try {
-        const res = await fetch(`https://timor.tech/api/holiday/year/${year}`);
-        const json = await res.json();
-        const raw = json.holiday || {};
-
-        const result = {};
-        for (const k in raw) {
-            const item = raw[k];
-            result[item.date] = {   // ✅ 使用完整 date 作为 key
-                name: item.name,
-                holiday: item.holiday
-            };
-        }
-        return result;
-    } catch (e) {
-        console.warn("获取中国节假日失败", e);
-        return {};
+    const res = await fetch(`https://timor.tech/api/holiday/year/${year}`);
+    if (!res.ok) throw new Error(`China holiday API returned ${res.status}`);
+    const json = await res.json();
+    if (json.code !== undefined && Number(json.code) !== 0) throw new Error(json.msg || 'China holiday API rejected the year');
+    if (!json.holiday || typeof json.holiday !== 'object' || Array.isArray(json.holiday)) {
+        throw new Error('China holiday API returned an invalid response');
     }
+    const result = {};
+    for (const k in json.holiday) {
+        const item = json.holiday[k];
+        if (item?.date) result[item.date] = { name: item.name, holiday: item.holiday };
+    }
+    return result;
 }
 async function getLocalHolidayMap(year, countryCode) {
     const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`);
+    if (!res.ok) throw new Error(`Local holiday API returned ${res.status}`);
     const list = await res.json();
+    if (!Array.isArray(list)) throw new Error('Local holiday API returned an invalid response');
     const map = {};
     list.forEach(item => {
         map[item.date] = {
@@ -309,6 +314,17 @@ let calendarSelectedDate = new Date(calendarDate.getTime());
 const calendarHolidayCache = new Map();
 let calendarBuildToken = 0;
 
+function holidaySourceFor(key, load) {
+    if (!calendarHolidayCache.has(key)) {
+        const request = load().catch((error) => {
+            calendarHolidayCache.delete(key);
+            throw error;
+        });
+        calendarHolidayCache.set(key, request);
+    }
+    return calendarHolidayCache.get(key);
+}
+
 function calendarDateKey(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
@@ -318,7 +334,11 @@ function calendarText(text) {
     const translations = {
         '今天': { tw: '今天', en: 'Today', jp: '今日' },
         '中国节日': { tw: '中國節日', en: 'China holiday', jp: '中国の祝日' },
-        '本地节日': { tw: '本地節日', en: 'Local holiday', jp: '現地の祝日' }
+        '本地节日': { tw: '本地節日', en: 'Local holiday', jp: '現地の祝日' },
+        '选择年月': { tw: '選擇年月', en: 'Choose month and year', jp: '年月を選択' },
+        '正在确认节假日…': { tw: '正在確認節假日…', en: 'Checking holidays…', jp: '祝日を確認中…' },
+        '部分节假日数据暂不可用': { tw: '部分節假日資料暫不可用', en: 'Some holiday data is unavailable', jp: '一部の祝日データを取得できません' },
+        '重试': { tw: '重試', en: 'Retry', jp: '再試行' }
     };
     return translations[text]?.[language] || window.WebWindowsI18n?.translate?.(text) || text;
 }
@@ -335,12 +355,29 @@ function ensureCalendarStructure() {
         button.type = 'button';
         header.insertBefore(button, document.getElementById('next-month'));
     }
+    if (!document.getElementById('calendar-month-picker')) {
+        const picker = document.createElement('input');
+        picker.id = 'calendar-month-picker';
+        picker.type = 'month';
+        picker.setAttribute('aria-label', calendarText('选择年月'));
+        const oldHeader = document.getElementById('calendar-header');
+        if (oldHeader) header.replaceChild(picker, oldHeader);
+    }
     if (!document.getElementById('calendar-weekdays')) {
         const weekdays = document.createElement('div');
         weekdays.id = 'calendar-weekdays';
         weekdays.className = 'weekdays-header';
         weekdays.setAttribute('aria-hidden', 'true');
         popup.insertBefore(weekdays, days);
+    }
+    if (!document.getElementById('calendar-data-status')) {
+        const status = document.createElement('div');
+        status.id = 'calendar-data-status';
+        status.className = 'calendar-data-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.hidden = true;
+        popup.appendChild(status);
     }
     if (!popup.querySelector('.calendar-legend')) {
         const legend = document.createElement('div');
@@ -360,11 +397,7 @@ function ensureCalendarStructure() {
 ensureCalendarStructure();
 
 function holidayMapFor(year, countryCode) {
-    const key = `${year}:${countryCode}`;
-    if (!calendarHolidayCache.has(key)) {
-        calendarHolidayCache.set(key, getCombinedHolidayMap(year, countryCode).catch(() => ({})));
-    }
-    return calendarHolidayCache.get(key);
+    return getCombinedHolidayMap(year, countryCode);
 }
 
 function decorateCalendarDay(el, currentDate, info) {
@@ -414,10 +447,11 @@ async function buildCalendar(date) {
     const daysEl = document.getElementById('calendar-days');
     const weekdaysEl = document.getElementById('calendar-weekdays');
     const todayButton = document.getElementById('calendar-today');
+    const monthPicker = document.getElementById('calendar-month-picker');
+    const status = document.getElementById('calendar-data-status');
 
-    const headerEl = document.getElementById('calendar-header');
     daysEl.innerHTML = '';
-    headerEl.textContent = year + '/' + String(month + 1).padStart(2, '0');
+    if (monthPicker) monthPicker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
     if (weekdaysEl) {
         weekdaysEl.replaceChildren();
         for (let day = 0; day < 7; day++) {
@@ -468,12 +502,33 @@ async function buildCalendar(date) {
     }
 
     // 月历骨架先同步呈现；节假日数据随后异步补充，不阻塞弹窗。
-    const holidayMap = await holidayMapFor(year, region.code);
+    if (status) {
+        status.replaceChildren();
+        status.textContent = calendarText('正在确认节假日…');
+        status.hidden = false;
+    }
+    const holidayResult = await holidayMapFor(year, region.code);
     if (token !== calendarBuildToken) return;
     daysEl.querySelectorAll('.day[data-date]').forEach((el) => {
         const parts = el.dataset.date.split('-').map(Number);
-        decorateCalendarDay(el, new Date(parts[0], parts[1] - 1, parts[2]), holidayMap[el.dataset.date]);
+        decorateCalendarDay(el, new Date(parts[0], parts[1] - 1, parts[2]), holidayResult.holidays[el.dataset.date]);
     });
+    if (status) {
+        status.replaceChildren();
+        if (holidayResult.unavailable.length) {
+            const label = holidayResult.unavailable.map((source) => calendarText(source === 'cn' ? '中国节日' : '本地节日')).join('、');
+            status.append(document.createTextNode(`${calendarText('部分节假日数据暂不可用')}：${label}。`));
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'calendar-retry';
+            retry.textContent = calendarText('重试');
+            retry.addEventListener('click', () => buildCalendar(calendarDate));
+            status.appendChild(retry);
+            status.hidden = false;
+        } else {
+            status.hidden = true;
+        }
+    }
 }
 document.getElementById('taskbar-datetime')?.addEventListener('click', () => {
     const popup = document.getElementById('calendar-popup');
@@ -483,6 +538,12 @@ document.getElementById('taskbar-datetime')?.addEventListener('click', () => {
 });
 document.getElementById('prev-month')?.addEventListener('click', () => {
     calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
+    buildCalendar(calendarDate);
+});
+document.getElementById('calendar-month-picker')?.addEventListener('change', (event) => {
+    const match = /^(\d{4})-(\d{2})$/.exec(event.currentTarget.value);
+    if (!match) return;
+    calendarDate = new Date(Number(match[1]), Number(match[2]) - 1, 1);
     buildCalendar(calendarDate);
 });
 document.getElementById('next-month')?.addEventListener('click', () => {
@@ -498,7 +559,9 @@ document.getElementById('calendar-today')?.addEventListener('click', () => {
 window.addEventListener('webwindows:language-changed', () => {
     const popup = document.getElementById('calendar-popup');
     const todayButton = document.getElementById('calendar-today');
+    const monthPicker = document.getElementById('calendar-month-picker');
     if (todayButton) todayButton.textContent = calendarText('今天');
+    if (monthPicker) monthPicker.setAttribute('aria-label', calendarText('选择年月'));
     const legend = popup?.querySelector('.calendar-legend');
     if (legend) [...legend.children].forEach((item, index) => {
         const label = index === 0 ? '中国节日' : '本地节日';

@@ -5,6 +5,7 @@ import { chromium } from "@playwright/test";
 const port = 4189;
 const server = spawn(process.execPath, ["tools/static-server.mjs", String(port)], { stdio: "ignore" });
 let browser;
+let china2028Attempts = 0;
 try {
   for (let attempt = 0; attempt < 20; attempt++) {
     try {
@@ -16,6 +17,10 @@ try {
   const page = await browser.newPage();
   await page.route("**/api/holiday/year/*", async (route) => {
     const year = new URL(route.request().url()).pathname.split("/").at(-1);
+    if (year === "2028" && china2028Attempts++ === 0) {
+      await route.fulfill({ status: 503, contentType: "application/json", body: "{}" });
+      return;
+    }
     const holiday = Object.fromEntries(Array.from({ length: 12 }, (_, index) => {
       const month = String(index + 1).padStart(2, "0");
       return [`${year}-${month}-01`, { date: `${year}-${month}-01`, name: "China Test", holiday: true }];
@@ -58,9 +63,9 @@ try {
   const blankBackground = await page.locator("#calendar-days .day-empty").first().evaluate((el) => getComputedStyle(el).backgroundColor);
   assert.equal(blankBackground, "rgba(0, 0, 0, 0)", "empty calendar cells do not look like dates");
   await page.locator("#next-month").click();
-  assert.equal(await page.locator("#calendar-header").innerText(), "2026/02", "advancing from January 31 lands in February");
+  assert.equal(await page.locator("#calendar-month-picker").inputValue(), "2026-02", "advancing from January 31 lands in February");
   await page.locator("#calendar-today").click();
-  assert.equal(await page.locator("#calendar-header").innerText(), "2026/01", "today returns to the current month");
+  assert.equal(await page.locator("#calendar-month-picker").inputValue(), "2026-01", "today returns to the current month");
   const today = page.locator('#calendar-days [data-date="2026-01-31"]');
   assert.equal(await today.evaluate((el) => el.classList.contains("today")), true, "today receives an independent outline state");
   await page.locator('#calendar-days [data-date="2026-01-29"]').click();
@@ -70,6 +75,13 @@ try {
   await page.waitForFunction(() => document.querySelector("#calendar-today")?.textContent === "今日");
   assert.match(await page.locator(".calendar-legend").innerText(), /中国の祝日\s+現地の祝日/,
     "the legend also updates when the interface language changes while the calendar is open");
+  await page.locator("#calendar-month-picker").fill("2028-05");
+  await page.locator("#calendar-data-status:not([hidden])").waitFor();
+  assert.match(await page.locator("#calendar-data-status").innerText(), /取得できません/, "failed API data is reported in the active language");
+  assert.equal(await page.locator("#calendar-month-picker").inputValue(), "2028-05", "month picker jumps directly to another year");
+  await page.locator(".calendar-retry").click();
+  await page.waitForFunction(() => document.querySelector("#calendar-data-status")?.hidden === true);
+  assert.equal(china2028Attempts, 2, "failed API responses are not cached and can be retried");
   console.log("calendar widget smoke test passed");
 } finally {
   await browser?.close();

@@ -310,6 +310,27 @@ html[data-ww-taskbar-icons="large"] .taskbar-app > span {
         font-size: 16px;
     }
 
+    #calendar-popup #calendar-month-picker {
+        width: 100%;
+        min-width: 0;
+        padding: 3px 5px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: white;
+        font: inherit;
+        font-size: 15px;
+        font-weight: 650;
+        color-scheme: dark;
+    }
+
+    #calendar-popup #calendar-month-picker:hover,
+    #calendar-popup #calendar-month-picker:focus-visible {
+        border-color: rgba(255,255,255,.2);
+        outline: none;
+        background: rgba(255,255,255,.08);
+    }
+
     #calendar-popup .weekdays-header,
     #calendar-popup .days {
     display: grid;
@@ -415,6 +436,25 @@ html[data-ww-taskbar-icons="large"] .taskbar-app > span {
     display: inline-flex;
     align-items: center;
     gap: 5px;
+}
+
+#calendar-popup .calendar-data-status {
+    margin-top: 8px;
+    color: #c5d1df;
+    font-size: 11px;
+    line-height: 1.45;
+}
+
+#calendar-popup .calendar-data-status[hidden] {
+    display: none;
+}
+
+#calendar-popup .calendar-retry {
+    margin-left: 6px;
+    padding: 2px 6px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 5px;
+    font-size: 11px;
 }
 
 

@@ -305,8 +305,59 @@ async function getLocalHolidayMap(year, countryCode) {
 }
 
 let calendarDate = dateInTimeZone();
+let calendarSelectedDate = new Date(calendarDate.getTime());
 const calendarHolidayCache = new Map();
 let calendarBuildToken = 0;
+
+function calendarDateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function calendarText(text) {
+    const language = window.WebWindowsI18n?.getLanguage?.() || 'zh';
+    const translations = {
+        '今天': { tw: '今天', en: 'Today', jp: '今日' },
+        '中国节日': { tw: '中國節日', en: 'China holiday', jp: '中国の祝日' },
+        '本地节日': { tw: '本地節日', en: 'Local holiday', jp: '現地の祝日' }
+    };
+    return translations[text]?.[language] || window.WebWindowsI18n?.translate?.(text) || text;
+}
+
+function ensureCalendarStructure() {
+    const popup = document.getElementById('calendar-popup');
+    const header = popup?.querySelector('header');
+    const days = document.getElementById('calendar-days');
+    if (!popup || !header || !days) return;
+
+    if (!document.getElementById('calendar-today')) {
+        const button = document.createElement('button');
+        button.id = 'calendar-today';
+        button.type = 'button';
+        header.insertBefore(button, document.getElementById('next-month'));
+    }
+    if (!document.getElementById('calendar-weekdays')) {
+        const weekdays = document.createElement('div');
+        weekdays.id = 'calendar-weekdays';
+        weekdays.className = 'weekdays-header';
+        weekdays.setAttribute('aria-hidden', 'true');
+        popup.insertBefore(weekdays, days);
+    }
+    if (!popup.querySelector('.calendar-legend')) {
+        const legend = document.createElement('div');
+        legend.className = 'calendar-legend';
+        for (const [kind, label] of [['cn', '中国节日'], ['local', '本地节日']]) {
+            const item = document.createElement('span');
+            const marker = document.createElement('i');
+            marker.className = `holiday-marker holiday-marker--${kind}`;
+            marker.setAttribute('aria-hidden', 'true');
+            item.append(marker, document.createTextNode(calendarText(label)));
+            legend.appendChild(item);
+        }
+        popup.appendChild(legend);
+    }
+}
+
+ensureCalendarStructure();
 
 function holidayMapFor(year, countryCode) {
     const key = `${year}:${countryCode}`;
@@ -317,26 +368,41 @@ function holidayMapFor(year, countryCode) {
 }
 
 function decorateCalendarDay(el, currentDate, info) {
-    if (!info) return;
     const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-    const localHoliday = info.holiday;
-    const cnHoliday = info.cnHoliday;
-    if (localHoliday && cnHoliday) {
-        el.style.color = '#ff4d4f';
-        el.title = `${info.name}  中国节：${info.cnName}`;
-    } else if (isWeekend && cnHoliday && !localHoliday) {
-        el.style.color = '#69c0ff';
-        el.title = `中国节：${info.cnName}`;
-    } else if (!localHoliday && cnHoliday) {
-        el.style.color = '#69c0ff';
-        el.title = `中国节：${info.cnName}`;
-    } else if (localHoliday) {
-        el.style.color = '#ff4d4f';
-        el.title = info.name;
-    } else if (isWeekend) {
-        el.style.color = '#ffc107';
-        el.title = info.cnName || '';
+    const localHoliday = Boolean(info?.holiday);
+    const cnHoliday = Boolean(info?.cnHoliday);
+    el.classList.toggle('weekend', isWeekend);
+    el.classList.toggle('holiday-cn', cnHoliday && !localHoliday);
+    el.classList.toggle('holiday-local', localHoliday && !cnHoliday);
+    el.classList.toggle('holiday-both', localHoliday && cnHoliday);
+    el.setAttribute('aria-pressed', String(calendarDateKey(currentDate) === calendarDateKey(calendarSelectedDate)));
+    if (calendarDateKey(currentDate) === calendarDateKey(calendarSelectedDate)) el.classList.add('selected');
+    else el.classList.remove('selected');
+
+    const markers = el.querySelector('.holiday-markers');
+    if (markers) {
+        markers.replaceChildren();
+        if (cnHoliday) {
+            const marker = document.createElement('span');
+            marker.className = 'holiday-marker holiday-marker--cn';
+            marker.setAttribute('aria-hidden', 'true');
+            markers.appendChild(marker);
+        }
+        if (localHoliday) {
+            const marker = document.createElement('span');
+            marker.className = 'holiday-marker holiday-marker--local';
+            marker.setAttribute('aria-hidden', 'true');
+            markers.appendChild(marker);
+        }
     }
+
+    const holidayNames = [];
+    if (cnHoliday && info.cnName) holidayNames.push(`${calendarText('中国节日')}：${info.cnName}`);
+    if (localHoliday && info.name) holidayNames.push(`${calendarText('本地节日')}：${info.name}`);
+    if (holidayNames.length) el.title = holidayNames.join(' / ');
+    else el.removeAttribute('title');
+    const dateLabel = new Intl.DateTimeFormat(window.WebWindowsI18n?.getLocale?.() || undefined, { dateStyle: 'full' }).format(currentDate);
+    el.setAttribute('aria-label', holidayNames.length ? `${dateLabel}，${holidayNames.join('，')}` : dateLabel);
 }
 
 async function buildCalendar(date) {
@@ -346,38 +412,58 @@ async function buildCalendar(date) {
     const region = getWebWindowsRegion();
     const today = dateInTimeZone(new Date(), region);
     const daysEl = document.getElementById('calendar-days');
+    const weekdaysEl = document.getElementById('calendar-weekdays');
+    const todayButton = document.getElementById('calendar-today');
 
     const headerEl = document.getElementById('calendar-header');
     daysEl.innerHTML = '';
     headerEl.textContent = year + '/' + String(month + 1).padStart(2, '0');
+    if (weekdaysEl) {
+        weekdaysEl.replaceChildren();
+        for (let day = 0; day < 7; day++) {
+            const label = document.createElement('span');
+            label.textContent = new Date(2023, 0, 1 + day).toLocaleDateString(region.locale, { weekday: 'short' });
+            weekdaysEl.appendChild(label);
+        }
+    }
+    if (todayButton) todayButton.textContent = calendarText('今天');
 
     const firstDay = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) {
         const blank = document.createElement('div');
-        blank.className = 'day';
-        blank.textContent = '';
+        blank.className = 'day day-empty';
+        blank.setAttribute('aria-hidden', 'true');
         daysEl.appendChild(blank);
     }
     for (let d = 1; d <= totalDays; d++) {
-        const el = document.createElement('div');
+        const el = document.createElement('button');
+        el.type = 'button';
         el.className = 'day';
-
         const currentDate = new Date(year, month, d);
-        const weekday = currentDate.toLocaleDateString(region.locale, { weekday: 'short' });
-
-        el.innerHTML = `
-        <div style="font-weight:bold;">${d}</div>
-        <div class="weekday-label">${weekday}</div>
-    `;
-        const dateStr = `${String(year)}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        el.textContent = String(d);
+        const markers = document.createElement('span');
+        markers.className = 'holiday-markers';
+        markers.setAttribute('aria-hidden', 'true');
+        el.appendChild(markers);
+        const dateStr = calendarDateKey(currentDate);
         el.dataset.date = dateStr;
         if (
             d === today.getDate() &&
             month === today.getMonth() &&
             year === today.getFullYear()
         ) el.classList.add('today');
+        if (dateStr === calendarDateKey(calendarSelectedDate)) el.classList.add('selected');
+        el.setAttribute('aria-pressed', String(dateStr === calendarDateKey(calendarSelectedDate)));
+        el.addEventListener('click', () => {
+            calendarSelectedDate = new Date(year, month, d);
+            daysEl.querySelectorAll('.day[data-date]').forEach((dayElement) => {
+                const selected = dayElement.dataset.date === dateStr;
+                dayElement.classList.toggle('selected', selected);
+                dayElement.setAttribute('aria-pressed', String(selected));
+            });
+        });
         daysEl.appendChild(el);
     }
 
@@ -396,12 +482,29 @@ document.getElementById('taskbar-datetime')?.addEventListener('click', () => {
     if (!isVisible) buildCalendar(calendarDate);
 });
 document.getElementById('prev-month')?.addEventListener('click', () => {
-    calendarDate.setMonth(calendarDate.getMonth() - 1);
+    calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
     buildCalendar(calendarDate);
 });
 document.getElementById('next-month')?.addEventListener('click', () => {
-    calendarDate.setMonth(calendarDate.getMonth() + 1);
+    calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
     buildCalendar(calendarDate);
+});
+document.getElementById('calendar-today')?.addEventListener('click', () => {
+    calendarDate = dateInTimeZone();
+    calendarSelectedDate = new Date(calendarDate.getTime());
+    buildCalendar(calendarDate);
+});
+
+window.addEventListener('webwindows:language-changed', () => {
+    const popup = document.getElementById('calendar-popup');
+    const todayButton = document.getElementById('calendar-today');
+    if (todayButton) todayButton.textContent = calendarText('今天');
+    const legend = popup?.querySelector('.calendar-legend');
+    if (legend) [...legend.children].forEach((item, index) => {
+        const label = index === 0 ? '中国节日' : '本地节日';
+        item.lastChild.textContent = calendarText(label);
+    });
+    if (popup?.style.display === 'block') buildCalendar(calendarDate);
 });
 
 

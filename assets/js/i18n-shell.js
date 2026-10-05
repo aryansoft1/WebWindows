@@ -18,6 +18,9 @@
     Object.assign(catalog.tw, SHELL_TW);
     Object.assign(catalog.en, SHELL_EN);
     Object.assign(catalog.jp, SHELL_JP);
+    Object.assign(catalog.tw, { "移动到工作空间": "移至工作空間" });
+    Object.assign(catalog.en, { "移动到工作空间": "Move to workspace" });
+    Object.assign(catalog.jp, { "移动到工作空间": "ワークスペースに移動" });
     return true;
   }
 

@@ -5,6 +5,7 @@
     <title>设置</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="assets/css/settings.css?v=20261002-personalize-1" />
+    <link rel="stylesheet" href="assets/css/disaster-alerts.css?v=20261006-alerts-3" />
     <script src="assets/js/locale-region.js?v=20260819-language-source-1"></script>
     <script src="assets/js/cursor-theme-inline.js?v=1"></script>
     <script src="assets/js/cursor-themes.js?v=20260928-loading-pointer-2"></script>
@@ -16,6 +17,7 @@
     <script defer src="assets/js/device-controls.js?v=20260808-device-api-1"></script>
     <script defer src="assets/js/network-speed.js?v=20260913-camera-network-2"></script>
     <script defer="True" src="assets/js/settings.js?v=20261005-weather-widget-visibility-2"></script>
+    <script defer src="assets/js/disaster-alerts.js?v=20261006-alerts-3"></script>
 </head>
 <body>
     <div class="settings-ipad-layout">
@@ -87,6 +89,22 @@
                             <input id="weatherWidgetToggle" type="checkbox" class="settings-switch" checked>
                         </label>
                     </div>
+                    <section class="settings-card ww-disaster-preferences" aria-labelledby="disasterAlertHeading">
+                        <h4 id="disasterAlertHeading">防灾提醒</h4>
+                        <label class="settings-switch-row" for="disasterAlertsToggle">
+                            <span>显示灾害提醒<span class="settings-help">显示所选地区的全球重大灾害风险信息。数据来自 GDACS，不替代当地政府警报。</span></span>
+                            <input id="disasterAlertsToggle" type="checkbox" class="settings-switch" checked>
+                        </label>
+                        <label class="settings-switch-row" for="disasterAlertSoundToggle">
+                            <span>播放高等级提醒音<span class="settings-help">仅在页面打开且收到红色等级事件时播放短提示音。默认关闭；浏览器可能要求先与页面交互。</span></span>
+                            <input id="disasterAlertSoundToggle" type="checkbox" class="settings-switch">
+                        </label>
+                        <div class="ww-disaster-settings-actions">
+                            <button type="button" id="disasterAlertSoundPreview">试听提示音</button>
+                            <span id="disasterAlertSourceStatus" role="status">全球灾害信息源：GDACS</span>
+                        </div>
+                        <p id="disasterAlertLimitations" class="settings-help">此功能目前仅在 WebWindows 页面运行时检查全球重大事件；紧急避险请以当地政府和手机官方警报为准。</p>
+                    </section>
                     <div class="settings-card guide-entry-card">
                         <div>
                             <strong>桌面壁纸</strong>

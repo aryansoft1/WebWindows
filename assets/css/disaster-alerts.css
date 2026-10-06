@@ -1,0 +1,54 @@
+#ww-disaster-alerts {
+  position: fixed;
+  z-index: 2147483000;
+  top: max(18px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 28px));
+  display: grid;
+  gap: 10px;
+  pointer-events: none;
+  font: 13px/1.5 system-ui, "Segoe UI", sans-serif;
+}
+.ww-disaster-alert {
+  pointer-events: auto;
+  color: #f8fafc;
+  background: linear-gradient(145deg, rgba(12, 29, 51, .97), rgba(20, 42, 67, .96));
+  border: 1px solid rgba(210,230,255,.16);
+  border-left: 3px solid #f59e0b;
+  border-radius: 15px;
+  box-shadow: 0 12px 34px rgba(0,0,0,.28), 0 2px 8px rgba(0,0,0,.16), inset 0 1px rgba(255,255,255,.06);
+  padding: 12px 13px 10px;
+  backdrop-filter: blur(18px) saturate(135%);
+  animation: ww-disaster-enter .2s cubic-bezier(.2,.8,.2,1) both;
+}
+.ww-disaster-alert[data-level="red"] { border-left-color: #ef4444; }
+.ww-disaster-alert[data-level="orange"] { border-left-color: #f59e0b; }
+.ww-disaster-alert-head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.ww-disaster-alert-level { display:inline-flex; align-items:center; gap:6px; width:max-content; padding:4px 9px 4px 7px; border-radius:999px; background:rgba(245,158,11,.13); color:#ffd58a; font-size:11px; font-weight:750; letter-spacing:.02em; }
+.ww-disaster-alert-level-icon { display:grid; place-items:center; width:15px; height:15px; }
+.ww-disaster-alert-level-icon svg { display:block; width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.ww-disaster-alert-level[data-level="red"] { background:rgba(239,68,68,.15); color:#ffb4b4; }
+.ww-disaster-alert-dismiss {
+  display:grid; place-items:center; flex:0 0 28px; width:28px; height:28px;
+  border:1px solid rgba(255,255,255,.09); border-radius:9px; background:rgba(255,255,255,.07); color:rgba(255,255,255,.8);
+  cursor:pointer; font:18px/1 system-ui,sans-serif; transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.ww-disaster-alert-dismiss:hover { color:#fff; background:rgba(255,255,255,.15); transform:scale(1.04); }
+.ww-disaster-alert-body { display:flex; align-items:center; flex-wrap:wrap; gap:5px 8px; margin-top:7px; color:#f8fafc; }
+.ww-disaster-alert-event { font-size:14px; font-weight:680; letter-spacing:.005em; }
+.ww-disaster-alert-type { display:inline-flex; align-items:center; min-height:20px; padding:1px 7px; border:1px solid rgba(255,214,140,.16); border-radius:999px; background:rgba(255,214,140,.08); color:#f4d59c; font-size:11px; }
+.ww-disaster-alert-country { display:inline-flex; align-items:center; min-height:20px; padding:1px 7px; border:1px solid rgba(191,219,254,.14); border-radius:999px; background:rgba(191,219,254,.07); color:#bfd7ef; font-size:11px; }
+.ww-disaster-alert-details { display:grid; gap:0; margin-top:9px; padding:5px 10px; border:1px solid rgba(255,255,255,.06); border-radius:10px; background:rgba(255,255,255,.065); color:#fff; }
+.ww-disaster-alert-details > div { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:3px 0; }
+.ww-disaster-alert-details > div + div { border-top:1px solid rgba(255,255,255,.055); }
+.ww-disaster-alert-details strong { flex:0 0 auto; color:#a9c5df; font-weight:550; }
+.ww-disaster-alert-details span { text-align:right; font-weight:620; font-variant-numeric:tabular-nums; }
+.ww-disaster-alert-meta { margin-top:8px; color:rgba(226,232,240,.58); font-size:10px; line-height:1.4; }
+.ww-disaster-settings-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.ww-disaster-settings-actions button { border:1px solid #94a3b8; border-radius:8px; padding:7px 10px; background:transparent; color:inherit; cursor:pointer; }
+.ww-disaster-settings-actions span { color:#64748b; font-size:12px; }
+.ww-disaster-preferences h4 { margin:0 0 12px; font-size:15px; }
+@keyframes ww-disaster-enter { from { opacity:0; transform:translateY(-7px) scale(.99); } to { opacity:1; transform:translateY(0) scale(1); } }
+@media (max-width:480px) { #ww-disaster-alerts { width:calc(100vw - 20px); } .ww-disaster-alert { padding:10px 11px 9px; } .ww-disaster-alert-details > div { gap:8px; } }
+@media (prefers-reduced-motion: reduce) { .ww-disaster-alert { animation:none; } }

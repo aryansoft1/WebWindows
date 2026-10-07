@@ -817,10 +817,13 @@ const VIDEO_CATS = [
   { id:'yt-tech',   name:'YouTube·科技',   overseas:true, feeds:[{kind:'yt_channel', id:'UCXuqSBlHAE6Xw-yeJA0Tunw'}] },
   { id:'yt-lofi',   name:'YouTube·Lo-Fi',  overseas:true, feeds:[{kind:'yt_channel', id:'UCSJ4gkVC6NrvII8umztf0Ow'}] }
 ];
-const YOUTUBE_FEED_CACHE_URL = 'https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json';
+const YOUTUBE_FEED_CACHE_URLS = [
+  'https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json',
+  'https://raw.githubusercontent.com/aryansoft1/WebWindows/codex/aplay-cloud-media/data/aplay/youtube-feeds.json'
+];
 let videoCurrentCatId = localStorage.getItem('aplay.video.cat') || '';
 function feedUrl(feed){
-  if (feed.kind === 'yt_channel') return YOUTUBE_FEED_CACHE_URL;
+  if (feed.kind === 'yt_channel') return YOUTUBE_FEED_CACHE_URLS[0];
   const sourceUrl=new URL(APLAY_SOURCE_ENDPOINT.href);
   if (feed.kind === 'bili_pop') sourceUrl.searchParams.set('source','bili-popular');
   else if (feed.kind === 'bili_partion') { sourceUrl.searchParams.set('source','bili-partition'); sourceUrl.searchParams.set('tid',feed.tid); }
@@ -876,9 +879,21 @@ const VIDEO_CACHE = new Map(); const VIDEO_TTL = 10*60*1000;
 let VIDEO_SOURCE_STALE=false;
 function feedStorageKey(feed){return `aplay.feed.${feed.kind}.${feed.tid||feed.id||'all'}`;}
 async function fetchVideoFeed(feed,url){
-  const response=await fetch(url,{cache:'no-store',headers:{Accept:'application/json, application/atom+xml, application/rss+xml, application/xml'}});
+  const options={cache:'no-store',headers:{Accept:'application/json, application/atom+xml, application/xml, application/rss+xml'}};
+  if(feed.kind==='yt_channel'){
+    let lastError;
+    const candidates=[url,...YOUTUBE_FEED_CACHE_URLS.filter(candidate=>candidate!==url)];
+    for(const sourceUrl of candidates){
+      try{
+        const response=await fetch(sourceUrl,options);
+        if(!response.ok) throw new Error(`source_http_${response.status}`);
+        return parseYouTubeCache(await response.json(),feed);
+      }catch(error){lastError=error;}
+    }
+    throw lastError||new Error('youtube_cache_unavailable');
+  }
+  const response=await fetch(url,options);
   if(!response.ok) throw new Error(`source_http_${response.status}`);
-  if(feed.kind==='yt_channel') return parseYouTubeCache(await response.json(),feed);
   const contentType=response.headers.get('content-type')||'';
   if(contentType.includes('json')) return parseBilibiliApi(await response.json(),feed);
   const doc=new DOMParser().parseFromString(await response.text(),'text/xml');

@@ -34,7 +34,9 @@ assert.match(html, /new URL\('\/api\/aplay-source\.asp', location\.origin\)/);
 assert.match(html, /fetchAPlaySource\('apple-chart'/);
 assert.match(html, /fetchAPlaySource\('apple-search'/);
 assert.match(html, /sourceUrl\.searchParams\.set\('source','bili-popular'\)/);
-assert.match(html, /YOUTUBE_FEED_CACHE_URL = 'https:\/\/raw\.githubusercontent\.com\/aryansoft1\/WebWindows\/main\/data\/aplay\/youtube-feeds\.json'/);
+assert.match(html, /YOUTUBE_FEED_CACHE_URLS = \[/);
+assert.match(html, /https:\/\/raw\.githubusercontent\.com\/aryansoft1\/WebWindows\/main\/data\/aplay\/youtube-feeds\.json/);
+assert.match(html, /https:\/\/raw\.githubusercontent\.com\/aryansoft1\/WebWindows\/codex\/aplay-cloud-media\/data\/aplay\/youtube-feeds\.json/);
 assert.doesNotMatch(html, /searchParams\.set\('source','youtube-channel'\)/);
 assert.doesNotMatch(html, /YOUTUBE_API_KEY|googleapis\.com\/youtube\/v3/i, "the client must never receive or use the API key");
 assert.doesNotMatch(html, /https:\/\/(?:rsshub\.app|r\.jina\.ai|api\.allorigins\.win|itunes\.apple\.com|www\.youtube\.com\/feeds\/videos\.xml)/i);
@@ -284,5 +286,26 @@ const cacheItems = parseYouTubeCache(generatedCache, { kind: "yt_channel", id: Y
 assert.equal(cacheItems.length, 1);
 assert.equal(cacheItems[0].url, "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1");
 assert.throws(() => parseYouTubeCache({ schemaVersion: 1, channels: {} }, { kind: "yt_channel", id: "UC0000000000000000000000" }), /youtube_channel_missing/);
+
+const cacheUrlsSource = html.match(/const YOUTUBE_FEED_CACHE_URLS = \[[\s\S]*?\];/)?.[0];
+const fetchVideoFeedSource = html.match(/async function fetchVideoFeed\(feed,url\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(cacheUrlsSource && fetchVideoFeedSource, "YouTube cache must have a tested fallback fetch path");
+const requestedCacheUrls = [];
+const fetchYouTubeFeed = vm.runInNewContext(
+  `${cacheUrlsSource}; ${parseCacheSource}; ${fetchVideoFeedSource}; fetchVideoFeed`,
+  {
+    fetch: async (url) => {
+      requestedCacheUrls.push(url);
+      if (url.includes("/main/")) return { ok: false, status: 404 };
+      return { ok: true, status: 200, async json() { return generatedCache; } };
+    }
+  }
+);
+const recoveredFeed = await fetchYouTubeFeed({ kind: "yt_channel", id: YOUTUBE_CHANNELS[0] }, "https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json");
+assert.equal(recoveredFeed.length, 1);
+assert.deepEqual(requestedCacheUrls, [
+  "https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json",
+  "https://raw.githubusercontent.com/aryansoft1/WebWindows/codex/aplay-cloud-media/data/aplay/youtube-feeds.json"
+]);
 
 console.log("APlay i18n and unified cloud media smoke test passed");

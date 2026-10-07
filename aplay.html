@@ -817,12 +817,13 @@ const VIDEO_CATS = [
   { id:'yt-tech',   name:'YouTube·科技',   overseas:true, feeds:[{kind:'yt_channel', id:'UCXuqSBlHAE6Xw-yeJA0Tunw'}] },
   { id:'yt-lofi',   name:'YouTube·Lo-Fi',  overseas:true, feeds:[{kind:'yt_channel', id:'UCSJ4gkVC6NrvII8umztf0Ow'}] }
 ];
+const YOUTUBE_FEED_CACHE_URL = 'https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json';
 let videoCurrentCatId = localStorage.getItem('aplay.video.cat') || '';
 function feedUrl(feed){
+  if (feed.kind === 'yt_channel') return YOUTUBE_FEED_CACHE_URL;
   const sourceUrl=new URL(APLAY_SOURCE_ENDPOINT.href);
   if (feed.kind === 'bili_pop') sourceUrl.searchParams.set('source','bili-popular');
   else if (feed.kind === 'bili_partion') { sourceUrl.searchParams.set('source','bili-partition'); sourceUrl.searchParams.set('tid',feed.tid); }
-  else if (feed.kind === 'yt_channel') { sourceUrl.searchParams.set('source','youtube-channel'); sourceUrl.searchParams.set('id',feed.id); }
   else return '';
   return sourceUrl.href;
 }
@@ -860,12 +861,24 @@ function parseItems(doc, feed){
   }
   return out;
 }
+function parseYouTubeCache(data,feed){
+  if(feed.kind!=='yt_channel'||!/^[A-Za-z0-9_-]{24}$/.test(feed.id||'')||data?.schemaVersion!==1) throw new Error('youtube_cache_invalid');
+  const channel=data.channels?.[feed.id];
+  if(channel?.channelId!==feed.id||!Array.isArray(channel.videos)) throw new Error('youtube_channel_missing');
+  return channel.videos.slice(0,24).map(item=>{
+    const id=String(item?.videoId||'').trim();
+    if(!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
+    const title=String(item?.title||'YouTube').trim().slice(0,240)||'YouTube';
+    return {title,type:'embed',url:`https://www.youtube.com/embed/${id}?autoplay=1`};
+  }).filter(Boolean);
+}
 const VIDEO_CACHE = new Map(); const VIDEO_TTL = 10*60*1000;
 let VIDEO_SOURCE_STALE=false;
 function feedStorageKey(feed){return `aplay.feed.${feed.kind}.${feed.tid||feed.id||'all'}`;}
 async function fetchVideoFeed(feed,url){
   const response=await fetch(url,{cache:'no-store',headers:{Accept:'application/json, application/atom+xml, application/rss+xml, application/xml'}});
   if(!response.ok) throw new Error(`source_http_${response.status}`);
+  if(feed.kind==='yt_channel') return parseYouTubeCache(await response.json(),feed);
   const contentType=response.headers.get('content-type')||'';
   if(contentType.includes('json')) return parseBilibiliApi(await response.json(),feed);
   const doc=new DOMParser().parseFromString(await response.text(),'text/xml');
@@ -874,19 +887,20 @@ async function fetchVideoFeed(feed,url){
 }
 async function loadFeed(feed){
   const url=feedUrl(feed); if(!url) return [];
-  const hit=VIDEO_CACHE.get(url); const now=Date.now();
+  const cacheKey=feed.kind==='yt_channel'?`${url}#${feed.id}`:url;
+  const hit=VIDEO_CACHE.get(cacheKey); const now=Date.now();
   if(hit && (now-hit.time)<VIDEO_TTL) return hit.items;
   const storageKey=feedStorageKey(feed); let saved=null;
   try{saved=JSON.parse(localStorage.getItem(storageKey)||'null');}catch{}
-  if(saved?.items?.length&&now-saved.time<VIDEO_TTL){VIDEO_CACHE.set(url,{time:saved.time,items:saved.items});return saved.items;}
+  if(saved?.items?.length&&now-saved.time<VIDEO_TTL){VIDEO_CACHE.set(cacheKey,{time:saved.time,items:saved.items});return saved.items;}
   try{
     const items=await fetchVideoFeed(feed,url);
     if(!items.length) throw new Error('source_empty');
-    VIDEO_CACHE.set(url,{time:now,items});
+    VIDEO_CACHE.set(cacheKey,{time:now,items});
     localStorage.setItem(storageKey,JSON.stringify({time:now,items}));
     return items;
   }catch(error){
-    if(saved?.items?.length&&now-saved.time<24*60*60*1000){VIDEO_SOURCE_STALE=true;VIDEO_CACHE.set(url,{time:now,items:saved.items});return saved.items;}
+    if(saved?.items?.length&&now-saved.time<24*60*60*1000){VIDEO_SOURCE_STALE=true;VIDEO_CACHE.set(cacheKey,{time:now,items:saved.items});return saved.items;}
     throw error;
   }
 }

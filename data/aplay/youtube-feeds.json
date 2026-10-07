@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": null,
+  "source": "YouTube Data API v3",
+  "channels": {
+    "UC-9-kyTW8ZkZNDHQJ6FgpwQ": {
+      "channelId": "UC-9-kyTW8ZkZNDHQJ6FgpwQ",
+      "videos": []
+    },
+    "UCXuqSBlHAE6Xw-yeJA0Tunw": {
+      "channelId": "UCXuqSBlHAE6Xw-yeJA0Tunw",
+      "videos": []
+    },
+    "UCSJ4gkVC6NrvII8umztf0Ow": {
+      "channelId": "UCSJ4gkVC6NrvII8umztf0Ow",
+      "videos": []
+    }
+  }
+}

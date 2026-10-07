@@ -1,0 +1,43 @@
+name: Refresh APlay YouTube feed cache
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - aplay.html
+      - data/aplay/youtube-feeds.json
+      - tools/refresh-aplay-youtube-feeds.mjs
+      - .github/workflows/refresh-aplay-youtube-feeds.yml
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aplay-youtube-feed-cache
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Refresh public channel feed cache
+        run: node tools/refresh-aplay-youtube-feeds.mjs
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      - name: Commit changed cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- data/aplay/youtube-feeds.json
+          if ! git diff --cached --quiet -- data/aplay/youtube-feeds.json; then
+            git commit -m "chore(aplay): refresh YouTube feed cache"
+            git push
+          fi

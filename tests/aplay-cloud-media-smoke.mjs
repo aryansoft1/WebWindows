@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import vm from "node:vm";
+import { buildYouTubeFeedCache, YOUTUBE_CHANNELS } from "../tools/refresh-aplay-youtube-feeds.mjs";
 
 const read = async (relative) => fs.readFile(new URL(`../${relative}`, import.meta.url), "utf8");
 
@@ -10,6 +11,7 @@ const resourceOpenSource = await read("assets/js/resource-open.js");
 const cloudDialogSource = await read("assets/js/cloud-file-dialog.js");
 const deviceSource = await read("cloud/browser/device-locations.js");
 const sourceApi = await read("api/aplay-source.asp");
+const feedWorkflow = await read(".github/workflows/refresh-aplay-youtube-feeds.yml");
 const publicPicker = await read("cloud/browser/files.asp");
 const privatePicker = await read("cloud/browser/private-files.asp");
 
@@ -32,6 +34,9 @@ assert.match(html, /new URL\('\/api\/aplay-source\.asp', location\.origin\)/);
 assert.match(html, /fetchAPlaySource\('apple-chart'/);
 assert.match(html, /fetchAPlaySource\('apple-search'/);
 assert.match(html, /sourceUrl\.searchParams\.set\('source','bili-popular'\)/);
+assert.match(html, /YOUTUBE_FEED_CACHE_URL = 'https:\/\/raw\.githubusercontent\.com\/aryansoft1\/WebWindows\/main\/data\/aplay\/youtube-feeds\.json'/);
+assert.doesNotMatch(html, /searchParams\.set\('source','youtube-channel'\)/);
+assert.doesNotMatch(html, /YOUTUBE_API_KEY|googleapis\.com\/youtube\/v3/i, "the client must never receive or use the API key");
 assert.doesNotMatch(html, /https:\/\/(?:rsshub\.app|r\.jina\.ai|api\.allorigins\.win|itunes\.apple\.com|www\.youtube\.com\/feeds\/videos\.xml)/i);
 assert.match(html, /CC BY 4\.0 · 需署名/);
 assert.match(html, /incompetech\.com\/music\/royalty-free\/mp3-royaltyfree\/Carefree\.mp3/);
@@ -54,12 +59,42 @@ assert.match(sourceApi, /Case "apple-search"/);
 assert.match(sourceApi, /Case "bili-popular"/);
 assert.match(sourceApi, /Case "bili-partition"/);
 assert.match(sourceApi, /fallbackUpstream = "https:\/\/rsshub\.app\/bilibili\/popular\/all"/);
-assert.ok(sourceApi.includes('fallbackUpstream = "https://rsshub.app/youtube/channel/" & channelId'));
 assert.ok(sourceApi.includes('InStr(1, value, "</rss>", vbTextCompare)'));
 assert.match(sourceApi, /api\.bilibili\.com\/x\/web-interface\/popular/);
 assert.match(sourceApi, /IsAllowedChannel/);
 assert.doesNotMatch(sourceApi, /QueryString\("url"\)/i);
 assert.match(sourceApi, /APLAY_MAX_RESPONSE_CHARS/);
+assert.match(feedWorkflow, /cron: "23 \* \* \* \*"/);
+assert.match(feedWorkflow, /permissions:\s*\n\s+contents: write/);
+assert.match(feedWorkflow, /node tools\/refresh-aplay-youtube-feeds\.mjs/);
+assert.match(feedWorkflow, /YOUTUBE_API_KEY:\s*\$\{\{\s*secrets\.YOUTUBE_API_KEY\s*\}\}/);
+assert.doesNotMatch(feedWorkflow, /AIza[\w-]{30,}/);
+assert.equal(YOUTUBE_CHANNELS.length, 3);
+
+const mockedApiCalls = [];
+const fixtureKey = "test-only-fixture-key";
+const generatedCache = await buildYouTubeFeedCache({
+  apiKey: fixtureKey,
+  now: new Date("2026-10-08T00:00:00.000Z"),
+  fetchImpl: async (input, options) => {
+    const url = new URL(input);
+    assert.equal(options.headers["x-goog-api-key"], fixtureKey);
+    assert.equal(url.searchParams.has("key"), false, "API key must not appear in URLs");
+    mockedApiCalls.push(url.pathname);
+    const payload = url.pathname.endsWith("/channels")
+      ? { items: YOUTUBE_CHANNELS.map(channelId => ({ id: channelId, contentDetails: { relatedPlaylists: { uploads: `UU${channelId.slice(2)}` } } })) }
+      : { items: [
+        { contentDetails: { videoId: "dQw4w9WgXcQ", videoPublishedAt: "2026-10-08T00:00:00Z" }, snippet: { title: "Fixture video" } },
+        { contentDetails: { videoId: "invalid" }, snippet: { title: "Rejected video" } }
+      ] };
+    return { ok: true, status: 200, async json() { return payload; } };
+  }
+});
+assert.equal(mockedApiCalls.filter(endpoint => endpoint.endsWith("/channels")).length, 1);
+assert.equal(mockedApiCalls.filter(endpoint => endpoint.endsWith("/playlistItems")).length, 3);
+assert.equal(generatedCache.channels[YOUTUBE_CHANNELS[0]].videos[0].videoId, "dQw4w9WgXcQ");
+assert.doesNotMatch(JSON.stringify(generatedCache), /test-only-fixture-key/);
+await assert.rejects(() => buildYouTubeFeedCache({ apiKey: "", fetchImpl: async () => { throw new Error("must not fetch"); } }), /YOUTUBE_API_KEY/);
 
 const app = manifest.apps.find((candidate) => candidate.id === "com.aryansoft.webwindows.aplay");
 assert.ok(app, "APlay must be registered");
@@ -176,5 +211,13 @@ const rssItem = {
 const fallbackItems = parseItems({ querySelectorAll: (selector) => selector === "entry, item" ? [rssItem] : [] }, { kind: "yt_channel" });
 assert.equal(fallbackItems.length, 1);
 assert.equal(fallbackItems[0].url, "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1");
+
+const parseCacheSource = html.match(/function parseYouTubeCache\(data,feed\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(parseCacheSource, "APlay must parse the generated YouTube cache");
+const parseYouTubeCache = vm.runInNewContext(`${parseCacheSource}; parseYouTubeCache`);
+const cacheItems = parseYouTubeCache(generatedCache, { kind: "yt_channel", id: YOUTUBE_CHANNELS[0] });
+assert.equal(cacheItems.length, 1);
+assert.equal(cacheItems[0].url, "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1");
+assert.throws(() => parseYouTubeCache({ schemaVersion: 1, channels: {} }, { kind: "yt_channel", id: "UC0000000000000000000000" }), /youtube_channel_missing/);
 
 console.log("APlay i18n and unified cloud media smoke test passed");

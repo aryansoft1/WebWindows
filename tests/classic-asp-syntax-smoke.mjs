@@ -39,6 +39,7 @@ const files = [
   "api/function-package.asp",
   "api/runtime-release.asp",
   "api/railway-proxy.asp",
+  "api/aplay-source.asp",
   "api/visitor-analytics.asp",
   "api/region-geo.asp"
 ];

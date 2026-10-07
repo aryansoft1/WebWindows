@@ -207,7 +207,7 @@ href="data:image/svg+xml;utf8,
       <div id="view-music" class="hidden space-y-6">
         <div class="flex items-center gap-2">
           <button id="tab-rss" class="h-9 px-3 rounded-xl border border-gray-200 tab-active">榜单（预览）</button>
-          <button id="tab-pd"  class="h-9 px-3 rounded-xl border border-gray-200">无版权（整曲）</button>
+          <button id="tab-pd"  class="h-9 px-3 rounded-xl border border-gray-200">完整曲目（CC BY 4.0）</button>
         </div>
 
         <!-- 榜单（iTunes 旧 RSS + 预览） -->
@@ -228,6 +228,7 @@ href="data:image/svg+xml;utf8,
 
           <div>
             <div class="text-sm text-gray-500 mb-2" id="rss-title">—</div>
+            <div class="text-xs text-gray-500 mb-2" id="rss-source-status" aria-live="polite"></div>
             <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white">
               <table class="w-full text-sm">
                 <thead class="bg-gray-50 text-gray-500">
@@ -245,11 +246,11 @@ href="data:image/svg+xml;utf8,
           </div>
         </div>
 
-        <!-- 无版权整曲 -->
+        <!-- Creative Commons full tracks -->
         <div id="music-pd" class="hidden space-y-5">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-semibold">无版权 · 整曲</h2>
-            <div class="text-xs text-gray-500">示例数据，后期换成你的直链或自建源</div>
+            <h2 class="text-base font-semibold">授权音乐 · 完整曲目</h2>
+            <div class="text-xs text-gray-500">本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。</div>
           </div>
           <div id="pd-cats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3"></div>
           <div>
@@ -386,7 +387,8 @@ const I18N_TEXT={
     '中国金曲':'華語金曲','英文歌曲':'英文歌曲','日本音乐':'日本音樂','热门歌曲（真实榜单）':'熱門歌曲（即時榜單）','标题 / 艺术家':'標題 / 藝術家','艺术家':'藝術家','专辑':'專輯','操作':'操作','预览':'試聽','获取中…':'取得中…','不可预览':'無法試聽','正在加载…':'正在載入…','暂无数据（可稍后再试）':'暫無資料（可稍後再試）',
     '无版权 · 整曲':'無版權 · 整首','示例数据，后期换成你的直链或自建源':'示例資料，可替換為你的連結或自建來源','无版权 · 轻音乐':'無版權 · 輕音樂','无版权 · 电子':'無版權 · 電子','无版权 · 古典':'無版權 · 古典','全量列表':'完整清單','暂无曲目':'暫無曲目','标题':'標題','授权':'授權','播放':'播放',
     '为你推荐 · 视频':'為你推薦 · 影片','海外源未开启':'海外來源未開啟','海外源关闭，仅显示 B 站':'海外來源已關閉，僅顯示 B 站','已启用海外源（YouTube）':'已啟用海外來源（YouTube）','暂无数据或被源限制':'暫無資料或來源受限','未选择视频':'尚未選擇影片','正在播放：':'正在播放：','播放/暂停':'播放/暫停','静音':'靜音','全屏':'全螢幕','退出':'離開','TV · 官方 / 直链':'TV · 官方 / 連結','未选择频道':'尚未選擇頻道','选择一首歌开始播放':'選擇一首歌開始播放','收藏夹为空（示例）':'收藏清單是空的（示例）','上一首':'上一首','下一首':'下一首','播放或暂停':'播放或暫停','播放进度':'播放進度','音量':'音量',
-    '公共云':'公共雲','私人云':'私人雲','此设备':'此裝置','WebWindows 资料':'WebWindows 資料','媒体':'媒體','音频':'音訊','频道':'頻道','用 APlay 打开媒体':'使用 APlay 開啟媒體','音频和视频':'音訊與影片','媒体打开失败。':'媒體開啟失敗。','云资源服务暂时不可用。':'雲端資源服務暫時無法使用。','APlay 不支持此媒体格式。':'APlay 不支援此媒體格式。'
+    '公共云':'公共雲','私人云':'私人雲','此设备':'此裝置','WebWindows 资料':'WebWindows 資料','媒体':'媒體','音频':'音訊','频道':'頻道','用 APlay 打开媒体':'使用 APlay 開啟媒體','音频和视频':'音訊與影片','媒体打开失败。':'媒體開啟失敗。','云资源服务暂时不可用。':'雲端資源服務暫時無法使用。','APlay 不支持此媒体格式。':'APlay 不支援此媒體格式。',
+    '数据源暂不可用，已显示上次成功结果':'資料來源暫時無法使用，已顯示上次成功結果','数据源暂不可用，请稍后刷新':'資料來源暫時無法使用，請稍後重新整理','显示缓存结果':'顯示快取結果','来源暂不可用':'來源暫時無法使用','已改用备用地区商店':'已改用備用地區商店','无可用试听版本':'所選商店沒有可用試聽版本','试听源暂不可用':'試聽來源暫時無法使用','排行榜暂不可用':'排行榜暫時無法使用'
   },
   en:{
     '你的音乐与媒体空间':'Your music and media space','发现好声音':'Discover','首页':'Home','音乐馆':'Music','视频':'Video','直播':'Live','电台':'Radio','我喜欢':'Liked','浏览':'Browse',
@@ -399,7 +401,8 @@ const I18N_TEXT={
     '中国金曲':'Chinese hits','英文歌曲':'English songs','日本音乐':'Japanese music','热门歌曲（真实榜单）':'Top songs (live chart)','标题 / 艺术家':'Title / artist','艺术家':'Artist','专辑':'Album','操作':'Action','预览':'Preview','获取中…':'Loading…','不可预览':'Unavailable','正在加载…':'Loading…','暂无数据（可稍后再试）':'No data. Try again later.',
     '无版权 · 整曲':'Royalty-free · Full tracks','示例数据，后期换成你的直链或自建源':'Sample catalog; replace it with your own licensed source','无版权 · 轻音乐':'Royalty-free · Easy listening','无版权 · 电子':'Royalty-free · Electronic','无版权 · 古典':'Royalty-free · Classical','全量列表':'Full list','暂无曲目':'No tracks','标题':'Title','授权':'License','播放':'Play',
     '为你推荐 · 视频':'Video for you','海外源未开启':'International sources are off','海外源关闭，仅显示 B 站':'International sources are off; showing Bilibili only','已启用海外源（YouTube）':'International sources enabled (YouTube)','暂无数据或被源限制':'No content available from this source','未选择视频':'No video selected','正在播放：':'Now playing: ','播放/暂停':'Play / pause','静音':'Mute','全屏':'Full screen','退出':'Exit','TV · 官方 / 直链':'TV · Official / streams','未选择频道':'No channel selected','选择一首歌开始播放':'Choose a track to start listening','收藏夹为空（示例）':'Your liked list is empty','上一首':'Previous','下一首':'Next','播放或暂停':'Play or pause','播放进度':'Playback position','音量':'Volume',
-    '公共云':'Public cloud','私人云':'Private cloud','此设备':'This device','WebWindows 资料':'WebWindows files','媒体':'Media','音频':'Audio','频道':'Channel','用 APlay 打开媒体':'Open media with APlay','音频和视频':'Audio and video','媒体打开失败。':'Could not open the media.','云资源服务暂时不可用。':'Cloud resources are temporarily unavailable.','APlay 不支持此媒体格式。':'APlay does not support this media format.'
+    '公共云':'Public cloud','私人云':'Private cloud','此设备':'This device','WebWindows 资料':'WebWindows files','媒体':'Media','音频':'Audio','频道':'Channel','用 APlay 打开媒体':'Open media with APlay','音频和视频':'Audio and video','媒体打开失败。':'Could not open the media.','云资源服务暂时不可用。':'Cloud resources are temporarily unavailable.','APlay 不支持此媒体格式。':'APlay does not support this media format.',
+    '数据源暂不可用，已显示上次成功结果':'Source temporarily unavailable; showing the last successful results','数据源暂不可用，请稍后刷新':'Source temporarily unavailable. Please refresh later.','显示缓存结果':'Showing cached results','来源暂不可用':'Source temporarily unavailable','已改用备用地区商店':'Using an alternate store region','无可用试听版本':'No preview is available in the selected stores','试听源暂不可用':'Preview service temporarily unavailable','排行榜暂不可用':'Charts are temporarily unavailable'
   },
   jp:{
     '你的音乐与媒体空间':'あなたの音楽とメディア','发现好声音':'見つける','首页':'ホーム','音乐馆':'ミュージック','视频':'動画','直播':'ライブ','电台':'ラジオ','我喜欢':'お気に入り','浏览':'ブラウズ',
@@ -412,10 +415,23 @@ const I18N_TEXT={
     '中国金曲':'中国ヒット','英文歌曲':'英語の曲','日本音乐':'日本の音楽','热门歌曲（真实榜单）':'人気曲（ライブランキング）','标题 / 艺术家':'曲名 / アーティスト','艺术家':'アーティスト','专辑':'アルバム','操作':'操作','预览':'試聴','获取中…':'取得中…','不可预览':'試聴不可','正在加载…':'読み込み中…','暂无数据（可稍后再试）':'データがありません。後でもう一度お試しください。',
     '无版权 · 整曲':'ロイヤリティフリー · フル再生','示例数据，后期换成你的直链或自建源':'サンプルです。ライセンス済みの独自ソースに置き換えられます','无版权 · 轻音乐':'ロイヤリティフリー · イージーリスニング','无版权 · 电子':'ロイヤリティフリー · エレクトロニック','无版权 · 古典':'ロイヤリティフリー · クラシック','全量列表':'全曲','暂无曲目':'曲がありません','标题':'タイトル','授权':'ライセンス','播放':'再生',
     '为你推荐 · 视频':'おすすめ動画','海外源未开启':'海外ソースはオフです','海外源关闭，仅显示 B 站':'海外ソースはオフです。Bilibili のみ表示します','已启用海外源（YouTube）':'海外ソースを有効化（YouTube）','暂无数据或被源限制':'このソースからコンテンツを取得できません','未选择视频':'動画が選択されていません','正在播放：':'再生中：','播放/暂停':'再生 / 一時停止','静音':'ミュート','全屏':'全画面','退出':'終了','TV · 官方 / 直链':'TV · 公式 / ストリーム','未选择频道':'チャンネルが選択されていません','选择一首歌开始播放':'曲を選んで再生を始めましょう','收藏夹为空（示例）':'お気に入りは空です','上一首':'前の曲','下一首':'次の曲','播放或暂停':'再生または一時停止','播放进度':'再生位置','音量':'音量',
-    '公共云':'パブリッククラウド','私人云':'プライベートクラウド','此设备':'このデバイス','WebWindows 资料':'WebWindows ファイル','媒体':'メディア','音频':'オーディオ','频道':'チャンネル','用 APlay 打开媒体':'APlay でメディアを開く','音频和视频':'オーディオと動画','媒体打开失败。':'メディアを開けませんでした。','云资源服务暂时不可用。':'クラウドリソースを一時的に利用できません。','APlay 不支持此媒体格式。':'このメディア形式は APlay で再生できません。'
+    '公共云':'パブリッククラウド','私人云':'プライベートクラウド','此设备':'このデバイス','WebWindows 资料':'WebWindows ファイル','媒体':'メディア','音频':'オーディオ','频道':'チャンネル','用 APlay 打开媒体':'APlay でメディアを開く','音频和视频':'オーディオと動画','媒体打开失败。':'メディアを開けませんでした。','云资源服务暂时不可用。':'クラウドリソースを一時的に利用できません。','APlay 不支持此媒体格式。':'このメディア形式は APlay で再生できません。',
+    '数据源暂不可用，已显示上次成功结果':'ソースを一時的に利用できないため、前回の結果を表示しています','数据源暂不可用，请稍后刷新':'ソースを一時的に利用できません。後でもう一度更新してください','显示缓存结果':'キャッシュ済みの結果を表示中','来源暂不可用':'ソースを一時的に利用できません','已改用备用地区商店':'別の地域のストアを使用しています','无可用试听版本':'選択したストアに試聴版がありません','试听源暂不可用':'試聴サービスを一時的に利用できません','排行榜暂不可用':'ランキングを一時的に利用できません'
   }
 };
 let aplayLanguage='zh';
+Object.assign(I18N_TEXT.tw, {
+  '完整曲目（CC BY 4.0）':'完整曲目（CC BY 4.0）','授权音乐 · 完整曲目':'授權音樂 · 完整曲目','本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。':'本曲採用 CC BY 4.0；請標註 Kevin MacLeod，曲名連結至官方來源頁。',
+  '自由音乐 · 轻松':'自由音樂 · 輕鬆','自由音乐 · 电子':'自由音樂 · 電子','自由音乐 · 古典':'自由音樂 · 古典','CC BY 4.0 · 需署名':'CC BY 4.0 · 需標註','电台源暂不可用':'電台來源暫時無法使用'
+});
+Object.assign(I18N_TEXT.en, {
+  '完整曲目（CC BY 4.0）':'Full tracks (CC BY 4.0)','授权音乐 · 完整曲目':'Licensed music · Full tracks','本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。':'Tracks are licensed under CC BY 4.0. Credit Kevin MacLeod; each title links to its official source.',
+  '自由音乐 · 轻松':'Free music · Easy listening','自由音乐 · 电子':'Free music · Electronic','自由音乐 · 古典':'Free music · Classical','CC BY 4.0 · 需署名':'CC BY 4.0 · attribution required','电台源暂不可用':'Radio source unavailable'
+});
+Object.assign(I18N_TEXT.jp, {
+  '完整曲目（CC BY 4.0）':'フル曲（CC BY 4.0）','授权音乐 · 完整曲目':'ライセンス音源 · フル曲','本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。':'CC BY 4.0 ライセンスです。Kevin MacLeod をクレジットしてください。曲名から公式ソースを確認できます。',
+  '自由音乐 · 轻松':'フリー音源 · リラックス','自由音乐 · 电子':'フリー音源 · エレクトロニック','自由音乐 · 古典':'フリー音源 · クラシック','CC BY 4.0 · 需署名':'CC BY 4.0 · クレジット表記が必要','电台源暂不可用':'ラジオソースを一時的に利用できません'
+});
 const originalAttributes=new WeakMap();
 function normalizeLanguage(value){
   const language=String(value||'zh').toLowerCase();
@@ -516,24 +532,72 @@ const APPLE_RSS_FEEDS = [
 let CURRENT_FEED = APPLE_RSS_FEEDS[0];
 let RSS_LIST = [];
 
-// 通用 CORS JSON 拉取：直连 → r.jina.ai → allorigins
-async function fetchJSONCORS(url) {
-  const toJSON = async (r) => {
-    const ct = r.headers.get('content-type') || '';
-    if (ct.includes('application/json')) return await r.json();
-    const t = await r.text(); try{ return JSON.parse(t); }catch{ throw new Error('non-JSON'); }
-  };
-  try { const r = await fetch(url,{cache:'no-store'}); if (r.ok) return await toJSON(r); } catch {}
-  try { const r = await fetch('https://r.jina.ai/http://' + url.replace(/^https?:\/\//,'')); if (r.ok) return await toJSON(r); } catch {}
-  try { const r = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)); if (r.ok) return await toJSON(r); } catch {}
-  throw new Error('CORS blocked');
+const APLAY_SOURCE_ENDPOINT = new URL('/api/aplay-source.asp', location.origin);
+async function fetchAPlaySource(source, params={}) {
+  const url = new URL(APLAY_SOURCE_ENDPOINT.href);
+  url.searchParams.set('source', source);
+  Object.entries(params).forEach(([key, value]) => url.searchParams.set(key, String(value)));
+  const response = await fetch(url.href, {
+    cache: 'no-store',
+    headers: { Accept: 'application/json, application/atom+xml, application/xml, text/xml' }
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.error?.code || 'source_unavailable');
+  }
+  return response;
 }
-// iTunes Search 取预览
+
+function normalizeTrackText(value) {
+  return String(value || '').normalize('NFKC').toLocaleLowerCase().replace(/[\p{P}\p{S}\s]+/gu, '');
+}
+function allowedApplePreview(value) {
+  try {
+    const url = new URL(value);
+    if (url.protocol === 'http:' && /(^|\.)itunes\.apple\.com$/i.test(url.hostname)) url.protocol = 'https:';
+    if (url.protocol !== 'https:' || !/(^|\.)itunes\.apple\.com$/i.test(url.hostname)) return '';
+    return url.href;
+  } catch { return ''; }
+}
+function applePreviewCacheKey(title, artist) {
+  const source = normalizeTrackText(`${title} ${artist}`);
+  let hash = 2166136261;
+  for (let i=0;i<source.length;i++) { hash ^= source.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return `aplay.apple.preview.${(hash>>>0).toString(36)}`;
+}
+function chooseApplePreview(results, title, artist) {
+  const wantedTitle=normalizeTrackText(title), wantedArtist=normalizeTrackText(artist);
+  const matches=(Array.isArray(results)?results:[]).map(item=>{
+    const foundTitle=normalizeTrackText(item.trackName), foundArtist=normalizeTrackText(item.artistName);
+    let score=0;
+    if(wantedTitle&&foundTitle===wantedTitle) score+=3;
+    else if(wantedTitle&&foundTitle&&(foundTitle.includes(wantedTitle)||wantedTitle.includes(foundTitle))) score+=1;
+    if(wantedArtist&&foundArtist===wantedArtist) score+=3;
+    else if(wantedArtist&&foundArtist&&(foundArtist.includes(wantedArtist)||wantedArtist.includes(foundArtist))) score+=1;
+    return {score,url:allowedApplePreview(item.previewUrl)};
+  }).filter(item=>item.url&&item.score>=3).sort((a,b)=>b.score-a.score);
+  return matches[0]?.url || '';
+}
+
+// Apple 官方目录只提供短试听；在当前商店没有试听时，顺序尝试其他商店地区。
 async function fetchPreviewUrlBySearch(title, artist, country='cn') {
-  const q = encodeURIComponent(`${title} ${artist}`.trim());
-  const url = `https://itunes.apple.com/search?term=${q}&entity=song&limit=1&country=${country}`;
-  try { const r=await fetch(url); if(!r.ok) return ''; const j=await r.json(); return j.results?.[0]?.previewUrl || ''; }
-  catch { return ''; }
+  const cacheKey=applePreviewCacheKey(title,artist), now=Date.now();
+  try {
+    const cached=JSON.parse(localStorage.getItem(cacheKey)||'null');
+    if(cached?.url&&cached.expires>now) return cached.url;
+  } catch {}
+  const countries=country==='cn'?['cn','tw','hk','sg']:country==='jp'?['jp','us']:['us','gb','ca'];
+  let hadSourceError=false;
+  for(const store of countries){
+    try {
+      const response=await fetchAPlaySource('apple-search',{country:store,term:`${title} ${artist}`.trim()});
+      const data=await response.json();
+      const preview=chooseApplePreview(data.results,title,artist);
+      if(preview){try{localStorage.setItem(cacheKey,JSON.stringify({url:preview,expires:now+7*24*60*60*1000}));}catch{}return preview;}
+    } catch { hadSourceError=true; }
+  }
+  if(hadSourceError) throw new Error('source_unavailable');
+  return '';
 }
 // 解析 iTunes RSS
 function parseItunes(data){
@@ -576,39 +640,52 @@ async function mountMusicRSS(){
       await renderSongsFromRss(CURRENT_FEED);
     });
     $('#btn-play-any')?.addEventListener('click', async ()=>{
+      let sourceFailed=false;
       for (let i=0;i<RSS_LIST.length;i++){
         const t = RSS_LIST[i];
-        let url = t.previewUrl || await fetchPreviewUrlBySearch(t.title, t.artist, CURRENT_FEED.code);
-        if (url) { t.previewUrl=url; playAudio(url, {title:t.title, sub:t.artist||'', cover:t.cover||''}); break; }
+        let url = t.previewUrl || '';
+        if(!url){try{url=await fetchPreviewUrlBySearch(t.title,t.artist,CURRENT_FEED.code);}catch{sourceFailed=true;continue;}}
+        if (url) { t.previewUrl=url; playAudio(url, {title:t.title, sub:t.artist||'', cover:t.cover||''}); return; }
       }
+      $('#rss-source-status').textContent=tx(sourceFailed?'试听源暂不可用':'无可用试听版本');
     });
   });
 }
 
 async function renderSongsFromRss(feed){
   const titleEl = $('#rss-title'); const tbody=$('#rss-table');
+  const sourceStatus = $('#rss-source-status');
   titleEl.textContent = `${tx(feed.label)} · ${tx('热门歌曲（真实榜单）')}`;
+  sourceStatus.textContent = '';
   tbody.innerHTML = `<tr class="border-t"><td colspan="5" class="px-4 py-6 text-gray-500">正在加载…</td></tr>`;
 
   const cacheKey = `aplay.apple.${feed.code}`;
   const ttl = 6 * 60 * 60 * 1000; // 6h
-  const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(cacheKey) || 'null'); } catch {}
   if (cached && (Date.now()-cached.t) < ttl && (cached.items||[]).length){
+    sourceStatus.textContent = cached.cc && cached.cc !== feed.code ? tx('已改用备用地区商店') : '';
     RSS_LIST = cached.items; return renderRssTable(cached.items);
   }
 
   const order = (feed.code === 'cn') ? ['cn','tw','hk','sg'] : [feed.code];
-  let items = [], used = '';
+  let items = [], used = '', sourceFailed = false;
   for (const cc of order){
     try{
-      const url = `https://itunes.apple.com/${cc}/rss/topsongs/limit=100/explicit=true/json`;
-      const data = await fetchJSONCORS(url);
+      const response = await fetchAPlaySource('apple-chart',{country:cc});
+      const data = await response.json();
       items = parseItunes(data);
       if (items.length){ used = cc; break; }
-    }catch(e){}
+    }catch(e){ sourceFailed=true; }
   }
   if (items.length){
-    localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), items, cc: used }));
+    try { localStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), items, cc: used })); } catch {}
+    sourceStatus.textContent = used !== feed.code ? tx('已改用备用地区商店') : '';
+  } else if (cached?.items?.length) {
+    items = cached.items;
+    sourceStatus.textContent = tx('数据源暂不可用，已显示上次成功结果');
+  } else if (sourceFailed) {
+    sourceStatus.textContent = tx('数据源暂不可用，请稍后刷新');
   }
   RSS_LIST = items;
   return renderRssTable(items);
@@ -617,27 +694,27 @@ async function renderSongsFromRss(feed){
 function renderRssTable(items){
   const tbody=$('#rss-table'); tbody.innerHTML='';
   if(!items.length){
-    tbody.innerHTML = `<tr class="border-t"><td colspan="5" class="px-4 py-6 text-center text-gray-500">暂无数据（可稍后再试）</td></tr>`;
+    const row=document.createElement('tr'); row.className='border-t';
+    const cell=document.createElement('td'); cell.colSpan=5; cell.className='px-4 py-6 text-center text-gray-500';
+    cell.textContent=tx('排行榜暂不可用'); row.appendChild(cell); tbody.appendChild(row);
     return;
   }
   items.forEach((s,idx)=>{
     const tr=document.createElement('tr'); tr.className='border-t hover:bg-gray-50';
-    tr.innerHTML=`
-      <td class="px-4 py-2">${idx+1}</td>
-      <td class="px-4 py-2">
-        <div class="flex items-center gap-3">
-          <img src="${s.cover||''}" class="w-8 h-8 rounded object-cover" alt=""/>
-          <div class="min-w-0">
-            <div class="text-clip">${s.title}</div>
-            <div class="text-xs text-gray-500 text-clip">${s.artist||'—'}</div>
-          </div>
-        </div>
-      </td>
-      <td class="px-4 py-2 text-gray-600">${s.artist||'—'}</td>
-      <td class="px-4 py-2 text-gray-600">${s.album||'—'}</td>
-      <td class="px-4 py-2 text-right">
-        <button class="btn-preview h-8 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm" data-idx="${idx}">预览</button>
-      </td>`;
+    const rank=document.createElement('td'); rank.className='px-4 py-2'; rank.textContent=String(idx+1);
+    const details=document.createElement('td'); details.className='px-4 py-2';
+    const flex=document.createElement('div'); flex.className='flex items-center gap-3';
+    const cover=document.createElement('img'); cover.className='w-8 h-8 rounded object-cover'; cover.alt='';
+    try { const coverUrl=new URL(s.cover); if(coverUrl.protocol==='https:'&&/(^|\.)mzstatic\.com$/i.test(coverUrl.hostname)) cover.src=coverUrl.href; } catch {}
+    const copy=document.createElement('div'); copy.className='min-w-0';
+    const songTitle=document.createElement('div'); songTitle.className='text-clip'; songTitle.textContent=s.title||'—';
+    const songArtist=document.createElement('div'); songArtist.className='text-xs text-gray-500 text-clip'; songArtist.textContent=s.artist||'—';
+    copy.append(songTitle,songArtist); flex.append(cover,copy); details.appendChild(flex);
+    const artist=document.createElement('td'); artist.className='px-4 py-2 text-gray-600'; artist.textContent=s.artist||'—';
+    const album=document.createElement('td'); album.className='px-4 py-2 text-gray-600'; album.textContent=s.album||'—';
+    const action=document.createElement('td'); action.className='px-4 py-2 text-right';
+    const button=document.createElement('button'); button.className='btn-preview h-8 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm'; button.dataset.idx=String(idx); button.textContent=tx('预览');
+    action.appendChild(button); tr.append(rank,details,artist,album,action);
     tbody.appendChild(tr);
   });
   setTimeout(()=>{
@@ -646,9 +723,11 @@ function renderRssTable(items){
       btn.addEventListener('click', async ()=>{
         const i=+btn.dataset.idx||0, t=RSS_LIST[i]; if(!t) return;
         if(!t.previewUrl){
-          btn.disabled=true; btn.textContent='获取中…';
-          t.previewUrl = await fetchPreviewUrlBySearch(t.title, t.artist, CURRENT_FEED.code);
-          btn.disabled=false; btn.textContent = t.previewUrl ? '预览' : '不可预览';
+          btn.disabled=true; btn.textContent=tx('获取中…');
+          try { t.previewUrl = await fetchPreviewUrlBySearch(t.title, t.artist, CURRENT_FEED.code); }
+          catch { t.previewError=true; }
+          btn.disabled=false;
+          btn.textContent=t.previewUrl?tx('预览'):tx(t.previewError?'试听源暂不可用':'无可用试听版本');
         }
         if(t.previewUrl){ playAudio(t.previewUrl, {title:t.title, sub:t.artist||'', cover:t.cover||''}); }
       });
@@ -656,18 +735,16 @@ function renderRssTable(items){
   });
 }
 
-/* ===== 无版权整曲（示例） ===== */
+/* ===== CC BY 4.0 full tracks ===== */
 const PD_CATALOG = {
-  '无版权 · 轻音乐': [
-    {id:'fpd_carefree', title:'Carefree Day', artist:'FreePD', license:'CC0/PD', src:'https://freepd.com/music/Carefree%20Day.mp3'},
-    {id:'fpd_happy',    title:'Happy Place',  artist:'FreePD', license:'CC0/PD', src:'https://freepd.com/music/Happy%20Place.mp3'}
+  '自由音乐 · 轻松': [
+    {id:'carefree', title:'Carefree', artist:'Kevin MacLeod', license:'CC BY 4.0 · 需署名', src:'https://incompetech.com/music/royalty-free/mp3-royaltyfree/Carefree.mp3', sourceUrl:'https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400037'}
   ],
-  '无版权 · 电子': [
-    {id:'helix_1', title:'Helix One', artist:'SoundHelix', license:'Free', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'},
-    {id:'helix_2', title:'Helix Two', artist:'SoundHelix', license:'Free', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3'}
+  '自由音乐 · 电子': [
+    {id:'new_friendly', title:'New Friendly', artist:'Kevin MacLeod', license:'CC BY 4.0 · 需署名', src:'https://incompetech.com/music/royalty-free/mp3-royaltyfree/New%20Friendly.mp3', sourceUrl:'https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200005'}
   ],
-  '无版权 · 古典': [
-    {id:'helix_3', title:'Helix Three', artist:'SoundHelix', license:'Free', src:'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3'}
+  '自由音乐 · 古典': [
+    {id:'toccata_fugue', title:'Toccata and Fugue in D Minor', artist:'Kevin MacLeod', license:'CC BY 4.0 · 需署名', src:'https://incompetech.com/music/royalty-free/mp3-royaltyfree/Toccata%20and%20Fugue%20in%20D%20Minor.mp3', sourceUrl:'https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100350'}
   ]
 };
 const PD_CATS = Object.keys(PD_CATALOG);
@@ -703,14 +780,15 @@ function renderPDTable(cat){
   }
   list.forEach((s,idx)=>{
     const tr=document.createElement('tr'); tr.className='border-t hover:bg-gray-50';
-    tr.innerHTML=`
-      <td class="px-4 py-2">${idx+1}</td>
-      <td class="px-4 py-2">${s.title}</td>
-      <td class="px-4 py-2 text-gray-600">${s.artist||'—'}</td>
-      <td class="px-4 py-2 text-gray-600">${s.license||'—'}</td>
-      <td class="px-4 py-2 text-right">
-        <button class="btn-pdplay h-8 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm" data-idx="${idx}">播放</button>
-      </td>`;
+    const rank=document.createElement('td'); rank.className='px-4 py-2'; rank.textContent=String(idx+1);
+    const title=document.createElement('td'); title.className='px-4 py-2';
+    const source=document.createElement('a'); source.href=s.sourceUrl; source.target='_blank'; source.rel='noopener noreferrer'; source.textContent=s.title; source.className='hover:underline';
+    title.appendChild(source);
+    const artist=document.createElement('td'); artist.className='px-4 py-2 text-gray-600'; artist.textContent=s.artist||'—';
+    const license=document.createElement('td'); license.className='px-4 py-2 text-gray-600'; license.textContent=tx(s.license||'—');
+    const action=document.createElement('td'); action.className='px-4 py-2 text-right';
+    const button=document.createElement('button'); button.className='btn-pdplay h-8 px-3 rounded-lg border border-gray-200 hover:bg-gray-50 text-sm'; button.dataset.idx=String(idx); button.textContent=tx('播放');
+    action.appendChild(button); tr.append(rank,title,artist,license,action);
     tbody.appendChild(tr);
   });
   setTimeout(()=>{
@@ -741,20 +819,23 @@ const VIDEO_CATS = [
 ];
 let videoCurrentCatId = localStorage.getItem('aplay.video.cat') || '';
 function feedUrl(feed){
-  if (feed.kind === 'bili_pop')     return `https://rsshub.app/bilibili/popular/all`;
-  if (feed.kind === 'bili_partion') return `https://rsshub.app/bilibili/partion/${encodeURIComponent(feed.tid)}`;
-  if (feed.kind === 'bili_user')    return `https://rsshub.app/bilibili/user/video/${encodeURIComponent(feed.uid)}`;
-  if (feed.kind === 'bilibili_fav') return `https://rsshub.app/bilibili/fav/${encodeURIComponent(feed.uid)}/${encodeURIComponent(feed.fid)}`;
-  if (feed.kind === 'yt_channel')   return `https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(feed.id)}`;
-  if (feed.kind === 'yt_playlist')  return `https://www.youtube.com/feeds/videos.xml?playlist_id=${encodeURIComponent(feed.id)}`;
-  return '';
+  const sourceUrl=new URL(APLAY_SOURCE_ENDPOINT.href);
+  if (feed.kind === 'bili_pop') sourceUrl.searchParams.set('source','bili-popular');
+  else if (feed.kind === 'bili_partion') { sourceUrl.searchParams.set('source','bili-partition'); sourceUrl.searchParams.set('tid',feed.tid); }
+  else if (feed.kind === 'yt_channel') { sourceUrl.searchParams.set('source','youtube-channel'); sourceUrl.searchParams.set('id',feed.id); }
+  else return '';
+  return sourceUrl.href;
 }
-async function fetchXMLCORS(url){
-  const toXML = async r => new DOMParser().parseFromString(await r.text(),'text/xml');
-  try { const r=await fetch(url,{cache:'no-store'}); if(r.ok) return await toXML(r); } catch {}
-  try { const r=await fetch('https://r.jina.ai/http://' + url.replace(/^https?:\/\//,'')); if(r.ok) return await toXML(r); } catch {}
-  try { const r=await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)); if(r.ok) return await toXML(r); } catch {}
-  throw new Error('fetchXMLCORS failed: '+url);
+function makeVideoEntry(title,bvid){
+  const id=String(bvid||'').trim();
+  if(!/^BV[0-9A-Za-z]+$/.test(id)) return null;
+  return {title:String(title||'B站视频').slice(0,240),type:'embed',url:`https://player.bilibili.com/player.html?bvid=${encodeURIComponent(id)}&high_quality=1&danmaku=0&autoplay=1`};
+}
+function parseBilibiliApi(data,feed){
+  if(Number(data?.code)!==0) throw new Error('bilibili_source_unavailable');
+  const rows=feed.kind==='bili_pop'?data?.data?.list:data?.data?.archives;
+  if(!Array.isArray(rows)) throw new Error('bilibili_source_invalid');
+  return rows.map(item=>makeVideoEntry(item.title,item.bvid)).filter(Boolean);
 }
 function parseItems(doc, feed){
   const out=[];
@@ -763,7 +844,7 @@ function parseItems(doc, feed){
       const title = it.querySelector('title')?.textContent?.trim() || 'B站';
       const link  = it.querySelector('link')?.textContent || '';
       const bv = (link.match(/BV\w+/) || [])[0];
-      if (bv) out.push({ title, type:'embed', url:`https://player.bilibili.com/player.html?bvid=${bv}&high_quality=1&danmaku=0&autoplay=1` });
+      const entry=makeVideoEntry(title,bv); if(entry) out.push(entry);
     });
   } else {
     doc.querySelectorAll('entry').forEach(e=>{
@@ -775,12 +856,34 @@ function parseItems(doc, feed){
   return out;
 }
 const VIDEO_CACHE = new Map(); const VIDEO_TTL = 10*60*1000;
+let VIDEO_SOURCE_STALE=false;
+function feedStorageKey(feed){return `aplay.feed.${feed.kind}.${feed.tid||feed.id||'all'}`;}
+async function fetchVideoFeed(feed,url){
+  const response=await fetch(url,{cache:'no-store',headers:{Accept:'application/json, application/atom+xml, application/rss+xml, application/xml'}});
+  if(!response.ok) throw new Error(`source_http_${response.status}`);
+  const contentType=response.headers.get('content-type')||'';
+  if(contentType.includes('json')) return parseBilibiliApi(await response.json(),feed);
+  const doc=new DOMParser().parseFromString(await response.text(),'text/xml');
+  if(doc.querySelector('parsererror')) throw new Error('source_xml_invalid');
+  return parseItems(doc,feed);
+}
 async function loadFeed(feed){
   const url=feedUrl(feed); if(!url) return [];
   const hit=VIDEO_CACHE.get(url); const now=Date.now();
   if(hit && (now-hit.time)<VIDEO_TTL) return hit.items;
-  const doc=await fetchXMLCORS(url); const items=parseItems(doc,feed);
-  VIDEO_CACHE.set(url,{time:now,items}); return items;
+  const storageKey=feedStorageKey(feed); let saved=null;
+  try{saved=JSON.parse(localStorage.getItem(storageKey)||'null');}catch{}
+  if(saved?.items?.length&&now-saved.time<VIDEO_TTL){VIDEO_CACHE.set(url,{time:saved.time,items:saved.items});return saved.items;}
+  try{
+    const items=await fetchVideoFeed(feed,url);
+    if(!items.length) throw new Error('source_empty');
+    VIDEO_CACHE.set(url,{time:now,items});
+    localStorage.setItem(storageKey,JSON.stringify({time:now,items}));
+    return items;
+  }catch(error){
+    if(saved?.items?.length&&now-saved.time<24*60*60*1000){VIDEO_SOURCE_STALE=true;VIDEO_CACHE.set(url,{time:now,items:saved.items});return saved.items;}
+    throw error;
+  }
 }
 function videoMakeChips(){
   const bar=$('#video-cats'); const tip=$('#video-source-tip'); bar.innerHTML='';
@@ -810,11 +913,13 @@ async function renderVideoCat(catId){
   if(cat.overseas && !state.showOverseas){ grid.innerHTML='<div class="text-sm text-gray-500 px-2">海外源未开启</div>'; return; }
   const key=`cat:${catId}:${state.showOverseas}`; const hit=VIDEO_CACHE2.get(key); const now=Date.now();
   if(hit && (now-hit.time)<VIDEO_TTL2){ return renderVideoCards(hit.items); }
+  VIDEO_SOURCE_STALE=false;
   try{
     const all=[]; for(const f of (cat.feeds||[])){ const items=await loadFeed(f); all.push(...items); }
     const uniq=Array.from(new Map(all.map(x=>[x.url,x])).values()).slice(0,24);
     VIDEO_CACHE2.set(key,{time:now,items:uniq}); renderVideoCards(uniq);
-  }catch(e){ console.error(e); grid.innerHTML='<div class="text-sm text-red-500 px-2">加载失败：可能被 CORS/网络限制</div>'; }
+    if(VIDEO_SOURCE_STALE) $('#video-source-tip').textContent=`${state.showOverseas?'已启用海外源（YouTube）':'海外源关闭，仅显示 B 站'} · ${tx('显示缓存结果')}`;
+  }catch(e){ console.error('[APlay source]',e); grid.textContent=tx('数据源暂不可用，请稍后刷新'); }
 }
 function renderVideoCards(list){
   const grid=$('#video-grid'); grid.innerHTML='';
@@ -822,18 +927,15 @@ function renderVideoCards(list){
   list.forEach((v,i)=>{
     const card=document.createElement('div');
     card.className='rounded-2xl border border-gray-200 bg-white overflow-hidden hover:shadow-sm';
-    card.innerHTML=`
-      <div class="h-32 bg-gradient-to-tr from-indigo-100 to-indigo-50 grid place-items-center">
-        <i data-lucide="clapperboard" class="w-6 h-6 text-indigo-700"></i>
-      </div>
-      <div class="p-4 space-y-2">
-        <div class="font-medium text-clip">${v.title}</div>
-        <div class="flex items-center justify-end">
-          <button class="btn-video h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-idx="${i}">
-            <i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放</span>
-          </button>
-        </div>
-      </div>`;
+    const art=document.createElement('div'); art.className='h-32 bg-gradient-to-tr from-indigo-100 to-indigo-50 grid place-items-center';
+    const artIcon=document.createElement('i'); artIcon.dataset.lucide='clapperboard'; artIcon.className='w-6 h-6 text-indigo-700'; art.appendChild(artIcon);
+    const body=document.createElement('div'); body.className='p-4 space-y-2';
+    const title=document.createElement('div'); title.className='font-medium text-clip'; title.textContent=v.title;
+    const actions=document.createElement('div'); actions.className='flex items-center justify-end';
+    const button=document.createElement('button'); button.className='btn-video h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700'; button.dataset.idx=String(i);
+    const playIcon=document.createElement('i'); playIcon.dataset.lucide='play'; playIcon.className='w-4 h-4';
+    const playText=document.createElement('span'); playText.className='ml-1'; playText.textContent=tx('播放');
+    button.append(playIcon,playText); actions.appendChild(button); body.append(title,actions); card.append(art,body);
     grid.appendChild(card);
   });
   setTimeout(()=>{
@@ -851,8 +953,8 @@ const TV_DB=[
   {title:'Elephants Dream（MP4）', type:'file',  url:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'}
 ];
 const RADIO_DB=[
-  {title:'Radio Paradise', desc:'MP3 192kbps', url:'https://stream.radioparadise.com/mp3-192'},
-  {title:'SomaFM Groove Salad', desc:'MP3 128kbps', url:'https://ice1.somafm.com/groovesalad-128-mp3'}
+  {title:'Radio Paradise', desc:'MP3 192kbps', urls:['https://stream.radioparadise.com/mp3-192']},
+  {title:'SomaFM Groove Salad', desc:'MP3 128kbps', urls:['https://ice5.somafm.com/groovesalad-128-mp3','https://ice6.somafm.com/groovesalad-128-mp3']}
 ];
 function mountTV(){
   const grid=$('#tv-grid'); grid.innerHTML='';
@@ -890,7 +992,7 @@ function mountRadio(){
         <div class="font-medium">${r.title}</div>
         <div class="text-sm text-gray-600">${r.desc||''}</div>
         <div class="flex items-center justify-end">
-          <button class="btn-radio h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-url="${encodeURIComponent(r.url)}">
+          <button class="btn-radio h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-idx="${RADIO_DB.indexOf(r)}">
             <i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放</span>
           </button>
         </div>
@@ -899,8 +1001,23 @@ function mountRadio(){
   });
   setTimeout(()=>{
     refreshIcons();
-    document.querySelectorAll('.btn-radio').forEach(btn=>btn.addEventListener('click',()=>{ const url=decodeURIComponent(btn.dataset.url); playAudio(url,{title:'电台',sub:''}); }));
+    document.querySelectorAll('.btn-radio').forEach(btn=>btn.addEventListener('click',()=>{ const station=RADIO_DB[+btn.dataset.idx]; if(station) playRadioStation(station); }));
   });
+}
+function playRadioStation(station){
+  const audio=$('#audio'), urls=(station.urls||[station.url]).filter(Boolean);
+  let index=0;
+  const attempt=()=>{
+    const url=urls[index];
+    const onError=()=>{
+      if(audio.src!==new URL(url,location.href).href) return;
+      if(index+1<urls.length){index++;attempt();}
+      else $('#now-sub').textContent=tx('电台源暂不可用');
+    };
+    audio.addEventListener('error',onError,{once:true});
+    playAudio(url,{title:station.title,sub:station.desc||tx('电台')});
+  };
+  if(urls.length) attempt();
 }
 
 /* ===== 视频/TV 播放控制（屏蔽右键/点击穿透） ===== */

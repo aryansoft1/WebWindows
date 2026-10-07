@@ -52,6 +52,7 @@ Select Case sourceName
   Case "youtube-channel"
     If Not IsAllowedChannel(channelId) Then SendError "400 Bad Request", "invalid_channel"
     upstream = "https://www.youtube.com/feeds/videos.xml?channel_id=" & channelId
+    fallbackUpstream = "https://rsshub.app/youtube/channel/" & channelId
     contentType = "application/atom+xml; charset=utf-8"
     cacheKey = "webwindows.aplay.youtube." & channelId
 
@@ -120,7 +121,7 @@ Function IsValidSourceBody(ByVal kind, ByVal value)
       IsValidSourceBody = (InStr(1, value, """code"":0", vbTextCompare) > 0 Or InStr(1, value, """code"": 0", vbTextCompare) > 0) And InStr(1, value, """archives""", vbTextCompare) > 0
       If Not IsValidSourceBody And InStr(1, value, "<rss", vbTextCompare) > 0 Then IsValidSourceBody = True
     Case "youtube-channel"
-      IsValidSourceBody = (InStr(1, value, "<feed", vbTextCompare) > 0 And InStr(1, value, "</feed>", vbTextCompare) > 0)
+      IsValidSourceBody = (InStr(1, value, "<feed", vbTextCompare) > 0 And InStr(1, value, "</feed>", vbTextCompare) > 0) Or (InStr(1, value, "<rss", vbTextCompare) > 0 And InStr(1, value, "</rss>", vbTextCompare) > 0)
   End Select
 End Function
 

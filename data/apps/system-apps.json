@@ -4,8 +4,8 @@
     "id": "aryansoft-main",
     "name": "WebWindows 功能仓库",
     "baseUrl": "/",
-    "catalogVersion": "2026.10.07.3",
-    "updatedAt": "2026-10-07T21:05:38+09:00"
+    "catalogVersion": "2026.10.07.4",
+    "updatedAt": "2026-10-07T21:48:00+09:00"
   },
   "apps": [
     {
@@ -345,7 +345,7 @@
       "type": "application",
       "name": "傲映(APlay)",
       "icon": "assets/icons/aplay.png",
-      "entry": "aplay.html?v=20261007-source-proxy-2",
+      "entry": "aplay.html?v=20261007-source-proxy-3",
       "install": {
         "defaultState": "installed",
         "source": "preinstalled",

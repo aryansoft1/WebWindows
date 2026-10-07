@@ -38,20 +38,24 @@ assert.match(html, /incompetech\.com\/music\/royalty-free\/mp3-royaltyfree\/Care
 assert.match(html, /incompetech\.com\/music\/royalty-free\/mp3-royaltyfree\/New%20Friendly\.mp3/);
 assert.match(html, /sourceUrl:'https:\/\/incompetech\.com\/music\/royalty-free\/index\.html\?isrc=/);
 assert.doesNotMatch(html, /freepd\.com|SoundHelix|ice1\.somafm\.com/i);
-assert.match(html, /ice5\.somafm\.com\/groovesalad-128-mp3/);
-assert.match(html, /ice6\.somafm\.com\/groovesalad-128-mp3/);
+assert.match(html, /title:'Radio Paradise'.*stream\.radioparadise\.com\/mp3-192/s);
+assert.doesNotMatch(html, /somafm\.com/i);
+assert.match(html, /querySelectorAll\('entry, item'\)/);
+assert.ok(html.includes("/^[A-Za-z0-9_-]{11}$/"), "YouTube ids from fallback feeds must be validated");
 assert.match(html, /audio\.addEventListener\('error',onError,\{once:true\}\)/);
 assert.match(html, /title\.textContent=v\.title/);
 assert.match(html, /songTitle\.textContent=s\.title/);
 assert.match(html, /数据源暂不可用，已显示上次成功结果/);
 assert.match(html, /localStorage\.setItem\(storageKey,JSON\.stringify\(\{time:now,items\}\)\)/);
-assert.match(manifest.apps.find((candidate) => candidate.id === "com.aryansoft.webwindows.aplay")?.entry || "", /source-proxy-2/);
+assert.match(manifest.apps.find((candidate) => candidate.id === "com.aryansoft.webwindows.aplay")?.entry || "", /source-proxy-3/);
 
 assert.match(sourceApi, /Case "apple-chart"/);
 assert.match(sourceApi, /Case "apple-search"/);
 assert.match(sourceApi, /Case "bili-popular"/);
 assert.match(sourceApi, /Case "bili-partition"/);
 assert.match(sourceApi, /fallbackUpstream = "https:\/\/rsshub\.app\/bilibili\/popular\/all"/);
+assert.ok(sourceApi.includes('fallbackUpstream = "https://rsshub.app/youtube/channel/" & channelId'));
+assert.ok(sourceApi.includes('InStr(1, value, "</rss>", vbTextCompare)'));
 assert.match(sourceApi, /api\.bilibili\.com\/x\/web-interface\/popular/);
 assert.match(sourceApi, /IsAllowedChannel/);
 assert.doesNotMatch(sourceApi, /QueryString\("url"\)/i);
@@ -157,5 +161,20 @@ assert.match(publicPicker, /Case "mp3"/);
 assert.match(publicPicker, /Case "mp4", "m4v"/);
 assert.match(privatePicker, /Case "mp3": FileMime = "audio\/mpeg"/);
 assert.match(privatePicker, /Case "mp4", "m4v": FileMime = "video\/mp4"/);
+
+const parseItemsSource = html.match(/function parseItems\(doc, feed\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(parseItemsSource, "YouTube feed parser must exist");
+const parseItems = vm.runInNewContext(`${parseItemsSource}; parseItems`);
+const rssItem = {
+  querySelector(selector) {
+    if (selector === "title") return { textContent: "Fallback upload" };
+    if (selector === "yt\\:videoId, videoId") return null;
+    if (selector === "link") return { getAttribute: () => "https://www.youtube.com/watch?v=dQw4w9WgXcQ", textContent: "" };
+    return null;
+  }
+};
+const fallbackItems = parseItems({ querySelectorAll: (selector) => selector === "entry, item" ? [rssItem] : [] }, { kind: "yt_channel" });
+assert.equal(fallbackItems.length, 1);
+assert.equal(fallbackItems[0].url, "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1");
 
 console.log("APlay i18n and unified cloud media smoke test passed");

@@ -847,10 +847,15 @@ function parseItems(doc, feed){
       const entry=makeVideoEntry(title,bv); if(entry) out.push(entry);
     });
   } else {
-    doc.querySelectorAll('entry').forEach(e=>{
-      const vid = e.querySelector('yt\\:videoId, videoId')?.textContent?.trim();
+    doc.querySelectorAll('entry, item').forEach(e=>{
+      let vid = e.querySelector('yt\\:videoId, videoId')?.textContent?.trim();
+      if (!vid) {
+        const link=e.querySelector('link');
+        const href=link?.getAttribute('href') || link?.textContent || '';
+        vid=(href.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/)||[])[1] || '';
+      }
       const title = e.querySelector('title')?.textContent?.trim() || 'YouTube';
-      if (vid) out.push({ title, type:'embed', url:`https://www.youtube.com/embed/${vid}?autoplay=1` });
+      if (/^[A-Za-z0-9_-]{11}$/.test(vid)) out.push({ title, type:'embed', url:`https://www.youtube.com/embed/${encodeURIComponent(vid)}?autoplay=1` });
     });
   }
   return out;
@@ -953,8 +958,7 @@ const TV_DB=[
   {title:'Elephants Dream（MP4）', type:'file',  url:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'}
 ];
 const RADIO_DB=[
-  {title:'Radio Paradise', desc:'MP3 192kbps', urls:['https://stream.radioparadise.com/mp3-192']},
-  {title:'SomaFM Groove Salad', desc:'MP3 128kbps', urls:['https://ice5.somafm.com/groovesalad-128-mp3','https://ice6.somafm.com/groovesalad-128-mp3']}
+  {title:'Radio Paradise', desc:'MP3 192kbps', urls:['https://stream.radioparadise.com/mp3-192']}
 ];
 function mountTV(){
   const grid=$('#tv-grid'); grid.innerHTML='';

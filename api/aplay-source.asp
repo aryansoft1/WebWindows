@@ -37,16 +37,16 @@ Select Case sourceName
     upstream = "https://itunes.apple.com/search?term=" & Server.URLEncode(term) & "&entity=song&limit=10&country=" & country
 
   Case "bili-popular"
-    upstream = "https://api.bilibili.com/x/web-interface/popular?ps=30&pn=1"
-    fallbackUpstream = "https://rsshub.app/bilibili/popular/all"
-    contentType = "application/json; charset=utf-8"
+    upstream = "https://rsshub.bili.ren/bilibili/popular/all"
+    fallbackUpstream = "https://rsshub.mt.cd/bilibili/popular/all"
+    contentType = "application/xml; charset=utf-8"
     cacheKey = "webwindows.aplay.bili-popular"
 
   Case "bili-partition"
     If partitionId <> "3" And partitionId <> "188" Then SendError "400 Bad Request", "invalid_partition"
-    upstream = "https://api.bilibili.com/x/web-interface/newlist?ps=15&rid=" & partitionId
-    fallbackUpstream = "https://rsshub.app/bilibili/partion/" & partitionId
-    contentType = "application/json; charset=utf-8"
+    upstream = "https://rsshub.bili.ren/bilibili/partion/" & partitionId
+    fallbackUpstream = "https://rsshub.mt.cd/bilibili/partion/" & partitionId
+    contentType = "application/xml; charset=utf-8"
     cacheKey = "webwindows.aplay.bili-partition." & partitionId
 
   Case "youtube-channel"
@@ -109,19 +109,24 @@ Function HasControlCharacters(ByVal value)
 End Function
 
 Function IsValidSourceBody(ByVal kind, ByVal value)
+  Dim normalizedBody
   IsValidSourceBody = False
-  If Len(value) = 0 Or Len(value) > APLAY_MAX_RESPONSE_CHARS Then Exit Function
+  If IsNull(value) Then Exit Function
+  If IsEmpty(value) Then Exit Function
+  normalizedBody = LCase(CStr(value))
+  If Len(normalizedBody) = 0 Then Exit Function
+  If Len(normalizedBody) > APLAY_MAX_RESPONSE_CHARS Then Exit Function
   Select Case kind
     Case "apple-chart", "apple-search"
-      IsValidSourceBody = (InStr(1, value, """results""", vbTextCompare) > 0 Or InStr(1, value, """feed""", vbTextCompare) > 0)
+      IsValidSourceBody = (InStr(normalizedBody, """results""") > 0 Or InStr(normalizedBody, """feed""") > 0)
     Case "bili-popular"
-      IsValidSourceBody = (InStr(1, value, """code"":0", vbTextCompare) > 0 Or InStr(1, value, """code"": 0", vbTextCompare) > 0) And InStr(1, value, """list""", vbTextCompare) > 0
-      If Not IsValidSourceBody And InStr(1, value, "<rss", vbTextCompare) > 0 Then IsValidSourceBody = True
+      IsValidSourceBody = (InStr(normalizedBody, """code"":0") > 0 Or InStr(normalizedBody, """code"": 0") > 0) And InStr(normalizedBody, """list""") > 0
+      If Not IsValidSourceBody And InStr(normalizedBody, "<rss") > 0 And InStr(normalizedBody, "<item") > 0 Then IsValidSourceBody = True
     Case "bili-partition"
-      IsValidSourceBody = (InStr(1, value, """code"":0", vbTextCompare) > 0 Or InStr(1, value, """code"": 0", vbTextCompare) > 0) And InStr(1, value, """archives""", vbTextCompare) > 0
-      If Not IsValidSourceBody And InStr(1, value, "<rss", vbTextCompare) > 0 Then IsValidSourceBody = True
+      IsValidSourceBody = (InStr(normalizedBody, """code"":0") > 0 Or InStr(normalizedBody, """code"": 0") > 0) And (InStr(normalizedBody, """archives""") > 0 Or InStr(normalizedBody, """list""") > 0)
+      If Not IsValidSourceBody And InStr(normalizedBody, "<rss") > 0 And InStr(normalizedBody, "<item") > 0 Then IsValidSourceBody = True
     Case "youtube-channel"
-      IsValidSourceBody = (InStr(1, value, "<feed", vbTextCompare) > 0 And InStr(1, value, "</feed>", vbTextCompare) > 0) Or (InStr(1, value, "<rss", vbTextCompare) > 0 And InStr(1, value, "</rss>", vbTextCompare) > 0)
+      IsValidSourceBody = (InStr(normalizedBody, "<feed") > 0 And InStr(normalizedBody, "</feed>") > 0) Or (InStr(normalizedBody, "<rss") > 0 And InStr(normalizedBody, "</rss>") > 0)
   End Select
 End Function
 

@@ -7,6 +7,10 @@ export const YOUTUBE_CHANNELS = Object.freeze([
   "UCXuqSBlHAE6Xw-yeJA0Tunw",
   "UCSJ4gkVC6NrvII8umztf0Ow"
 ]);
+export const YOUTUBE_TREND_REGIONS = Object.freeze([
+  "JP", "US", "GB", "CA", "AU", "KR", "IN", "SG",
+  "TW", "HK", "CN", "FR", "DE", "BR", "MX", "ES"
+]);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUTPUT = path.join(ROOT, "data", "aplay", "youtube-feeds.json");
@@ -45,7 +49,22 @@ function parsePlaylistItems(payload) {
     if (!VIDEO_ID.test(videoId) || !title || seen.has(videoId)) return [];
     seen.add(videoId);
     const publishedAt = String(item?.contentDetails?.videoPublishedAt || item?.snippet?.publishedAt || "");
-    return [{ videoId, title, publishedAt: /^\d{4}-\d\d-\d\dT/.test(publishedAt) ? publishedAt.slice(0, 40) : "" }];
+    const thumbnail = ["maxres", "high", "medium", "default"].map(size => item?.snippet?.thumbnails?.[size]?.url).find(url => /^https:\/\/i\.ytimg\.com\//i.test(String(url || ""))) || "";
+    return [{ videoId, title, publishedAt: /^\d{4}-\d\d-\d\dT/.test(publishedAt) ? publishedAt.slice(0, 40) : "", thumbnail }];
+  }).slice(0, 15);
+}
+
+function parseMostPopularItems(payload) {
+  if (!Array.isArray(payload?.items)) throw new Error("YouTube popular response is missing items");
+  const seen = new Set();
+  return payload.items.flatMap(item => {
+    const videoId = String(typeof item?.id === "string" ? item.id : item?.id?.videoId || "").trim();
+    const title = String(item?.snippet?.title || "").trim().slice(0, 240);
+    if (!VIDEO_ID.test(videoId) || !title || seen.has(videoId)) return [];
+    seen.add(videoId);
+    const publishedAt = String(item?.snippet?.publishedAt || "");
+    const thumbnail = ["maxres", "high", "medium", "default"].map(size => item?.snippet?.thumbnails?.[size]?.url).find(url => /^https:\/\/i\.ytimg\.com\//i.test(String(url || ""))) || "";
+    return [{ videoId, title, publishedAt: /^\d{4}-\d\d-\d\dT/.test(publishedAt) ? publishedAt.slice(0, 40) : "", thumbnail }];
   }).slice(0, 15);
 }
 
@@ -141,14 +160,31 @@ export async function buildYouTubeFeedCache({ apiKey, fetchImpl = fetch, now = n
       }
     }
   })));
+  const regions = Object.fromEntries(await Promise.all(YOUTUBE_TREND_REGIONS.map(async regionCode => {
+    try {
+      const response = await apiGet("videos", {
+        part: "snippet,contentDetails",
+        chart: "mostPopular",
+        regionCode,
+        maxResults: "15"
+      }, { apiKey, fetchImpl });
+      const videos = parseMostPopularItems(response);
+      if (!videos.length) console.warn("YouTube most-popular chart returned no videos for region " + regionCode + ".");
+      return [regionCode, { regionCode, videos }];
+    } catch (error) {
+      console.warn("YouTube most-popular chart unavailable for region " + regionCode + ": " + error.message);
+      return [regionCode, { regionCode, videos: [] }];
+    }
+  })));
   if (!Object.values(channels).some(channel => channel.videos.length)) {
     throw new Error("YouTube API and public RSS returned no valid videos; keeping the existing cache");
   }
   return {
     schemaVersion: 1,
     generatedAt: now.toISOString(),
-    source: "YouTube Data API v3 with public RSS fallback",
-    channels
+    source: "YouTube Data API v3 with regional popular charts and public RSS fallback",
+    channels,
+    regions
   };
 }
 

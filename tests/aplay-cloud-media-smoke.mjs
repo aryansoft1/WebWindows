@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import vm from "node:vm";
-import { buildYouTubeFeedCache, YOUTUBE_CHANNELS } from "../tools/refresh-aplay-youtube-feeds.mjs";
+import { buildYouTubeFeedCache, YOUTUBE_CHANNELS, YOUTUBE_TREND_REGIONS } from "../tools/refresh-aplay-youtube-feeds.mjs";
 
 const read = async (relative) => fs.readFile(new URL(`../${relative}`, import.meta.url), "utf8");
 
@@ -34,6 +34,9 @@ assert.match(html, /new URL\('\/api\/aplay-source\.asp', location\.origin\)/);
 assert.match(html, /fetchAPlaySource\('apple-chart'/);
 assert.match(html, /fetchAPlaySource\('apple-search'/);
 assert.match(html, /sourceUrl\.searchParams\.set\('source','bili-popular'\)/);
+assert.match(html, /id:'yt-local',\s+name:'YouTube·当地热门'/);
+assert.match(html, /'YouTube·当地热门':'YouTube · Local trends'/);
+assert.match(html, /id="btn-video-refresh"/);
 assert.match(html, /YOUTUBE_FEED_CACHE_URLS = \[/);
 assert.match(html, /https:\/\/raw\.githubusercontent\.com\/aryansoft1\/WebWindows\/main\/data\/aplay\/youtube-feeds\.json/);
 assert.match(html, /https:\/\/raw\.githubusercontent\.com\/aryansoft1\/WebWindows\/codex\/aplay-cloud-media\/data\/aplay\/youtube-feeds\.json/);
@@ -54,15 +57,22 @@ assert.match(html, /title\.textContent=v\.title/);
 assert.match(html, /songTitle\.textContent=s\.title/);
 assert.match(html, /数据源暂不可用，已显示上次成功结果/);
 assert.match(html, /localStorage\.setItem\(storageKey,JSON\.stringify\(\{time:now,items\}\)\)/);
+assert.match(html, /cover\.src=v\.thumbnail/);
+assert.match(html, /shield\.classList\.add\('hidden'\); shield\.onclick=null/);
+assert.match(html, /function safeVideoCover\(value,source\)/);
 assert.match(manifest.apps.find((candidate) => candidate.id === "com.aryansoft.webwindows.aplay")?.entry || "", /source-proxy-3/);
 
 assert.match(sourceApi, /Case "apple-chart"/);
 assert.match(sourceApi, /Case "apple-search"/);
 assert.match(sourceApi, /Case "bili-popular"/);
 assert.match(sourceApi, /Case "bili-partition"/);
-assert.match(sourceApi, /fallbackUpstream = "https:\/\/rsshub\.app\/bilibili\/popular\/all"/);
-assert.ok(sourceApi.includes('InStr(1, value, "</rss>", vbTextCompare)'));
-assert.match(sourceApi, /api\.bilibili\.com\/x\/web-interface\/popular/);
+assert.match(sourceApi, /upstream = "https:\/\/rsshub\.bili\.ren\/bilibili\/popular\/all"/);
+assert.match(sourceApi, /fallbackUpstream = "https:\/\/rsshub\.mt\.cd\/bilibili\/popular\/all"/);
+assert.match(sourceApi, /upstream = "https:\/\/rsshub\.bili\.ren\/bilibili\/partion\/"/);
+assert.match(sourceApi, /fallbackUpstream = "https:\/\/rsshub\.mt\.cd\/bilibili\/partion\/"/);
+assert.doesNotMatch(sourceApi, /x-web-interface\/(?:newlist|popular)/);
+assert.match(sourceApi, /If IsNull\(value\) Then Exit Function/);
+assert.match(sourceApi, /InStr\(normalizedBody, "<item"\)/);
 assert.match(sourceApi, /IsAllowedChannel/);
 assert.doesNotMatch(sourceApi, /QueryString\("url"\)/i);
 assert.match(sourceApi, /APLAY_MAX_RESPONSE_CHARS/);
@@ -74,6 +84,7 @@ assert.doesNotMatch(feedWorkflow, /AIza[\w-]{30,}/);
 assert.equal(YOUTUBE_CHANNELS.length, 3);
 
 const mockedApiCalls = [];
+const mockedRegionCodes = [];
 const fixtureKey = "test-only-fixture-key";
 const generatedCache = await buildYouTubeFeedCache({
   apiKey: fixtureKey,
@@ -83,10 +94,18 @@ const generatedCache = await buildYouTubeFeedCache({
     assert.equal(options.headers["x-goog-api-key"], fixtureKey);
     assert.equal(url.searchParams.has("key"), false, "API key must not appear in URLs");
     mockedApiCalls.push(url.pathname);
+    if (url.pathname.endsWith("/videos")) {
+      assert.equal(url.searchParams.get("chart"), "mostPopular");
+      mockedRegionCodes.push(url.searchParams.get("regionCode"));
+      return { ok: true, status: 200, async json() { return { items: [{
+        id: "dQw4w9WgXcQ",
+        snippet: { title: `Local ${url.searchParams.get("regionCode")}`, publishedAt: "2026-10-08T00:00:00Z", thumbnails: { high: { url: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" } } }
+      }] }; } };
+    }
     const payload = url.pathname.endsWith("/channels")
       ? { items: YOUTUBE_CHANNELS.map(channelId => ({ id: channelId, contentDetails: { relatedPlaylists: { uploads: `UU${channelId.slice(2)}` } } })) }
       : { items: [
-        { contentDetails: { videoId: "dQw4w9WgXcQ", videoPublishedAt: "2026-10-08T00:00:00Z" }, snippet: { title: "Fixture video" } },
+        { contentDetails: { videoId: "dQw4w9WgXcQ", videoPublishedAt: "2026-10-08T00:00:00Z" }, snippet: { title: "Fixture video", thumbnails: { high: { url: "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" } } } },
         { contentDetails: { videoId: "invalid" }, snippet: { title: "Rejected video" } }
       ] };
     return { ok: true, status: 200, async json() { return payload; } };
@@ -94,7 +113,11 @@ const generatedCache = await buildYouTubeFeedCache({
 });
 assert.equal(mockedApiCalls.filter(endpoint => endpoint.endsWith("/channels")).length, 1);
 assert.equal(mockedApiCalls.filter(endpoint => endpoint.endsWith("/playlistItems")).length, 3);
+assert.deepEqual([...mockedRegionCodes].sort(), [...YOUTUBE_TREND_REGIONS].sort());
 assert.equal(generatedCache.channels[YOUTUBE_CHANNELS[0]].videos[0].videoId, "dQw4w9WgXcQ");
+assert.equal(generatedCache.channels[YOUTUBE_CHANNELS[0]].videos[0].thumbnail, "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
+assert.equal(generatedCache.regions.JP.videos[0].title, "Local JP");
+assert.equal(generatedCache.regions.JP.videos[0].thumbnail, "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
 assert.doesNotMatch(JSON.stringify(generatedCache), /test-only-fixture-key/);
 
 const rssFallbackChannel = YOUTUBE_CHANNELS[1];
@@ -138,6 +161,15 @@ const rssFallbackCache = await buildYouTubeFeedCache({
               snippet: { title: "API video" }
             }]
           };
+        }
+      };
+    }
+    if (url.pathname.endsWith("/videos")) {
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return { items: [{ id: "dQw4w9WgXcQ", snippet: { title: "Regional video", thumbnails: { medium: { url: "https://i.ytimg.com/vi/dQw4w9WgXcQ/mqdefault.jpg" } } } }] };
         }
       };
     }
@@ -266,7 +298,11 @@ assert.match(privatePicker, /Case "mp4", "m4v": FileMime = "video\/mp4"/);
 
 const parseItemsSource = html.match(/function parseItems\(doc, feed\)\{[\s\S]*?\n\}/)?.[0];
 assert.ok(parseItemsSource, "YouTube feed parser must exist");
-const parseItems = vm.runInNewContext(`${parseItemsSource}; parseItems`);
+const safeVideoCoverSource = html.match(/function safeVideoCover\(value,source\)\{[\s\S]*?\n\}/)?.[0];
+const makeVideoEntrySource = html.match(/function makeVideoEntry\(title,bvid,cover\)\{[\s\S]*?\n\}/)?.[0];
+const parseBilibiliApiSource = html.match(/function parseBilibiliApi\(data,feed\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(safeVideoCoverSource && makeVideoEntrySource && parseBilibiliApiSource, "Bilibili entries must be parsed with safe cover URLs");
+const parseItems = vm.runInNewContext(`${safeVideoCoverSource}; ${makeVideoEntrySource}; ${parseItemsSource}; parseItems`, { URL });
 const rssItem = {
   querySelector(selector) {
     if (selector === "title") return { textContent: "Fallback upload" };
@@ -278,21 +314,57 @@ const rssItem = {
 const fallbackItems = parseItems({ querySelectorAll: (selector) => selector === "entry, item" ? [rssItem] : [] }, { kind: "yt_channel" });
 assert.equal(fallbackItems.length, 1);
 assert.equal(fallbackItems[0].url, "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1");
+assert.equal(fallbackItems[0].thumbnail, "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
+
+const biliItem = {
+  querySelector(selector) {
+    if (selector === "title") return { textContent: "Bili cover" };
+    if (selector === "link") return { textContent: "https://www.bilibili.com/video/BV1xx411c7mD" };
+    if (selector === "description") return { textContent: '<img src="http://i0.hdslb.com/bfs/archive/cover.jpg">' };
+    return null;
+  }
+};
+const biliRssItems = parseItems({ querySelectorAll: (selector) => selector === "item" ? [biliItem] : [] }, { kind: "bili-partition" });
+assert.equal(biliRssItems[0].thumbnail, "https://i0.hdslb.com/bfs/archive/cover.jpg");
+const parseBilibiliApi = vm.runInNewContext(`${safeVideoCoverSource}; ${makeVideoEntrySource}; ${parseBilibiliApiSource}; parseBilibiliApi`, { URL });
+const biliApiItems = parseBilibiliApi({ code: 0, data: { list: [{ title: "Bili API cover", bvid: "BV1xx411c7mD", pic: "//i0.hdslb.com/bfs/archive/api-cover.jpg" }] } }, { kind: "bili-pop" });
+assert.equal(biliApiItems[0].thumbnail, "https://i0.hdslb.com/bfs/archive/api-cover.jpg");
+assert.equal(parseBilibiliApi({ code: 0, data: { archives: [{ title: "Music archive", bvid: "BV1xx411c7mD", pic: "https://i0.hdslb.com/bfs/archive/music.jpg" }] } }, { kind: "bili-partition" })[0].title, "Music archive");
+assert.equal(parseBilibiliApi({ code: 0, data: { list: [{ title: "unsafe", bvid: "BV1xx411c7mD", pic: "https://evil.example/cover.jpg" }] } }, { kind: "bili-pop" })[0].thumbnail, "");
 
 const parseCacheSource = html.match(/function parseYouTubeCache\(data,feed\)\{[\s\S]*?\n\}/)?.[0];
-assert.ok(parseCacheSource, "APlay must parse the generated YouTube cache");
-const parseYouTubeCache = vm.runInNewContext(`${parseCacheSource}; parseYouTubeCache`);
+const regionHelpersSource = html.match(/const YOUTUBE_REGION_FALLBACKS=[\s\S]*?function getLocalYouTubeRegion\(regions\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(parseCacheSource && regionHelpersSource, "APlay must parse regional YouTube caches");
+const regionIntl = { DateTimeFormat: () => ({ resolvedOptions: () => ({ timeZone: "Asia/Tokyo" }) }) };
+const parseYouTubeCache = vm.runInNewContext(`${safeVideoCoverSource}; ${regionHelpersSource}; ${parseCacheSource}; parseYouTubeCache`, { URL, Intl: regionIntl, navigator: { language: "en-US", languages: ["en-US"] } });
 const cacheItems = parseYouTubeCache(generatedCache, { kind: "yt_channel", id: YOUTUBE_CHANNELS[0] });
 assert.equal(cacheItems.length, 1);
 assert.equal(cacheItems[0].url, "https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1");
+assert.equal(cacheItems[0].thumbnail, "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
 assert.throws(() => parseYouTubeCache({ schemaVersion: 1, channels: {} }, { kind: "yt_channel", id: "UC0000000000000000000000" }), /youtube_channel_missing/);
+const localVideos = parseYouTubeCache(generatedCache, { kind: "yt_local" });
+assert.equal(localVideos[0].title, "Local JP");
+assert.equal(localVideos[0].thumbnail, "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
+
+const playVideoEntrySource = html.match(/function playVideoEntry\(entry\)\{[\s\S]*?\n\}/)?.[0];
+assert.ok(playVideoEntrySource, "Video entries must be playable");
+const classes = () => { const values = new Set(); return { add: value => values.add(value), remove: value => values.delete(value), contains: value => values.has(value) }; };
+const videoElements = {
+  "#video-now": { textContent: "" },
+  "#video-player": { classList: classes(), parentElement: {}, pause() {}, removeAttribute() {}, load() {} },
+  "#video-iframe": { classList: classes(), parentElement: {}, src: "" },
+  "#video-shield": { classList: classes(), onclick: null, oncontextmenu: null }
+};
+vm.runInNewContext(`${playVideoEntrySource}; playVideoEntry`, { $: selector => videoElements[selector], pauseAudio() {}, tx: value => value })({ type: "embed", title: "Bilibili", url: "https://player.bilibili.com/player.html?bvid=BV1xx411c7mD" });
+assert.equal(videoElements["#video-iframe"].classList.contains("hidden"), false);
+assert.equal(videoElements["#video-shield"].classList.contains("hidden"), true);
 
 const cacheUrlsSource = html.match(/const YOUTUBE_FEED_CACHE_URLS = \[[\s\S]*?\];/)?.[0];
 const fetchVideoFeedSource = html.match(/async function fetchVideoFeed\(feed,url\)\{[\s\S]*?\n\}/)?.[0];
 assert.ok(cacheUrlsSource && fetchVideoFeedSource, "YouTube cache must have a tested fallback fetch path");
 const requestedCacheUrls = [];
 const fetchYouTubeFeed = vm.runInNewContext(
-  `${cacheUrlsSource}; ${parseCacheSource}; ${fetchVideoFeedSource}; fetchVideoFeed`,
+  `${safeVideoCoverSource}; ${cacheUrlsSource}; ${parseCacheSource}; ${fetchVideoFeedSource}; fetchVideoFeed`,
   {
     fetch: async (url) => {
       requestedCacheUrls.push(url);

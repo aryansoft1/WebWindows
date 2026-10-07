@@ -275,7 +275,7 @@ href="data:image/svg+xml;utf8,
 
       <!-- Video -->
       <div id="view-video" class="hidden space-y-6">
-        <div class="flex items-center justify-between"><h2 class="text-base font-semibold">为你推荐 · 视频</h2></div>
+        <div class="flex items-center justify-between"><h2 class="text-base font-semibold">为你推荐 · 视频</h2><button id="btn-video-refresh" class="h-9 px-3 rounded-xl border border-gray-200 hover:bg-gray-50 text-sm">刷新</button></div>
         <div class="flex items-center justify-between">
           <div id="video-cats" class="flex flex-wrap gap-2"></div>
           <div id="video-source-tip" class="text-xs text-gray-500"></div>
@@ -386,7 +386,7 @@ const I18N_TEXT={
     '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'榜單來自 Apple iTunes RSS；試聽為 Apple 提供的 30–90 秒預覽，僅供推廣展示，不提供整首歌曲連結。',
     '中国金曲':'華語金曲','英文歌曲':'英文歌曲','日本音乐':'日本音樂','热门歌曲（真实榜单）':'熱門歌曲（即時榜單）','标题 / 艺术家':'標題 / 藝術家','艺术家':'藝術家','专辑':'專輯','操作':'操作','预览':'試聽','获取中…':'取得中…','不可预览':'無法試聽','正在加载…':'正在載入…','暂无数据（可稍后再试）':'暫無資料（可稍後再試）',
     '无版权 · 整曲':'無版權 · 整首','示例数据，后期换成你的直链或自建源':'示例資料，可替換為你的連結或自建來源','无版权 · 轻音乐':'無版權 · 輕音樂','无版权 · 电子':'無版權 · 電子','无版权 · 古典':'無版權 · 古典','全量列表':'完整清單','暂无曲目':'暫無曲目','标题':'標題','授权':'授權','播放':'播放',
-    '为你推荐 · 视频':'為你推薦 · 影片','海外源未开启':'海外來源未開啟','海外源关闭，仅显示 B 站':'海外來源已關閉，僅顯示 B 站','已启用海外源（YouTube）':'已啟用海外來源（YouTube）','暂无数据或被源限制':'暫無資料或來源受限','未选择视频':'尚未選擇影片','正在播放：':'正在播放：','播放/暂停':'播放/暫停','静音':'靜音','全屏':'全螢幕','退出':'離開','TV · 官方 / 直链':'TV · 官方 / 連結','未选择频道':'尚未選擇頻道','选择一首歌开始播放':'選擇一首歌開始播放','收藏夹为空（示例）':'收藏清單是空的（示例）','上一首':'上一首','下一首':'下一首','播放或暂停':'播放或暫停','播放进度':'播放進度','音量':'音量',
+    '为你推荐 · 视频':'為你推薦 · 影片','YouTube·当地热门':'YouTube·當地熱門','海外源未开启':'海外來源未開啟','海外源关闭，仅显示 B 站':'海外來源已關閉，僅顯示 B 站','已启用海外源（YouTube）':'已啟用海外來源（YouTube）','暂无数据或被源限制':'暫無資料或來源受限','未选择视频':'尚未選擇影片','正在播放：':'正在播放：','播放/暂停':'播放/暫停','静音':'靜音','全屏':'全螢幕','退出':'離開','TV · 官方 / 直链':'TV · 官方 / 連結','未选择频道':'尚未選擇頻道','选择一首歌开始播放':'選擇一首歌開始播放','收藏夹为空（示例）':'收藏清單是空的（示例）','上一首':'上一首','下一首':'下一首','播放或暂停':'播放或暫停','播放进度':'播放進度','音量':'音量',
     '公共云':'公共雲','私人云':'私人雲','此设备':'此裝置','WebWindows 资料':'WebWindows 資料','媒体':'媒體','音频':'音訊','频道':'頻道','用 APlay 打开媒体':'使用 APlay 開啟媒體','音频和视频':'音訊與影片','媒体打开失败。':'媒體開啟失敗。','云资源服务暂时不可用。':'雲端資源服務暫時無法使用。','APlay 不支持此媒体格式。':'APlay 不支援此媒體格式。',
     '数据源暂不可用，已显示上次成功结果':'資料來源暫時無法使用，已顯示上次成功結果','数据源暂不可用，请稍后刷新':'資料來源暫時無法使用，請稍後重新整理','显示缓存结果':'顯示快取結果','来源暂不可用':'來源暫時無法使用','已改用备用地区商店':'已改用備用地區商店','无可用试听版本':'所選商店沒有可用試聽版本','试听源暂不可用':'試聽來源暫時無法使用','排行榜暂不可用':'排行榜暫時無法使用'
   },
@@ -400,7 +400,7 @@ const I18N_TEXT={
     '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'Charts come from Apple iTunes RSS. Apple previews are 30–90 seconds and are provided for promotional listening only.',
     '中国金曲':'Chinese hits','英文歌曲':'English songs','日本音乐':'Japanese music','热门歌曲（真实榜单）':'Top songs (live chart)','标题 / 艺术家':'Title / artist','艺术家':'Artist','专辑':'Album','操作':'Action','预览':'Preview','获取中…':'Loading…','不可预览':'Unavailable','正在加载…':'Loading…','暂无数据（可稍后再试）':'No data. Try again later.',
     '无版权 · 整曲':'Royalty-free · Full tracks','示例数据，后期换成你的直链或自建源':'Sample catalog; replace it with your own licensed source','无版权 · 轻音乐':'Royalty-free · Easy listening','无版权 · 电子':'Royalty-free · Electronic','无版权 · 古典':'Royalty-free · Classical','全量列表':'Full list','暂无曲目':'No tracks','标题':'Title','授权':'License','播放':'Play',
-    '为你推荐 · 视频':'Video for you','海外源未开启':'International sources are off','海外源关闭，仅显示 B 站':'International sources are off; showing Bilibili only','已启用海外源（YouTube）':'International sources enabled (YouTube)','暂无数据或被源限制':'No content available from this source','未选择视频':'No video selected','正在播放：':'Now playing: ','播放/暂停':'Play / pause','静音':'Mute','全屏':'Full screen','退出':'Exit','TV · 官方 / 直链':'TV · Official / streams','未选择频道':'No channel selected','选择一首歌开始播放':'Choose a track to start listening','收藏夹为空（示例）':'Your liked list is empty','上一首':'Previous','下一首':'Next','播放或暂停':'Play or pause','播放进度':'Playback position','音量':'Volume',
+    '为你推荐 · 视频':'Video for you','YouTube·当地热门':'YouTube · Local trends','海外源未开启':'International sources are off','海外源关闭，仅显示 B 站':'International sources are off; showing Bilibili only','已启用海外源（YouTube）':'International sources enabled (YouTube)','暂无数据或被源限制':'No content available from this source','未选择视频':'No video selected','正在播放：':'Now playing: ','播放/暂停':'Play / pause','静音':'Mute','全屏':'Full screen','退出':'Exit','TV · 官方 / 直链':'TV · Official / streams','未选择频道':'No channel selected','选择一首歌开始播放':'Choose a track to start listening','收藏夹为空（示例）':'Your liked list is empty','上一首':'Previous','下一首':'Next','播放或暂停':'Play or pause','播放进度':'Playback position','音量':'Volume',
     '公共云':'Public cloud','私人云':'Private cloud','此设备':'This device','WebWindows 资料':'WebWindows files','媒体':'Media','音频':'Audio','频道':'Channel','用 APlay 打开媒体':'Open media with APlay','音频和视频':'Audio and video','媒体打开失败。':'Could not open the media.','云资源服务暂时不可用。':'Cloud resources are temporarily unavailable.','APlay 不支持此媒体格式。':'APlay does not support this media format.',
     '数据源暂不可用，已显示上次成功结果':'Source temporarily unavailable; showing the last successful results','数据源暂不可用，请稍后刷新':'Source temporarily unavailable. Please refresh later.','显示缓存结果':'Showing cached results','来源暂不可用':'Source temporarily unavailable','已改用备用地区商店':'Using an alternate store region','无可用试听版本':'No preview is available in the selected stores','试听源暂不可用':'Preview service temporarily unavailable','排行榜暂不可用':'Charts are temporarily unavailable'
   },
@@ -414,7 +414,7 @@ const I18N_TEXT={
     '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'ランキングは Apple iTunes RSS を使用しています。試聴は Apple 提供の30〜90秒のプロモーション用プレビューです。',
     '中国金曲':'中国ヒット','英文歌曲':'英語の曲','日本音乐':'日本の音楽','热门歌曲（真实榜单）':'人気曲（ライブランキング）','标题 / 艺术家':'曲名 / アーティスト','艺术家':'アーティスト','专辑':'アルバム','操作':'操作','预览':'試聴','获取中…':'取得中…','不可预览':'試聴不可','正在加载…':'読み込み中…','暂无数据（可稍后再试）':'データがありません。後でもう一度お試しください。',
     '无版权 · 整曲':'ロイヤリティフリー · フル再生','示例数据，后期换成你的直链或自建源':'サンプルです。ライセンス済みの独自ソースに置き換えられます','无版权 · 轻音乐':'ロイヤリティフリー · イージーリスニング','无版权 · 电子':'ロイヤリティフリー · エレクトロニック','无版权 · 古典':'ロイヤリティフリー · クラシック','全量列表':'全曲','暂无曲目':'曲がありません','标题':'タイトル','授权':'ライセンス','播放':'再生',
-    '为你推荐 · 视频':'おすすめ動画','海外源未开启':'海外ソースはオフです','海外源关闭，仅显示 B 站':'海外ソースはオフです。Bilibili のみ表示します','已启用海外源（YouTube）':'海外ソースを有効化（YouTube）','暂无数据或被源限制':'このソースからコンテンツを取得できません','未选择视频':'動画が選択されていません','正在播放：':'再生中：','播放/暂停':'再生 / 一時停止','静音':'ミュート','全屏':'全画面','退出':'終了','TV · 官方 / 直链':'TV · 公式 / ストリーム','未选择频道':'チャンネルが選択されていません','选择一首歌开始播放':'曲を選んで再生を始めましょう','收藏夹为空（示例）':'お気に入りは空です','上一首':'前の曲','下一首':'次の曲','播放或暂停':'再生または一時停止','播放进度':'再生位置','音量':'音量',
+    '为你推荐 · 视频':'おすすめ動画','YouTube·当地热门':'YouTube · 現地の人気動画','海外源未开启':'海外ソースはオフです','海外源关闭，仅显示 B 站':'海外ソースはオフです。Bilibili のみ表示します','已启用海外源（YouTube）':'海外ソースを有効化（YouTube）','暂无数据或被源限制':'このソースからコンテンツを取得できません','未选择视频':'動画が選択されていません','正在播放：':'再生中：','播放/暂停':'再生 / 一時停止','静音':'ミュート','全屏':'全画面','退出':'終了','TV · 官方 / 直链':'TV · 公式 / ストリーム','未选择频道':'チャンネルが選択されていません','选择一首歌开始播放':'曲を選んで再生を始めましょう','收藏夹为空（示例）':'お気に入りは空です','上一首':'前の曲','下一首':'次の曲','播放或暂停':'再生または一時停止','播放进度':'再生位置','音量':'音量',
     '公共云':'パブリッククラウド','私人云':'プライベートクラウド','此设备':'このデバイス','WebWindows 资料':'WebWindows ファイル','媒体':'メディア','音频':'オーディオ','频道':'チャンネル','用 APlay 打开媒体':'APlay でメディアを開く','音频和视频':'オーディオと動画','媒体打开失败。':'メディアを開けませんでした。','云资源服务暂时不可用。':'クラウドリソースを一時的に利用できません。','APlay 不支持此媒体格式。':'このメディア形式は APlay で再生できません。',
     '数据源暂不可用，已显示上次成功结果':'ソースを一時的に利用できないため、前回の結果を表示しています','数据源暂不可用，请稍后刷新':'ソースを一時的に利用できません。後でもう一度更新してください','显示缓存结果':'キャッシュ済みの結果を表示中','来源暂不可用':'ソースを一時的に利用できません','已改用备用地区商店':'別の地域のストアを使用しています','无可用试听版本':'選択したストアに試聴版がありません','试听源暂不可用':'試聴サービスを一時的に利用できません','排行榜暂不可用':'ランキングを一時的に利用できません'
   }
@@ -813,6 +813,7 @@ const VIDEO_CATS = [
   { id:'bili-pop',  name:'B站·全站热门', feeds:[{kind:'bili_pop'}] },
   { id:'bili-music',name:'B站·音乐',      feeds:[{kind:'bili_partion', tid:3}] },
   { id:'bili-tech', name:'B站·科技',      feeds:[{kind:'bili_partion', tid:188}] },
+  { id:'yt-local',  name:'YouTube·当地热门', overseas:true, feeds:[{kind:'yt_local'}] },
   { id:'yt-music',  name:'YouTube·NPR Music',  overseas:true, feeds:[{kind:'yt_channel', id:'UC4eYXhJI4-7wSWc8UNRwD4A'}] },
   { id:'yt-tech',   name:'YouTube·科技',   overseas:true, feeds:[{kind:'yt_channel', id:'UCXuqSBlHAE6Xw-yeJA0Tunw'}] },
   { id:'yt-lofi',   name:'YouTube·Lo-Fi',  overseas:true, feeds:[{kind:'yt_channel', id:'UCSJ4gkVC6NrvII8umztf0Ow'}] }
@@ -823,23 +824,36 @@ const YOUTUBE_FEED_CACHE_URLS = [
 ];
 let videoCurrentCatId = localStorage.getItem('aplay.video.cat') || '';
 function feedUrl(feed){
-  if (feed.kind === 'yt_channel') return YOUTUBE_FEED_CACHE_URLS[0];
+  if (feed.kind === 'yt_channel' || feed.kind === 'yt_local') return YOUTUBE_FEED_CACHE_URLS[0];
   const sourceUrl=new URL(APLAY_SOURCE_ENDPOINT.href);
   if (feed.kind === 'bili_pop') sourceUrl.searchParams.set('source','bili-popular');
   else if (feed.kind === 'bili_partion') { sourceUrl.searchParams.set('source','bili-partition'); sourceUrl.searchParams.set('tid',feed.tid); }
   else return '';
   return sourceUrl.href;
 }
-function makeVideoEntry(title,bvid){
+function safeVideoCover(value,source){
+  let raw=String(value||'').trim();
+  if(!raw) return '';
+  if(raw.startsWith('//')) raw='https:'+raw;
+  else raw=raw.replace(/^http:\/\//i,'https://');
+  try{
+    const url=new URL(raw); const host=url.hostname.toLowerCase();
+    if(url.protocol!=='https:') return '';
+    if(source==='bili'&&(host==='hdslb.com'||host.endsWith('.hdslb.com')||host==='biliimg.com'||host.endsWith('.biliimg.com'))) return url.href;
+    if(source==='youtube'&&(host==='ytimg.com'||host.endsWith('.ytimg.com'))) return url.href;
+  }catch{}
+  return '';
+}
+function makeVideoEntry(title,bvid,cover){
   const id=String(bvid||'').trim();
   if(!/^BV[0-9A-Za-z]+$/.test(id)) return null;
-  return {title:String(title||'B站视频').slice(0,240),type:'embed',url:`https://player.bilibili.com/player.html?bvid=${encodeURIComponent(id)}&high_quality=1&danmaku=0&autoplay=1`};
+  return {title:String(title||'B站视频').slice(0,240),type:'embed',url:`https://player.bilibili.com/player.html?bvid=${encodeURIComponent(id)}&high_quality=1&danmaku=0&autoplay=1`,thumbnail:safeVideoCover(cover,'bili')};
 }
 function parseBilibiliApi(data,feed){
   if(Number(data?.code)!==0) throw new Error('bilibili_source_unavailable');
-  const rows=feed.kind==='bili_pop'?data?.data?.list:data?.data?.archives;
+  const rows=feed.kind==='bili_pop'?data?.data?.list:(data?.data?.archives||data?.data?.list);
   if(!Array.isArray(rows)) throw new Error('bilibili_source_invalid');
-  return rows.map(item=>makeVideoEntry(item.title,item.bvid)).filter(Boolean);
+  return rows.map(item=>makeVideoEntry(item.title,item.bvid,item.pic||item.cover)).filter(Boolean);
 }
 function parseItems(doc, feed){
   const out=[];
@@ -848,7 +862,11 @@ function parseItems(doc, feed){
       const title = it.querySelector('title')?.textContent?.trim() || 'B站';
       const link  = it.querySelector('link')?.textContent || '';
       const bv = (link.match(/BV\w+/) || [])[0];
-      const entry=makeVideoEntry(title,bv); if(entry) out.push(entry);
+      const thumbnailNode=it.querySelector('media\\:thumbnail, thumbnail, enclosure, cover');
+      const description=it.querySelector('description')?.textContent||'';
+      const descriptionCover=(description.match(/<img\b[^>]*(?:src|data-src)=["']([^"']+)["']/i)||[])[1]||'';
+      const cover=thumbnailNode?.getAttribute('url')||thumbnailNode?.getAttribute('href')||descriptionCover;
+      const entry=makeVideoEntry(title,bv,cover); if(entry) out.push(entry);
     });
   } else {
     doc.querySelectorAll('entry, item').forEach(e=>{
@@ -859,28 +877,66 @@ function parseItems(doc, feed){
         vid=(href.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/)||[])[1] || '';
       }
       const title = e.querySelector('title')?.textContent?.trim() || 'YouTube';
-      if (/^[A-Za-z0-9_-]{11}$/.test(vid)) out.push({ title, type:'embed', url:`https://www.youtube.com/embed/${encodeURIComponent(vid)}?autoplay=1` });
+      if (/^[A-Za-z0-9_-]{11}$/.test(vid)) out.push({ title, type:'embed', url:`https://www.youtube.com/embed/${encodeURIComponent(vid)}?autoplay=1`, thumbnail:`https://i.ytimg.com/vi/${vid}/hqdefault.jpg` });
     });
   }
   return out;
 }
+const YOUTUBE_REGION_FALLBACKS={CN:['HK','TW','SG','JP'],MO:['HK','TW'],MX:['US'],AR:['BR','ES'],NZ:['AU'],IE:['GB'],MY:['SG'],ID:['SG'],TH:['SG'],VN:['SG']};
+function getYouTubeRegionHints(){
+  const hints=[]; const add=value=>{const code=String(value||'').toUpperCase();if(/^[A-Z]{2}$/.test(code)&&!hints.includes(code))hints.push(code);};
+  try{
+    const zone=Intl.DateTimeFormat().resolvedOptions().timeZone||'';
+    const zoneMap={'Asia/Tokyo':'JP','Asia/Shanghai':'CN','Asia/Hong_Kong':'HK','Asia/Taipei':'TW','Asia/Singapore':'SG','Asia/Seoul':'KR','Asia/Kolkata':'IN','Europe/London':'GB','Europe/Paris':'FR','Europe/Berlin':'DE','Europe/Madrid':'ES','America/Toronto':'CA','America/Vancouver':'CA','America/Edmonton':'CA','America/Winnipeg':'CA','America/Halifax':'CA','America/Los_Angeles':'US','America/Denver':'US','America/Chicago':'US','America/New_York':'US','America/Phoenix':'US','Pacific/Honolulu':'US','Australia/Sydney':'AU','Australia/Melbourne':'AU','Australia/Perth':'AU','America/Sao_Paulo':'BR','America/Mexico_City':'MX'};
+    add(zoneMap[zone]);
+  }catch{}
+  try{
+    const locales=[...(Array.isArray(navigator.languages)?navigator.languages:[]),navigator.language];
+    locales.forEach(locale=>String(locale||'').replace(/_/g,'-').split('-').slice(1).reverse().find(part=>{if(/^[A-Za-z]{2}$/.test(part)){add(part);return true;}return false;}));
+  }catch{}
+  try{
+    const lang=String(navigator.language||'').toLowerCase().split('-')[0];
+    add(({ja:'JP',zh:'CN',en:'US',ko:'KR',hi:'IN',fr:'FR',de:'DE',es:'ES',pt:'BR'})[lang]);
+  }catch{}
+  if(!hints.length) add('US');
+  return hints;
+}
+function getLocalYouTubeRegion(regions){
+  const available=Object.entries(regions||{}).filter(([code,entry])=>entry?.regionCode===code&&Array.isArray(entry.videos)&&entry.videos.length>0).map(([code])=>code);
+  const hints=getYouTubeRegionHints();
+  for(const hint of hints){
+    if(available.includes(hint)) return hint;
+    for(const fallback of (YOUTUBE_REGION_FALLBACKS[hint]||[])) if(available.includes(fallback)) return fallback;
+  }
+  return available[0]||hints[0]||'US';
+}
 function parseYouTubeCache(data,feed){
-  if(feed.kind!=='yt_channel'||!/^[A-Za-z0-9_-]{24}$/.test(feed.id||'')||data?.schemaVersion!==1) throw new Error('youtube_cache_invalid');
-  const channel=data.channels?.[feed.id];
-  if(channel?.channelId!==feed.id||!Array.isArray(channel.videos)) throw new Error('youtube_channel_missing');
-  return channel.videos.slice(0,24).map(item=>{
+  if(data?.schemaVersion!==1) throw new Error('youtube_cache_invalid');
+  let videos=[];
+  if(feed.kind==='yt_local'){
+    const regionCode=getLocalYouTubeRegion(data.regions);
+    videos=data.regions?.[regionCode]?.videos||[];
+    if(!videos.length) videos=Object.values(data.channels||{}).flatMap(channel=>Array.isArray(channel?.videos)?channel.videos:[]).slice(0,24);
+    if(!videos.length) throw new Error('youtube_region_missing');
+  }else if(feed.kind==='yt_channel'&&/^[A-Za-z0-9_-]{24}$/.test(feed.id||'')){
+    const channel=data.channels?.[feed.id];
+    if(channel?.channelId!==feed.id||!Array.isArray(channel.videos)) throw new Error('youtube_channel_missing');
+    videos=channel.videos;
+  }else throw new Error('youtube_cache_invalid');
+  return videos.slice(0,24).map(item=>{
     const id=String(item?.videoId||'').trim();
     if(!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
     const title=String(item?.title||'YouTube').trim().slice(0,240)||'YouTube';
-    return {title,type:'embed',url:`https://www.youtube.com/embed/${id}?autoplay=1`};
+    const thumbnail=safeVideoCover(item?.thumbnail,'youtube')||`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
+    return {title,type:'embed',url:`https://www.youtube.com/embed/${id}?autoplay=1`,thumbnail};
   }).filter(Boolean);
 }
 const VIDEO_CACHE = new Map(); const VIDEO_TTL = 10*60*1000;
 let VIDEO_SOURCE_STALE=false;
-function feedStorageKey(feed){return `aplay.feed.${feed.kind}.${feed.tid||feed.id||'all'}`;}
+function feedStorageKey(feed){return `aplay.feed.${feed.kind}.${feed.tid||feed.id||(feed.kind==='yt_local'?getYouTubeRegionHints()[0]:'all')}`;}
 async function fetchVideoFeed(feed,url){
   const options={cache:'no-store',headers:{Accept:'application/json, application/atom+xml, application/xml, application/rss+xml'}};
-  if(feed.kind==='yt_channel'){
+  if(feed.kind==='yt_channel'||feed.kind==='yt_local'){
     let lastError;
     const candidates=[url,...YOUTUBE_FEED_CACHE_URLS.filter(candidate=>candidate!==url)];
     for(const sourceUrl of candidates){
@@ -900,14 +956,14 @@ async function fetchVideoFeed(feed,url){
   if(doc.querySelector('parsererror')) throw new Error('source_xml_invalid');
   return parseItems(doc,feed);
 }
-async function loadFeed(feed){
+async function loadFeed(feed,forceRefresh=false){
   const url=feedUrl(feed); if(!url) return [];
-  const cacheKey=feed.kind==='yt_channel'?`${url}#${feed.id}`:url;
+  const cacheKey=feed.kind==='yt_channel'?`${url}#${feed.id}`:feed.kind==='yt_local'?`${url}#local-${getYouTubeRegionHints()[0]}`:url;
   const hit=VIDEO_CACHE.get(cacheKey); const now=Date.now();
-  if(hit && (now-hit.time)<VIDEO_TTL) return hit.items;
+  if(!forceRefresh&&hit && (now-hit.time)<VIDEO_TTL) return hit.items;
   const storageKey=feedStorageKey(feed); let saved=null;
   try{saved=JSON.parse(localStorage.getItem(storageKey)||'null');}catch{}
-  if(saved?.items?.length&&now-saved.time<VIDEO_TTL){VIDEO_CACHE.set(cacheKey,{time:saved.time,items:saved.items});return saved.items;}
+  if(!forceRefresh&&saved?.items?.length&&now-saved.time<VIDEO_TTL){VIDEO_CACHE.set(cacheKey,{time:saved.time,items:saved.items});return saved.items;}
   try{
     const items=await fetchVideoFeed(feed,url);
     if(!items.length) throw new Error('source_empty');
@@ -941,15 +997,15 @@ function videoMakeChips(){
   });
 }
 const VIDEO_CACHE2 = new Map(); const VIDEO_TTL2 = 8*60*1000;
-async function renderVideoCat(catId){
+async function renderVideoCat(catId,forceRefresh=false){
   const grid=$('#video-grid'); grid.innerHTML='<div class="text-sm text-gray-500 px-2">正在加载…</div>';
   const cat=VIDEO_CATS.find(c=>c.id===catId); if(!cat){ grid.innerHTML='<div class="text-sm text-gray-500 px-2">分类不存在</div>'; return; }
   if(cat.overseas && !state.showOverseas){ grid.innerHTML='<div class="text-sm text-gray-500 px-2">海外源未开启</div>'; return; }
-  const key=`cat:${catId}:${state.showOverseas}`; const hit=VIDEO_CACHE2.get(key); const now=Date.now();
-  if(hit && (now-hit.time)<VIDEO_TTL2){ return renderVideoCards(hit.items); }
+  const key=`cat:${catId}:${state.showOverseas}:${catId==='yt-local'?getYouTubeRegionHints()[0]:''}`; const hit=VIDEO_CACHE2.get(key); const now=Date.now();
+  if(!forceRefresh&&hit && (now-hit.time)<VIDEO_TTL2){ return renderVideoCards(hit.items); }
   VIDEO_SOURCE_STALE=false;
   try{
-    const all=[]; for(const f of (cat.feeds||[])){ const items=await loadFeed(f); all.push(...items); }
+    const all=[]; for(const f of (cat.feeds||[])){ const items=await loadFeed(f,forceRefresh); all.push(...items); }
     const uniq=Array.from(new Map(all.map(x=>[x.url,x])).values()).slice(0,24);
     VIDEO_CACHE2.set(key,{time:now,items:uniq}); renderVideoCards(uniq);
     if(VIDEO_SOURCE_STALE) $('#video-source-tip').textContent=`${state.showOverseas?'已启用海外源（YouTube）':'海外源关闭，仅显示 B 站'} · ${tx('显示缓存结果')}`;
@@ -961,8 +1017,15 @@ function renderVideoCards(list){
   list.forEach((v,i)=>{
     const card=document.createElement('div');
     card.className='rounded-2xl border border-gray-200 bg-white overflow-hidden hover:shadow-sm';
-    const art=document.createElement('div'); art.className='h-32 bg-gradient-to-tr from-indigo-100 to-indigo-50 grid place-items-center';
-    const artIcon=document.createElement('i'); artIcon.dataset.lucide='clapperboard'; artIcon.className='w-6 h-6 text-indigo-700'; art.appendChild(artIcon);
+    const art=document.createElement('div'); art.className='h-32 bg-gradient-to-tr from-indigo-100 to-indigo-50 relative overflow-hidden';
+    const artIcon=document.createElement('i'); artIcon.dataset.lucide='clapperboard'; artIcon.className='w-6 h-6 text-indigo-700 absolute inset-0 m-auto'; art.appendChild(artIcon);
+    if(v.thumbnail){
+      const cover=document.createElement('img'); cover.className='absolute inset-0 w-full h-full object-cover'; cover.alt=''; cover.loading='lazy';
+      cover.addEventListener('load',()=>artIcon.classList.add('hidden'),{once:true});
+      cover.addEventListener('error',()=>cover.remove(),{once:true});
+      cover.src=v.thumbnail; art.appendChild(cover);
+      if(cover.complete&&cover.naturalWidth) artIcon.classList.add('hidden');
+    }
     const body=document.createElement('div'); body.className='p-4 space-y-2';
     const title=document.createElement('div'); title.className='font-medium text-clip'; title.textContent=v.title;
     const actions=document.createElement('div'); actions.className='flex items-center justify-end';
@@ -979,7 +1042,16 @@ function renderVideoCards(list){
     });
   });
 }
-function videoInit(){ videoMakeChips(); if(videoCurrentCatId) renderVideoCat(videoCurrentCatId); }
+function videoInit(){
+  videoMakeChips();
+  $('#btn-video-refresh')?.addEventListener('click',async event=>{
+    const button=event.currentTarget;
+    button.disabled=true;
+    try{if(videoCurrentCatId) await renderVideoCat(videoCurrentCatId,true);}
+    finally{button.disabled=false;}
+  });
+  if(videoCurrentCatId) renderVideoCat(videoCurrentCatId);
+}
 
 /* ===== TV / Radio 示例 ===== */
 const TV_DB=[
@@ -1067,7 +1139,7 @@ function playVideoEntry(entry){
   }else{
     v.classList.add('hidden'); v.pause(); v.removeAttribute('src'); v.load?.();
     f.classList.remove('hidden'); f.src=entry.url;
-    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
+    shield.classList.add('hidden'); shield.onclick=null; shield.oncontextmenu=null;
   }
 }
 function videoControlsBind(){

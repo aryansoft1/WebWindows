@@ -379,5 +379,21 @@ assert.deepEqual(requestedCacheUrls, [
   "https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json",
   "https://raw.githubusercontent.com/aryansoft1/WebWindows/codex/aplay-cloud-media/data/aplay/youtube-feeds.json"
 ]);
+const regionalCacheRequests = [];
+const fetchYouTubeLocalFeed = vm.runInNewContext(
+  `${safeVideoCoverSource}; ${cacheUrlsSource}; ${regionHelpersSource}; ${parseCacheSource}; ${fetchVideoFeedSource}; fetchVideoFeed`,
+  {
+    Intl: regionIntl,
+    navigator: { language: "en-US", languages: ["en-US"] },
+    fetch: async (url) => {
+      regionalCacheRequests.push(url);
+      if (url.includes("/main/")) return { ok: true, status: 200, async json() { return { schemaVersion: 1, channels: generatedCache.channels }; } };
+      return { ok: true, status: 200, async json() { return generatedCache; } };
+    }
+  }
+);
+const regionalFeed = await fetchYouTubeLocalFeed({ kind: "yt_local" }, "https://raw.githubusercontent.com/aryansoft1/WebWindows/main/data/aplay/youtube-feeds.json");
+assert.equal(regionalFeed[0].title, "Local JP", "local trends must use the regional cache before the legacy main cache");
+assert.deepEqual(regionalCacheRequests, ["https://raw.githubusercontent.com/aryansoft1/WebWindows/codex/aplay-cloud-media/data/aplay/youtube-feeds.json"]);
 
 console.log("APlay i18n and unified cloud media smoke test passed");

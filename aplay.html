@@ -938,7 +938,9 @@ async function fetchVideoFeed(feed,url){
   const options={cache:'no-store',headers:{Accept:'application/json, application/atom+xml, application/xml, application/rss+xml'}};
   if(feed.kind==='yt_channel'||feed.kind==='yt_local'){
     let lastError;
-    const candidates=[url,...YOUTUBE_FEED_CACHE_URLS.filter(candidate=>candidate!==url)];
+    const candidates=feed.kind==='yt_local'
+      ? [...YOUTUBE_FEED_CACHE_URLS.filter(candidate=>candidate!==url),url]
+      : [url,...YOUTUBE_FEED_CACHE_URLS.filter(candidate=>candidate!==url)];
     for(const sourceUrl of candidates){
       try{
         const response=await fetch(sourceUrl,options);

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.10.07.1",
+  "releaseVersion": "2026.10.07.2",
   "catalogVersion": "2026.10.05.1",
-  "generatedAt": "2026-10-07T05:21:24.765Z",
+  "generatedAt": "2026-10-07T06:05:26.706Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -345,7 +345,7 @@
     "assets/js/i18n-shell.js",
     "assets/js/sysinfo-i18n.js"
   ],
-  "previousReleaseVersion": "2026.10.06.1",
+  "previousReleaseVersion": "2026.10.07.1",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -384,8 +384,8 @@
       "size": 46603
     },
     "assets/css/context_menu.css": {
-      "sha256": "c5af2ea978bb88a05facbcfbfbf8b68753bc0b43cd7bb8b91257bcb2760fefd5",
-      "size": 4359
+      "sha256": "2d385bf022dff9527bc95af3179ea4829fb2fc357dd6f3ea540f1fd08bb2f10a",
+      "size": 4422
     },
     "assets/css/desktalk.css": {
       "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
@@ -1000,8 +1000,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "60b5bb7db75d6476dbe5fe77905210d482b9211f20c7fc91faf4e9128a7e7d7f",
-      "size": 36794
+      "sha256": "2b856bc9b91008bfcfe6caa6c218d3202434b980da65620187795083d0b471fa",
+      "size": 36788
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
@@ -1695,12 +1695,10 @@
       "size": 11959
     }
   },
-  "releaseScope": "webwindows-session-branding",
+  "releaseScope": "webwindows-power-menu-width",
   "uploadFiles": [
     "assets/css/context_menu.css",
     "index.html",
-    "assets/js/system-session.js",
-    "assets/js/webwindows-message.js",
     "deploy/ftp-manifest.json"
   ]
 }

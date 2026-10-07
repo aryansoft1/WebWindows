@@ -4,6 +4,7 @@ import vm from "node:vm";
 
 const source = fs.readFileSync(new URL("../assets/js/system-session.js", import.meta.url), "utf8");
 const dialogSource = fs.readFileSync(new URL("../assets/js/webwindows-message.js", import.meta.url), "utf8");
+const contextMenuCss = fs.readFileSync(new URL("../assets/css/context_menu.css", import.meta.url), "utf8");
 const index = fs.readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const dialogScript = index.indexOf("assets/js/webwindows-message.js?v=20261007-webwindows-logo-1");
 const powerScript = index.indexOf("assets/js/system-session.js?v=20261007-session-brand-icons-1");
@@ -11,7 +12,10 @@ assert.ok(dialogScript >= 0 && powerScript > dialogScript, "WebWindows dialog AP
 assert.match(dialogSource, /<img class="ww-system-dialog__mark" src="\/assets\/icons\/logo\.png"/);
 assert.equal(fs.existsSync(new URL("../assets/icons/logo.png", import.meta.url)), true, "the WebWindows dialog logo asset must exist");
 assert.match(source, /<img class="webwindows-session-cover__logo" src="\/assets\/icons\/logo\.png"/);
-assert.match(index, /context_menu\.css\?v=20261007-power-menu-brand-icons-1/);
+assert.match(index, /context_menu\.css\?v=20261007-power-menu-width-1/);
+assert.match(contextMenuCss, /#power-menu\s*\{[^}]*width:\s*300px;/s);
+assert.match(contextMenuCss, /#power-menu\s*\{[^}]*max-width:\s*calc\(100vw\s*-\s*16px\);/s);
+assert.match(contextMenuCss, /#power-menu\s*\{[^}]*box-sizing:\s*border-box;/s);
 assert.equal((index.match(/<svg class="emoji power-item__icon"/g) || []).length, 4, "all power-menu icons must be vector assets, not missing-font glyphs");
 assert.doesNotMatch(index, /data-device-operation="(?:lock|sleep|shutdown|restart)">\s*<span class="emoji">/);
 assert.doesNotMatch(source, /\bwindow\.confirm\s*\(/, "power actions must not use the browser-origin confirmation dialog");

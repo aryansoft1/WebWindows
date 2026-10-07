@@ -51,7 +51,9 @@
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 8px 0;
-    width: 160px;
+    width: 300px;
+    max-width: calc(100vw - 16px);
+    box-sizing: border-box;
     display: none;
     z-index: 9999;
     font-family: "Segoe UI", sans-serif;

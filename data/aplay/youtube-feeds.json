@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedAt": "2026-10-07T17:18:35.521Z",
-  "source": "YouTube Data API v3 with public RSS fallback",
+  "generatedAt": "2026-10-07T18:47:31.340Z",
+  "source": "YouTube Data API v3 with regional popular charts and public RSS fallback",
   "channels": {
     "UC4eYXhJI4-7wSWc8UNRwD4A": {
       "channelId": "UC4eYXhJI4-7wSWc8UNRwD4A",
@@ -9,77 +9,92 @@
         {
           "videoId": "ey7ZHhcv1dE",
           "title": "Tim Bernardes: Tiny Desk Concert",
-          "publishedAt": "2026-10-06T11:00:11Z"
+          "publishedAt": "2026-10-06T11:00:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/ey7ZHhcv1dE/maxresdefault.jpg"
         },
         {
           "videoId": "AvSxPx25oLc",
           "title": "Panteón Rococó: Tiny Desk Concert",
-          "publishedAt": "2026-10-01T14:00:35Z"
+          "publishedAt": "2026-10-01T14:00:35Z",
+          "thumbnail": "https://i.ytimg.com/vi/AvSxPx25oLc/maxresdefault.jpg"
         },
         {
           "videoId": "3EWLwZh4HjU",
           "title": "Melissa Aldana with Gonzalo Rubalcaba: Tiny Desk Concert",
-          "publishedAt": "2026-09-29T12:00:23Z"
+          "publishedAt": "2026-09-29T12:00:23Z",
+          "thumbnail": "https://i.ytimg.com/vi/3EWLwZh4HjU/maxresdefault.jpg"
         },
         {
           "videoId": "jYRH2z3v-Ug",
           "title": "Tiny Desk Merch: Latin Music Month",
-          "publishedAt": "2026-09-28T20:03:25Z"
+          "publishedAt": "2026-09-28T20:03:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/jYRH2z3v-Ug/maxresdefault.jpg"
         },
         {
           "videoId": "IN5lC_T7yOA",
           "title": "Tori Kelly explains how she takes on different personas while recording in the studio,",
-          "publishedAt": "2026-09-24T16:30:40Z"
+          "publishedAt": "2026-09-24T16:30:40Z",
+          "thumbnail": "https://i.ytimg.com/vi/IN5lC_T7yOA/maxresdefault.jpg"
         },
         {
           "videoId": "zw3iotteJz0",
           "title": "Alex Ferreira: Tiny Desk Concert",
-          "publishedAt": "2026-09-24T14:00:39Z"
+          "publishedAt": "2026-09-24T14:00:39Z",
+          "thumbnail": "https://i.ytimg.com/vi/zw3iotteJz0/maxresdefault.jpg"
         },
         {
           "videoId": "2rn94FAndBw",
           "title": "Did Stella Lefty really steal from other songs?",
-          "publishedAt": "2026-09-23T20:00:29Z"
+          "publishedAt": "2026-09-23T20:00:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/2rn94FAndBw/maxresdefault.jpg"
         },
         {
           "videoId": "lPbzlEj3A0U",
           "title": "YEИDRY: Tiny Desk Concert",
-          "publishedAt": "2026-09-22T09:00:11Z"
+          "publishedAt": "2026-09-22T09:00:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/lPbzlEj3A0U/maxresdefault.jpg"
         },
         {
           "videoId": "nBB5R2pWHMU",
           "title": "With time comes a refinement of purpose.",
-          "publishedAt": "2026-09-21T16:08:50Z"
+          "publishedAt": "2026-09-21T16:08:50Z",
+          "thumbnail": "https://i.ytimg.com/vi/nBB5R2pWHMU/maxresdefault.jpg"
         },
         {
           "videoId": "hhJQlkvDnKM",
           "title": "2026 AmericanaFest Day Stage | Friday, Sept 18",
-          "publishedAt": "2026-09-18T22:21:24Z"
+          "publishedAt": "2026-09-18T22:21:24Z",
+          "thumbnail": "https://i.ytimg.com/vi/hhJQlkvDnKM/maxresdefault.jpg"
         },
         {
           "videoId": "htBSUv9iWyM",
           "title": "Certain music hits you with a force of nature.",
-          "publishedAt": "2026-09-18T19:30:27Z"
+          "publishedAt": "2026-09-18T19:30:27Z",
+          "thumbnail": "https://i.ytimg.com/vi/htBSUv9iWyM/maxresdefault.jpg"
         },
         {
           "videoId": "yQn06Xwf84c",
           "title": "2026 AmericanaFest Day Stage | Thursday, Sept 17",
-          "publishedAt": "2026-09-17T21:54:49Z"
+          "publishedAt": "2026-09-17T21:54:49Z",
+          "thumbnail": "https://i.ytimg.com/vi/yQn06Xwf84c/maxresdefault.jpg"
         },
         {
           "videoId": "WCh4tfSqXFc",
           "title": "Los Mirlos: Tiny Desk Concert",
-          "publishedAt": "2026-09-17T14:00:09Z"
+          "publishedAt": "2026-09-17T14:00:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/WCh4tfSqXFc/maxresdefault.jpg"
         },
         {
           "videoId": "kOkOkxeUoSY",
           "title": "The 25th Annual Americana Honors & Awards",
-          "publishedAt": "2026-09-17T03:29:38Z"
+          "publishedAt": "2026-09-17T03:29:38Z",
+          "thumbnail": "https://i.ytimg.com/vi/kOkOkxeUoSY/maxresdefault.jpg"
         },
         {
           "videoId": "waMcpoegz-M",
           "title": "2026 AmericanaFest Day Stage | Wednesday, Sept 16",
-          "publishedAt": "2026-09-16T22:12:36Z"
+          "publishedAt": "2026-09-16T22:12:36Z",
+          "thumbnail": "https://i.ytimg.com/vi/waMcpoegz-M/maxresdefault.jpg"
         }
       ]
     },
@@ -89,77 +104,92 @@
         {
           "videoId": "t28bEMboL9Y",
           "title": "The All COSTCO Gaming Setup",
-          "publishedAt": "2026-10-06T17:00:03Z"
+          "publishedAt": "2026-10-06T17:00:03Z",
+          "thumbnail": "https://i.ytimg.com/vi/t28bEMboL9Y/maxresdefault.jpg"
         },
         {
           "videoId": "ijFSEb2W6_8",
           "title": "I’ve Wanted This Robot for 10 Years",
-          "publishedAt": "2026-10-04T17:49:07Z"
+          "publishedAt": "2026-10-04T17:49:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/ijFSEb2W6_8/maxresdefault.jpg"
         },
         {
           "videoId": "79s8O7Cipl0",
           "title": "I Spent Over 10 Hours Upgrading my Controllers",
-          "publishedAt": "2026-10-03T16:27:37Z"
+          "publishedAt": "2026-10-03T16:27:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/79s8O7Cipl0/maxresdefault.jpg"
         },
         {
           "videoId": "1H20xp8Brnc",
           "title": "I Have Strong Feelings About Air Conditioning in the Tech House",
-          "publishedAt": "2026-10-01T16:59:42Z"
+          "publishedAt": "2026-10-01T16:59:42Z",
+          "thumbnail": "https://i.ytimg.com/vi/1H20xp8Brnc/maxresdefault.jpg"
         },
         {
           "videoId": "y1hZ3EalPQU",
           "title": "I Found these Computers in a Ditch…",
-          "publishedAt": "2026-09-28T18:15:07Z"
+          "publishedAt": "2026-09-28T18:15:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/y1hZ3EalPQU/maxresdefault.jpg"
         },
         {
           "videoId": "zH9bqwNShiM",
           "title": "What's the Worst Tech Linus Still Uses?",
-          "publishedAt": "2026-09-27T17:12:45Z"
+          "publishedAt": "2026-09-27T17:12:45Z",
+          "thumbnail": "https://i.ytimg.com/vi/zH9bqwNShiM/maxresdefault.jpg"
         },
         {
           "videoId": "1gxnANAbLuE",
           "title": "The ALL RAZER Gaming Setup",
-          "publishedAt": "2026-09-26T17:08:04Z"
+          "publishedAt": "2026-09-26T17:08:04Z",
+          "thumbnail": "https://i.ytimg.com/vi/1gxnANAbLuE/maxresdefault.jpg"
         },
         {
           "videoId": "Fx0x3oI_ngo",
           "title": "How Expensive is the Fastest PC of 2026?",
-          "publishedAt": "2026-09-26T16:33:04Z"
+          "publishedAt": "2026-09-26T16:33:04Z",
+          "thumbnail": "https://i.ytimg.com/vi/Fx0x3oI_ngo/maxresdefault.jpg"
         },
         {
           "videoId": "DLOQOUWmRpI",
           "title": "The Apple Product I Still Fanboy Over - AirPods 5 Review",
-          "publishedAt": "2026-09-24T18:18:23Z"
+          "publishedAt": "2026-09-24T18:18:23Z",
+          "thumbnail": "https://i.ytimg.com/vi/DLOQOUWmRpI/maxresdefault.jpg"
         },
         {
           "videoId": "p-EXFD_DHmc",
           "title": "leaking the newest lttstore products...",
-          "publishedAt": "2026-09-24T16:25:01Z"
+          "publishedAt": "2026-09-24T16:25:01Z",
+          "thumbnail": "https://i.ytimg.com/vi/p-EXFD_DHmc/maxresdefault.jpg"
         },
         {
           "videoId": "XM04mbymDsE",
           "title": "The Most Permanent Tech Upgrade of All Time - AMD $5000 Ultimate Tech Upgrade",
-          "publishedAt": "2026-09-23T17:30:27Z"
+          "publishedAt": "2026-09-23T17:30:27Z",
+          "thumbnail": "https://i.ytimg.com/vi/XM04mbymDsE/maxresdefault.jpg"
         },
         {
           "videoId": "GaX0frxNwfQ",
           "title": "I Thought These Guys Made Cables",
-          "publishedAt": "2026-09-21T17:15:51Z"
+          "publishedAt": "2026-09-21T17:15:51Z",
+          "thumbnail": "https://i.ytimg.com/vi/GaX0frxNwfQ/maxresdefault.jpg"
         },
         {
           "videoId": "SuIhqDP2VHw",
           "title": "Linus vs Robot",
-          "publishedAt": "2026-09-20T17:00:04Z"
+          "publishedAt": "2026-09-20T17:00:04Z",
+          "thumbnail": "https://i.ytimg.com/vi/SuIhqDP2VHw/maxresdefault.jpg"
         },
         {
           "videoId": "Z1sqWFs86uU",
           "title": "Building the Rarest PC",
-          "publishedAt": "2026-09-19T00:27:36Z"
+          "publishedAt": "2026-09-19T00:27:36Z",
+          "thumbnail": "https://i.ytimg.com/vi/Z1sqWFs86uU/maxresdefault.jpg"
         },
         {
           "videoId": "pJWqvVnDT0A",
           "title": "Custom PC for DisguisedToast",
-          "publishedAt": "2026-09-18T19:18:56Z"
+          "publishedAt": "2026-09-18T19:18:56Z",
+          "thumbnail": "https://i.ytimg.com/vi/pJWqvVnDT0A/maxresdefault.jpg"
         }
       ]
     },
@@ -169,77 +199,1517 @@
         {
           "videoId": "zQbdwzGhse0",
           "title": "flip a coin, i guess…#exam #studygram #studying",
-          "publishedAt": "2026-10-07T08:26:19Z"
+          "publishedAt": "2026-10-07T08:26:19Z",
+          "thumbnail": "https://i.ytimg.com/vi/zQbdwzGhse0/maxresdefault.jpg"
         },
         {
           "videoId": "_jH2oTNRe7g",
           "title": "cozy autumn music 🍂 lofi beats to study / relax to",
-          "publishedAt": "2026-10-05T14:00:08Z"
+          "publishedAt": "2026-10-05T14:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/_jH2oTNRe7g/maxresdefault.jpg"
         },
         {
           "videoId": "C0STkNVChLI",
           "title": "I ate before... don't worry about me... I don't even like chips...",
-          "publishedAt": "2026-10-03T18:39:44Z"
+          "publishedAt": "2026-10-03T18:39:44Z",
+          "thumbnail": "https://i.ytimg.com/vi/C0STkNVChLI/maxresdefault.jpg"
         },
         {
           "videoId": "1-LpQekNa9g",
           "title": "24/7 halloween ambience 🎃 spooky lofi to get chills to",
-          "publishedAt": "2026-10-01T12:39:01Z"
+          "publishedAt": "2026-10-01T12:39:01Z",
+          "thumbnail": "https://i.ytimg.com/vi/1-LpQekNa9g/maxresdefault_live.jpg"
         },
         {
           "videoId": "GYQe7arWTtE",
           "title": "i carved some pumpkins for you! tell me which one you got without telling me which one you got 🎃",
-          "publishedAt": "2026-09-30T18:00:33Z"
+          "publishedAt": "2026-09-30T18:00:33Z",
+          "thumbnail": "https://i.ytimg.com/vi/GYQe7arWTtE/maxresdefault.jpg"
         },
         {
           "videoId": "l9McIeQxwqY",
           "title": "something spooky drops tomorrow 🎃",
-          "publishedAt": "2026-09-30T18:00:17Z"
+          "publishedAt": "2026-09-30T18:00:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/l9McIeQxwqY/maxresdefault.jpg"
         },
         {
           "videoId": "o7rgKYI1Kzo",
           "title": "there might be a message there, not sure tho... #lofigirl #studytube",
-          "publishedAt": "2026-09-29T19:00:11Z"
+          "publishedAt": "2026-09-29T19:00:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/o7rgKYI1Kzo/maxresdefault.jpg"
         },
         {
           "videoId": "FVMmVDlqLIY",
           "title": "How did they even do that??",
-          "publishedAt": "2026-09-24T18:11:00Z"
+          "publishedAt": "2026-09-24T18:11:00Z",
+          "thumbnail": "https://i.ytimg.com/vi/FVMmVDlqLIY/maxresdefault.jpg"
         },
         {
           "videoId": "nI725iVsyoQ",
           "title": "24/7 deep sleep music 🌌 calm ambient to sleep & dream to",
-          "publishedAt": "2026-09-23T15:58:20Z"
+          "publishedAt": "2026-09-23T15:58:20Z",
+          "thumbnail": "https://i.ytimg.com/vi/nI725iVsyoQ/maxresdefault_live.jpg"
         },
         {
           "videoId": "VqpRA76movA",
           "title": "Lofi Teacher is here, Jade is back, everything is how it should be!#lofihouse #lofigirl",
-          "publishedAt": "2026-09-21T20:00:16Z"
+          "publishedAt": "2026-09-21T20:00:16Z",
+          "thumbnail": "https://i.ytimg.com/vi/VqpRA76movA/maxresdefault.jpg"
         },
         {
           "videoId": "O_97HkFMhFk",
           "title": "lofi house vol.1 🌆 chill music to vibe to",
-          "publishedAt": "2026-09-21T18:02:16Z"
+          "publishedAt": "2026-09-21T18:02:16Z",
+          "thumbnail": "https://i.ytimg.com/vi/O_97HkFMhFk/maxresdefault.jpg"
         },
         {
           "videoId": "3PFJ9SETS4M",
           "title": "lofi house radio 🌅  lounge music to vibe/chill to",
-          "publishedAt": "2026-09-17T17:49:46Z"
+          "publishedAt": "2026-09-17T17:49:46Z",
+          "thumbnail": "https://i.ytimg.com/vi/3PFJ9SETS4M/maxresdefault_live.jpg"
         },
         {
           "videoId": "Jqtq2ArhTxU",
           "title": "Introducing Lofi Teacher 🌇  Lofi House teaser",
-          "publishedAt": "2026-09-17T17:06:41Z"
+          "publishedAt": "2026-09-17T17:06:41Z",
+          "thumbnail": "https://i.ytimg.com/vi/Jqtq2ArhTxU/maxresdefault.jpg"
         },
         {
           "videoId": "2PiNm-xtXIE",
           "title": "i'm done.",
-          "publishedAt": "2026-09-16T17:30:35Z"
+          "publishedAt": "2026-09-16T17:30:35Z",
+          "thumbnail": "https://i.ytimg.com/vi/2PiNm-xtXIE/maxresdefault.jpg"
         },
         {
           "videoId": "lWfa_Hgv42E",
           "title": "it's me, hi, i'm the problem it's me",
-          "publishedAt": "2026-09-12T16:23:25Z"
+          "publishedAt": "2026-09-12T16:23:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/lWfa_Hgv42E/maxresdefault.jpg"
+        }
+      ]
+    }
+  },
+  "regions": {
+    "JP": {
+      "regionCode": "JP",
+      "videos": [
+        {
+          "videoId": "-7Tar3VlrIw",
+          "title": "なにわ男子 - Moonlit [Official Music Video]",
+          "publishedAt": "2026-10-06T10:28:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/-7Tar3VlrIw/maxresdefault.jpg"
+        },
+        {
+          "videoId": "nrMgBjqj72s",
+          "title": "配信者がめちゃくちゃ身バレして大事件になるホラーゲーム",
+          "publishedAt": "2026-10-07T08:30:35Z",
+          "thumbnail": "https://i.ytimg.com/vi/nrMgBjqj72s/maxresdefault.jpg"
+        },
+        {
+          "videoId": "EaYxNTHFc3o",
+          "title": "LEE JISOO - Movie Star / THE FIRST TAKE",
+          "publishedAt": "2026-10-07T13:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/EaYxNTHFc3o/maxresdefault.jpg"
+        },
+        {
+          "videoId": "JECebCGt4S0",
+          "title": "【PUBG】誰も勝てると思ってないだろ【りりむ アルス イブラヒム】英リサさんのPUBGイベント",
+          "publishedAt": "2026-10-07T14:40:33Z",
+          "thumbnail": "https://i.ytimg.com/vi/JECebCGt4S0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "W6abYxqfCPU",
+          "title": "SixTONES –「Battery」from LIVE DVD/BD「MILESixTONES」(2026.3.26 YOKOHAMA ARENA)",
+          "publishedAt": "2026-10-06T13:00:27Z",
+          "thumbnail": "https://i.ytimg.com/vi/W6abYxqfCPU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "DqWSaZKhOZA",
+          "title": "【神視点】ぶいすぽGG 英リサ presents PUBG【#ぶいすぽGG】",
+          "publishedAt": "2026-10-07T14:37:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/DqWSaZKhOZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "oX6PfHd9BOY",
+          "title": "M!LK - 時空超えてユニバース（Dance Practice Movie）",
+          "publishedAt": "2026-10-05T12:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/oX6PfHd9BOY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "rHobVHusMR8",
+          "title": "エースコンバットより1/100000000くらい薄い評価が墜落してるクソゲー【ネービーシーコンクリフト】",
+          "publishedAt": "2026-10-07T10:17:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/rHobVHusMR8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "__qvPGatwus",
+          "title": "【Ado】DND feat. KUROMI",
+          "publishedAt": "2026-10-07T11:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/__qvPGatwus/maxresdefault.jpg"
+        },
+        {
+          "videoId": "_KxqnetU0kk",
+          "title": "【PUBG】ぶいすぽGG PUBGカスタム 勝つぞ！勝つぞ！夕飯はドン勝だ！！ /w バニ３モンド３コヤ３【ローレン・イロアス/にじさんじ】",
+          "publishedAt": "2026-10-07T14:31:35Z",
+          "thumbnail": "https://i.ytimg.com/vi/_KxqnetU0kk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "GGQsVQqFkl0",
+          "title": "ano「キライのちスキ！」× TVアニメ『ケロロ軍曹☆』Collaboration Music Video",
+          "publishedAt": "2026-10-07T11:00:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/GGQsVQqFkl0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "M_gNB7BVhV0",
+          "title": "6次会・配信者当てクイズで何故かヒリつきまくる関優太＆SHAKA【みんなで推理】",
+          "publishedAt": "2026-10-06T08:30:13Z",
+          "thumbnail": "https://i.ytimg.com/vi/M_gNB7BVhV0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "dUsrqJniU_8",
+          "title": "SEKAI NO OWARI「Supermarket」from ”1億2000万人のありがとう 歌の感謝祭”",
+          "publishedAt": "2026-10-07T13:00:05Z",
+          "thumbnail": "https://i.ytimg.com/vi/dUsrqJniU_8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "n_b34M-xgJU",
+          "title": "【※隠れています】プロになりすぎて見つからない『めっちゃカメレオン』",
+          "publishedAt": "2026-10-07T09:15:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/n_b34M-xgJU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "5yXXgMCcrK0",
+          "title": "ロクデナシ「星を巡る」/ Rokudenashi - Circling the Stars【Official Music Video】",
+          "publishedAt": "2026-10-07T12:00:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/5yXXgMCcrK0/maxresdefault.jpg"
+        }
+      ]
+    },
+    "US": {
+      "regionCode": "US",
+      "videos": [
+        {
+          "videoId": "6pm4s82cMuA",
+          "title": "Yu Les – Jarahn ft. SHLD, Nene Morus & Rich Antony (Official Music Video)",
+          "publishedAt": "2026-09-25T09:17:35Z",
+          "thumbnail": "https://i.ytimg.com/vi/6pm4s82cMuA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ix7x59a8t7g",
+          "title": "🔴LIVE | ARC RAIDERS | FROZEN TRAIL PREP | HUTCHMF X SUMMIT1G | TESTICULAR TORSION TUE | #BUNGULATE",
+          "publishedAt": "2026-10-07T06:44:47Z",
+          "thumbnail": "https://i.ytimg.com/vi/ix7x59a8t7g/maxresdefault.jpg"
+        },
+        {
+          "videoId": "1jSD5RWVU3U",
+          "title": "Lord I Wanna Know Ya",
+          "publishedAt": "2026-10-05T10:00:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/1jSD5RWVU3U/maxresdefault.jpg"
+        },
+        {
+          "videoId": "cPjW_ESwKXU",
+          "title": "Honest Trailers | Master and Commander: The Far Side of the World",
+          "publishedAt": "2026-10-06T17:00:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/cPjW_ESwKXU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FUW8BCRH9FM",
+          "title": "INFINITE MONEY GLITCH FOUND | Bills Must Be Paid",
+          "publishedAt": "2026-10-06T16:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/FUW8BCRH9FM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "6Y-T--EBq-0",
+          "title": "Me, a God",
+          "publishedAt": "2026-10-06T10:02:48Z",
+          "thumbnail": "https://i.ytimg.com/vi/6Y-T--EBq-0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "xA3ovdSmjP0",
+          "title": "THE EXORCIST: MARTYRS Official Teaser Trailer (2026) Scarlett Johansson",
+          "publishedAt": "2026-10-07T10:13:45Z",
+          "thumbnail": "https://i.ytimg.com/vi/xA3ovdSmjP0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zYEdWZ6UNao",
+          "title": "PLAYING HARDCORE MINECRAFT UNTIL WE BEAT IT DAY 2",
+          "publishedAt": "2026-10-07T03:51:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/zYEdWZ6UNao/maxresdefault.jpg"
+        },
+        {
+          "videoId": "_DUXeWadqDo",
+          "title": "Conep, YOVNGCHIMI, DJ Luian - Kirby (Official Video)",
+          "publishedAt": "2026-10-06T21:00:36Z",
+          "thumbnail": "https://i.ytimg.com/vi/_DUXeWadqDo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "W9W5CLUGjbU",
+          "title": "Dragon Ball Super: Beerus | Official Trailer | Crunchyroll",
+          "publishedAt": "2026-10-06T22:30:32Z",
+          "thumbnail": "https://i.ytimg.com/vi/W9W5CLUGjbU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "8t8YBu7bdT0",
+          "title": "Escaping Terminus: The Deadliest Minecraft Prison",
+          "publishedAt": "2026-10-06T13:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/8t8YBu7bdT0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "riEbYFMcWXU",
+          "title": "Carlos Vives - La Gota Fría | Letra",
+          "publishedAt": "2026-09-30T20:00:22Z",
+          "thumbnail": "https://i.ytimg.com/vi/riEbYFMcWXU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "rXaR4nXRvOY",
+          "title": "DRUMMER BOY | Official Trailer | In Theaters Nov 6 | Angel",
+          "publishedAt": "2026-10-06T20:00:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/rXaR4nXRvOY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "f5q_s_-Lbn8",
+          "title": "Poopy’s Playland…",
+          "publishedAt": "2026-10-06T22:00:27Z",
+          "thumbnail": "https://i.ytimg.com/vi/f5q_s_-Lbn8/maxresdefault.jpg"
+        }
+      ]
+    },
+    "GB": {
+      "regionCode": "GB",
+      "videos": [
+        {
+          "videoId": "6Y-T--EBq-0",
+          "title": "Me, a God",
+          "publishedAt": "2026-10-06T10:02:48Z",
+          "thumbnail": "https://i.ytimg.com/vi/6Y-T--EBq-0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "v2IksvXLQgo",
+          "title": "Official Trailer | Last One Laughing: Halloween Special",
+          "publishedAt": "2026-10-07T09:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/v2IksvXLQgo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "8t8YBu7bdT0",
+          "title": "Escaping Terminus: The Deadliest Minecraft Prison",
+          "publishedAt": "2026-10-06T13:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/8t8YBu7bdT0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "F9AjIFOOEBQ",
+          "title": "Said & Done",
+          "publishedAt": "2026-10-06T04:34:46Z",
+          "thumbnail": "https://i.ytimg.com/vi/F9AjIFOOEBQ/maxresdefault.jpg"
+        },
+        {
+          "videoId": "xA3ovdSmjP0",
+          "title": "THE EXORCIST: MARTYRS Official Teaser Trailer (2026) Scarlett Johansson",
+          "publishedAt": "2026-10-07T10:13:45Z",
+          "thumbnail": "https://i.ytimg.com/vi/xA3ovdSmjP0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ix7x59a8t7g",
+          "title": "🔴LIVE | ARC RAIDERS | FROZEN TRAIL PREP | HUTCHMF X SUMMIT1G | TESTICULAR TORSION TUE | #BUNGULATE",
+          "publishedAt": "2026-10-07T06:44:47Z",
+          "thumbnail": "https://i.ytimg.com/vi/ix7x59a8t7g/maxresdefault.jpg"
+        },
+        {
+          "videoId": "YVFHXxfCEcI",
+          "title": "YODDA - FANCY FT SUSHANT KC",
+          "publishedAt": "2026-10-07T11:15:32Z",
+          "thumbnail": "https://i.ytimg.com/vi/YVFHXxfCEcI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zYEdWZ6UNao",
+          "title": "PLAYING HARDCORE MINECRAFT UNTIL WE BEAT IT DAY 2",
+          "publishedAt": "2026-10-07T03:51:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/zYEdWZ6UNao/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Q4ryZfcMg3A",
+          "title": "Chalra Chalra Waal Female Version - Tu Sanwal Phul Kasturi Song ❤️ Instagram Trending song 2026",
+          "publishedAt": "2026-10-04T07:59:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/Q4ryZfcMg3A/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Id-zxgS2_hg",
+          "title": "CAN I GO 15-0 WITH A BRONZE TEAM!?",
+          "publishedAt": "2026-10-06T19:20:57Z",
+          "thumbnail": "https://i.ytimg.com/vi/Id-zxgS2_hg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zOLxTZgX-hE",
+          "title": "ZANZI BEAT - Baobab Dreams (Organic Afro House)",
+          "publishedAt": "2026-09-30T22:00:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/zOLxTZgX-hE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "aw32p2i7UTg",
+          "title": "The Exorcist: Martyrs | First Teaser | Coming to GSC starting 11 March 2027",
+          "publishedAt": "2026-10-07T02:34:42Z",
+          "thumbnail": "https://i.ytimg.com/vi/aw32p2i7UTg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "o1Wx0TNLPWo",
+          "title": "GTA 6: October 15 and the Latest Marketing Clues",
+          "publishedAt": "2026-10-07T11:01:43Z",
+          "thumbnail": "https://i.ytimg.com/vi/o1Wx0TNLPWo/maxresdefault.jpg"
+        }
+      ]
+    },
+    "CA": {
+      "regionCode": "CA",
+      "videos": [
+        {
+          "videoId": "F9AjIFOOEBQ",
+          "title": "Said & Done",
+          "publishedAt": "2026-10-06T04:34:46Z",
+          "thumbnail": "https://i.ytimg.com/vi/F9AjIFOOEBQ/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "8t8YBu7bdT0",
+          "title": "Escaping Terminus: The Deadliest Minecraft Prison",
+          "publishedAt": "2026-10-06T13:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/8t8YBu7bdT0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "r8h8Kee_PYU",
+          "title": "Bjorn Bonebreaker - Mama, Don't Close Your Eyes [Official Lyrics Video]",
+          "publishedAt": "2026-09-14T21:00:12Z",
+          "thumbnail": "https://i.ytimg.com/vi/r8h8Kee_PYU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "cPjW_ESwKXU",
+          "title": "Honest Trailers | Master and Commander: The Far Side of the World",
+          "publishedAt": "2026-10-06T17:00:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/cPjW_ESwKXU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FUW8BCRH9FM",
+          "title": "INFINITE MONEY GLITCH FOUND | Bills Must Be Paid",
+          "publishedAt": "2026-10-06T16:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/FUW8BCRH9FM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "OQZGfcKycn4",
+          "title": "THAH THAH (Official Video)| RANJIT BAWA | NARINDER BATTH |DESI CREW|TRUE MAKERS|Latest Punjabi Songs",
+          "publishedAt": "2026-10-05T12:30:01Z",
+          "thumbnail": "https://i.ytimg.com/vi/OQZGfcKycn4/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ix7x59a8t7g",
+          "title": "🔴LIVE | ARC RAIDERS | FROZEN TRAIL PREP | HUTCHMF X SUMMIT1G | TESTICULAR TORSION TUE | #BUNGULATE",
+          "publishedAt": "2026-10-07T06:44:47Z",
+          "thumbnail": "https://i.ytimg.com/vi/ix7x59a8t7g/maxresdefault.jpg"
+        },
+        {
+          "videoId": "9nImqRfMpV8",
+          "title": "Vancleef (feat. Shipra Goyal)",
+          "publishedAt": "2026-10-04T10:00:13Z",
+          "thumbnail": "https://i.ytimg.com/vi/9nImqRfMpV8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "3JWEGVpNIiQ",
+          "title": "I Kill The Bear | Official Series Trailer",
+          "publishedAt": "2026-10-06T17:00:05Z",
+          "thumbnail": "https://i.ytimg.com/vi/3JWEGVpNIiQ/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zYEdWZ6UNao",
+          "title": "PLAYING HARDCORE MINECRAFT UNTIL WE BEAT IT DAY 2",
+          "publishedAt": "2026-10-07T03:51:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/zYEdWZ6UNao/maxresdefault.jpg"
+        },
+        {
+          "videoId": "2ZTcvsdMR1c",
+          "title": "Ayra Starr - Heaven Baby ft. ZAYN",
+          "publishedAt": "2026-10-05T16:02:40Z",
+          "thumbnail": "https://i.ytimg.com/vi/2ZTcvsdMR1c/maxresdefault.jpg"
+        },
+        {
+          "videoId": "W9W5CLUGjbU",
+          "title": "Dragon Ball Super: Beerus | Official Trailer | Crunchyroll",
+          "publishedAt": "2026-10-06T22:30:32Z",
+          "thumbnail": "https://i.ytimg.com/vi/W9W5CLUGjbU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Q934KcLk9gM",
+          "title": "I Investigated Dream Faking his Manhunts",
+          "publishedAt": "2026-10-06T22:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/Q934KcLk9gM/maxresdefault.jpg"
+        }
+      ]
+    },
+    "AU": {
+      "regionCode": "AU",
+      "videos": [
+        {
+          "videoId": "pBxrtb89y_I",
+          "title": "BADASS",
+          "publishedAt": "2026-10-06T04:35:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/pBxrtb89y_I/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "8t8YBu7bdT0",
+          "title": "Escaping Terminus: The Deadliest Minecraft Prison",
+          "publishedAt": "2026-10-06T13:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/8t8YBu7bdT0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "fv0ebPWwtVg",
+          "title": "Money On The Dash",
+          "publishedAt": "2026-10-01T10:00:13Z",
+          "thumbnail": "https://i.ytimg.com/vi/fv0ebPWwtVg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "cPjW_ESwKXU",
+          "title": "Honest Trailers | Master and Commander: The Far Side of the World",
+          "publishedAt": "2026-10-06T17:00:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/cPjW_ESwKXU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "AsGh9FojXbM",
+          "title": "Surviving in a Maze isn't Easy...",
+          "publishedAt": "2026-10-05T19:13:22Z",
+          "thumbnail": "https://i.ytimg.com/vi/AsGh9FojXbM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "OQZGfcKycn4",
+          "title": "THAH THAH (Official Video)| RANJIT BAWA | NARINDER BATTH |DESI CREW|TRUE MAKERS|Latest Punjabi Songs",
+          "publishedAt": "2026-10-05T12:30:01Z",
+          "thumbnail": "https://i.ytimg.com/vi/OQZGfcKycn4/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Ih6DVdyQn3I",
+          "title": "Season 5: A Grim Doctrine Launch Trailer | Overwatch",
+          "publishedAt": "2026-10-05T17:00:23Z",
+          "thumbnail": "https://i.ytimg.com/vi/Ih6DVdyQn3I/maxresdefault.jpg"
+        },
+        {
+          "videoId": "VLwcqaXiNOA",
+          "title": "SIDEMEN AMONG US MEGAMIND ROLE: BURST EVERYONE'S HEADS TO WIN",
+          "publishedAt": "2026-10-03T18:30:16Z",
+          "thumbnail": "https://i.ytimg.com/vi/VLwcqaXiNOA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Huj-UJ8LKhI",
+          "title": "Moving To The Sun",
+          "publishedAt": "2026-09-29T19:53:55Z",
+          "thumbnail": "https://i.ytimg.com/vi/Huj-UJ8LKhI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "jbQHpGuy-lU",
+          "title": "PRX vs. LOUD — VALORANT Champions Shanghai — Playoffs Stage — Day 11",
+          "publishedAt": "2026-10-07T14:00:41Z",
+          "thumbnail": "https://i.ytimg.com/vi/jbQHpGuy-lU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "cj37lh-71h8",
+          "title": "Stand by Me",
+          "publishedAt": "2026-09-28T13:51:34Z",
+          "thumbnail": "https://i.ytimg.com/vi/cj37lh-71h8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "QTz5PqZspEs",
+          "title": "Comrade Kalyan - Official Trailer | Sree Vishnu | Mahima Nambiar | Janakiram Marella",
+          "publishedAt": "2026-10-06T10:03:33Z",
+          "thumbnail": "https://i.ytimg.com/vi/QTz5PqZspEs/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FUW8BCRH9FM",
+          "title": "INFINITE MONEY GLITCH FOUND | Bills Must Be Paid",
+          "publishedAt": "2026-10-06T16:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/FUW8BCRH9FM/maxresdefault.jpg"
+        }
+      ]
+    },
+    "KR": {
+      "regionCode": "KR",
+      "videos": [
+        {
+          "videoId": "R4kmk4CDVHM",
+          "title": "CRY OUT LOUD",
+          "publishedAt": "2026-10-06T09:03:52Z",
+          "thumbnail": "https://i.ytimg.com/vi/R4kmk4CDVHM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "W2zvgtCTDdU",
+          "title": "예고편 4천만 뷰 터진 일본판 우영우, 전세계가 발칵 뒤집어진 이유",
+          "publishedAt": "2026-10-05T09:00:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/W2zvgtCTDdU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "tx3tyTI3NW0",
+          "title": "'역대급 재능' 반다이크 톱으로 슈챔 찍어버린 김민교",
+          "publishedAt": "2026-10-07T09:18:53Z",
+          "thumbnail": "https://i.ytimg.com/vi/tx3tyTI3NW0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ZnPMTLKEh9g",
+          "title": "나를 건 미래에 우린",
+          "publishedAt": "2026-10-05T09:00:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/ZnPMTLKEh9g/maxresdefault.jpg"
+        },
+        {
+          "videoId": "v23rGW84Jqk",
+          "title": "내부의 적",
+          "publishedAt": "2026-10-06T14:00:30Z",
+          "thumbnail": "https://i.ytimg.com/vi/v23rGW84Jqk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "iUNLe0iD9P8",
+          "title": "ICONIC HEART (Korean Version)",
+          "publishedAt": "2026-10-05T09:03:38Z",
+          "thumbnail": "https://i.ytimg.com/vi/iUNLe0iD9P8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "hZ3Zfla4JrQ",
+          "title": "똘끼 리니지클래식 돌아왔구나  인형! 예전별명이 인형공장장이였습니다",
+          "publishedAt": "2026-10-07T08:56:45Z",
+          "thumbnail": "https://i.ytimg.com/vi/hZ3Zfla4JrQ/maxresdefault.jpg"
+        },
+        {
+          "videoId": "IfRNyaUgEC8",
+          "title": "OK",
+          "publishedAt": "2026-09-30T03:02:44Z",
+          "thumbnail": "https://i.ytimg.com/vi/IfRNyaUgEC8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "kHvGu0eKshI",
+          "title": "NRG vs T1 / PRX vs LOUD - 챔피언스 상하이- 플레이오프 - 11일차",
+          "publishedAt": "2026-10-07T05:29:22Z",
+          "thumbnail": "https://i.ytimg.com/vi/kHvGu0eKshI/maxresdefault_live.jpg"
+        },
+        {
+          "videoId": "0MjKlniDQfo",
+          "title": "Pedazos",
+          "publishedAt": "2026-10-06T09:03:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/0MjKlniDQfo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "DmJYG5Ps2EY",
+          "title": "\"그냥 현금 2천만원 쓴 청년 ㅋㅋ\" 트릭두 보다 비싼 트릭(마)두 등장 ㅋㅋ",
+          "publishedAt": "2026-10-06T11:00:15Z",
+          "thumbnail": "https://i.ytimg.com/vi/DmJYG5Ps2EY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "7lhg38sKq_Y",
+          "title": "Just because I love you more",
+          "publishedAt": "2026-10-03T09:01:28Z",
+          "thumbnail": "https://i.ytimg.com/vi/7lhg38sKq_Y/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Fcp-YAu9Tu4",
+          "title": "이블린 견제",
+          "publishedAt": "2026-10-06T08:30:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/Fcp-YAu9Tu4/maxresdefault.jpg"
+        },
+        {
+          "videoId": "tNRpc6Ffyfo",
+          "title": "Tic Tac Toe",
+          "publishedAt": "2026-10-07T09:00:19Z",
+          "thumbnail": "https://i.ytimg.com/vi/tNRpc6Ffyfo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "pgNgAIBq0ys",
+          "title": "돌아온 도황안경 : 새출발 챌린지【포켓로그】",
+          "publishedAt": "2026-10-07T09:00:21Z",
+          "thumbnail": "https://i.ytimg.com/vi/pgNgAIBq0ys/maxresdefault.jpg"
+        }
+      ]
+    },
+    "IN": {
+      "regionCode": "IN",
+      "videos": [
+        {
+          "videoId": "hpNimBHa1zI",
+          "title": "Pawan Singh New Song 2026 | Bihari Ke Dum | Srishti Bharti | Neelam Giri | Bhojpuri Song",
+          "publishedAt": "2026-10-06T01:30:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/hpNimBHa1zI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "pqrY8UsRI3w",
+          "title": "Insta Pe Tharki (Official Video) Ajay Hooda | Vijay Varma | New Haryanvi Song 2026",
+          "publishedAt": "2026-10-06T04:35:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/pqrY8UsRI3w/maxresdefault.jpg"
+        },
+        {
+          "videoId": "QTz5PqZspEs",
+          "title": "Comrade Kalyan - Official Trailer | Sree Vishnu | Mahima Nambiar | Janakiram Marella",
+          "publishedAt": "2026-10-06T10:03:33Z",
+          "thumbnail": "https://i.ytimg.com/vi/QTz5PqZspEs/maxresdefault.jpg"
+        },
+        {
+          "videoId": "M9Qgixrwes8",
+          "title": "Evolving into Scary Verity in Minecraft..",
+          "publishedAt": "2026-10-07T12:11:55Z",
+          "thumbnail": "https://i.ytimg.com/vi/M9Qgixrwes8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "nubOGaPEGtI",
+          "title": "BINDELU BINDELU BAVAYYA FULL SONG | MADHURI RATHOD | SINGER GIRAMMA | LEADING BOYS | MARRIKINDHA",
+          "publishedAt": "2026-10-07T03:00:20Z",
+          "thumbnail": "https://i.ytimg.com/vi/nubOGaPEGtI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "4jpPJoYJxGM",
+          "title": "Jailer 2 | Trailer Reaction | Super Star Rajni | Anirudh | Malayalam",
+          "publishedAt": "2026-10-05T13:20:38Z",
+          "thumbnail": "https://i.ytimg.com/vi/4jpPJoYJxGM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "pEAx49fdhBM",
+          "title": "[HINDI] BMSD 2026 | Lower Bracket Survival | Day 3 #BGMILIVE",
+          "publishedAt": "2026-10-06T15:10:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/pEAx49fdhBM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ImcoG8j-1DA",
+          "title": "🔥 DHORI PE NIMBU | AASHISH YADAV & SHWETA SARGAM | NEW BHOJPURI SONG 2026 🔥 FT. KANISHKA CHAUDHARY",
+          "publishedAt": "2026-10-05T01:28:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/ImcoG8j-1DA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Deem8fs1OII",
+          "title": "Haiku - Official Trailer | Aegan | Sri Devi | Femina George | Yuvraj Chinnasamy | Siddhu Kumar",
+          "publishedAt": "2026-10-06T12:00:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/Deem8fs1OII/maxresdefault.jpg"
+        },
+        {
+          "videoId": "g1dq2Znutjg",
+          "title": "GTA 5 LIVE  #gta5 #gtav #gaming",
+          "publishedAt": "2026-10-07T04:04:03Z",
+          "thumbnail": "https://i.ytimg.com/vi/g1dq2Znutjg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Q4ryZfcMg3A",
+          "title": "Chalra Chalra Waal Female Version - Tu Sanwal Phul Kasturi Song ❤️ Instagram Trending song 2026",
+          "publishedAt": "2026-10-04T07:59:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/Q4ryZfcMg3A/maxresdefault.jpg"
+        },
+        {
+          "videoId": "DDyZq1QEybI",
+          "title": "Hanuman Ansh Telugu Trailer | Vishal Chaturvedi | Shobhinaw Satyaa | Hombale Films | Oct 9 Release",
+          "publishedAt": "2026-10-05T11:29:16Z",
+          "thumbnail": "https://i.ytimg.com/vi/DDyZq1QEybI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "qs4VRFgmBZU",
+          "title": "🔴 GTA 5 LIVE – DON’T BLINK! SECRET MOD ACTIVATED 😺 #gtalive #gtaonline",
+          "publishedAt": "2026-10-07T12:54:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/qs4VRFgmBZU/maxresdefault.jpg"
+        }
+      ]
+    },
+    "SG": {
+      "regionCode": "SG",
+      "videos": [
+        {
+          "videoId": "mw3kSNIxjqo",
+          "title": "Taylor Swift - Patient Zero (Official Music Video)",
+          "publishedAt": "2026-09-29T22:00:19Z",
+          "thumbnail": "https://i.ytimg.com/vi/mw3kSNIxjqo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "jbQHpGuy-lU",
+          "title": "PRX vs. LOUD — VALORANT Champions Shanghai — Playoffs Stage — Day 11",
+          "publishedAt": "2026-10-07T14:00:41Z",
+          "thumbnail": "https://i.ytimg.com/vi/jbQHpGuy-lU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "0GZ4gQQE1yM",
+          "title": "G.E.M. 鄧紫棋【自由的你 FREE TO BE YOU】啟程版 Official Lyric Video (4K)",
+          "publishedAt": "2026-10-05T16:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/0GZ4gQQE1yM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "sXKnmgmbkoE",
+          "title": "Marvel Television’s VisionQuest | Official Trailer",
+          "publishedAt": "2026-10-01T16:00:21Z",
+          "thumbnail": "https://i.ytimg.com/vi/sXKnmgmbkoE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "8t8YBu7bdT0",
+          "title": "Escaping Terminus: The Deadliest Minecraft Prison",
+          "publishedAt": "2026-10-06T13:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/8t8YBu7bdT0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Lufa9QAFFeY",
+          "title": "ROSÉ - new trick (OFFICIAL MUSIC VIDEO)",
+          "publishedAt": "2026-09-17T23:00:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/Lufa9QAFFeY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "lARiBU25bBo",
+          "title": "AVENGERS: DOOMSDAY Official Trailer (2026) Extended",
+          "publishedAt": "2026-09-27T18:24:49Z",
+          "thumbnail": "https://i.ytimg.com/vi/lARiBU25bBo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "VLwcqaXiNOA",
+          "title": "SIDEMEN AMONG US MEGAMIND ROLE: BURST EVERYONE'S HEADS TO WIN",
+          "publishedAt": "2026-10-03T18:30:16Z",
+          "thumbnail": "https://i.ytimg.com/vi/VLwcqaXiNOA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "4ThkrA7yNa4",
+          "title": "Sarah Brightman and Zhou Shen Perform ‘The Music of the Night’ at the 2026 Mid-Autumn Festival Gala",
+          "publishedAt": "2026-09-30T08:00:14Z",
+          "thumbnail": "https://i.ytimg.com/vi/4ThkrA7yNa4/maxresdefault.jpg"
+        },
+        {
+          "videoId": "EMMrsr_Nz_U",
+          "title": "JAILER 2 Trailer, Thalaivar Dharisanam! ( REACTION!! )",
+          "publishedAt": "2026-10-05T13:01:46Z",
+          "thumbnail": "https://i.ytimg.com/vi/EMMrsr_Nz_U/maxresdefault.jpg"
+        },
+        {
+          "videoId": "D-EgFgTJOgk",
+          "title": "Help find Gus! (Brawl Stars Animation)",
+          "publishedAt": "2026-10-01T08:00:30Z",
+          "thumbnail": "https://i.ytimg.com/vi/D-EgFgTJOgk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "uwfa-gyubSg",
+          "title": "KATSEYE - Hootie Frutti (Live from Saturday Night Live)",
+          "publishedAt": "2026-09-27T06:57:47Z",
+          "thumbnail": "https://i.ytimg.com/vi/uwfa-gyubSg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Azl5MdWqtcY",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Ani | MaayaKumar | Episode 6449",
+          "publishedAt": "2026-10-05T12:32:11Z",
+          "thumbnail": "https://i.ytimg.com/vi/Azl5MdWqtcY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "fV9rheIAddk",
+          "title": "GRIEF VERIFIED",
+          "publishedAt": "2026-10-05T03:32:15Z",
+          "thumbnail": "https://i.ytimg.com/vi/fV9rheIAddk/maxresdefault.jpg"
+        }
+      ]
+    },
+    "TW": {
+      "regionCode": "TW",
+      "videos": [
+        {
+          "videoId": "0GZ4gQQE1yM",
+          "title": "G.E.M. 鄧紫棋【自由的你 FREE TO BE YOU】啟程版 Official Lyric Video (4K)",
+          "publishedAt": "2026-10-05T16:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/0GZ4gQQE1yM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "nPeVhOKq5Wo",
+          "title": "《急診室的奇蹟》 | 正式前導預告 | Netflix",
+          "publishedAt": "2026-10-06T02:00:00Z",
+          "thumbnail": "https://i.ytimg.com/vi/nPeVhOKq5Wo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "IuxCtZZssUE",
+          "title": "【偷一顆蛋】我獲得了最新神聖天空鯨魚！融合出靈界守護者！【Steal An Egg】【Roblox】",
+          "publishedAt": "2026-10-06T10:57:41Z",
+          "thumbnail": "https://i.ytimg.com/vi/IuxCtZZssUE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ruW6WmqNkS8",
+          "title": "8lak張鈞 & INHON胤宏【一遍兩遍】Official Music Video",
+          "publishedAt": "2026-10-02T12:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/ruW6WmqNkS8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ge0I2ebq2Pk",
+          "title": "Tidak Tergantikan (Irreplaceable) Trailer EP17 | Suatu saat Xu Chi bakal menggantikan Ye Xinzhi?!",
+          "publishedAt": "2026-10-07T05:27:34Z",
+          "thumbnail": "https://i.ytimg.com/vi/ge0I2ebq2Pk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "DbdIAIpAMrw",
+          "title": "傳說對決 |10/1號太古巨猿事件這場結束傳說對決永遠失去了一名拓冥玩家?| Sirenia 海牛 |瑪迦",
+          "publishedAt": "2026-10-06T09:49:01Z",
+          "thumbnail": "https://i.ytimg.com/vi/DbdIAIpAMrw/maxresdefault.jpg"
+        },
+        {
+          "videoId": "2rhLKnWCo6Y",
+          "title": "AIYOU - Eve Music Video",
+          "publishedAt": "2026-10-02T10:00:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/2rhLKnWCo6Y/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zrP2wF0jnks",
+          "title": "ROBLOX 偷一顆蛋！我原本超慢都搶不到😭 但一位高手居然送我最強的蛋!? 我可以變多快？？【Steal An Egg - 有感筆電】",
+          "publishedAt": "2026-10-02T10:13:30Z",
+          "thumbnail": "https://i.ytimg.com/vi/zrP2wF0jnks/maxresdefault.jpg"
+        },
+        {
+          "videoId": "T8chOWL8lw0",
+          "title": "再见只是陌生人 (男女合唱 R&B)",
+          "publishedAt": "2026-10-01T10:04:00Z",
+          "thumbnail": "https://i.ytimg.com/vi/T8chOWL8lw0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "R2c5FUS4w6Q",
+          "title": "《说我暗系弱：吾乃暗影君王归来》【第1~306集】S级暗系被嘲只能偷袭？看他进化为SS级永夜君王横扫全场！#麻梨酥 #玄幻 #热血 #逆袭 #穿越 #爽文 #古装 #都市",
+          "publishedAt": "2026-10-06T23:42:47Z",
+          "thumbnail": "https://i.ytimg.com/vi/R2c5FUS4w6Q/maxresdefault.jpg"
+        },
+        {
+          "videoId": "PL9o0xj7RyM",
+          "title": "YUQI 'I Like You' Official Music Video",
+          "publishedAt": "2026-10-02T04:00:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/PL9o0xj7RyM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "jbQHpGuy-lU",
+          "title": "PRX vs. LOUD — VALORANT Champions Shanghai — Playoffs Stage — Day 11",
+          "publishedAt": "2026-10-07T14:00:41Z",
+          "thumbnail": "https://i.ytimg.com/vi/jbQHpGuy-lU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "miPsgPCE53k",
+          "title": "空心（R&B）",
+          "publishedAt": "2026-10-01T18:26:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/miPsgPCE53k/maxresdefault.jpg"
+        },
+        {
+          "videoId": "u7xo8BlhHl0",
+          "title": "GCS 2026 夏季例行賽W7D3－2026/10/04《Garena 傳說對決》",
+          "publishedAt": "2026-10-04T14:00:13Z",
+          "thumbnail": "https://i.ytimg.com/vi/u7xo8BlhHl0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "R48yZyjztBg",
+          "title": "甲乙丙丁Strangers (合唱版)",
+          "publishedAt": "2026-09-29T16:00:21Z",
+          "thumbnail": "https://i.ytimg.com/vi/R48yZyjztBg/maxresdefault.jpg"
+        }
+      ]
+    },
+    "HK": {
+      "regionCode": "HK",
+      "videos": [
+        {
+          "videoId": "x9trAoDbLYQ",
+          "title": "Alibi",
+          "publishedAt": "2026-10-01T10:00:38Z",
+          "thumbnail": "https://i.ytimg.com/vi/x9trAoDbLYQ/maxresdefault.jpg"
+        },
+        {
+          "videoId": "sXKnmgmbkoE",
+          "title": "Marvel Television’s VisionQuest | Official Trailer",
+          "publishedAt": "2026-10-01T16:00:21Z",
+          "thumbnail": "https://i.ytimg.com/vi/sXKnmgmbkoE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "aQ4Abh6qWJY",
+          "title": "小編亞運直播專區！｜ 電競決賽： 《英雄聯盟》  ｜ 20261002 ｜香港隊｜ 亞運 ｜齊睇HOY撐港隊 ｜ HOY",
+          "publishedAt": "2026-10-02T06:47:03Z",
+          "thumbnail": "https://i.ytimg.com/vi/aQ4Abh6qWJY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "rIuavE__LyY",
+          "title": "Sugarproof",
+          "publishedAt": "2026-09-28T10:00:05Z",
+          "thumbnail": "https://i.ytimg.com/vi/rIuavE__LyY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Tn0vFEH-qFk",
+          "title": "《我阿爹想旅行》GOOD TRIP｜香港正式預告｜10月15日 行得㗎啦",
+          "publishedAt": "2026-09-16T04:00:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/Tn0vFEH-qFk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zrP2wF0jnks",
+          "title": "ROBLOX 偷一顆蛋！我原本超慢都搶不到😭 但一位高手居然送我最強的蛋!? 我可以變多快？？【Steal An Egg - 有感筆電】",
+          "publishedAt": "2026-10-02T10:13:30Z",
+          "thumbnail": "https://i.ytimg.com/vi/zrP2wF0jnks/maxresdefault.jpg"
+        },
+        {
+          "videoId": "g4bjfyP5ODE",
+          "title": "MIRROR《Fight Club》Official Music Video",
+          "publishedAt": "2026-09-28T13:00:20Z",
+          "thumbnail": "https://i.ytimg.com/vi/g4bjfyP5ODE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "fSn1LGcCAt8",
+          "title": "台北GTA內玩「香港GTA」😱香港人：超還原！由旺角到銅鑼灣！坐電車、山頂纜車、天星小輪？",
+          "publishedAt": "2026-10-05T13:26:42Z",
+          "thumbnail": "https://i.ytimg.com/vi/fSn1LGcCAt8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "_J8PDMBVmas",
+          "title": "gareth.t - 淺粉紅 baby pink (official video)",
+          "publishedAt": "2026-09-24T12:00:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/_J8PDMBVmas/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Ih6DVdyQn3I",
+          "title": "Season 5: A Grim Doctrine Launch Trailer | Overwatch",
+          "publishedAt": "2026-10-05T17:00:23Z",
+          "thumbnail": "https://i.ytimg.com/vi/Ih6DVdyQn3I/maxresdefault.jpg"
+        },
+        {
+          "videoId": "hHasrujdn-E",
+          "title": "GTA 6 有幾 18 禁？PEGI 評級寫到好似劇透咁：斷頭、可卡因、性愛場面全部有！ - Gamehub 遊戲 八卦 花生 新聞 (cc.中文字幕)",
+          "publishedAt": "2026-10-07T04:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/hHasrujdn-E/maxresdefault.jpg"
+        },
+        {
+          "videoId": "0GZ4gQQE1yM",
+          "title": "G.E.M. 鄧紫棋【自由的你 FREE TO BE YOU】啟程版 Official Lyric Video (4K)",
+          "publishedAt": "2026-10-05T16:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/0GZ4gQQE1yM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "lARiBU25bBo",
+          "title": "AVENGERS: DOOMSDAY Official Trailer (2026) Extended",
+          "publishedAt": "2026-09-27T18:24:49Z",
+          "thumbnail": "https://i.ytimg.com/vi/lARiBU25bBo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "D-EgFgTJOgk",
+          "title": "Help find Gus! (Brawl Stars Animation)",
+          "publishedAt": "2026-10-01T08:00:30Z",
+          "thumbnail": "https://i.ytimg.com/vi/D-EgFgTJOgk/maxresdefault.jpg"
+        }
+      ]
+    },
+    "CN": {
+      "regionCode": "CN",
+      "videos": []
+    },
+    "FR": {
+      "regionCode": "FR",
+      "videos": [
+        {
+          "videoId": "PN0chKQVjhc",
+          "title": "La Fouine - 1981 | A COLORS SHOW",
+          "publishedAt": "2026-10-05T16:00:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/PN0chKQVjhc/maxresdefault.jpg"
+        },
+        {
+          "videoId": "v6uWXocGgH8",
+          "title": "THE SACRIFICE Bande Annonce VF (2026)",
+          "publishedAt": "2026-10-06T17:30:12Z",
+          "thumbnail": "https://i.ytimg.com/vi/v6uWXocGgH8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "sYKEyW0GFlg",
+          "title": "LES PIRES SUJETS DE CONVERSATION POSSIBLE (Apocalypter)",
+          "publishedAt": "2026-10-07T12:00:08Z",
+          "thumbnail": "https://i.ytimg.com/vi/sYKEyW0GFlg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Ag6AsqRtE-8",
+          "title": "Seth Gueko - UBER CRIME ft. Sofiane (Clip Officiel)",
+          "publishedAt": "2026-10-06T16:00:13Z",
+          "thumbnail": "https://i.ytimg.com/vi/Ag6AsqRtE-8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "sN95T77jYyk",
+          "title": "FAUSSE NOTE Bande Annonce (2026) Benoît Poelvoorde, Kad Merad",
+          "publishedAt": "2026-10-06T17:01:14Z",
+          "thumbnail": "https://i.ytimg.com/vi/sN95T77jYyk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "88cQ0yaPlOg",
+          "title": "Récompense GRATUITE, SOLUTION SALON ( Mister P ) FIND GUS !",
+          "publishedAt": "2026-10-07T10:08:52Z",
+          "thumbnail": "https://i.ytimg.com/vi/88cQ0yaPlOg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ycr50dzbO0I",
+          "title": "Bekar - Mauvais film (nouveau clip)",
+          "publishedAt": "2026-10-07T10:20:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/ycr50dzbO0I/maxresdefault.jpg"
+        },
+        {
+          "videoId": "BcDq7R35LKM",
+          "title": "L'Impératrice - Saison 3 | Bande-annonce officielle VF | Netflix France",
+          "publishedAt": "2026-10-07T10:00:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/BcDq7R35LKM/maxresdefault.jpg"
+        },
+        {
+          "videoId": "uC1w4Px059A",
+          "title": "Je me suis INCRUSTÉ dans ce Défilé de Mode d'Halloween !",
+          "publishedAt": "2026-10-07T11:59:05Z",
+          "thumbnail": "https://i.ytimg.com/vi/uC1w4Px059A/maxresdefault.jpg"
+        },
+        {
+          "videoId": "266Hi8FwuU0",
+          "title": "Mentissa - Les enfants difficiles (The Voice kids)",
+          "publishedAt": "2026-10-07T10:13:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/266Hi8FwuU0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FilO0MPm_cY",
+          "title": "L'EMPIRE DU JAPON SERA À MOI ! (Nouvelle aventure Crusader Kings III) #1",
+          "publishedAt": "2026-10-07T08:00:34Z",
+          "thumbnail": "https://i.ytimg.com/vi/FilO0MPm_cY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "p1xukNwPUqo",
+          "title": "Comment ne pas te louer - Stade de France 2026 - Veillée des jeunes Pape Léon XIV",
+          "publishedAt": "2026-10-07T09:22:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/p1xukNwPUqo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FW_PPcr1sPE",
+          "title": "JAILER 2 - Official Trailer | Superstar Rajinikanth | Sun Pictures | Anirudh | Nelson",
+          "publishedAt": "2026-10-05T12:29:17Z",
+          "thumbnail": "https://i.ytimg.com/vi/FW_PPcr1sPE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "VuXADrTlju8",
+          "title": "Je suis le PIGEON le plus MÉCHANT qui existe... (Iam Bird VR)",
+          "publishedAt": "2026-10-06T15:00:28Z",
+          "thumbnail": "https://i.ytimg.com/vi/VuXADrTlju8/maxresdefault.jpg"
+        }
+      ]
+    },
+    "DE": {
+      "regionCode": "DE",
+      "videos": [
+        {
+          "videoId": "C5VOLpsefMs",
+          "title": "SEKA ALEKSIĆ – MENI SI NEKO (OFFICIAL VIDEO)",
+          "publishedAt": "2026-10-07T10:00:36Z",
+          "thumbnail": "https://i.ytimg.com/vi/C5VOLpsefMs/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Zjrz_KVKnts",
+          "title": "Die Kaiserin: Staffel 3 | Offizieller Trailer | Netflix",
+          "publishedAt": "2026-10-07T10:00:00Z",
+          "thumbnail": "https://i.ytimg.com/vi/Zjrz_KVKnts/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Fw6fAyKBBBg",
+          "title": "Wenn Mario Party ab 18 wäre...",
+          "publishedAt": "2026-10-07T11:30:03Z",
+          "thumbnail": "https://i.ytimg.com/vi/Fw6fAyKBBBg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "bnfw3jFFGt8",
+          "title": "Perche Ti Amo – DJ LUNESA ft. Enzo Vieri 🔥 | Love Without Limits ❤️‍🔥",
+          "publishedAt": "2026-09-27T12:00:22Z",
+          "thumbnail": "https://i.ytimg.com/vi/bnfw3jFFGt8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "N2J6Yz20wks",
+          "title": "Ich CHEATE HEIMLICH mit OP VERSTECK in meinem Roblox Spiel!",
+          "publishedAt": "2026-10-07T13:15:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/N2J6Yz20wks/maxresdefault.jpg"
+        },
+        {
+          "videoId": "iCe3trSoDmc",
+          "title": "Parkway Drive - \"Prey\" (Live at the Sydney Opera House)",
+          "publishedAt": "2026-10-06T22:07:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/iCe3trSoDmc/maxresdefault.jpg"
+        },
+        {
+          "videoId": "GYoTOIsn5yk",
+          "title": "AMERICAN HORROR STORY Staffel 13 Trailer German Deutsch (2026) Sarah Paulson, Emma Roberts",
+          "publishedAt": "2026-10-06T12:02:28Z",
+          "thumbnail": "https://i.ytimg.com/vi/GYoTOIsn5yk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "PIj_AVTdUr0",
+          "title": "ZARBEX ALS HAUSFRAU! KOCHEN, PUTZEN UND WÄSCHE WASCHEN! 👩 🧼 | Woman Simulator | Part 1 | UNCUT",
+          "publishedAt": "2026-10-07T10:03:16Z",
+          "thumbnail": "https://i.ytimg.com/vi/PIj_AVTdUr0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "13A2QGmdN8c",
+          "title": "Liane & Reiner Kirsten - Blue Bayou (Offizielles Musikvideo)",
+          "publishedAt": "2026-10-05T17:00:07Z",
+          "thumbnail": "https://i.ytimg.com/vi/13A2QGmdN8c/maxresdefault.jpg"
+        },
+        {
+          "videoId": "phZbhL60Goo",
+          "title": "Neuer Forever CLASS TRAILER! Was ändert sich bei diesen Klassen?",
+          "publishedAt": "2026-10-07T09:03:18Z",
+          "thumbnail": "https://i.ytimg.com/vi/phZbhL60Goo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FFXtWpRHEqE",
+          "title": "ich muss 1 MILLIONEN KARTOFFELN SCHÄLEN dann passierte das...",
+          "publishedAt": "2026-10-07T11:43:21Z",
+          "thumbnail": "https://i.ytimg.com/vi/FFXtWpRHEqE/maxresdefault.jpg"
+        },
+        {
+          "videoId": "UxmdCABl1EY",
+          "title": "Rammstein - Live in Mexico City - Sonne (Official Video)",
+          "publishedAt": "2026-10-05T09:00:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/UxmdCABl1EY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "WtjLFxAGPrs",
+          "title": "DAS GROSSE ASTERIX KINO-FESTIVAL Trailer German Deutsch (2027)",
+          "publishedAt": "2026-10-06T13:06:04Z",
+          "thumbnail": "https://i.ytimg.com/vi/WtjLFxAGPrs/maxresdefault.jpg"
+        },
+        {
+          "videoId": "iBz4Zqv-IK4",
+          "title": "Das ENDE von MINECRAFT HELDEN 3...",
+          "publishedAt": "2026-10-07T11:00:03Z",
+          "thumbnail": "https://i.ytimg.com/vi/iBz4Zqv-IK4/maxresdefault.jpg"
+        }
+      ]
+    },
+    "BR": {
+      "regionCode": "BR",
+      "videos": [
+        {
+          "videoId": "gipLuqliTNI",
+          "title": "Minha Mãezinha | Ir Kelly Patrícia no Misericórdia Brasil - Instituto Hesed",
+          "publishedAt": "2026-10-07T09:18:44Z",
+          "thumbnail": "https://i.ytimg.com/vi/gipLuqliTNI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "W9W5CLUGjbU",
+          "title": "Dragon Ball Super: Beerus | Official Trailer | Crunchyroll",
+          "publishedAt": "2026-10-06T22:30:32Z",
+          "thumbnail": "https://i.ytimg.com/vi/W9W5CLUGjbU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "hmzVh56mTls",
+          "title": "O TERROR SOBRE FORMAS GEOMÉTRICAS TÁ DE VOLTA COM NOVAS FORMAS GEOMÉTRICAS! - Save the Shapes 2",
+          "publishedAt": "2026-10-06T15:03:59Z",
+          "thumbnail": "https://i.ytimg.com/vi/hmzVh56mTls/maxresdefault.jpg"
+        },
+        {
+          "videoId": "SQXbjJ3ThV8",
+          "title": "O Céu Não Esqueceu (Ao Vivo)",
+          "publishedAt": "2026-10-05T10:05:26Z",
+          "thumbnail": "https://i.ytimg.com/vi/SQXbjJ3ThV8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "l-AeX7nZIm0",
+          "title": "True Damage: Know My Name | Skins Trailer - League of Legends",
+          "publishedAt": "2026-10-06T16:00:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/l-AeX7nZIm0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "-zk8wgIuSRo",
+          "title": "NRG x T1 | PRX x LOUD | Champions Shanghai | Playoffs - Dia 11",
+          "publishedAt": "2026-10-07T14:01:47Z",
+          "thumbnail": "https://i.ytimg.com/vi/-zk8wgIuSRo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ypeS-TGeCFo",
+          "title": "Tipo Minato V2⚡️| Kurama Mode | (Naruto) Style Trap | MHRAP",
+          "publishedAt": "2026-10-06T21:00:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/ypeS-TGeCFo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Eaf4g8O0QlI",
+          "title": "NOVO TRAILER de 171 ESTÁ INCRÍVEL!",
+          "publishedAt": "2026-10-06T23:00:32Z",
+          "thumbnail": "https://i.ytimg.com/vi/Eaf4g8O0QlI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "N6FYolJiZaU",
+          "title": "Virei Pai por 1 dia no Minecraft!",
+          "publishedAt": "2026-10-07T13:00:19Z",
+          "thumbnail": "https://i.ytimg.com/vi/N6FYolJiZaU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "imhrGXEJshk",
+          "title": "Quarta Feira 07 de Outubro - Izael Lopes | Bom dia Deus 🙏🏻",
+          "publishedAt": "2026-10-07T01:33:49Z",
+          "thumbnail": "https://i.ytimg.com/vi/imhrGXEJshk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "xp-yqwlyPks",
+          "title": "ULTRON ESCAPOU! É O FIM DO MUNDO? ANÁLISE COMPLETA DO TRAILER DE VISION QUEST",
+          "publishedAt": "2026-10-04T23:21:05Z",
+          "thumbnail": "https://i.ytimg.com/vi/xp-yqwlyPks/maxresdefault.jpg"
+        },
+        {
+          "videoId": "pGBnuvB58dk",
+          "title": "Evoluí CASA na ÁGUA POBRE até CASA na ÁGUA MILIONÁRIA para VENCER minha NAMORADA! 💘",
+          "publishedAt": "2026-10-07T12:16:41Z",
+          "thumbnail": "https://i.ytimg.com/vi/pGBnuvB58dk/maxresdefault.jpg"
+        },
+        {
+          "videoId": "0ZtEQMeVASI",
+          "title": "SET JAPA NK 3.0 - RYAN SP, LELE JP, MENO K, MARCHI, JACARÉ LUUKY, IGUINHO CT, RODRIGO DO CN, GH DO 7",
+          "publishedAt": "2026-10-06T23:55:13Z",
+          "thumbnail": "https://i.ytimg.com/vi/0ZtEQMeVASI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "zcB4UqnaBJc",
+          "title": "INAUGUREI MEU PRIMEIRO MAPA NO ROBLOX",
+          "publishedAt": "2026-10-06T23:00:24Z",
+          "thumbnail": "https://i.ytimg.com/vi/zcB4UqnaBJc/maxresdefault.jpg"
+        }
+      ]
+    },
+    "MX": {
+      "regionCode": "MX",
+      "videos": [
+        {
+          "videoId": "DGS5B65W-5k",
+          "title": "Dharius - El Cumbión Ft. Neto Peña & La Santa Grifa (Video Oficial)",
+          "publishedAt": "2026-10-06T22:47:28Z",
+          "thumbnail": "https://i.ytimg.com/vi/DGS5B65W-5k/maxresdefault.jpg"
+        },
+        {
+          "videoId": "aw32p2i7UTg",
+          "title": "The Exorcist: Martyrs | First Teaser | Coming to GSC starting 11 March 2027",
+          "publishedAt": "2026-10-07T02:34:42Z",
+          "thumbnail": "https://i.ytimg.com/vi/aw32p2i7UTg/maxresdefault.jpg"
+        },
+        {
+          "videoId": "tl1QNDvV60U",
+          "title": "CONSTRUYE TU PROPIO ESCAPA DEL TECLADO EN ROBLOX!⚒️",
+          "publishedAt": "2026-10-06T21:00:27Z",
+          "thumbnail": "https://i.ytimg.com/vi/tl1QNDvV60U/maxresdefault.jpg"
+        },
+        {
+          "videoId": "InjHtEpwXp8",
+          "title": "Ven Conmigo",
+          "publishedAt": "2026-10-07T05:20:58Z",
+          "thumbnail": "https://i.ytimg.com/vi/InjHtEpwXp8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "W9W5CLUGjbU",
+          "title": "Dragon Ball Super: Beerus | Official Trailer | Crunchyroll",
+          "publishedAt": "2026-10-06T22:30:32Z",
+          "thumbnail": "https://i.ytimg.com/vi/W9W5CLUGjbU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Q9E58ai1D2M",
+          "title": "Gears of War : La Saga en 1 Video",
+          "publishedAt": "2026-10-06T18:30:00Z",
+          "thumbnail": "https://i.ytimg.com/vi/Q9E58ai1D2M/hqdefault.jpg"
+        },
+        {
+          "videoId": "QbHZuaDYxPo",
+          "title": "Banda El Recodo, Banda MS, La Arrolladora,Los Recoditos,Carnaval ☘ Puro Bandas Romanticas 2026",
+          "publishedAt": "2026-10-03T12:00:22Z",
+          "thumbnail": "https://i.ytimg.com/vi/QbHZuaDYxPo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "FwRoS0oG2rY",
+          "title": "\"Una Gallina Muy Ponedora\" Tráiler Oficial",
+          "publishedAt": "2026-10-04T22:08:48Z",
+          "thumbnail": "https://i.ytimg.com/vi/FwRoS0oG2rY/maxresdefault.jpg"
+        },
+        {
+          "videoId": "54LuZNKgZo8",
+          "title": "Sobrevivi De Homero Simpson Maldito Con Verity / Homero.EXE Mod Minecraft",
+          "publishedAt": "2026-10-07T00:27:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/54LuZNKgZo8/maxresdefault.jpg"
+        },
+        {
+          "videoId": "ssBa-h_UJBQ",
+          "title": "Flor y Amor Joven - Millones de Estrellas (Video Oficial)",
+          "publishedAt": "2026-10-07T02:00:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/ssBa-h_UJBQ/maxresdefault.jpg"
+        },
+        {
+          "videoId": "l-AeX7nZIm0",
+          "title": "True Damage: Know My Name | Skins Trailer - League of Legends",
+          "publishedAt": "2026-10-06T16:00:25Z",
+          "thumbnail": "https://i.ytimg.com/vi/l-AeX7nZIm0/maxresdefault.jpg"
+        },
+        {
+          "videoId": "d3Lkkm73MqA",
+          "title": "Me Hice pasar por NOOB, después CONSEGUÍ una TORRE DE COCHES en Minecraft!",
+          "publishedAt": "2026-10-06T20:20:12Z",
+          "thumbnail": "https://i.ytimg.com/vi/d3Lkkm73MqA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "9rzI5wsAQbU",
+          "title": "Jeanette — ¿Porqué te vas? (Letra)",
+          "publishedAt": "2026-09-17T16:00:05Z",
+          "thumbnail": "https://i.ytimg.com/vi/9rzI5wsAQbU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "OpgjL1O5b5Y",
+          "title": "la ARMADURA más DIFÍCIL de CONSEGUIR | DEDsafioMinecraft4💀 Día 13",
+          "publishedAt": "2026-10-06T20:58:49Z",
+          "thumbnail": "https://i.ytimg.com/vi/OpgjL1O5b5Y/maxresdefault.jpg"
+        }
+      ]
+    },
+    "ES": {
+      "regionCode": "ES",
+      "videos": [
+        {
+          "videoId": "_DUXeWadqDo",
+          "title": "Conep, YOVNGCHIMI, DJ Luian - Kirby (Official Video)",
+          "publishedAt": "2026-10-06T21:00:36Z",
+          "thumbnail": "https://i.ytimg.com/vi/_DUXeWadqDo/maxresdefault.jpg"
+        },
+        {
+          "videoId": "4axFZYPbYlw",
+          "title": "VENGADORES: DOOMSDAY TV Spot Español (2026) Robert Downey Jr., Chris Hemsworth",
+          "publishedAt": "2026-10-07T08:40:52Z",
+          "thumbnail": "https://i.ytimg.com/vi/4axFZYPbYlw/maxresdefault.jpg"
+        },
+        {
+          "videoId": "7BjcmY8Bdaw",
+          "title": "AMONG US CON LA SELECCIÓN ESPAÑOLA DE FUTBOL 🇪🇸",
+          "publishedAt": "2026-10-05T17:26:48Z",
+          "thumbnail": "https://i.ytimg.com/vi/7BjcmY8Bdaw/maxresdefault.jpg"
+        },
+        {
+          "videoId": "X1dkDXoeLws",
+          "title": "Jarfaiter - GTA - (Official Video) #Arcade",
+          "publishedAt": "2026-10-06T19:00:10Z",
+          "thumbnail": "https://i.ytimg.com/vi/X1dkDXoeLws/hqdefault.jpg"
+        },
+        {
+          "videoId": "y1nQ3eo9j9Y",
+          "title": "VENGADORES : DOOMSDAY TV Spot Español (2026)",
+          "publishedAt": "2026-10-06T10:43:36Z",
+          "thumbnail": "https://i.ytimg.com/vi/y1nQ3eo9j9Y/maxresdefault.jpg"
+        },
+        {
+          "videoId": "tTUE0DAV9XI",
+          "title": "El Mejor Among Us de la historia | Lamine, Auron, Peereira, Olmo, Fermín...",
+          "publishedAt": "2026-10-05T17:05:04Z",
+          "thumbnail": "https://i.ytimg.com/vi/tTUE0DAV9XI/maxresdefault.jpg"
+        },
+        {
+          "videoId": "D6VOtKyA6og",
+          "title": "Clarent & Quevedo - Jukiar (Video Oficial)",
+          "publishedAt": "2026-10-02T22:00:09Z",
+          "thumbnail": "https://i.ytimg.com/vi/D6VOtKyA6og/maxresdefault.jpg"
+        },
+        {
+          "videoId": "KjiJDylLdZA",
+          "title": "Frozen Trail Launch Trailer | ARC Raiders",
+          "publishedAt": "2026-10-06T16:00:37Z",
+          "thumbnail": "https://i.ytimg.com/vi/KjiJDylLdZA/maxresdefault.jpg"
+        },
+        {
+          "videoId": "oN4eE_Fn89s",
+          "title": "LAS PELEAS MÁS SURREALISTAS 🦍 - How Many Dudes?",
+          "publishedAt": "2026-10-06T13:15:18Z",
+          "thumbnail": "https://i.ytimg.com/vi/oN4eE_Fn89s/maxresdefault.jpg"
+        },
+        {
+          "videoId": "riEbYFMcWXU",
+          "title": "Carlos Vives - La Gota Fría | Letra",
+          "publishedAt": "2026-09-30T20:00:22Z",
+          "thumbnail": "https://i.ytimg.com/vi/riEbYFMcWXU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "Ih6DVdyQn3I",
+          "title": "Season 5: A Grim Doctrine Launch Trailer | Overwatch",
+          "publishedAt": "2026-10-05T17:00:23Z",
+          "thumbnail": "https://i.ytimg.com/vi/Ih6DVdyQn3I/maxresdefault.jpg"
+        },
+        {
+          "videoId": "SsW0rVwVM1M",
+          "title": "GANÉ el TORNEO MÁS LOCO de ROCKET LEAGUE",
+          "publishedAt": "2026-10-06T21:13:24Z",
+          "thumbnail": "https://i.ytimg.com/vi/SsW0rVwVM1M/maxresdefault.jpg"
+        },
+        {
+          "videoId": "jWrj0UIojhc",
+          "title": "Romeo Santos - La Diabla | Letra",
+          "publishedAt": "2026-09-30T21:00:02Z",
+          "thumbnail": "https://i.ytimg.com/vi/jWrj0UIojhc/maxresdefault.jpg"
+        },
+        {
+          "videoId": "cPjW_ESwKXU",
+          "title": "Honest Trailers | Master and Commander: The Far Side of the World",
+          "publishedAt": "2026-10-06T17:00:29Z",
+          "thumbnail": "https://i.ytimg.com/vi/cPjW_ESwKXU/maxresdefault.jpg"
+        },
+        {
+          "videoId": "tXRYJKzTJbA",
+          "title": "Lo del AION 2 es SALVAJE",
+          "publishedAt": "2026-10-06T16:01:06Z",
+          "thumbnail": "https://i.ytimg.com/vi/tXRYJKzTJbA/maxresdefault.jpg"
         }
       ]
     }

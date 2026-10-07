@@ -94,6 +94,71 @@ assert.equal(mockedApiCalls.filter(endpoint => endpoint.endsWith("/channels")).l
 assert.equal(mockedApiCalls.filter(endpoint => endpoint.endsWith("/playlistItems")).length, 3);
 assert.equal(generatedCache.channels[YOUTUBE_CHANNELS[0]].videos[0].videoId, "dQw4w9WgXcQ");
 assert.doesNotMatch(JSON.stringify(generatedCache), /test-only-fixture-key/);
+
+const rssFallbackChannel = YOUTUBE_CHANNELS[1];
+const rssFallbackCalls = [];
+const rssFallbackCache = await buildYouTubeFeedCache({
+  apiKey: fixtureKey,
+  now: new Date("2026-10-08T00:00:00.000Z"),
+  fetchImpl: async (input, options) => {
+    const url = new URL(input);
+    if (url.pathname.endsWith("/channels")) {
+      assert.equal(options.headers["x-goog-api-key"], fixtureKey);
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            items: YOUTUBE_CHANNELS.map(channelId => ({
+              id: channelId,
+              contentDetails: { relatedPlaylists: { uploads: "UU" + channelId.slice(2) } }
+            }))
+          };
+        }
+      };
+    }
+    if (url.pathname.endsWith("/playlistItems")) {
+      assert.equal(options.headers["x-goog-api-key"], fixtureKey);
+      if (url.searchParams.get("playlistId") === "UU" + rssFallbackChannel.slice(2)) {
+        return {
+          ok: false,
+          status: 404,
+          async json() { return { error: { errors: [{ reason: "playlistNotFound" }] } }; }
+        };
+      }
+      return {
+        ok: true,
+        status: 200,
+        async json() {
+          return {
+            items: [{
+              contentDetails: { videoId: "dQw4w9WgXcQ", videoPublishedAt: "2026-10-08T00:00:00Z" },
+              snippet: { title: "API video" }
+            }]
+          };
+        }
+      };
+    }
+    assert.equal(url.hostname, "www.youtube.com");
+    assert.equal(url.pathname, "/feeds/videos.xml");
+    assert.equal(url.searchParams.get("channel_id"), rssFallbackChannel);
+    assert.equal(url.searchParams.has("key"), false);
+    assert.equal(options.headers["x-goog-api-key"], undefined, "RSS fallback must not receive the API key");
+    rssFallbackCalls.push(url.searchParams.get("channel_id"));
+    return {
+      ok: true,
+      status: 200,
+      async text() {
+        return '<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015"><entry><yt:videoId>9bZkp7q19f0</yt:videoId><title>RSS &amp; fallback</title><published>2026-10-08T00:00:00Z</published></entry></feed>';
+      }
+    };
+  }
+});
+assert.deepEqual(rssFallbackCalls, [rssFallbackChannel]);
+assert.equal(rssFallbackCache.channels[rssFallbackChannel].videos[0].videoId, "9bZkp7q19f0");
+assert.equal(rssFallbackCache.channels[rssFallbackChannel].videos[0].title, "RSS & fallback");
+assert.equal(rssFallbackCache.channels[YOUTUBE_CHANNELS[0]].videos[0].title, "API video");
+
 await assert.rejects(() => buildYouTubeFeedCache({ apiKey: "", fetchImpl: async () => { throw new Error("must not fetch"); } }), /YOUTUBE_API_KEY/);
 
 const app = manifest.apps.find((candidate) => candidate.id === "com.aryansoft.webwindows.aplay");

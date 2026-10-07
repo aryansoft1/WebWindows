@@ -28,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Run APlay cloud media smoke test
+        run: node tests/aplay-cloud-media-smoke.mjs
       - name: Refresh public channel feed cache
         run: node tools/refresh-aplay-youtube-feeds.mjs
         env:

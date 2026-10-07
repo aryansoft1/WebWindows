@@ -6,11 +6,12 @@
   const PICKER_CANCELLED = "webwindows:cloud-resource-picker-cancelled";
   const MAX_BYTES = 15 * 1024 * 1024;
   let sequence = 0;
+  const objectUrls = new Set();
 
   const messages = {
-    zh: { purposeInvalid: "purpose 只能包含字母、数字、冒号、下划线和连字符。", fileTypeRequired: "至少需要提供一种可选择的文件类型。", tooManyFileTypes: "文件类型筛选不能超过 16 项。", openTitle: "从云资料打开", saveTitle: "保存到云资料", closeDialog: "关闭云文件对话框", requestFailed: "云资料请求失败（{status}）", invalidWriteTarget: "保存目标不是可写的私人云资料。", invalidWriteUrl: "云资料写入地址无效。", invalidContentSize: "保存内容必须在 1 字节到 15 MB 之间。", missingReadUrl: "云资料缺少读取地址。", invalidReadUrl: "云资料读取地址无效。", readFailed: "云资料读取失败（{status}）" },
-    jp: { purposeInvalid: "purpose には英数字、コロン、アンダースコア、ハイフンのみ使用できます。", fileTypeRequired: "選択可能なファイル形式を1つ以上指定してください。", tooManyFileTypes: "ファイル形式は16件まで指定できます。", openTitle: "クラウドから開く", saveTitle: "クラウドに保存", closeDialog: "クラウドファイルダイアログを閉じる", requestFailed: "クラウドファイルのリクエストに失敗しました（{status}）", invalidWriteTarget: "保存先は書き込み可能なプライベートクラウドではありません。", invalidWriteUrl: "クラウドファイルの書き込み先が無効です。", invalidContentSize: "保存内容は1バイト以上15 MB以下である必要があります。", missingReadUrl: "クラウドファイルの読み取り先がありません。", invalidReadUrl: "クラウドファイルの読み取り先が無効です。", readFailed: "クラウドファイルを読み取れませんでした（{status}）" },
-    en: { purposeInvalid: "purpose may contain only letters, numbers, colons, underscores, and hyphens.", fileTypeRequired: "Provide at least one selectable file type.", tooManyFileTypes: "File type filters cannot exceed 16 entries.", openTitle: "Open from cloud", saveTitle: "Save to cloud", closeDialog: "Close cloud file dialog", requestFailed: "Cloud file request failed ({status})", invalidWriteTarget: "The save target is not writable private cloud storage.", invalidWriteUrl: "The cloud file write address is invalid.", invalidContentSize: "Content must be between 1 byte and 15 MB.", missingReadUrl: "The cloud file read address is missing.", invalidReadUrl: "The cloud file read address is invalid.", readFailed: "Cloud file read failed ({status})" }
+    zh: { purposeInvalid: "purpose 只能包含字母、数字、冒号、下划线和连字符。", fileTypeRequired: "至少需要提供一种可选择的文件类型。", tooManyFileTypes: "文件类型筛选不能超过 16 项。", openTitle: "从云资料打开", saveTitle: "保存到云资料", closeDialog: "关闭云文件对话框", requestFailed: "云资料请求失败（{status}）", invalidWriteTarget: "保存目标不是可写的私人云资料。", invalidWriteUrl: "云资料写入地址无效。", invalidContentSize: "保存内容必须在 1 字节到 15 MB 之间。", missingReadUrl: "云资料缺少读取地址。", invalidReadUrl: "云资料读取地址无效。", invalidDeviceBlob: "设备文件没有可用的受控内容。", readFailed: "云资料读取失败（{status}）" },
+    jp: { purposeInvalid: "purpose には英数字、コロン、アンダースコア、ハイフンのみ使用できます。", fileTypeRequired: "選択可能なファイル形式を1つ以上指定してください。", tooManyFileTypes: "ファイル形式は16件まで指定できます。", openTitle: "クラウドから開く", saveTitle: "クラウドに保存", closeDialog: "クラウドファイルダイアログを閉じる", requestFailed: "クラウドファイルのリクエストに失敗しました（{status}）", invalidWriteTarget: "保存先は書き込み可能なプライベートクラウドではありません。", invalidWriteUrl: "クラウドファイルの書き込み先が無効です。", invalidContentSize: "保存内容は1バイト以上15 MB以下である必要があります。", missingReadUrl: "クラウドファイルの読み取り先がありません。", invalidReadUrl: "クラウドファイルの読み取り先が無効です。", invalidDeviceBlob: "デバイスファイルの安全な内容を取得できません。", readFailed: "クラウドファイルを読み取れませんでした（{status}）" },
+    en: { purposeInvalid: "purpose may contain only letters, numbers, colons, underscores, and hyphens.", fileTypeRequired: "Provide at least one selectable file type.", tooManyFileTypes: "File type filters cannot exceed 16 entries.", openTitle: "Open from cloud", saveTitle: "Save to cloud", closeDialog: "Close cloud file dialog", requestFailed: "Cloud file request failed ({status})", invalidWriteTarget: "The save target is not writable private cloud storage.", invalidWriteUrl: "The cloud file write address is invalid.", invalidContentSize: "Content must be between 1 byte and 15 MB.", missingReadUrl: "The cloud file read address is missing.", invalidReadUrl: "The cloud file read address is invalid.", invalidDeviceBlob: "The device file has no safe readable content.", readFailed: "Cloud file read failed ({status})" }
   };
 
   function language() {
@@ -138,9 +139,27 @@
           return;
         }
         if (message.type !== PICKER_SELECTED) return;
-        const resources = Array.isArray(message.resources)
+        let resources = Array.isArray(message.resources)
           ? message.resources
           : (message.resource ? [message.resource] : []);
+        try {
+          resources = resources.map((resource) => {
+            if (resource?.scope !== "device") return resource;
+            if (!(resource.blob instanceof Blob) || !resource.blob.size || resource.blob.size > MAX_BYTES) {
+              throw new Error(t("invalidDeviceBlob"));
+            }
+            const objectUrl = URL.createObjectURL(resource.blob);
+            objectUrls.add(objectUrl);
+            const safe = { ...resource, url: objectUrl, readUrl: objectUrl };
+            delete safe.blob;
+            delete safe.path;
+            delete safe.nodeId;
+            return safe;
+          });
+        } catch (error) {
+          finish(null, error);
+          return;
+        }
         finish({ resource: resources[0] || null, resources });
       }
       global.addEventListener("message", onMessage);
@@ -258,4 +277,8 @@
   global.WebWindows = global.WebWindows || {};
   global.WebWindows.fileDialog = api;
   global.WebWindowsCloudFiles = api;
+  global.addEventListener("beforeunload", () => {
+    objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    objectUrls.clear();
+  }, { once: true });
 })(window);

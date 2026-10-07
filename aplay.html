@@ -115,7 +115,7 @@ href="data:image/svg+xml;utf8,
     #audio-footer>div>div:nth-child(2)>div:last-child,#audio-footer>div>div:last-child,#btn-prev,#btn-next{display:none}
     #audio-footer>div>div:nth-child(2)>div:first-child button{width:44px;height:44px}
   }
-  @media(max-width:540px){body>div.h-full>header #btn-open-url span{display:none}.hero-art{opacity:.55}.hero-title{max-width:100%;font-size:29px}.hero-desc{max-width:100%}.discover-card{min-height:100px!important}}
+  @media(max-width:540px){body>div.h-full>header #btn-open-media span{display:none}.hero-art{opacity:.55}.hero-title{max-width:100%;font-size:29px}.hero-desc{max-width:100%}.discover-card{min-height:100px!important}}
 </style>
 </head>
 <body class="h-full bg-gray-50 text-gray-800 no-select">
@@ -151,8 +151,8 @@ href="data:image/svg+xml;utf8,
       <div id="subtitle" class="text-gray-400 text-sm">· 发现好声音</div>
     </div>
     <div class="flex items-center gap-2">
-      <button id="btn-open-url" class="h-10 px-4 rounded-full border border-gray-200 bg-white/70 hover:bg-white flex items-center gap-2 shadow-sm" title="打开媒体链接">
-        <i data-lucide="link-2" class="w-4 h-4"></i><span class="hidden sm:inline text-sm font-medium">打开链接</span>
+      <button id="btn-open-media" class="h-10 px-4 rounded-full border border-gray-200 bg-white/70 hover:bg-white flex items-center gap-2 shadow-sm" title="从 WebWindows 资料打开媒体">
+        <i data-lucide="folder-open" class="w-4 h-4"></i><span class="hidden sm:inline text-sm font-medium">打开媒体</span>
       </button>
       <label class="flex items-center gap-2 h-10 px-3 rounded-full bg-white/70 border border-gray-200" title="显示海外平台源（YouTube 等）">
         <input id="switch-overseas" type="checkbox" class="accent-blue-600">
@@ -373,6 +373,110 @@ const $=s=>document.querySelector(s);
 function refreshIcons(){ if(window.lucide?.createIcons) window.lucide.createIcons(); }
 function fmtTime(s){ if(!isFinite(s)) return '00:00'; const m=Math.floor(s/60),x=Math.floor(s%60); return String(m).padStart(2,'0')+':'+String(x).padStart(2,'0'); }
 
+/* ===== APlay 多语言（跟随 WebWindows：简中 / 繁中 / English / 日本語） ===== */
+const I18N_TEXT={
+  tw:{
+    '你的音乐与媒体空间':'你的音樂與媒體空間','发现好声音':'發現好聲音','首页':'首頁','音乐馆':'音樂館','视频':'影片','直播':'直播','电台':'電台','我喜欢':'我喜歡','浏览':'瀏覽',
+    '打开媒体':'開啟媒體','从 WebWindows 资料打开媒体':'從 WebWindows 資料開啟媒體','显示海外平台源（YouTube 等）':'顯示海外平台來源（YouTube 等）','海外源':'海外來源',
+    '让喜欢的声音，':'讓喜歡的聲音，','一直陪着你':'一直陪著你','发现热门榜单、自由音乐、视频与全球电台。一个更像音乐应用的 APlay，也依然保留熟悉的媒体能力。':'探索熱門榜單、自由音樂、影片與全球電台。更像音樂應用的 APlay，也保留熟悉的媒體能力。',
+    '开始听歌':'開始聽歌','随心电台':'隨心電台','随心发现':'隨心發現','从音乐开始，探索你的媒体空间':'從音樂開始，探索你的媒體空間',
+    '榜单与自由音乐':'榜單與自由音樂','精选视频':'精選影片','热门内容随时看':'熱門內容隨時看','全球电台':'全球電台','打开世界的声音':'打開世界的聲音','直播频道':'直播頻道','正在播出的精彩':'正在播出的精彩',
+    '榜单（预览）':'榜單（試聽）','无版权（整曲）':'無版權（整首）','热门榜单':'熱門榜單','来源说明':'來源說明','刷新':'重新整理','随便听一首（预览）':'隨機聽一首（試聽）',
+    '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'榜單來自 Apple iTunes RSS；試聽為 Apple 提供的 30–90 秒預覽，僅供推廣展示，不提供整首歌曲連結。',
+    '中国金曲':'華語金曲','英文歌曲':'英文歌曲','日本音乐':'日本音樂','热门歌曲（真实榜单）':'熱門歌曲（即時榜單）','标题 / 艺术家':'標題 / 藝術家','艺术家':'藝術家','专辑':'專輯','操作':'操作','预览':'試聽','获取中…':'取得中…','不可预览':'無法試聽','正在加载…':'正在載入…','暂无数据（可稍后再试）':'暫無資料（可稍後再試）',
+    '无版权 · 整曲':'無版權 · 整首','示例数据，后期换成你的直链或自建源':'示例資料，可替換為你的連結或自建來源','无版权 · 轻音乐':'無版權 · 輕音樂','无版权 · 电子':'無版權 · 電子','无版权 · 古典':'無版權 · 古典','全量列表':'完整清單','暂无曲目':'暫無曲目','标题':'標題','授权':'授權','播放':'播放',
+    '为你推荐 · 视频':'為你推薦 · 影片','海外源未开启':'海外來源未開啟','海外源关闭，仅显示 B 站':'海外來源已關閉，僅顯示 B 站','已启用海外源（YouTube）':'已啟用海外來源（YouTube）','暂无数据或被源限制':'暫無資料或來源受限','未选择视频':'尚未選擇影片','正在播放：':'正在播放：','播放/暂停':'播放/暫停','静音':'靜音','全屏':'全螢幕','退出':'離開','TV · 官方 / 直链':'TV · 官方 / 連結','未选择频道':'尚未選擇頻道','选择一首歌开始播放':'選擇一首歌開始播放','收藏夹为空（示例）':'收藏清單是空的（示例）','上一首':'上一首','下一首':'下一首','播放或暂停':'播放或暫停','播放进度':'播放進度','音量':'音量',
+    '公共云':'公共雲','私人云':'私人雲','此设备':'此裝置','WebWindows 资料':'WebWindows 資料','媒体':'媒體','音频':'音訊','频道':'頻道','用 APlay 打开媒体':'使用 APlay 開啟媒體','音频和视频':'音訊與影片','媒体打开失败。':'媒體開啟失敗。','云资源服务暂时不可用。':'雲端資源服務暫時無法使用。','APlay 不支持此媒体格式。':'APlay 不支援此媒體格式。'
+  },
+  en:{
+    '你的音乐与媒体空间':'Your music and media space','发现好声音':'Discover','首页':'Home','音乐馆':'Music','视频':'Video','直播':'Live','电台':'Radio','我喜欢':'Liked','浏览':'Browse',
+    '打开媒体':'Open media','从 WebWindows 资料打开媒体':'Open media from WebWindows files','显示海外平台源（YouTube 等）':'Show international sources such as YouTube','海外源':'International',
+    '让喜欢的声音，':'Keep the sounds you love','一直陪着你':'close, wherever you go','发现热门榜单、自由音乐、视频与全球电台。一个更像音乐应用的 APlay，也依然保留熟悉的媒体能力。':'Discover charts, free music, video and global radio in a music-first APlay with the media tools you know.',
+    '开始听歌':'Start listening','随心电台':'Radio','随心发现':'Discover','从音乐开始，探索你的媒体空间':'Start with music and explore your media space',
+    '榜单与自由音乐':'Charts and free music','精选视频':'Featured video','热门内容随时看':'Popular videos on demand','全球电台':'Global radio','打开世界的声音':'Hear the world','直播频道':'Live channels','正在播出的精彩':'Watch what is live now',
+    '榜单（预览）':'Charts (previews)','无版权（整曲）':'Royalty-free (full)','热门榜单':'Top charts','来源说明':'About sources','刷新':'Refresh','随便听一首（预览）':'Play something',
+    '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'Charts come from Apple iTunes RSS. Apple previews are 30–90 seconds and are provided for promotional listening only.',
+    '中国金曲':'Chinese hits','英文歌曲':'English songs','日本音乐':'Japanese music','热门歌曲（真实榜单）':'Top songs (live chart)','标题 / 艺术家':'Title / artist','艺术家':'Artist','专辑':'Album','操作':'Action','预览':'Preview','获取中…':'Loading…','不可预览':'Unavailable','正在加载…':'Loading…','暂无数据（可稍后再试）':'No data. Try again later.',
+    '无版权 · 整曲':'Royalty-free · Full tracks','示例数据，后期换成你的直链或自建源':'Sample catalog; replace it with your own licensed source','无版权 · 轻音乐':'Royalty-free · Easy listening','无版权 · 电子':'Royalty-free · Electronic','无版权 · 古典':'Royalty-free · Classical','全量列表':'Full list','暂无曲目':'No tracks','标题':'Title','授权':'License','播放':'Play',
+    '为你推荐 · 视频':'Video for you','海外源未开启':'International sources are off','海外源关闭，仅显示 B 站':'International sources are off; showing Bilibili only','已启用海外源（YouTube）':'International sources enabled (YouTube)','暂无数据或被源限制':'No content available from this source','未选择视频':'No video selected','正在播放：':'Now playing: ','播放/暂停':'Play / pause','静音':'Mute','全屏':'Full screen','退出':'Exit','TV · 官方 / 直链':'TV · Official / streams','未选择频道':'No channel selected','选择一首歌开始播放':'Choose a track to start listening','收藏夹为空（示例）':'Your liked list is empty','上一首':'Previous','下一首':'Next','播放或暂停':'Play or pause','播放进度':'Playback position','音量':'Volume',
+    '公共云':'Public cloud','私人云':'Private cloud','此设备':'This device','WebWindows 资料':'WebWindows files','媒体':'Media','音频':'Audio','频道':'Channel','用 APlay 打开媒体':'Open media with APlay','音频和视频':'Audio and video','媒体打开失败。':'Could not open the media.','云资源服务暂时不可用。':'Cloud resources are temporarily unavailable.','APlay 不支持此媒体格式。':'APlay does not support this media format.'
+  },
+  jp:{
+    '你的音乐与媒体空间':'あなたの音楽とメディア','发现好声音':'見つける','首页':'ホーム','音乐馆':'ミュージック','视频':'動画','直播':'ライブ','电台':'ラジオ','我喜欢':'お気に入り','浏览':'ブラウズ',
+    '打开媒体':'メディアを開く','从 WebWindows 资料打开媒体':'WebWindows ファイルからメディアを開く','显示海外平台源（YouTube 等）':'YouTube など海外のソースを表示','海外源':'海外ソース',
+    '让喜欢的声音，':'好きな音を、','一直陪着你':'いつもそばに','发现热门榜单、自由音乐、视频与全球电台。一个更像音乐应用的 APlay，也依然保留熟悉的媒体能力。':'ランキング、フリー音源、動画、世界のラジオを、音楽アプリらしくなった APlay で楽しめます。',
+    '开始听歌':'再生を始める','随心电台':'ラジオ','随心发现':'おすすめ','从音乐开始，探索你的媒体空间':'音楽から、あなたのメディア空間へ',
+    '榜单与自由音乐':'ランキングとフリー音源','精选视频':'おすすめ動画','热门内容随时看':'人気の動画を楽しむ','全球电台':'世界のラジオ','打开世界的声音':'世界の音を聴く','直播频道':'ライブチャンネル','正在播出的精彩':'放送中の番組',
+    '榜单（预览）':'ランキング（試聴）','无版权（整曲）':'ロイヤリティフリー（フル）','热门榜单':'人気ランキング','来源说明':'ソースについて','刷新':'更新','随便听一首（预览）':'おまかせ再生',
+    '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'ランキングは Apple iTunes RSS を使用しています。試聴は Apple 提供の30〜90秒のプロモーション用プレビューです。',
+    '中国金曲':'中国ヒット','英文歌曲':'英語の曲','日本音乐':'日本の音楽','热门歌曲（真实榜单）':'人気曲（ライブランキング）','标题 / 艺术家':'曲名 / アーティスト','艺术家':'アーティスト','专辑':'アルバム','操作':'操作','预览':'試聴','获取中…':'取得中…','不可预览':'試聴不可','正在加载…':'読み込み中…','暂无数据（可稍后再试）':'データがありません。後でもう一度お試しください。',
+    '无版权 · 整曲':'ロイヤリティフリー · フル再生','示例数据，后期换成你的直链或自建源':'サンプルです。ライセンス済みの独自ソースに置き換えられます','无版权 · 轻音乐':'ロイヤリティフリー · イージーリスニング','无版权 · 电子':'ロイヤリティフリー · エレクトロニック','无版权 · 古典':'ロイヤリティフリー · クラシック','全量列表':'全曲','暂无曲目':'曲がありません','标题':'タイトル','授权':'ライセンス','播放':'再生',
+    '为你推荐 · 视频':'おすすめ動画','海外源未开启':'海外ソースはオフです','海外源关闭，仅显示 B 站':'海外ソースはオフです。Bilibili のみ表示します','已启用海外源（YouTube）':'海外ソースを有効化（YouTube）','暂无数据或被源限制':'このソースからコンテンツを取得できません','未选择视频':'動画が選択されていません','正在播放：':'再生中：','播放/暂停':'再生 / 一時停止','静音':'ミュート','全屏':'全画面','退出':'終了','TV · 官方 / 直链':'TV · 公式 / ストリーム','未选择频道':'チャンネルが選択されていません','选择一首歌开始播放':'曲を選んで再生を始めましょう','收藏夹为空（示例）':'お気に入りは空です','上一首':'前の曲','下一首':'次の曲','播放或暂停':'再生または一時停止','播放进度':'再生位置','音量':'音量',
+    '公共云':'パブリッククラウド','私人云':'プライベートクラウド','此设备':'このデバイス','WebWindows 资料':'WebWindows ファイル','媒体':'メディア','音频':'オーディオ','频道':'チャンネル','用 APlay 打开媒体':'APlay でメディアを開く','音频和视频':'オーディオと動画','媒体打开失败。':'メディアを開けませんでした。','云资源服务暂时不可用。':'クラウドリソースを一時的に利用できません。','APlay 不支持此媒体格式。':'このメディア形式は APlay で再生できません。'
+  }
+};
+let aplayLanguage='zh';
+const originalAttributes=new WeakMap();
+function normalizeLanguage(value){
+  const language=String(value||'zh').toLowerCase();
+  if(language==='tw'||language.startsWith('zh-tw')||language.startsWith('zh-hk')) return 'tw';
+  if(language==='jp'||language.startsWith('ja')) return 'jp';
+  if(language.startsWith('en')) return 'en';
+  return 'zh';
+}
+function hostLanguage(){
+  try{return normalizeLanguage(window.parent?.WebWindowsI18n?.getLanguage?.()||window.parent?.localStorage?.getItem('lang')||localStorage.getItem('lang')||navigator.language);}
+  catch(_){return normalizeLanguage(localStorage.getItem('lang')||navigator.language);}
+}
+function tx(source){return I18N_TEXT[aplayLanguage]?.[source]||source;}
+function sourceLabel(source){return tx(source==='device'?'此设备':source==='private'?'私人云':'公共云');}
+function localizeTree(root=document){
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+  let node;
+  while((node=walker.nextNode())){
+    if(['SCRIPT','STYLE'].includes(node.parentElement?.tagName)) continue;
+    const raw=node.nodeValue||'', trimmed=raw.trim();
+    if(!trimmed) continue;
+    if(!node.__aplayI18nSource) node.__aplayI18nSource=trimmed;
+    const translated=tx(node.__aplayI18nSource);
+    node.nodeValue=raw.slice(0,raw.indexOf(trimmed))+translated+raw.slice(raw.indexOf(trimmed)+trimmed.length);
+  }
+  const attributed=[];
+  if(root.nodeType===Node.ELEMENT_NODE&&root.matches?.('[title],[aria-label]')) attributed.push(root);
+  root.querySelectorAll?.('[title],[aria-label]').forEach(element=>attributed.push(element));
+  attributed.forEach(element=>{
+    let values=originalAttributes.get(element);
+    if(!values){values={title:element.getAttribute('title'),aria:element.getAttribute('aria-label')};originalAttributes.set(element,values);}
+    if(values.title) element.setAttribute('title',tx(values.title));
+    if(values.aria) element.setAttribute('aria-label',tx(values.aria));
+  });
+}
+function routeLabel(route){
+  const labels={home:'发现好声音',music:'音乐馆',video:'精选视频',tv:'直播',radio:'全球电台',fav:'我喜欢'};
+  return '· '+tx(labels[route]||labels.home);
+}
+function applyLanguage(language=hostLanguage()){
+  aplayLanguage=normalizeLanguage(language);
+  document.documentElement.lang={zh:'zh-CN',tw:'zh-TW',en:'en',jp:'ja'}[aplayLanguage];
+  document.title=`APlay · ${tx('你的音乐与媒体空间')}`;
+  localizeTree(document);
+  const route=(location.hash.replace('#/','')||'home').split('?')[0];
+  if($('#subtitle')) $('#subtitle').textContent=routeLabel(route);
+  if(typeof CURRENT_FEED!=='undefined'&&$('#rss-title')?.textContent!=='—') $('#rss-title').textContent=`${tx(CURRENT_FEED.label)} · ${tx('热门歌曲（真实榜单）')}`;
+  if(typeof PD_CURRENT_CAT!=='undefined'&&$('#pd-title')?.textContent!=='—') $('#pd-title').textContent=`${tx(PD_CURRENT_CAT)} · ${tx('全量列表')}`;
+  window.dispatchEvent(new CustomEvent('aplay:language-changed',{detail:{language:aplayLanguage}}));
+}
+function bindLanguageBridge(){
+  window.addEventListener('storage',event=>{if(event.key==='lang') applyLanguage(event.newValue);});
+  window.addEventListener('message',event=>{if(event.origin===location.origin&&event.data?.type==='webwindows-language-changed') applyLanguage(event.data.language);});
+  try{if(window.parent!==window) window.parent.addEventListener('webwindows:language-changed',event=>applyLanguage(event.detail?.language));}catch(_){}
+  new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{
+    if(node.nodeType===Node.ELEMENT_NODE) localizeTree(node);
+    else if(node.nodeType===Node.TEXT_NODE&&node.parentElement) localizeTree(node.parentElement);
+  }))).observe(document.body,{childList:true,subtree:true});
+}
+window.APlayI18n=Object.freeze({getLanguage:()=>aplayLanguage,setLanguage:applyLanguage,translate:tx});
+
 /* ===== 全局状态（海外源） ===== */
 const state = { showOverseas: JSON.parse(localStorage.getItem('aplay.overseas') || 'false') };
 function bindGlobalToggles(){
@@ -392,8 +496,7 @@ function setRoute(route){
   document.querySelectorAll('#nav .nav-btn').forEach(b=>b.classList.toggle('nav-active', b.dataset.route===route));
   ROUTES.forEach(r=>document.getElementById('view-'+r)?.classList.add('hidden'));
   document.getElementById('view-'+route)?.classList.remove('hidden');
-  const map={home:'· 发现好声音', music:'· 音乐馆', video:'· 精选视频', tv:'· 直播', radio:'· 全球电台', fav:'· 我喜欢'};
-  $('#subtitle').textContent=map[route]||'· 发现好声音';
+  $('#subtitle').textContent=routeLabel(route);
   const isAV=(route==='video'||route==='tv');
   if(isAV){ enterAVMode(); pauseAudio(); } else { exitAVMode(true); stopInlinePlayers(); }
   refreshIcons();
@@ -484,7 +587,7 @@ async function mountMusicRSS(){
 
 async function renderSongsFromRss(feed){
   const titleEl = $('#rss-title'); const tbody=$('#rss-table');
-  titleEl.textContent = `${feed.label} · 热门歌曲（真实榜单）`;
+  titleEl.textContent = `${tx(feed.label)} · ${tx('热门歌曲（真实榜单）')}`;
   tbody.innerHTML = `<tr class="border-t"><td colspan="5" class="px-4 py-6 text-gray-500">正在加载…</td></tr>`;
 
   const cacheKey = `aplay.apple.${feed.code}`;
@@ -591,7 +694,7 @@ function mountMusicPD(){
 }
 function renderPDTable(cat){
   const titleEl=$('#pd-title'); const tbody=$('#pd-table');
-  titleEl.textContent = cat + ' · 全量列表';
+  titleEl.textContent = tx(cat) + ' · ' + tx('全量列表');
   const list = (PD_CATALOG[cat]||[]); PD_LIST = list.slice();
   tbody.innerHTML='';
   if(!list.length){
@@ -803,7 +906,7 @@ function mountRadio(){
 /* ===== 视频/TV 播放控制（屏蔽右键/点击穿透） ===== */
 function playVideoEntry(entry){
   const v=$('#video-player'), f=$('#video-iframe'), shield=$('#video-shield');
-  $('#video-now').textContent='正在播放：'+(entry?.title||'视频');
+  $('#video-now').textContent=tx('正在播放：')+(entry?.title||tx('视频'));
   pauseAudio();
   const container=v.parentElement; container.oncontextmenu=e=>{e.preventDefault();return false;};
   if(entry.type==='file'){
@@ -826,7 +929,7 @@ function videoControlsBind(){
 }
 function playTVEntry(entry){
   const v=$('#tv-player'), f=$('#tv-iframe'), shield=$('#tv-shield');
-  $('#tv-now').textContent='正在播放：'+(entry?.title||'频道');
+  $('#tv-now').textContent=tx('正在播放：')+(entry?.title||tx('频道'));
   pauseAudio();
   const container=v.parentElement; container.oncontextmenu=e=>{e.preventDefault();return false;};
   if(entry.type==='file'){
@@ -900,14 +1003,59 @@ function stopInlinePlayers(){
   });
 }
 
-/* ===== 其它 ===== */
-$('#btn-open-url')?.addEventListener('click', ()=>{ alert('“打开 URL”将于后期与云资源结合，一键用 APlay 打开你的音/视频直链。'); });
+/* ===== WebWindows 统一资源打开 ===== */
+const MEDIA_EXTENSIONS=['mp3','wav','ogg','oga','m4a','aac','flac','opus','mp4','webm','mov','m4v','ogv','mkv'];
+function openWebWindowsMedia(media){
+  if(!media||!['audio','video'].includes(media.kind)||!media.url) return;
+  const meta={title:media.name||tx('媒体'),sub:sourceLabel(media.source)};
+  if(media.kind==='audio'){
+    location.hash='#/music';
+    stopInlinePlayers();
+    exitAVMode(true);
+    playAudio(media.url,meta);
+    return;
+  }
+  location.hash='#/video';
+  enterAVMode();
+  playVideoEntry({title:meta.title,type:'file',url:media.url});
+}
+window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||event.source!==window.parent) return;
+  if(event.data?.type==='webwindows-aplay-open-media') openWebWindowsMedia(event.data.media);
+});
+if(window.parent!==window) window.parent.postMessage({type:'webwindows-aplay-ready'},location.origin);
+
+$('#btn-open-media')?.addEventListener('click',async()=>{
+  try{
+    const host=window.parent!==window?window.parent:window;
+    if(typeof host.WebWindows?.fileDialog?.open!=='function'||typeof host.openResource!=='function') throw new Error(tx('云资源服务暂时不可用。'));
+    const resource=await host.WebWindows.fileDialog.open({
+      title:tx('用 APlay 打开媒体'),
+      fileTypes:[{name:tx('音频和视频'),extensions:MEDIA_EXTENSIONS}],
+      multiple:false,
+      purpose:'aplay-open-media'
+    });
+    if(!resource) return;
+    await host.openResource({
+      protocol:'webwindows-cloud-resource',version:'1.1',
+      nodeId:resource.nodeId,scope:resource.scope,path:resource.path,
+      name:resource.name,mimeType:resource.mimeType,size:resource.size,
+      readUrl:resource.readUrl||resource.url,url:resource.readUrl||resource.url,
+      permissions:{read:true,edit:false}
+    });
+  }catch(error){
+    console.error('[APlay]',error);
+    alert(error?.message||tx('媒体打开失败。'));
+  }
+});
 document.addEventListener('contextmenu', (e)=>{
   if(e.target.closest('#video-player')||e.target.closest('#video-iframe')||e.target.closest('#tv-player')||e.target.closest('#tv-iframe')) e.preventDefault();
 });
 
 /* ===== 启动 ===== */
 document.addEventListener('DOMContentLoaded', ()=>{
+  bindLanguageBridge();
+  applyLanguage();
   refreshIcons();
   bindGlobalToggles();
   initRouter();

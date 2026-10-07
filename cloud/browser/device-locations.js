@@ -7,6 +7,7 @@
   let volumes = [];
   let activeVolume = null;
   let activePath = [];
+  const PICKER_SELECTED = "webwindows:cloud-resource-selected";
   // Shared multi-file selection controller; null when unavailable, in which
   // case single-item behaviour is unchanged.
   let fileSelection = null;
@@ -44,6 +45,20 @@
   }
 
   function text(key) { return labels[language()][key] || labels.zh[key] || key; }
+
+  function pickerMode() {
+    return document.body?.dataset.mode === "picker";
+  }
+
+  function pickerAccepts(name) {
+    if (!pickerMode()) return true;
+    const extension = String(name || "").split(".").pop().toLowerCase();
+    const accepted = String(document.body?.dataset.pickerAccept || "")
+      .split(",")
+      .map((value) => value.trim().toLowerCase().replace(/^\./, ""))
+      .filter(Boolean);
+    return accepted.includes(extension);
+  }
 
   function localStorageSupported(capabilities) {
     if (!capabilities || typeof capabilities !== "object") return false;
@@ -174,6 +189,10 @@
       button.setAttribute("data-drop-target", "directory");
     } else {
       button.draggable = true;
+      if (!pickerAccepts(entry.name)) {
+        button.disabled = true;
+        button.setAttribute("aria-disabled", "true");
+      }
     }
     const icon = document.createElement("span");
     icon.className = "device-entry-icon";
@@ -304,7 +323,26 @@
     try {
       const result = await storage.openFile(volume.id, entry.path || [...activePath, entry.name]);
       const mimeType = result.metadata?.type || entry.type || "application/octet-stream";
-      const url = URL.createObjectURL(new Blob([result.data], { type: mimeType }));
+      const blob = new Blob([result.data], { type: mimeType });
+      if (pickerMode()) {
+        if (!pickerAccepts(result.metadata?.name || entry.name)) return;
+        global.parent?.postMessage({
+          type: PICKER_SELECTED,
+          requestId: document.body?.dataset.pickerRequestId || "",
+          resource: {
+            protocol: "webwindows-cloud-resource",
+            version: "1.1",
+            scope: "device",
+            name: result.metadata?.name || entry.name,
+            mimeType,
+            blob,
+            permissions: { read: true, edit: false },
+            source: "device-storage"
+          }
+        }, global.location.origin);
+        return;
+      }
+      const url = URL.createObjectURL(blob);
       objectUrls.add(url);
       const resource = {
         protocol: "webwindows-cloud-resource",

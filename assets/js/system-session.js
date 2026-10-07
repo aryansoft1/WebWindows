@@ -106,20 +106,29 @@
     button.focus();
   }
 
-  function confirmOperation(action, level) {
+  async function confirmOperation(action, level) {
     if (action === "reloadSession" || (action === "lock" && level === "session")) return true;
     var deviceCopy = {
-      shutdown: "关闭宿主设备？设备上的其他工作也会结束。原生外壳还会再次确认。",
-      restart: "重新启动宿主设备？设备上的其他工作也会中断。原生外壳还会再次确认。",
-      sleep: "让宿主设备进入睡眠？原生外壳还会再次确认。",
-      lock: "锁定宿主设备？原生外壳还会再次确认。"
+      shutdown: "关闭宿主设备？设备上的其他工作也会结束。",
+      restart: "重新启动宿主设备？设备上的其他工作也会中断。",
+      sleep: "让宿主设备进入睡眠？",
+      lock: "锁定宿主设备？"
     };
     var sessionCopy = {
       shutdown: "关闭当前 WebWindows 会话视图？宿主设备不会关机。",
       restart: "重新载入 WebWindows？宿主设备不会重新启动。",
       sleep: "休眠当前 WebWindows 会话视图？宿主设备不会进入睡眠。"
     };
-    return window.confirm((level === "native" ? deviceCopy : sessionCopy)[action]);
+    var dialog = window.WebWindows && window.WebWindows.dialog;
+    if (!dialog || typeof dialog.confirm !== "function") {
+      if (dialog && typeof dialog.alert === "function") {
+        await dialog.alert("WebWindows 确认对话框暂不可用，因此未执行此操作。", { title: "WebWindows" });
+      }
+      return false;
+    }
+    return dialog.confirm((level === "native" ? deviceCopy : sessionCopy)[action], {
+      title: level === "native" ? "确认设备操作" : "确认 WebWindows 操作"
+    });
   }
 
   function emit(action, level, status, extra) {
@@ -150,15 +159,16 @@
 
   async function perform(action) {
     if (ACTIONS.indexOf(action) === -1) throw new TypeError("Unsupported device operation: " + action);
+    var userActivationAtStart = !!(navigator.userActivation && navigator.userActivation.isActive);
     hideMenus();
     var capability = getCapabilities()[action];
-    if (!confirmOperation(action, capability.level)) {
+    if (!await confirmOperation(action, capability.level)) {
       emit(action, capability.level, "cancelled");
       return { status: "cancelled", level: capability.level };
     }
 
     if (capability.level === "native") {
-      if (!navigator.userActivation || !navigator.userActivation.isActive) {
+      if (!userActivationAtStart) {
         emit(action, "native", "denied", { reason: "user_activation_required" });
         throw new Error("Native device operations require an active user gesture.");
       }

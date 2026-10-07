@@ -96,10 +96,12 @@
     max-width: 520px;
 }
 
-.webwindows-session-cover__icon {
+.webwindows-session-cover__logo {
     display: block;
-    margin-bottom: 18px;
-    font-size: 52px;
+    width: 88px;
+    height: 88px;
+    object-fit: contain;
+    margin: 0 auto 18px;
 }
 
 .webwindows-session-cover h1 {
@@ -133,6 +135,13 @@
     width: 20px;
     text-align: center;
     font-size: 16px;
+}
+
+.power-item__icon {
+    display: block;
+    flex: 0 0 20px;
+    height: 20px;
+    color: #34495e;
 }
 
 /* 任务栏右键菜单 */

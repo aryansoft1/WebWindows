@@ -65,15 +65,14 @@
         font-weight: 650;
       }
       .ww-system-dialog__mark {
-        display: grid;
-        place-items: center;
-        width: 22px;
-        height: 22px;
+        display: block;
+        flex: 0 0 24px;
+        width: 24px;
+        height: 24px;
         border-radius: 6px;
-        color: #0878d8;
+        padding: 1px;
+        object-fit: contain;
         background: rgba(255, 255, 255, .94);
-        font-size: 13px;
-        font-weight: 800;
       }
       .ww-system-dialog__message {
         min-height: 62px;
@@ -135,7 +134,7 @@
       <section class="ww-system-dialog" role="alertdialog" aria-modal="true"
         aria-labelledby="ww-system-dialog-title" aria-describedby="ww-system-dialog-message">
         <div class="ww-system-dialog__titlebar">
-          <span class="ww-system-dialog__mark" aria-hidden="true">W</span>
+          <img class="ww-system-dialog__mark" src="/assets/icons/logo.png" alt="" aria-hidden="true" draggable="false">
           <span id="ww-system-dialog-title">WebWindows</span>
         </div>
         <p class="ww-system-dialog__message" id="ww-system-dialog-message"></p>

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.09.28.12",
-  "catalogVersion": "2026.09.26.1",
-  "generatedAt": "2026-09-28T10:40:05.620Z",
+  "releaseVersion": "2026.10.07.1",
+  "catalogVersion": "2026.10.05.1",
+  "generatedAt": "2026-10-07T05:21:24.765Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -341,9 +341,11 @@
     "bin/System.Threading.Tasks.Extensions.dll",
     "bin/System.ValueTuple.dll",
     "bin/WebWindows.MailCenter.dll",
-    "bin/ZstdSharp.dll"
+    "bin/ZstdSharp.dll",
+    "assets/js/i18n-shell.js",
+    "assets/js/sysinfo-i18n.js"
   ],
-  "previousReleaseVersion": "2026.09.28.11",
+  "previousReleaseVersion": "2026.10.06.1",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -382,8 +384,8 @@
       "size": 46603
     },
     "assets/css/context_menu.css": {
-      "sha256": "b4ebaf5a98e43e5ee9efbfb363ecba2683ba3e5a8eb16e4e9567a23c14461104",
-      "size": 3569
+      "sha256": "c5af2ea978bb88a05facbcfbfbf8b68753bc0b43cd7bb8b91257bcb2760fefd5",
+      "size": 4359
     },
     "assets/css/desktalk.css": {
       "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
@@ -634,8 +636,8 @@
       "size": 5503
     },
     "assets/js/device-api.js": {
-      "sha256": "872829cc32fc77fbc306261193ad42ffd982b7c6c520bfa414f39db4320d120f",
-      "size": 30029
+      "sha256": "08acdd9f6c94753f499d73a6af88a0d04a9f97ae55f811b87013cd4d7177edde",
+      "size": 30542
     },
     "assets/js/device-controls.js": {
       "sha256": "322818e1b37468c17f633603f04005b905e855c1bb87754e941ebe4463e63fd6",
@@ -654,8 +656,8 @@
       "size": 55188
     },
     "assets/js/function-center.js": {
-      "sha256": "fe3d31b1e11aff7a82fb9312d4e32e9e5262dc0cfa3c22c82e6ab63e87fafbf0",
-      "size": 11336
+      "sha256": "1623950c5d062c02ea5562d93e314c8eef65b16cc9946325935d6558d01efc25",
+      "size": 12406
     },
     "assets/js/function-sync.js": {
       "sha256": "87d15643bf9a74db70841fe9dbca960e585f472e39b8809f4740fb3895907b4c",
@@ -706,20 +708,20 @@
       "size": 6359
     },
     "assets/js/sysinfo.js": {
-      "sha256": "1f4c66c6835ccfac78e4cc298747f9759dcd67574750d5b8ac7a9bd3cf71b903",
-      "size": 12768
+      "sha256": "c9069ae0909b09da3e1bbc8e7e241b5473db9eeeffbeb1197119f9b9aa3e800e",
+      "size": 12772
     },
     "assets/js/system-session.js": {
-      "sha256": "0683b18cd513f3ff74697a11f61bb823ab2e73a9808e8bfb03bffacb9f2382a8",
-      "size": 9435
+      "sha256": "2716a5b04821d750e027f4cf31025c68696163e3f83ea6a13b28a3c53945037c",
+      "size": 17454
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "003266a098235de8ea6698b02c18f66aa054c21c8b9577efd696f2edd3705350",
       "size": 10287
     },
     "assets/js/tw.js": {
-      "sha256": "b667a1f7984f3aa7c5839b47b682587a2a249d48aac8abdcaf569966d2ef6872",
-      "size": 66301
+      "sha256": "38a66eeb8b1db784db6ea64959a1c06bd63a6d5ea1554e2961b562e53088848d",
+      "size": 82634
     },
     "assets/js/vendor/html2canvas.min.js": {
       "sha256": "669b68b0b6828272e5298a36f20a646b027b2cdf5b524ec05b2410009e75063e",
@@ -730,8 +732,8 @@
       "size": 2982
     },
     "assets/js/webwindows-message.js": {
-      "sha256": "bdd1dea9b0f37689697e6fe1a4659cca0ada9f80998c237bd2752c6017ef3f34",
-      "size": 9840
+      "sha256": "002856c6fb90e8a8db29b120d11e581381ce77a804a6a6833927feaef0a7ea40",
+      "size": 9879
     },
     "cloud.html": {
       "sha256": "3c4fe2ab3284cf099a5f1df7e71c41b60a8ce706c67deec2b275690e6bad6b0c",
@@ -986,8 +988,8 @@
       "size": 5614
     },
     "function-center.html": {
-      "sha256": "3646291af754f5998f1ac21062530b204f8bb2cbaa9b1e3a9af443eb25304fb2",
-      "size": 3000
+      "sha256": "4f17ce9bd9addb2ff447e7262cafed080f9c97c18b19b5f5366d2881a5bac969",
+      "size": 3024
     },
     "guide.html": {
       "sha256": "fc0d3f1ac83e3c0f8cde5c37f6f77b9f6b0a3f1517730621aadc541c3b1c97fd",
@@ -998,8 +1000,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "bffc51d2e51b97480116d94ce6820ac0eed26c3b58ae352ee0dc45ffb2e8067a",
-      "size": 35156
+      "sha256": "60b5bb7db75d6476dbe5fe77905210d482b9211f20c7fc91faf4e9128a7e7d7f",
+      "size": 36794
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
@@ -1026,8 +1028,8 @@
       "size": 2908
     },
     "sysinfo.html": {
-      "sha256": "883d11d823c1e9985bd4462139aaf2e43534bbbe8cacc1f632183a4fed788aee",
-      "size": 4883
+      "sha256": "e4ac792e86e816d9e956fb50fe4db3f28de09f2c3777936ac2d7c82b509bd2e3",
+      "size": 4957
     },
     "SystemManager/assets/css/admin.css": {
       "sha256": "35d03df5b6096af50693ac711ea048dc6e4a5d4f235f261d22c08ad108dde196",
@@ -1468,10 +1470,6 @@
       "sha256": "509564a7d476e545e2f12d83adb7cfd48ee694aed3791fb064b17feb81f6f6a9",
       "size": 10227
     },
-    "assets/js/developer-center.js": {
-      "sha256": "58e7a05f18bdee3a07f0b060881a52ea22dd4ad0c449ef00ddcec141e3e22f4a",
-      "size": 15201
-    },
     "assets/js/developer-content.js": {
       "sha256": "24c8caeba050afd7e8f41f4fdb9ae03083ace86a0d6d4fd28697f3b855fc946d",
       "size": 1866
@@ -1483,14 +1481,6 @@
     "developer-samples/hello-webwindows.zip": {
       "sha256": "53cea2a2fa4ca4859c4bd3297d852cd9cdb3ef9ff47cfdb4dd4e216d0e3afec3",
       "size": 2338
-    },
-    "developer-samples/hello-webwindows/index.html": {
-      "sha256": "512682a675ac57723bd46dc9c77e7291202b7970e03205d27703315e50c26d96",
-      "size": 1449
-    },
-    "developer-samples/hello-webwindows/manifest.json": {
-      "sha256": "ea29732dd4e9be745d9c3a41c004177278ef69a8b86a2314dc2b1103710d1021",
-      "size": 645
     },
     "developer.html": {
       "sha256": "22be7ac361025f48b2fac0920d6c863be8c471bb0a31123d5b97be6579751ecc",
@@ -1535,6 +1525,18 @@
     "SystemManager/layout.html": {
       "sha256": "8ad3f25b2e16c9c92ea623f380fb8a04beae6da2c9d9dd82b26f2c81921243f2",
       "size": 1493
+    },
+    "assets/js/developer-center.js": {
+      "sha256": "58e7a05f18bdee3a07f0b060881a52ea22dd4ad0c449ef00ddcec141e3e22f4a",
+      "size": 15201
+    },
+    "developer-samples/hello-webwindows/index.html": {
+      "sha256": "512682a675ac57723bd46dc9c77e7291202b7970e03205d27703315e50c26d96",
+      "size": 1449
+    },
+    "developer-samples/hello-webwindows/manifest.json": {
+      "sha256": "ea29732dd4e9be745d9c3a41c004177278ef69a8b86a2314dc2b1103710d1021",
+      "size": 645
     },
     "inc/json-charset.asp": {
       "sha256": "189aeaf9292c4052899202e9267bf4b9d0979a695fd639cd3fb626c7d51b8b91",
@@ -1683,40 +1685,22 @@
     "bin/ZstdSharp.dll": {
       "sha256": "e69baa507daa5fb47ebcfdd3325eb3f47ccf652eaa63e6181252e7a990e9b10a",
       "size": 427520
+    },
+    "assets/js/i18n-shell.js": {
+      "sha256": "97c0f74b526843a88ab987ef473047b1be67dcb4e24d252afe6ef5ff57c738ab",
+      "size": 41231
+    },
+    "assets/js/sysinfo-i18n.js": {
+      "sha256": "243f3024ca63202c1a6747bef28e7f3b2ac5295977d45151812aee001586f405",
+      "size": 11959
     }
   },
-  "releaseScope": "mail-center-v1",
+  "releaseScope": "webwindows-session-branding",
   "uploadFiles": [
-    "assets/js/desktalk.js",
+    "assets/css/context_menu.css",
     "index.html",
-    "mail-center/Api.ashx",
-    "mail-center/web.config",
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
-    "api/release-version.asp",
-    "api/mobile-version.asp",
-    "data/apps/system-apps.json",
-    "bin/BouncyCastle.Cryptography.dll",
-    "bin/Google.Protobuf.dll",
-    "bin/K4os.Compression.LZ4.dll",
-    "bin/K4os.Compression.LZ4.Streams.dll",
-    "bin/K4os.Hash.xxHash.dll",
-    "bin/MailKit.dll",
-    "bin/Microsoft.Bcl.AsyncInterfaces.dll",
-    "bin/MimeKit.dll",
-    "bin/MySql.Data.dll",
-    "bin/System.Buffers.dll",
-    "bin/System.Configuration.ConfigurationManager.dll",
-    "bin/System.Diagnostics.DiagnosticSource.dll",
-    "bin/System.Formats.Asn1.dll",
-    "bin/System.IO.Pipelines.dll",
-    "bin/System.Memory.dll",
-    "bin/System.Numerics.Vectors.dll",
-    "bin/System.Runtime.CompilerServices.Unsafe.dll",
-    "bin/System.Threading.Tasks.Extensions.dll",
-    "bin/System.ValueTuple.dll",
-    "bin/WebWindows.MailCenter.dll",
-    "bin/ZstdSharp.dll",
+    "assets/js/system-session.js",
+    "assets/js/webwindows-message.js",
     "deploy/ftp-manifest.json"
   ]
 }

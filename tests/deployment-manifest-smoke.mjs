@@ -334,6 +334,14 @@ if (manifest.releaseScope === "navigation-map") {
     "cloud/browser/file-selection.js",
     "deploy/ftp-manifest.json"
   ], "cursor icon release must keep the existing runtime dependencies recorded");
+} else if (manifest.releaseScope === "webwindows-session-branding") {
+  assert.deepEqual(uploadFiles, [
+    "assets/css/context_menu.css",
+    "index.html",
+    "assets/js/system-session.js",
+    "assets/js/webwindows-message.js",
+    "deploy/ftp-manifest.json"
+  ], "session branding releases must upload only the WebWindows session UI slice");
 } else {
   for (const onlineReleaseFile of onlineReleaseFiles) {
     assert.ok(uploadFiles.includes(onlineReleaseFile),

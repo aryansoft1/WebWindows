@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const YOUTUBE_CHANNELS = Object.freeze([
-  "UC-9-kyTW8ZkZNDHQJ6FgpwQ",
+  "UC4eYXhJI4-7wSWc8UNRwD4A",
   "UCXuqSBlHAE6Xw-yeJA0Tunw",
   "UCSJ4gkVC6NrvII8umztf0Ow"
 ]);

@@ -2,7 +2,7 @@ name: Refresh APlay YouTube feed cache
 
 on:
   push:
-    branches: [main]
+    branches: [main, codex/aplay-cloud-media]
     paths:
       - aplay.html
       - data/aplay/youtube-feeds.json

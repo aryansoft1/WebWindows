@@ -48,7 +48,7 @@ assert.match(html, /incompetech\.com\/music\/royalty-free\/mp3-royaltyfree\/Care
 assert.match(html, /incompetech\.com\/music\/royalty-free\/mp3-royaltyfree\/New%20Friendly\.mp3/);
 assert.match(html, /sourceUrl:'https:\/\/incompetech\.com\/music\/royalty-free\/index\.html\?isrc=/);
 assert.doesNotMatch(html, /freepd\.com|SoundHelix|ice1\.somafm\.com/i);
-assert.match(html, /title:'Radio Paradise'.*stream\.radioparadise\.com\/mp3-192/s);
+assert.match(html, /title:'Radio Paradise · Main Mix'.*stream\.radioparadise\.com\/mp3-192/s);
 assert.doesNotMatch(html, /somafm\.com/i);
 assert.match(html, /querySelectorAll\('entry, item'\)/);
 assert.ok(html.includes("/^[A-Za-z0-9_-]{11}$/"), "YouTube ids from fallback feeds must be validated");
@@ -57,8 +57,23 @@ assert.match(html, /title\.textContent=v\.title/);
 assert.match(html, /songTitle\.textContent=s\.title/);
 assert.match(html, /数据源暂不可用，已显示上次成功结果/);
 assert.match(html, /localStorage\.setItem\(storageKey,JSON\.stringify\(\{time:now,items\}\)\)/);
-assert.match(html, /cover\.src=v\.thumbnail/);
-assert.match(html, /shield\.classList\.add\('hidden'\); shield\.onclick=null/);
+assert.match(html, /cover\.src=isBili\?bilibiliCoverProxyUrl\(v\.thumbnail\):v\.thumbnail/);
+assert.match(html, /function bilibiliCoverProxyUrl\(value\)/);
+assert.match(html, /function loadYouTubeIframeApi\(\)/);
+assert.match(html, /player\.loadVideoById|player\.playVideo\(\)/);
+assert.doesNotMatch(html, /f\.src='';\s*setTimeout\(\(\)=>f\.src=u/);
+assert.match(html, /player-stage:fullscreen \.player-frame\{width:min\(100vw,177\.7778vh\)/);
+assert.match(html, /provider:'bili'/);
+assert.match(html, /TV_DB=\[[\s\S]*?Ap-UM1O9RBU[\s\S]*?xDWQ3LkccY8[\s\S]*?qMtcWqCL_UQ/);
+assert.match(html, /title:'Radio Paradise · Main Mix'[\s\S]*?title:'Radio Paradise · The Globe'/);
+assert.match(html, /官方新闻直播/);
+assert.ok(html.indexOf('id="video-player-panel"') < html.indexOf('id="video-grid"'), "the selected video player must appear before the feed list");
+assert.ok(html.indexOf('id="tv-player-panel"') < html.indexOf('id="tv-grid"'), "the live player must appear before the channel list");
+assert.match(html, /player-controls button\{[^}]*white-space:nowrap/);
+const tvDatabase = html.match(/const TV_DB=\[([\s\S]*?)\];/)?.[1] || "";
+const radioDatabase = html.match(/const RADIO_DB=\[([\s\S]*?)\];/)?.[1] || "";
+assert.equal((tvDatabase.match(/provider:'youtube'/g) || []).length, 3, "the live list should contain three verified public news channels");
+assert.equal((radioDatabase.match(/title:'Radio Paradise/g) || []).length, 4, "the radio list should expose all four Radio Paradise mixes");
 assert.match(html, /function safeVideoCover\(value,source\)/);
 assert.match(manifest.apps.find((candidate) => candidate.id === "com.aryansoft.webwindows.aplay")?.entry || "", /source-proxy-3/);
 
@@ -66,6 +81,11 @@ assert.match(sourceApi, /Case "apple-chart"/);
 assert.match(sourceApi, /Case "apple-search"/);
 assert.match(sourceApi, /Case "bili-popular"/);
 assert.match(sourceApi, /Case "bili-partition"/);
+assert.match(sourceApi, /Case "bili-cover"/);
+assert.match(sourceApi, /IsAllowedBiliCover\(coverUrl\)/);
+assert.match(sourceApi, /Right\(authority, 10\) = "\.hdslb\.com"/);
+assert.match(sourceApi, /stream\.Size > APLAY_MAX_COVER_BYTES/);
+assert.match(sourceApi, /Response\.BinaryWrite bytes/);
 assert.match(sourceApi, /upstream = "https:\/\/rsshub\.bili\.ren\/bilibili\/popular\/all"/);
 assert.match(sourceApi, /fallbackUpstream = "https:\/\/rsshub\.mt\.cd\/bilibili\/popular\/all"/);
 assert.match(sourceApi, /upstream = "https:\/\/rsshub\.bili\.ren\/bilibili\/partion\/"/);
@@ -320,12 +340,20 @@ const biliItem = {
   querySelector(selector) {
     if (selector === "title") return { textContent: "Bili cover" };
     if (selector === "link") return { textContent: "https://www.bilibili.com/video/BV1xx411c7mD" };
-    if (selector === "description") return { textContent: '<img src="http://i0.hdslb.com/bfs/archive/cover.jpg">' };
+    if (selector === "description") return { textContent: '&lt;iframe src=&quot;https://player.bilibili.com/player.html?bvid=BV1xx411c7mD&quot;&gt;&lt;img src=&quot;http://i0.hdslb.com/bfs/archive/cover.jpg&quot;&gt;&lt;/iframe&gt;' };
     return null;
   }
 };
 const biliRssItems = parseItems({ querySelectorAll: (selector) => selector === "item" ? [biliItem] : [] }, { kind: "bili-partition" });
 assert.equal(biliRssItems[0].thumbnail, "https://i0.hdslb.com/bfs/archive/cover.jpg");
+assert.equal(biliRssItems[0].provider, "bili");
+const biliProxySource = html.match(/function bilibiliCoverProxyUrl\(value\)\{[\s\S]*?\n\}/)?.[0];
+const sourceEndpointSource = html.match(/const APLAY_SOURCE_ENDPOINT = new URL\('[^']+', location\.origin\);/)?.[0];
+assert.ok(biliProxySource && sourceEndpointSource, "Bilibili thumbnails must use the same-origin allowlisted proxy");
+const biliProxyUrl = vm.runInNewContext(`${safeVideoCoverSource}; ${sourceEndpointSource}; ${biliProxySource}; bilibiliCoverProxyUrl`, { URL, location: { origin: "https://www.y0.hk" } })(biliRssItems[0].thumbnail);
+const parsedBiliProxy = new URL(biliProxyUrl);
+assert.equal(parsedBiliProxy.searchParams.get("source"), "bili-cover");
+assert.equal(parsedBiliProxy.searchParams.get("image"), "https://i0.hdslb.com/bfs/archive/cover.jpg");
 const parseBilibiliApi = vm.runInNewContext(`${safeVideoCoverSource}; ${makeVideoEntrySource}; ${parseBilibiliApiSource}; parseBilibiliApi`, { URL });
 const biliApiItems = parseBilibiliApi({ code: 0, data: { list: [{ title: "Bili API cover", bvid: "BV1xx411c7mD", pic: "//i0.hdslb.com/bfs/archive/api-cover.jpg" }] } }, { kind: "bili-pop" });
 assert.equal(biliApiItems[0].thumbnail, "https://i0.hdslb.com/bfs/archive/api-cover.jpg");
@@ -346,18 +374,42 @@ const localVideos = parseYouTubeCache(generatedCache, { kind: "yt_local" });
 assert.equal(localVideos[0].title, "Local JP");
 assert.equal(localVideos[0].thumbnail, "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg");
 
-const playVideoEntrySource = html.match(/function playVideoEntry\(entry\)\{[\s\S]*?\n\}/)?.[0];
-assert.ok(playVideoEntrySource, "Video entries must be playable");
-const classes = () => { const values = new Set(); return { add: value => values.add(value), remove: value => values.delete(value), contains: value => values.has(value) }; };
-const videoElements = {
-  "#video-now": { textContent: "" },
-  "#video-player": { classList: classes(), parentElement: {}, pause() {}, removeAttribute() {}, load() {} },
-  "#video-iframe": { classList: classes(), parentElement: {}, src: "" },
-  "#video-shield": { classList: classes(), onclick: null, oncontextmenu: null }
-};
-vm.runInNewContext(`${playVideoEntrySource}; playVideoEntry`, { $: selector => videoElements[selector], pauseAudio() {}, tx: value => value })({ type: "embed", title: "Bilibili", url: "https://player.bilibili.com/player.html?bvid=BV1xx411c7mD" });
-assert.equal(videoElements["#video-iframe"].classList.contains("hidden"), false);
-assert.equal(videoElements["#video-shield"].classList.contains("hidden"), true);
+const avPlaybackSource = html.match(/const YOUTUBE_PLAYERS=\{video:null,tv:null\};[\s\S]*?function tvControlsBind\(\)\{bindAVControls\('tv'\);\}/)?.[0];
+assert.ok(avPlaybackSource, "Video and TV controls must share the provider-aware player logic");
+const classes = () => { const values = new Set(); return { add: value => values.add(value), remove: value => values.delete(value), contains: value => values.has(value), toggle: (value, force) => { if(force===undefined) force=!values.has(value); if(force)values.add(value);else values.delete(value);return force; } }; };
+const videoElements = {};
+const videoActions = new Map();
+for (const kind of ["video", "tv"]) {
+  videoElements[`#${kind}-now`] = { textContent: "" };
+  videoElements[`#${kind}-player`] = { classList: classes(), pause() {}, removeAttribute() {}, load() {}, play() { return Promise.resolve(); }, controls: false, muted: false, paused: true };
+  videoElements[`#${kind}-embed-mount`] = { classList: classes(), children: [], replaceChildren(...children) { this.children = children; } };
+  videoElements[`#${kind}-player-panel`] = { classList: classes(), scrollIntoView() {}, querySelector: () => ({ requestFullscreen() {} }) };
+  videoElements[`#${kind}-control-note`] = { textContent: "" };
+  for (const name of ["play", "mute", "full", "exit"]) videoElements[`#${kind}-btn-${name}`] = { classList: classes(), addEventListener: (event, handler) => videoActions.set(`#${kind}-btn-${name}`, handler) };
+}
+const playbackWindow = { requestAnimationFrame: callback => callback(), setTimeout, clearTimeout, YT: { PlayerState: { PLAYING: 1 } } };
+const playerVm = vm.runInNewContext(`${avPlaybackSource}; ({playAVEntry,bindAVControls,YOUTUBE_PLAYERS,AV_PLAYER_STATE})`, {
+  $: selector => videoElements[selector],
+  pauseAudio() {},
+  tx: value => value,
+  window: playbackWindow,
+  document: { createElement: () => ({ classList: classes(), setAttribute() {} }), head: { appendChild() {} }, fullscreenElement: null, exitFullscreen() {} },
+  location: { origin: "https://www.y0.hk" },
+  URL
+});
+await playerVm.playAVEntry("video", { type: "embed", provider: "bili", title: "Bilibili", url: "https://player.bilibili.com/player.html?bvid=BV1xx411c7mD" });
+assert.equal(videoElements["#video-embed-mount"].classList.contains("hidden"), false);
+assert.equal(videoElements["#video-embed-mount"].children[0].src, "https://player.bilibili.com/player.html?bvid=BV1xx411c7mD");
+assert.equal(videoElements["#video-btn-play"].disabled, true, "Bilibili custom controls must not restart or pretend to control the embedded player");
+assert.equal(videoElements["#video-control-note"].textContent, "请使用视频画面内的播放和音量控制");
+playerVm.AV_PLAYER_STATE.video.provider = "youtube";
+let pausedByButton = 0, unmutedByButton = 0;
+playerVm.YOUTUBE_PLAYERS.video = { getPlayerState: () => 1, pauseVideo: () => pausedByButton++, isMuted: () => true, unMute: () => unmutedByButton++ };
+playerVm.bindAVControls("video");
+videoActions.get("#video-btn-play")();
+videoActions.get("#video-btn-mute")();
+assert.equal(pausedByButton, 1, "YouTube pause must call the player API instead of reloading the iframe");
+assert.equal(unmutedByButton, 1, "YouTube mute must use the player API");
 
 const cacheUrlsSource = html.match(/const YOUTUBE_FEED_CACHE_URLS = \[[\s\S]*?\];/)?.[0];
 const fetchVideoFeedSource = html.match(/async function fetchVideoFeed\(feed,url\)\{[\s\S]*?\n\}/)?.[0];

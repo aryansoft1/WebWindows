@@ -36,6 +36,13 @@ href="data:image/svg+xml;utf8,
   .text-clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .no-select{user-select:none;-webkit-user-drag:none}
   .shield{position:absolute;inset:0;z-index:10;background:transparent}
+  .player-stage{position:relative;width:min(100%,124.4444vh);margin-inline:auto;aspect-ratio:16/9;background:#000;display:grid;place-items:center;overflow:hidden}
+  .player-frame{width:100%;height:100%;min-height:0;aspect-ratio:16/9;background:#000;object-fit:contain}
+  .player-stage:fullscreen{width:100vw;height:100vh;max-height:none;aspect-ratio:auto;display:grid;place-items:center;background:#000}
+  .player-stage:fullscreen .player-frame{width:min(100vw,177.7778vh);height:min(56.25vw,100vh);min-height:0;aspect-ratio:16/9;object-fit:contain}
+  .player-controls{display:flex;align-items:center;gap:8px;max-width:100%;overflow-x:auto;white-space:nowrap;flex-shrink:0}
+  .player-controls button{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;flex-shrink:0}
+  @media(max-width:640px){.player-controls{gap:4px}.player-controls button{padding-left:9px;padding-right:9px}.player-controls button span{display:none}}
   body>div.h-full{background:radial-gradient(circle at 72% -18%,rgba(199,180,255,.35),transparent 34%),#f8f7fb}
   body>div.h-full>header{height:64px;background:rgba(250,249,252,.84);border-color:var(--line);box-shadow:none;backdrop-filter:blur(18px);z-index:30}
   body>div.h-full>main>aside{width:224px;background:rgba(255,255,255,.58);border-color:var(--line);padding:18px 14px}
@@ -280,49 +287,45 @@ href="data:image/svg+xml;utf8,
           <div id="video-cats" class="flex flex-wrap gap-2"></div>
           <div id="video-source-tip" class="text-xs text-gray-500"></div>
         </div>
-        <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm text-gray-500" id="video-now">未选择视频</h3>
-            <div class="flex items-center gap-2">
-              <button id="video-btn-play" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放/暂停</span></button>
-              <button id="video-btn-mute" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="volume-x" class="w-4 h-4"></i><span class="ml-1">静音</span></button>
-              <button id="video-btn-full" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="maximize" class="w-4 h-4"></i><span class="ml-1">全屏</span></button>
-              <button id="video-btn-exit" class="h-9 px-3 rounded-xl bg-blue-600 text-white"><i data-lucide="x" class="w-4 h-4"></i><span class="ml-1">退出</span></button>
+        <div id="video-player-panel" class="hidden space-y-2">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h3 class="text-sm text-gray-500 flex-1 min-w-0 text-clip" id="video-now">未选择视频</h3>
+            <div id="video-controls" class="player-controls">
+              <button id="video-btn-play" aria-label="播放/暂停" title="播放/暂停" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="play" class="w-4 h-4"></i><span>播放/暂停</span></button>
+              <button id="video-btn-mute" aria-label="静音" title="静音" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="volume-x" class="w-4 h-4"></i><span>静音</span></button>
+              <button id="video-btn-full" aria-label="全屏" title="全屏" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="maximize" class="w-4 h-4"></i><span>全屏</span></button>
+              <button id="video-btn-exit" aria-label="退出" title="退出" class="h-9 px-3 rounded-xl bg-blue-600 text-white"><i data-lucide="x" class="w-4 h-4"></i><span>退出</span></button>
             </div>
           </div>
-          <div class="rounded-xl overflow-hidden border border-gray-200 bg-black relative">
-            <video id="video-player" class="w-full h-[56vh] bg-black hidden" playsinline></video>
-            <iframe id="video-iframe" class="w-full h-[56vh] hidden" frameborder="0"
-              sandbox="allow-scripts allow-same-origin allow-presentation"
-              allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-            <div id="video-shield" class="shield hidden"></div>
+          <div id="video-control-note" class="text-xs text-gray-500"></div>
+          <div class="player-stage rounded-xl border border-gray-200">
+            <video id="video-player" class="player-frame hidden" playsinline controls></video>
+            <div id="video-embed-mount" class="player-frame hidden"></div>
           </div>
         </div>
+        <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
       </div>
 
       <!-- TV -->
       <div id="view-tv" class="hidden space-y-6">
-        <div class="flex items-center justify-between"><h2 class="text-base font-semibold">TV · 官方 / 直链</h2></div>
-        <div id="tv-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
-        <div class="space-y-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm text-gray-500" id="tv-now">未选择频道</h3>
-            <div class="flex items-center gap-2">
-              <button id="tv-btn-play" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放/暂停</span></button>
-              <button id="tv-btn-mute" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="volume-x" class="w-4 h-4"></i><span class="ml-1">静音</span></button>
-              <button id="tv-btn-full" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="maximize" class="w-4 h-4"></i><span class="ml-1">全屏</span></button>
-              <button id="tv-btn-exit" class="h-9 px-3 rounded-xl bg-blue-600 text-white"><i data-lucide="x" class="w-4 h-4"></i><span class="ml-1">退出</span></button>
+        <div><h2 class="text-base font-semibold">官方新闻直播</h2><p class="text-xs text-gray-500 mt-1">官方公开视频嵌入，受地区和直播状态限制</p></div>
+        <div id="tv-player-panel" class="hidden space-y-2">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <h3 class="text-sm text-gray-500 flex-1 min-w-0 text-clip" id="tv-now">未选择频道</h3>
+            <div id="tv-controls" class="player-controls">
+              <button id="tv-btn-play" aria-label="播放/暂停" title="播放/暂停" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="play" class="w-4 h-4"></i><span>播放/暂停</span></button>
+              <button id="tv-btn-mute" aria-label="静音" title="静音" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="volume-x" class="w-4 h-4"></i><span>静音</span></button>
+              <button id="tv-btn-full" aria-label="全屏" title="全屏" class="h-9 px-3 rounded-xl border border-gray-200"><i data-lucide="maximize" class="w-4 h-4"></i><span>全屏</span></button>
+              <button id="tv-btn-exit" aria-label="退出" title="退出" class="h-9 px-3 rounded-xl bg-blue-600 text-white"><i data-lucide="x" class="w-4 h-4"></i><span>退出</span></button>
             </div>
           </div>
-          <div class="rounded-xl overflow-hidden border border-gray-200 bg-black relative">
-            <video id="tv-player" class="w-full h-[56vh] bg-black hidden" playsinline></video>
-            <iframe id="tv-iframe" class="w-full h-[56vh] hidden" frameborder="0"
-              sandbox="allow-scripts allow-same-origin allow-presentation"
-              allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-            <div id="tv-shield" class="shield hidden"></div>
+          <div id="tv-control-note" class="text-xs text-gray-500"></div>
+          <div class="player-stage rounded-xl border border-gray-200">
+            <video id="tv-player" class="player-frame hidden" playsinline controls></video>
+            <div id="tv-embed-mount" class="player-frame hidden"></div>
           </div>
         </div>
+        <div id="tv-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
       </div>
 
       <!-- Radio -->
@@ -386,7 +389,7 @@ const I18N_TEXT={
     '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'榜單來自 Apple iTunes RSS；試聽為 Apple 提供的 30–90 秒預覽，僅供推廣展示，不提供整首歌曲連結。',
     '中国金曲':'華語金曲','英文歌曲':'英文歌曲','日本音乐':'日本音樂','热门歌曲（真实榜单）':'熱門歌曲（即時榜單）','标题 / 艺术家':'標題 / 藝術家','艺术家':'藝術家','专辑':'專輯','操作':'操作','预览':'試聽','获取中…':'取得中…','不可预览':'無法試聽','正在加载…':'正在載入…','暂无数据（可稍后再试）':'暫無資料（可稍後再試）',
     '无版权 · 整曲':'無版權 · 整首','示例数据，后期换成你的直链或自建源':'示例資料，可替換為你的連結或自建來源','无版权 · 轻音乐':'無版權 · 輕音樂','无版权 · 电子':'無版權 · 電子','无版权 · 古典':'無版權 · 古典','全量列表':'完整清單','暂无曲目':'暫無曲目','标题':'標題','授权':'授權','播放':'播放',
-    '为你推荐 · 视频':'為你推薦 · 影片','YouTube·当地热门':'YouTube·當地熱門','海外源未开启':'海外來源未開啟','海外源关闭，仅显示 B 站':'海外來源已關閉，僅顯示 B 站','已启用海外源（YouTube）':'已啟用海外來源（YouTube）','暂无数据或被源限制':'暫無資料或來源受限','未选择视频':'尚未選擇影片','正在播放：':'正在播放：','播放/暂停':'播放/暫停','静音':'靜音','全屏':'全螢幕','退出':'離開','TV · 官方 / 直链':'TV · 官方 / 連結','未选择频道':'尚未選擇頻道','选择一首歌开始播放':'選擇一首歌開始播放','收藏夹为空（示例）':'收藏清單是空的（示例）','上一首':'上一首','下一首':'下一首','播放或暂停':'播放或暫停','播放进度':'播放進度','音量':'音量',
+    '为你推荐 · 视频':'為你推薦 · 影片','YouTube·当地热门':'YouTube·當地熱門','海外源未开启':'海外來源未開啟','海外源关闭，仅显示 B 站':'海外來源已關閉，僅顯示 B 站','已启用海外源（YouTube）':'已啟用海外來源（YouTube）','暂无数据或被源限制':'暫無資料或來源受限','未选择视频':'尚未選擇影片','正在播放：':'正在播放：','播放/暂停':'播放/暫停','静音':'靜音','全屏':'全螢幕','退出':'離開','TV · 官方 / 直链':'TV · 官方 / 連結','官方新闻直播':'官方新聞直播','官方公开视频嵌入，受地区和直播状态限制':'官方公開影片嵌入，可能受地區與直播狀態限制','官方 YouTube 新闻直播 · 可能受地区限制':'官方 YouTube 新聞直播 · 可能受地區限制','未选择频道':'尚未選擇頻道','选择一首歌开始播放':'選擇一首歌開始播放','收藏夹为空（示例）':'收藏清單是空的（示例）','上一首':'上一首','下一首':'下一首','播放或暂停':'播放或暫停','播放进度':'播放進度','音量':'音量',
     '公共云':'公共雲','私人云':'私人雲','此设备':'此裝置','WebWindows 资料':'WebWindows 資料','媒体':'媒體','音频':'音訊','频道':'頻道','用 APlay 打开媒体':'使用 APlay 開啟媒體','音频和视频':'音訊與影片','媒体打开失败。':'媒體開啟失敗。','云资源服务暂时不可用。':'雲端資源服務暫時無法使用。','APlay 不支持此媒体格式。':'APlay 不支援此媒體格式。',
     '数据源暂不可用，已显示上次成功结果':'資料來源暫時無法使用，已顯示上次成功結果','数据源暂不可用，请稍后刷新':'資料來源暫時無法使用，請稍後重新整理','显示缓存结果':'顯示快取結果','来源暂不可用':'來源暫時無法使用','已改用备用地区商店':'已改用備用地區商店','无可用试听版本':'所選商店沒有可用試聽版本','试听源暂不可用':'試聽來源暫時無法使用','排行榜暂不可用':'排行榜暫時無法使用'
   },
@@ -400,7 +403,7 @@ const I18N_TEXT={
     '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'Charts come from Apple iTunes RSS. Apple previews are 30–90 seconds and are provided for promotional listening only.',
     '中国金曲':'Chinese hits','英文歌曲':'English songs','日本音乐':'Japanese music','热门歌曲（真实榜单）':'Top songs (live chart)','标题 / 艺术家':'Title / artist','艺术家':'Artist','专辑':'Album','操作':'Action','预览':'Preview','获取中…':'Loading…','不可预览':'Unavailable','正在加载…':'Loading…','暂无数据（可稍后再试）':'No data. Try again later.',
     '无版权 · 整曲':'Royalty-free · Full tracks','示例数据，后期换成你的直链或自建源':'Sample catalog; replace it with your own licensed source','无版权 · 轻音乐':'Royalty-free · Easy listening','无版权 · 电子':'Royalty-free · Electronic','无版权 · 古典':'Royalty-free · Classical','全量列表':'Full list','暂无曲目':'No tracks','标题':'Title','授权':'License','播放':'Play',
-    '为你推荐 · 视频':'Video for you','YouTube·当地热门':'YouTube · Local trends','海外源未开启':'International sources are off','海外源关闭，仅显示 B 站':'International sources are off; showing Bilibili only','已启用海外源（YouTube）':'International sources enabled (YouTube)','暂无数据或被源限制':'No content available from this source','未选择视频':'No video selected','正在播放：':'Now playing: ','播放/暂停':'Play / pause','静音':'Mute','全屏':'Full screen','退出':'Exit','TV · 官方 / 直链':'TV · Official / streams','未选择频道':'No channel selected','选择一首歌开始播放':'Choose a track to start listening','收藏夹为空（示例）':'Your liked list is empty','上一首':'Previous','下一首':'Next','播放或暂停':'Play or pause','播放进度':'Playback position','音量':'Volume',
+    '为你推荐 · 视频':'Video for you','YouTube·当地热门':'YouTube · Local trends','海外源未开启':'International sources are off','海外源关闭，仅显示 B 站':'International sources are off; showing Bilibili only','已启用海外源（YouTube）':'International sources enabled (YouTube)','暂无数据或被源限制':'No content available from this source','未选择视频':'No video selected','正在播放：':'Now playing: ','播放/暂停':'Play / pause','静音':'Mute','全屏':'Full screen','退出':'Exit','TV · 官方 / 直链':'TV · Official / streams','官方新闻直播':'Official live news','官方公开视频嵌入，受地区和直播状态限制':'Official public video embeds; availability depends on region and live status','官方 YouTube 新闻直播 · 可能受地区限制':'Official YouTube news stream · may be region restricted','未选择频道':'No channel selected','选择一首歌开始播放':'Choose a track to start listening','收藏夹为空（示例）':'Your liked list is empty','上一首':'Previous','下一首':'Next','播放或暂停':'Play or pause','播放进度':'Playback position','音量':'Volume',
     '公共云':'Public cloud','私人云':'Private cloud','此设备':'This device','WebWindows 资料':'WebWindows files','媒体':'Media','音频':'Audio','频道':'Channel','用 APlay 打开媒体':'Open media with APlay','音频和视频':'Audio and video','媒体打开失败。':'Could not open the media.','云资源服务暂时不可用。':'Cloud resources are temporarily unavailable.','APlay 不支持此媒体格式。':'APlay does not support this media format.',
     '数据源暂不可用，已显示上次成功结果':'Source temporarily unavailable; showing the last successful results','数据源暂不可用，请稍后刷新':'Source temporarily unavailable. Please refresh later.','显示缓存结果':'Showing cached results','来源暂不可用':'Source temporarily unavailable','已改用备用地区商店':'Using an alternate store region','无可用试听版本':'No preview is available in the selected stores','试听源暂不可用':'Preview service temporarily unavailable','排行榜暂不可用':'Charts are temporarily unavailable'
   },
@@ -414,7 +417,7 @@ const I18N_TEXT={
     '榜单来自 Apple 的 iTunes RSS；试听为 Apple 提供的 30–90 秒预览，仅用于推广展示，不提供整曲直链。':'ランキングは Apple iTunes RSS を使用しています。試聴は Apple 提供の30〜90秒のプロモーション用プレビューです。',
     '中国金曲':'中国ヒット','英文歌曲':'英語の曲','日本音乐':'日本の音楽','热门歌曲（真实榜单）':'人気曲（ライブランキング）','标题 / 艺术家':'曲名 / アーティスト','艺术家':'アーティスト','专辑':'アルバム','操作':'操作','预览':'試聴','获取中…':'取得中…','不可预览':'試聴不可','正在加载…':'読み込み中…','暂无数据（可稍后再试）':'データがありません。後でもう一度お試しください。',
     '无版权 · 整曲':'ロイヤリティフリー · フル再生','示例数据，后期换成你的直链或自建源':'サンプルです。ライセンス済みの独自ソースに置き換えられます','无版权 · 轻音乐':'ロイヤリティフリー · イージーリスニング','无版权 · 电子':'ロイヤリティフリー · エレクトロニック','无版权 · 古典':'ロイヤリティフリー · クラシック','全量列表':'全曲','暂无曲目':'曲がありません','标题':'タイトル','授权':'ライセンス','播放':'再生',
-    '为你推荐 · 视频':'おすすめ動画','YouTube·当地热门':'YouTube · 現地の人気動画','海外源未开启':'海外ソースはオフです','海外源关闭，仅显示 B 站':'海外ソースはオフです。Bilibili のみ表示します','已启用海外源（YouTube）':'海外ソースを有効化（YouTube）','暂无数据或被源限制':'このソースからコンテンツを取得できません','未选择视频':'動画が選択されていません','正在播放：':'再生中：','播放/暂停':'再生 / 一時停止','静音':'ミュート','全屏':'全画面','退出':'終了','TV · 官方 / 直链':'TV · 公式 / ストリーム','未选择频道':'チャンネルが選択されていません','选择一首歌开始播放':'曲を選んで再生を始めましょう','收藏夹为空（示例）':'お気に入りは空です','上一首':'前の曲','下一首':'次の曲','播放或暂停':'再生または一時停止','播放进度':'再生位置','音量':'音量',
+    '为你推荐 · 视频':'おすすめ動画','YouTube·当地热门':'YouTube · 現地の人気動画','海外源未开启':'海外ソースはオフです','海外源关闭，仅显示 B 站':'海外ソースはオフです。Bilibili のみ表示します','已启用海外源（YouTube）':'海外ソースを有効化（YouTube）','暂无数据或被源限制':'このソースからコンテンツを取得できません','未选择视频':'動画が選択されていません','正在播放：':'再生中：','播放/暂停':'再生 / 一時停止','静音':'ミュート','全屏':'全画面','退出':'終了','TV · 官方 / 直链':'TV · 公式 / ストリーム','官方新闻直播':'公式ニュースライブ','官方公开视频嵌入，受地区和直播状态限制':'公式動画の埋め込みです。地域や配信状況によって視聴できない場合があります','官方 YouTube 新闻直播 · 可能受地区限制':'公式 YouTube ニュース配信 · 地域制限の可能性あり','未选择频道':'チャンネルが選択されていません','选择一首歌开始播放':'曲を選んで再生を始めましょう','收藏夹为空（示例）':'お気に入りは空です','上一首':'前の曲','下一首':'次の曲','播放或暂停':'再生または一時停止','播放进度':'再生位置','音量':'音量',
     '公共云':'パブリッククラウド','私人云':'プライベートクラウド','此设备':'このデバイス','WebWindows 资料':'WebWindows ファイル','媒体':'メディア','音频':'オーディオ','频道':'チャンネル','用 APlay 打开媒体':'APlay でメディアを開く','音频和视频':'オーディオと動画','媒体打开失败。':'メディアを開けませんでした。','云资源服务暂时不可用。':'クラウドリソースを一時的に利用できません。','APlay 不支持此媒体格式。':'このメディア形式は APlay で再生できません。',
     '数据源暂不可用，已显示上次成功结果':'ソースを一時的に利用できないため、前回の結果を表示しています','数据源暂不可用，请稍后刷新':'ソースを一時的に利用できません。後でもう一度更新してください','显示缓存结果':'キャッシュ済みの結果を表示中','来源暂不可用':'ソースを一時的に利用できません','已改用备用地区商店':'別の地域のストアを使用しています','无可用试听版本':'選択したストアに試聴版がありません','试听源暂不可用':'試聴サービスを一時的に利用できません','排行榜暂不可用':'ランキングを一時的に利用できません'
   }
@@ -422,15 +425,15 @@ const I18N_TEXT={
 let aplayLanguage='zh';
 Object.assign(I18N_TEXT.tw, {
   '完整曲目（CC BY 4.0）':'完整曲目（CC BY 4.0）','授权音乐 · 完整曲目':'授權音樂 · 完整曲目','本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。':'本曲採用 CC BY 4.0；請標註 Kevin MacLeod，曲名連結至官方來源頁。',
-  '自由音乐 · 轻松':'自由音樂 · 輕鬆','自由音乐 · 电子':'自由音樂 · 電子','自由音乐 · 古典':'自由音樂 · 古典','CC BY 4.0 · 需署名':'CC BY 4.0 · 需標註','电台源暂不可用':'電台來源暫時無法使用'
+  '自由音乐 · 轻松':'自由音樂 · 輕鬆','自由音乐 · 电子':'自由音樂 · 電子','自由音乐 · 古典':'自由音樂 · 古典','CC BY 4.0 · 需署名':'CC BY 4.0 · 需標註','电台源暂不可用':'電台來源暫時無法使用','请使用视频画面内的播放和音量控制':'請使用影片畫面內的播放和音量控制','播放器加载失败，请刷新或稍后重试':'播放器載入失敗，請重新整理或稍後再試','播放器正在连接，请稍候':'播放器正在連線，請稍候'
 });
 Object.assign(I18N_TEXT.en, {
   '完整曲目（CC BY 4.0）':'Full tracks (CC BY 4.0)','授权音乐 · 完整曲目':'Licensed music · Full tracks','本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。':'Tracks are licensed under CC BY 4.0. Credit Kevin MacLeod; each title links to its official source.',
-  '自由音乐 · 轻松':'Free music · Easy listening','自由音乐 · 电子':'Free music · Electronic','自由音乐 · 古典':'Free music · Classical','CC BY 4.0 · 需署名':'CC BY 4.0 · attribution required','电台源暂不可用':'Radio source unavailable'
+  '自由音乐 · 轻松':'Free music · Easy listening','自由音乐 · 电子':'Free music · Electronic','自由音乐 · 古典':'Free music · Classical','CC BY 4.0 · 需署名':'CC BY 4.0 · attribution required','电台源暂不可用':'Radio source unavailable','请使用视频画面内的播放和音量控制':'Use the playback and volume controls inside the video','播放器加载失败，请刷新或稍后重试':'The player could not load. Refresh or try again later.','播放器正在连接，请稍候':'Connecting to the player…'
 });
 Object.assign(I18N_TEXT.jp, {
   '完整曲目（CC BY 4.0）':'フル曲（CC BY 4.0）','授权音乐 · 完整曲目':'ライセンス音源 · フル曲','本曲采用 CC BY 4.0；请署名 Kevin MacLeod，曲名链接至官方来源页。':'CC BY 4.0 ライセンスです。Kevin MacLeod をクレジットしてください。曲名から公式ソースを確認できます。',
-  '自由音乐 · 轻松':'フリー音源 · リラックス','自由音乐 · 电子':'フリー音源 · エレクトロニック','自由音乐 · 古典':'フリー音源 · クラシック','CC BY 4.0 · 需署名':'CC BY 4.0 · クレジット表記が必要','电台源暂不可用':'ラジオソースを一時的に利用できません'
+  '自由音乐 · 轻松':'フリー音源 · リラックス','自由音乐 · 电子':'フリー音源 · エレクトロニック','自由音乐 · 古典':'フリー音源 · クラシック','CC BY 4.0 · 需署名':'CC BY 4.0 · クレジット表記が必要','电台源暂不可用':'ラジオソースを一時的に利用できません','请使用视频画面内的播放和音量控制':'動画内の再生・音量コントロールを使用してください','播放器加载失败，请刷新或稍后重试':'プレーヤーを読み込めません。更新するか、しばらくしてから再試行してください','播放器正在连接，请稍候':'プレーヤーに接続しています…'
 });
 const originalAttributes=new WeakMap();
 function normalizeLanguage(value){
@@ -844,10 +847,14 @@ function safeVideoCover(value,source){
   }catch{}
   return '';
 }
+function bilibiliCoverProxyUrl(value){
+  const cover=safeVideoCover(value,'bili'); if(!cover) return '';
+  const url=new URL(APLAY_SOURCE_ENDPOINT.href); url.searchParams.set('source','bili-cover'); url.searchParams.set('image',cover); return url.href;
+}
 function makeVideoEntry(title,bvid,cover){
   const id=String(bvid||'').trim();
   if(!/^BV[0-9A-Za-z]+$/.test(id)) return null;
-  return {title:String(title||'B站视频').slice(0,240),type:'embed',url:`https://player.bilibili.com/player.html?bvid=${encodeURIComponent(id)}&high_quality=1&danmaku=0&autoplay=1`,thumbnail:safeVideoCover(cover,'bili')};
+  return {title:String(title||'B站视频').slice(0,240),type:'embed',provider:'bili',url:`https://player.bilibili.com/player.html?bvid=${encodeURIComponent(id)}&high_quality=1&danmaku=0&autoplay=1`,thumbnail:safeVideoCover(cover,'bili')};
 }
 function parseBilibiliApi(data,feed){
   if(Number(data?.code)!==0) throw new Error('bilibili_source_unavailable');
@@ -862,10 +869,17 @@ function parseItems(doc, feed){
       const title = it.querySelector('title')?.textContent?.trim() || 'B站';
       const link  = it.querySelector('link')?.textContent || '';
       const bv = (link.match(/BV\w+/) || [])[0];
-      const thumbnailNode=it.querySelector('media\\:thumbnail, thumbnail, enclosure, cover');
       const description=it.querySelector('description')?.textContent||'';
-      const descriptionCover=(description.match(/<img\b[^>]*(?:src|data-src)=["']([^"']+)["']/i)||[])[1]||'';
-      const cover=thumbnailNode?.getAttribute('url')||thumbnailNode?.getAttribute('href')||descriptionCover;
+      let thumbnailNode=null;
+      try{thumbnailNode=it.querySelector('media\\:thumbnail, media\\:content, thumbnail, cover');}catch{}
+      const attributes=['url','href','src','data-src'];
+      let cover='';
+      for(const name of attributes){cover=thumbnailNode?.getAttribute(name)||'';if(cover)break;}
+      let markup=description;
+      for(let i=0;i<2;i++) markup=markup.replace(/&(lt|gt|quot|apos|amp);/gi,entity=>({'&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&amp;':'&'})[entity.toLowerCase()]||entity);
+      const imageTag=markup.match(/<img\b[^>]*>/i)?.[0]||'';
+      const imageMatch=imageTag.match(/(?:src|data-src|data-original)\s*=\s*(?:"([^"]+)"|'([^']+)'|([^\s>]+))/i);
+      if(!cover&&imageMatch) cover=imageMatch[1]||imageMatch[2]||imageMatch[3]||'';
       const entry=makeVideoEntry(title,bv,cover); if(entry) out.push(entry);
     });
   } else {
@@ -877,7 +891,7 @@ function parseItems(doc, feed){
         vid=(href.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([A-Za-z0-9_-]{11})/)||[])[1] || '';
       }
       const title = e.querySelector('title')?.textContent?.trim() || 'YouTube';
-      if (/^[A-Za-z0-9_-]{11}$/.test(vid)) out.push({ title, type:'embed', url:`https://www.youtube.com/embed/${encodeURIComponent(vid)}?autoplay=1`, thumbnail:`https://i.ytimg.com/vi/${vid}/hqdefault.jpg` });
+      if (/^[A-Za-z0-9_-]{11}$/.test(vid)) out.push({ title, type:'embed', provider:'youtube', videoId:vid, url:`https://www.youtube.com/embed/${encodeURIComponent(vid)}?autoplay=1`, thumbnail:`https://i.ytimg.com/vi/${vid}/hqdefault.jpg` });
     });
   }
   return out;
@@ -928,7 +942,7 @@ function parseYouTubeCache(data,feed){
     if(!/^[A-Za-z0-9_-]{11}$/.test(id)) return null;
     const title=String(item?.title||'YouTube').trim().slice(0,240)||'YouTube';
     const thumbnail=safeVideoCover(item?.thumbnail,'youtube')||`https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
-    return {title,type:'embed',url:`https://www.youtube.com/embed/${id}?autoplay=1`,thumbnail};
+    return {title,type:'embed',provider:'youtube',videoId:id,url:`https://www.youtube.com/embed/${id}?autoplay=1`,thumbnail};
   }).filter(Boolean);
 }
 const VIDEO_CACHE = new Map(); const VIDEO_TTL = 10*60*1000;
@@ -1022,10 +1036,11 @@ function renderVideoCards(list){
     const art=document.createElement('div'); art.className='h-32 bg-gradient-to-tr from-indigo-100 to-indigo-50 relative overflow-hidden';
     const artIcon=document.createElement('i'); artIcon.dataset.lucide='clapperboard'; artIcon.className='w-6 h-6 text-indigo-700 absolute inset-0 m-auto'; art.appendChild(artIcon);
     if(v.thumbnail){
-      const cover=document.createElement('img'); cover.className='absolute inset-0 w-full h-full object-cover'; cover.alt=''; cover.loading='lazy';
+      const isBili=v.provider==='bili'||/player\.bilibili\.com/.test(v.url||'');
+      const cover=document.createElement('img'); cover.className='absolute inset-0 w-full h-full object-cover'; cover.alt=''; cover.loading='lazy'; cover.referrerPolicy='no-referrer';
       cover.addEventListener('load',()=>artIcon.classList.add('hidden'),{once:true});
       cover.addEventListener('error',()=>cover.remove(),{once:true});
-      cover.src=v.thumbnail; art.appendChild(cover);
+      cover.src=isBili?bilibiliCoverProxyUrl(v.thumbnail):v.thumbnail; art.appendChild(cover);
       if(cover.complete&&cover.naturalWidth) artIcon.classList.add('hidden');
     }
     const body=document.createElement('div'); body.className='p-4 space-y-2';
@@ -1055,30 +1070,34 @@ function videoInit(){
   if(videoCurrentCatId) renderVideoCat(videoCurrentCatId);
 }
 
-/* ===== TV / Radio 示例 ===== */
+/* ===== 直播 / 电台 ===== */
 const TV_DB=[
-  {title:'Bili 合辑频道',         type:'embed', url:'https://player.bilibili.com/player.html?bvid=BV1xx411c7mD&high_quality=1&danmaku=0&autoplay=1'},
-  {title:'Elephants Dream（MP4）', type:'file',  url:'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4'}
+  {title:'FRANCE 24 English · Live',desc:'官方 YouTube 新闻直播 · 可能受地区限制',type:'embed',provider:'youtube',videoId:'Ap-UM1O9RBU',url:'https://www.youtube.com/embed/Ap-UM1O9RBU'},
+  {title:'Sky News · Live',desc:'官方 YouTube 新闻直播 · 可能受地区限制',type:'embed',provider:'youtube',videoId:'xDWQ3LkccY8',url:'https://www.youtube.com/embed/xDWQ3LkccY8'},
+  {title:'DW News · Livestream',desc:'官方 YouTube 新闻直播 · 可能受地区限制',type:'embed',provider:'youtube',videoId:'qMtcWqCL_UQ',url:'https://www.youtube.com/embed/qMtcWqCL_UQ'}
 ];
 const RADIO_DB=[
-  {title:'Radio Paradise', desc:'MP3 192kbps', urls:['https://stream.radioparadise.com/mp3-192']}
+  {title:'Radio Paradise · Main Mix',desc:'MP3 · 192 kbps',urls:['https://stream.radioparadise.com/mp3-192']},
+  {title:'Radio Paradise · Mellow Mix',desc:'MP3 · 192 kbps',urls:['https://stream.radioparadise.com/mellow-192']},
+  {title:'Radio Paradise · Rock Mix',desc:'MP3 · 192 kbps',urls:['https://stream.radioparadise.com/rock-192']},
+  {title:'Radio Paradise · The Globe',desc:'MP3 · 192 kbps',urls:['https://stream.radioparadise.com/eclectic-192']}
 ];
 function mountTV(){
   const grid=$('#tv-grid'); grid.innerHTML='';
   TV_DB.forEach((v,i)=>{
     const card=document.createElement('div');
     card.className='rounded-2xl border border-gray-200 bg-white overflow-hidden hover:shadow-sm';
-    card.innerHTML=`
-      <div class="h-28 bg-gradient-to-tr from-blue-100 to-blue-50 grid place-items-center">
-        <div class="text-blue-700 font-semibold">${v.title}</div>
-      </div>
-      <div class="p-4">
-        <div class="flex items-center justify-end">
-          <button class="btn-tv h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700" data-idx="${i}">
-            <i data-lucide="play" class="w-4 h-4"></i><span class="ml-1">播放</span>
-          </button>
-        </div>
-      </div>`;
+    const art=document.createElement('div'); art.className='h-32 bg-gradient-to-tr from-blue-100 to-blue-50 relative overflow-hidden';
+    const cover=document.createElement('img'); cover.className='absolute inset-0 w-full h-full object-cover'; cover.alt=''; cover.loading='lazy'; cover.referrerPolicy='no-referrer'; cover.src=`https://i.ytimg.com/vi/${encodeURIComponent(v.videoId)}/hqdefault.jpg`;
+    cover.addEventListener('error',()=>cover.remove(),{once:true}); art.appendChild(cover);
+    const body=document.createElement('div'); body.className='p-4 space-y-2';
+    const title=document.createElement('div'); title.className='font-medium text-clip'; title.textContent=v.title;
+    const desc=document.createElement('div'); desc.className='text-xs text-gray-500'; desc.textContent=tx(v.desc);
+    const actions=document.createElement('div'); actions.className='flex items-center justify-end';
+    const button=document.createElement('button'); button.className='btn-tv h-9 px-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 inline-flex items-center gap-1 whitespace-nowrap'; button.dataset.idx=String(i);
+    const icon=document.createElement('i'); icon.dataset.lucide='play'; icon.className='w-4 h-4';
+    const label=document.createElement('span'); label.textContent=tx('播放'); button.append(icon,label); actions.appendChild(button);
+    body.append(title,desc,actions); card.append(art,body);
     grid.appendChild(card);
   });
   setTimeout(()=>{
@@ -1127,53 +1146,103 @@ function playRadioStation(station){
   if(urls.length) attempt();
 }
 
-/* ===== 视频/TV 播放控制（屏蔽右键/点击穿透） ===== */
-function playVideoEntry(entry){
-  const v=$('#video-player'), f=$('#video-iframe'), shield=$('#video-shield');
-  $('#video-now').textContent=tx('正在播放：')+(entry?.title||tx('视频'));
+/* ===== 视频/TV 播放控制：HTML5 + 官方 YouTube API + B站原生控件 ===== */
+const YOUTUBE_PLAYERS={video:null,tv:null};
+const AV_PLAYER_STATE={video:{provider:'',generation:0},tv:{provider:'',generation:0}};
+let YOUTUBE_IFRAME_API_PROMISE=null;
+function loadYouTubeIframeApi(){
+  if(window.YT?.Player) return Promise.resolve(window.YT);
+  if(YOUTUBE_IFRAME_API_PROMISE) return YOUTUBE_IFRAME_API_PROMISE;
+  YOUTUBE_IFRAME_API_PROMISE=new Promise((resolve,reject)=>{
+    const oldReady=window.onYouTubeIframeAPIReady;
+    const timer=window.setTimeout(()=>reject(new Error('youtube_api_timeout')),15000);
+    window.onYouTubeIframeAPIReady=()=>{window.clearTimeout(timer);try{oldReady?.();}catch{};if(window.YT?.Player)resolve(window.YT);else reject(new Error('youtube_api_unavailable'));};
+    const script=document.createElement('script');script.src='https://www.youtube.com/iframe_api';script.async=true;
+    script.onerror=()=>{window.clearTimeout(timer);reject(new Error('youtube_api_unavailable'));};
+    document.head.appendChild(script);
+  }).catch(error=>{YOUTUBE_IFRAME_API_PROMISE=null;throw error;});
+  return YOUTUBE_IFRAME_API_PROMISE;
+}
+function destroyYouTubePlayer(kind,mount){
+  const player=YOUTUBE_PLAYERS[kind];YOUTUBE_PLAYERS[kind]=null;
+  try{player?.destroy?.();}catch{}
+  mount.replaceChildren();
+}
+function setAVControlSupport(kind,enabled,note=''){
+  ['play','mute'].forEach(name=>{const button=$(`#${kind}-btn-${name}`);if(button){button.disabled=!enabled;button.classList.toggle('opacity-40',!enabled);button.title=tx(name==='play'?'播放/暂停':'静音');}});
+  const help=$(`#${kind}-control-note`);if(help)help.textContent=tx(note);
+}
+function entryVideoId(entry){
+  if(/^[A-Za-z0-9_-]{11}$/.test(entry?.videoId||''))return entry.videoId;
+  return String(entry?.url||'').match(/youtube\.com\/embed\/([A-Za-z0-9_-]{11})/)?.[1]||'';
+}
+function createFallbackYouTubeFrame(mount,videoId){
+  const frame=document.createElement('iframe');frame.className='player-frame';frame.src=`https://www.youtube.com/embed/${encodeURIComponent(videoId)}?autoplay=1&controls=1&playsinline=1`;
+  frame.title='YouTube video player';frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';
+  mount.replaceChildren(frame);
+}
+async function playAVEntry(kind,entry){
+  const v=$(`#${kind}-player`),mount=$(`#${kind}-embed-mount`),panel=$(`#${kind}-player-panel`),now=$(`#${kind}-now`);
+  if(!v||!mount||!panel||!entry?.url)return;
+  const state=AV_PLAYER_STATE[kind],generation=++state.generation;
+  const host=String(entry.provider||'').toLowerCase();
+  const provider=host||(/youtube\.com\/embed\//.test(entry.url)?'youtube':/player\.bilibili\.com/.test(entry.url)?'bili':'');
+  state.provider=entry.type==='file'?'file':provider;
+  panel.classList.remove('hidden');
+  window.requestAnimationFrame?.(()=>panel.scrollIntoView?.({behavior:'smooth',block:'start'}));
+  now.textContent=tx('正在播放：')+(entry.title||tx(kind==='video'?'视频':'频道'));
   pauseAudio();
-  const container=v.parentElement; container.oncontextmenu=e=>{e.preventDefault();return false;};
+  v.pause();v.removeAttribute('src');v.load?.();v.classList.add('hidden');
+  destroyYouTubePlayer(kind,mount);mount.classList.add('hidden');
   if(entry.type==='file'){
-    f.classList.add('hidden'); f.src='';
-    v.classList.remove('hidden'); v.removeAttribute('controls');
-    v.src=entry.url; v.muted=false; v.play().catch(()=>{});
-    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
-  }else{
-    v.classList.add('hidden'); v.pause(); v.removeAttribute('src'); v.load?.();
-    f.classList.remove('hidden'); f.src=entry.url;
-    shield.classList.add('hidden'); shield.onclick=null; shield.oncontextmenu=null;
+    state.provider='file';v.controls=true;v.classList.remove('hidden');v.src=entry.url;v.muted=false;
+    setAVControlSupport(kind,true,'');v.play().catch(()=>{});return;
   }
-}
-function videoControlsBind(){
-  const v=$('#video-player'), f=$('#video-iframe');
-  $('#video-btn-play').addEventListener('click',()=>{ if(!v.classList.contains('hidden')){ if(v.paused) v.play(); else v.pause(); } else { if(!f.classList.contains('hidden')){ const u=f.src; if(u){ f.src=''; setTimeout(()=>f.src=u,0);} } }});
-  $('#video-btn-mute').addEventListener('click',()=>{ if(!v.classList.contains('hidden')) v.muted=!v.muted; });
-  $('#video-btn-full').addEventListener('click',()=>{ const wrap=$('#video-iframe').classList.contains('hidden')? $('#video-player').parentElement : $('#video-iframe').parentElement; wrap.requestFullscreen?.(); });
-  $('#video-btn-exit').addEventListener('click',()=>{ stopInlinePlayers(); exitAVMode(true); $('#video-now').textContent='未选择视频'; });
-}
-function playTVEntry(entry){
-  const v=$('#tv-player'), f=$('#tv-iframe'), shield=$('#tv-shield');
-  $('#tv-now').textContent=tx('正在播放：')+(entry?.title||tx('频道'));
-  pauseAudio();
-  const container=v.parentElement; container.oncontextmenu=e=>{e.preventDefault();return false;};
-  if(entry.type==='file'){
-    f.classList.add('hidden'); f.src='';
-    v.classList.remove('hidden'); v.removeAttribute('controls');
-    v.src=entry.url; v.muted=false; v.play().catch(()=>{});
-    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
-  }else{
-    v.classList.add('hidden'); v.pause(); v.removeAttribute('src'); v.load?.();
-    f.classList.remove('hidden'); f.src=entry.url;
-    shield.classList.remove('hidden'); shield.onclick=(e)=>e.preventDefault(); shield.oncontextmenu=(e)=>{e.preventDefault();return false;};
+  if(provider==='youtube'){
+    const videoId=entryVideoId(entry);mount.classList.remove('hidden');
+    if(!videoId){setAVControlSupport(kind,false,'播放器加载失败，请刷新或稍后重试');return;}
+    setAVControlSupport(kind,false,'播放器正在连接，请稍候');
+    try{
+      const YT=await loadYouTubeIframeApi();if(generation!==state.generation)return;
+      YOUTUBE_PLAYERS[kind]=new YT.Player(mount,{width:'100%',height:'100%',videoId,playerVars:{autoplay:1,controls:1,playsinline:1,enablejsapi:1,origin:location.origin},events:{onReady:event=>{if(generation===state.generation){setAVControlSupport(kind,true,'');event.target.playVideo();}},onError:()=>{if(generation===state.generation)setAVControlSupport(kind,false,'播放器加载失败，请刷新或稍后重试');}}});
+    }catch{
+      if(generation!==state.generation)return;
+      createFallbackYouTubeFrame(mount,videoId);setAVControlSupport(kind,false,'请使用视频画面内的播放和音量控制');
+    }
+    return;
   }
+  if(provider==='bili'){
+    mount.classList.remove('hidden');
+    const frame=document.createElement('iframe');frame.className='player-frame';frame.src=entry.url;frame.title=entry.title||'Bilibili video';
+    frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;frame.referrerPolicy='strict-origin-when-cross-origin';frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation');
+    mount.replaceChildren(frame);setAVControlSupport(kind,false,'请使用视频画面内的播放和音量控制');return;
+  }
+  mount.classList.remove('hidden');
+  const frame=document.createElement('iframe');frame.className='player-frame';frame.src=entry.url;frame.title=entry.title||'Video player';frame.allow='autoplay; encrypted-media; picture-in-picture; fullscreen';frame.allowFullscreen=true;
+  mount.replaceChildren(frame);setAVControlSupport(kind,false,'请使用视频画面内的播放和音量控制');
 }
-function tvControlsBind(){
-  const v=$('#tv-player'), f=$('#tv-iframe');
-  $('#tv-btn-play').addEventListener('click',()=>{ if(!v.classList.contains('hidden')){ if(v.paused) v.play(); else v.pause(); } else { if(!f.classList.contains('hidden')){ const u=f.src; if(u){ f.src=''; setTimeout(()=>f.src=u,0);} } }});
-  $('#tv-btn-mute').addEventListener('click',()=>{ if(!v.classList.contains('hidden')) v.muted=!v.muted; });
-  $('#tv-btn-full').addEventListener('click',()=>{ const wrap=$('#tv-iframe').classList.contains('hidden')? $('#tv-player').parentElement : $('#tv-iframe').parentElement; wrap.requestFullscreen?.(); });
-  $('#tv-btn-exit').addEventListener('click',()=>{ stopInlinePlayers(); exitAVMode(true); $('#tv-now').textContent='未选择频道'; });
+function bindAVControls(kind){
+  const v=$(`#${kind}-player`),panel=$(`#${kind}-player-panel`);
+  $(`#${kind}-btn-play`).addEventListener('click',()=>{
+    if(AV_PLAYER_STATE[kind].provider==='file'){if(v.paused)v.play().catch(()=>{});else v.pause();return;}
+    const player=YOUTUBE_PLAYERS[kind];if(!player)return;
+    if(player.getPlayerState?.()===window.YT?.PlayerState?.PLAYING)player.pauseVideo();else player.playVideo();
+  });
+  $(`#${kind}-btn-mute`).addEventListener('click',()=>{
+    if(AV_PLAYER_STATE[kind].provider==='file'){v.muted=!v.muted;return;}
+    const player=YOUTUBE_PLAYERS[kind];if(!player)return;
+    if(player.isMuted?.())player.unMute();else player.mute();
+  });
+  $(`#${kind}-btn-full`).addEventListener('click',()=>{
+    const stage=panel.querySelector('.player-stage');
+    if(document.fullscreenElement)document.exitFullscreen?.();else stage?.requestFullscreen?.();
+  });
+  $(`#${kind}-btn-exit`).addEventListener('click',()=>{stopInlinePlayers();exitAVMode(true);});
 }
+function playVideoEntry(entry){playAVEntry('video',entry);}
+function videoControlsBind(){bindAVControls('video');}
+function playTVEntry(entry){playAVEntry('tv',entry);}
+function tvControlsBind(){bindAVControls('tv');}
 
 /* ===== 全局 Audio 栏 ===== */
 function playAudio(url, meta){
@@ -1219,10 +1288,13 @@ function enterAVMode(){ $('#audio-footer').classList.add('hidden'); }
 function exitAVMode(resume){ if(resume) $('#audio-footer').classList.remove('hidden'); }
 function stopInlinePlayers(){
   ['video','tv'].forEach(kind=>{
-    const v=$(`#${kind}-player`), f=$(`#${kind}-iframe`), shield=$(`#${kind}-shield`);
-    if(v){ v.pause(); v.removeAttribute('src'); v.load?.(); v.classList.add('hidden'); }
-    if(f){ f.src=''; f.classList.add('hidden'); }
-    if(shield) shield.classList.add('hidden');
+    const v=$(`#${kind}-player`), mount=$(`#${kind}-embed-mount`), panel=$(`#${kind}-player-panel`);
+    AV_PLAYER_STATE[kind].generation++;
+    if(v){ v.pause(); v.removeAttribute('src'); v.load?.(); v.classList.add('hidden'); v.controls=false; }
+    if(mount){ destroyYouTubePlayer(kind,mount); mount.classList.add('hidden'); }
+    if(panel)panel.classList.add('hidden');
+    AV_PLAYER_STATE[kind].provider='';
+    setAVControlSupport(kind,false,'');
     const now=$(`#${kind}-now`); if(now) now.textContent = kind==='video'?'未选择视频':'未选择频道';
   });
 }
@@ -1273,7 +1345,7 @@ $('#btn-open-media')?.addEventListener('click',async()=>{
   }
 });
 document.addEventListener('contextmenu', (e)=>{
-  if(e.target.closest('#video-player')||e.target.closest('#video-iframe')||e.target.closest('#tv-player')||e.target.closest('#tv-iframe')) e.preventDefault();
+  if(e.target.closest('#video-player')||e.target.closest('#video-embed-mount')||e.target.closest('#tv-player')||e.target.closest('#tv-embed-mount')) e.preventDefault();
 });
 
 /* ===== 启动 ===== */

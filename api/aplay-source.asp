@@ -4,13 +4,14 @@ Option Explicit
 
 Const APLAY_CACHE_TTL_SECONDS = 300
 Const APLAY_MAX_RESPONSE_CHARS = 2097152
+Const APLAY_MAX_COVER_BYTES = 2097152
 Const APLAY_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
 
 Response.Charset = "utf-8"
-Response.CacheControl = "no-store"
+If sourceName <> "bili-cover" Then Response.CacheControl = "no-store"
 Response.AddHeader "X-Content-Type-Options", "nosniff"
 
-Dim requestMethod, sourceName, country, term, partitionId, channelId
+Dim requestMethod, sourceName, country, term, partitionId, channelId, coverUrl
 Dim upstream, fallbackUpstream, contentType, cacheKey, body, upstreamStatus
 requestMethod = UCase(Trim(Request.ServerVariables("REQUEST_METHOD")))
 sourceName = LCase(Trim(Request.QueryString("source")))
@@ -48,6 +49,11 @@ Select Case sourceName
     fallbackUpstream = "https://rsshub.mt.cd/bilibili/partion/" & partitionId
     contentType = "application/xml; charset=utf-8"
     cacheKey = "webwindows.aplay.bili-partition." & partitionId
+
+  Case "bili-cover"
+    coverUrl = Trim(Request.QueryString("image"))
+    If Not IsAllowedBiliCover(coverUrl) Then SendError "400 Bad Request", "invalid_cover_url"
+    ServeBilibiliCover coverUrl
 
   Case "youtube-channel"
     If Not IsAllowedChannel(channelId) Then SendError "400 Bad Request", "invalid_channel"
@@ -95,6 +101,117 @@ End Function
 Function IsAllowedChannel(ByVal value)
   IsAllowedChannel = (value = "UC-9-kyTW8ZkZNDHQJ6FgpwQ" Or value = "UCXuqSBlHAE6Xw-yeJA0Tunw" Or value = "UCSJ4gkVC6NrvII8umztf0Ow")
 End Function
+
+Function IsAllowedBiliCover(ByVal value)
+  IsAllowedBiliCover = False
+  If Len(value) < 16 Or Len(value) > 2048 Then Exit Function
+  If LCase(Left(value, 8)) <> "https://" Then Exit Function
+  If InStr(value, Chr(10)) > 0 Or InStr(value, Chr(13)) > 0 Or InStr(value, Chr(92)) > 0 Then Exit Function
+
+  Dim authority, path, slashAt, queryAt
+  authority = Mid(value, 9)
+  slashAt = InStr(authority, "/")
+  If slashAt < 2 Then Exit Function
+  path = Mid(authority, slashAt)
+  authority = LCase(Left(authority, slashAt - 1))
+  If InStr(authority, "@") > 0 Or InStr(authority, ":") > 0 Or InStr(authority, "?") > 0 Or InStr(authority, "#") > 0 Then Exit Function
+  If Not (authority = "hdslb.com" Or Right(authority, 10) = ".hdslb.com" Or authority = "biliimg.com" Or Right(authority, 12) = ".biliimg.com") Then Exit Function
+  queryAt = InStr(path, "?")
+  If queryAt > 0 Then path = Left(path, queryAt - 1)
+  If Left(LCase(path), 5) <> "/bfs/" Then Exit Function
+  IsAllowedBiliCover = True
+End Function
+
+Sub ServeBilibiliCover(ByVal imageUrl)
+  On Error Resume Next
+  Dim http, contentType, contentLength, bytes, stream
+  Set http = Server.CreateObject("MSXML2.ServerXMLHTTP.6.0")
+  If Err.Number <> 0 Or http Is Nothing Then
+    Err.Clear
+    Set http = Server.CreateObject("MSXML2.ServerXMLHTTP")
+  End If
+  If Err.Number <> 0 Or http Is Nothing Then
+    Err.Clear
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_unavailable"
+  End If
+
+  http.setTimeouts 5000, 5000, 12000, 15000
+  http.open "GET", imageUrl, False
+  http.setRequestHeader "User-Agent", APLAY_USER_AGENT
+  http.setRequestHeader "Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8"
+  http.setRequestHeader "Referer", "https://www.bilibili.com/"
+  http.send
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set http = Nothing
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_unavailable"
+  End If
+  If http.status < 200 Or http.status >= 300 Then
+    Set http = Nothing
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_upstream_error"
+  End If
+
+  contentType = LCase(Trim(Split(CStr(http.getResponseHeader("Content-Type") & ""), ";")(0)))
+  Select Case contentType
+    Case "image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"
+    Case Else
+      Set http = Nothing
+      On Error GoTo 0
+      SendError "502 Bad Gateway", "bili_cover_invalid_type"
+  End Select
+
+  contentLength = Trim(CStr(http.getResponseHeader("Content-Length") & ""))
+  If IsNumeric(contentLength) Then
+    If CDbl(contentLength) > APLAY_MAX_COVER_BYTES Then
+      Set http = Nothing
+      On Error GoTo 0
+      SendError "502 Bad Gateway", "bili_cover_invalid_size"
+    End If
+  End If
+  bytes = http.responseBody
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set http = Nothing
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_unavailable"
+  End If
+  Set http = Nothing
+  Set stream = Server.CreateObject("ADODB.Stream")
+  If Err.Number <> 0 Or stream Is Nothing Then
+    Err.Clear
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_unavailable"
+  End If
+  stream.Type = 1
+  stream.Open
+  stream.Write bytes
+  If Err.Number <> 0 Or stream.Size = 0 Or stream.Size > APLAY_MAX_COVER_BYTES Then
+    Err.Clear
+    stream.Close
+    Set stream = Nothing
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_invalid_size"
+  End If
+  stream.Position = 0
+  bytes = stream.Read
+  stream.Close
+  Set stream = Nothing
+  If Err.Number <> 0 Then
+    Err.Clear
+    On Error GoTo 0
+    SendError "502 Bad Gateway", "bili_cover_unavailable"
+  End If
+
+  Response.Charset = ""
+  Response.Status = "200 OK"
+  Response.ContentType = contentType
+  Response.AddHeader "Cache-Control", "public, max-age=86400"
+  Response.BinaryWrite bytes
+  Response.End
+End Sub
 
 Function HasControlCharacters(ByVal value)
   Dim i, code

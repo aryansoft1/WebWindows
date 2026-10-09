@@ -222,6 +222,12 @@ if (manifest.releaseScope === "navigation-map") {
     "cloud/browser/toolbar.js",
     "deploy/ftp-manifest.json"
   ], "folder tree repair must upload its CSS and DOM renderer together");
+} else if (manifest.releaseScope === "cloud-folder-selection") {
+  assert.deepEqual(uploadFiles, [
+    "cloud/browser/files.asp",
+    "cloud/browser/toolbar.js",
+    "deploy/ftp-manifest.json"
+  ], "current-folder selection must upload the server page, DOM renderer and manifest");
 } else if (manifest.releaseScope === "systemmanager-sidebar-css-fix") {
   assert.deepEqual(uploadFiles, [
     "SystemManager/assets/css/admin-utilities.css",

@@ -216,7 +216,7 @@ itemCount = subfolders.Count + visibleFileCount
       <aside id="sidebar" aria-label="公共资料夹">
         <div class="sidebar-title" data-cloud-i18n="locations">资料位置</div>
         <button type="button" id="public-root-button" class="root-node selected"><img src="assets/home.svg" alt=""><span data-directory-name="Public"><%=CloudHtml(CloudDisplayName(CLOUD_PUBLIC_ROOT_NAME, language))%></span></button>
-        <% If Not pickerMode Then %><button type="button" id="device-root-button" class="root-node device-root-node" hidden><span class="device-root-icon" aria-hidden="true">▣</span><span>此设备</span></button><% End If %>
+        <button type="button" id="device-root-button" class="root-node device-root-node" hidden><span class="device-root-icon" aria-hidden="true">▣</span><span>此设备</span></button>
         <ul id="folder-tree"></ul>
       </aside>
 
@@ -288,6 +288,30 @@ itemCount = subfolders.Count + visibleFileCount
                 iconPath = "assets/presentation.svg": openMode = "app"
                 If extension = "ppt" Then mimeType = "application/vnd.ms-powerpoint"
                 If extension = "pptx" Then mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+              Case "mp3"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/mpeg"
+              Case "wav"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/wav"
+              Case "ogg", "oga"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/ogg"
+              Case "m4a"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/mp4"
+              Case "aac"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/aac"
+              Case "flac"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/flac"
+              Case "opus"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "audio/opus"
+              Case "mp4", "m4v"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "video/mp4"
+              Case "webm"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "video/webm"
+              Case "mov"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "video/quicktime"
+              Case "ogv"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "video/ogg"
+              Case "mkv"
+                iconPath = "assets/file.svg": openMode = "app": mimeType = "video/x-matroska"
               Case "zip"
                 iconPath = "assets/archive.svg": mimeType = "application/zip"
             End Select
@@ -325,7 +349,6 @@ itemCount = subfolders.Count + visibleFileCount
           </div>
         <% End If %>
       </section>
-      <% If Not pickerMode Then %>
       <section id="device-panel" class="device-panel" aria-label="此设备" hidden>
         <div class="device-panel-heading">
           <div><h2>此设备</h2><p>仅显示你主动授权给 WebWindows 的本地位置。</p></div>
@@ -335,7 +358,6 @@ itemCount = subfolders.Count + visibleFileCount
         <div id="device-status" class="device-status" role="status" aria-live="polite">正在检查本地存储能力…</div>
         <div id="device-content" class="device-content"></div>
       </section>
-      <% End If %>
     </main>
     <% If pickerMode Then %>
       <footer class="picker-bar" aria-label="云资料选择操作">
@@ -408,8 +430,8 @@ itemCount = subfolders.Count + visibleFileCount
 
   <script src="file-selection.js?v=20260928-selection-3"></script>
   <script src="open-with.js?v=20260930-openwith-1"></script>
-  <script src="toolbar.js?v=20260928-selection-3"></script>
-  <% If Not pickerMode Then %><script src="device-locations.js?v=20260809-device-1"></script><% End If %>
+  <script src="toolbar.js?v=20261009-folder-selection-1"></script>
+  <script src="device-locations.js?v=20261007-picker-1"></script>
 </body>
 </html>
 <%

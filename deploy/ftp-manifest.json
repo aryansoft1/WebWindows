@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "releaseVersion": "2026.10.06.1",
+  "releaseVersion": "2026.10.09.1",
   "catalogVersion": "2026.10.05.1",
-  "generatedAt": "2026-10-05T17:36:56.285Z",
+  "generatedAt": "2026-10-09T02:09:53.890Z",
   "root": "/wwwroot",
   "requiredFiles": [
     "admin_api/deleteDatacenter.asp",
@@ -345,7 +345,7 @@
     "assets/js/i18n-shell.js",
     "assets/js/sysinfo-i18n.js"
   ],
-  "previousReleaseVersion": "2026.10.05.2",
+  "previousReleaseVersion": "2026.10.07.2",
   "integrity": {
     "admin_api/deleteDatacenter.asp": {
       "sha256": "a08173d6ca4f22e922d8cec7b89a7734922992744b005318d0537e35af18f82a",
@@ -384,8 +384,8 @@
       "size": 46603
     },
     "assets/css/context_menu.css": {
-      "sha256": "b4ebaf5a98e43e5ee9efbfb363ecba2683ba3e5a8eb16e4e9567a23c14461104",
-      "size": 3569
+      "sha256": "2d385bf022dff9527bc95af3179ea4829fb2fc357dd6f3ea540f1fd08bb2f10a",
+      "size": 4422
     },
     "assets/css/desktalk.css": {
       "sha256": "44f1d10664fd2848e5aa72befc0dd3c722b945d466620a76e906eb6eeeff97d3",
@@ -712,8 +712,8 @@
       "size": 12772
     },
     "assets/js/system-session.js": {
-      "sha256": "0683b18cd513f3ff74697a11f61bb823ab2e73a9808e8bfb03bffacb9f2382a8",
-      "size": 9435
+      "sha256": "2716a5b04821d750e027f4cf31025c68696163e3f83ea6a13b28a3c53945037c",
+      "size": 17454
     },
     "assets/js/taskbar-experience.js": {
       "sha256": "003266a098235de8ea6698b02c18f66aa054c21c8b9577efd696f2edd3705350",
@@ -732,8 +732,8 @@
       "size": 2982
     },
     "assets/js/webwindows-message.js": {
-      "sha256": "bdd1dea9b0f37689697e6fe1a4659cca0ada9f80998c237bd2752c6017ef3f34",
-      "size": 9840
+      "sha256": "002856c6fb90e8a8db29b120d11e581381ce77a804a6a6833927feaef0a7ea40",
+      "size": 9879
     },
     "cloud.html": {
       "sha256": "3c4fe2ab3284cf099a5f1df7e71c41b60a8ce706c67deec2b275690e6bad6b0c",
@@ -852,8 +852,8 @@
       "size": 3673
     },
     "cloud/browser/files.asp": {
-      "sha256": "765557bf505d6e627e33e34f49002692c6e4a1ca1ca93ff191ee29d33d4f4bef",
-      "size": 23270
+      "sha256": "43bd85994e4cc163c8b4c0c9fc1d3cc7130b76d3bad2e2c7bcb56b64d3617652",
+      "size": 24521
     },
     "cloud/browser/open-with.js": {
       "sha256": "cb014b6769655d2afd670e0c477e352b9a66672891469beb005d52171b96d9e2",
@@ -888,8 +888,8 @@
       "size": 13667
     },
     "cloud/browser/toolbar.js": {
-      "sha256": "319e97b283abf4d380a31c583579d514a99502c6dbb2dffc55b71b18dd097aa0",
-      "size": 43531
+      "sha256": "ad463b36cd8bd6a4009fca414d6ef371d495c44fd77dcede1ae5eb1365fd1c2b",
+      "size": 44428
     },
     "contact.html": {
       "sha256": "2b69822ba45ffbd6866f0cc59c4fd275f86bb5d0e47c9a0e88a1b9acb859de8d",
@@ -1000,8 +1000,8 @@
       "size": 4500
     },
     "index.html": {
-      "sha256": "77323df2268f2528bf03b87019da99d7529910de2b5f6f444657d5b7b03a341e",
-      "size": 35295
+      "sha256": "2b856bc9b91008bfcfe6caa6c218d3202434b980da65620187795083d0b471fa",
+      "size": 36788
     },
     "japan.html": {
       "sha256": "3a8653e298c839fcde640fe5e96de0a4fa967328e55f4fa30ef0a4da3c9dac85",
@@ -1695,11 +1695,10 @@
       "size": 11959
     }
   },
-  "releaseScope": "sysinfo-i18n",
+  "releaseScope": "cloud-folder-selection",
   "uploadFiles": [
-    "sysinfo.html",
-    "assets/js/sysinfo.js",
-    "assets/js/sysinfo-i18n.js",
+    "cloud/browser/files.asp",
+    "cloud/browser/toolbar.js",
     "deploy/ftp-manifest.json"
   ]
 }

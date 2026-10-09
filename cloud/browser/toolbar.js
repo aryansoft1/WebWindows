@@ -298,7 +298,8 @@
 
     const button = document.createElement("button");
     button.type = "button";
-    button.className = "folder-label";
+    button.className = "folder-label root-node";
+    button.dataset.path = folder.path || "";
     const icon = document.createElement("img");
     icon.className = "folder-tree-icon";
     icon.src = "assets/folder.svg";
@@ -322,6 +323,7 @@
   async function loadFolderTree() {
     const list = document.getElementById("folder-tree");
     list.innerHTML = "";
+    syncCurrentFolderSelection();
     try {
       const response = await fetch(`getFolders.asp?lang=${encodeURIComponent(currentLanguage)}`, {
         cache: "no-store"
@@ -331,12 +333,30 @@
         throw new Error(cloudI18n.text("folderListUnavailable", null, currentLanguage));
       }
       payload.forEach((folder) => renderFolderNode(folder, list));
+      syncCurrentFolderSelection();
     } catch (error) {
       const item = document.createElement("li");
       item.className = "tree-error";
       item.textContent = cloudI18n.text("folderListFailed", null, currentLanguage);
       list.appendChild(item);
     }
+  }
+
+  function syncCurrentFolderSelection() {
+    const activePath = String(currentPath || "").replace(/^\/+|\/+$/g, "");
+    const root = document.getElementById("public-root-button");
+    if (root) {
+      const selected = activePath === "";
+      root.classList.toggle("selected", selected);
+      if (selected) root.setAttribute("aria-current", "page");
+      else root.removeAttribute("aria-current");
+    }
+    document.querySelectorAll("#folder-tree .folder-label").forEach((button) => {
+      const selected = String(button.dataset.path || "").replace(/^\/+|\/+$/g, "") === activePath;
+      button.classList.toggle("selected", selected);
+      if (selected) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    });
   }
 
   function resourceWindowId(path) {

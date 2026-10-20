@@ -166,11 +166,38 @@ interface MediaWriteSession {
 ### 7.5 诚实边界
 
 - L2 输出不可归因于"看懂视频"，界面禁止使用"AI 已理解素材"类文案；
-- capability 不支持显式 `supported:false` + 原因；降级导出必须明示（帧率/分辨率限制）；**WebCodecs 能力矩阵因宿主引擎而异**（2026-10-21 实测：OpenCode 审核环境 Electron/Chromium 152 无 VideoEncoder/VideoDecoder/AudioEncoder，仅有 MediaRecorder mp4/webm）——G3 capability 检测为必需，音频导出/混音必须有 OfflineAudioContext + MediaRecorder 降级管线；
+- capability 不支持显式 `supported:false` + 原因；降级导出必须明示（帧率/分辨率限制）；**WebCodecs 能力矩阵因宿主引擎而异**——G3 capability 检测仍为必需。**实证勘误（2026-10-21晚）**：此前"审核环境（Electron/Chromium 152）无 VideoEncoder/VideoDecoder/AudioEncoder"是在 **about:blank（非 secure context）** 下的假象；在可信上下文（http://localhost）复核，**WebCodecs 四接口全部存在**：VideoEncoder avc1.42001f/avc1.640028/vp9/av1 均 supported（avc1.42001e 不支持）、VideoDecoder avc1/vp9/av1、AudioEncoder/Decoder mp4a.40.2(AAC-LC)/opus 均 supported、MediaRecorder mp4 可用——即该引擎具备**完整客户端编码路径（H.264+AAC）**。结论修正：主导出管线优先纯 WebCodecs（VideoEncoder+AudioEncoder+封装），MediaRecorder mp4 为**宿主差异降级**（旧 WebView/异构引擎仍可能缺失），OfflineAudioContext+MediaRecorder 降级管线要求维持不变；任何"能力缺失"结论必须先排除 secure-context 干扰再定论；
 - **持久化已定案（G8）**：Production 走云端工程文件（云资料写权限，工程 JSON 存+"重新导入素材"模式，二进制不入工程文件）；沙箱无 localStorage/IndexedDB（SecurityError 实测），浏览器降级模式的 localStorage 草稿仅为开发便利并如实标注；不做自动后台同步（无后台常驻事实边界）；
 - **分发降级已定案**：一期导出只到云资料，界面提示"请到桌讯手动发送"；Host-owned 分享契约 `WEBWINDOWS_DESKTALK_HOST_SHARE_V1.md`（类型白名单扩展 mp4/webm + 大小分档）二层实现——依据 `dt_file_transfer.asp` 核对（类型白名单无视频/15 MiB 上限/登录态+头+好友校验/沙箱 `connect-src 'none'` 不可达）；不内嵌自动发布，发出去永远是谁的问题。
 
-## 8. 发布与门禁（对齐仓库纪律）- 每个契约接入前独立评审、audit 模式运行、drift 显式记录；
+## 8. 服务器负担评估（架构性定案：贵计算留在客户端）
+
+**总判断：«桌影»对服务器的负担设计上是"轻"的——所有重计算（解码、滤镜合成、字幕渲染、编码导出、L1 分析）全部发生在沙箱客户端**；服务器只在少数显式用户动作上过账。逐项清单：
+
+| 触达点 | 频率 | 体量 | 性质 |
+| --- | --- | --- | --- |
+| 工程文件保存（云资料 JSON） | 用户显式点击，无自动同步 | 单文件数 KB～数百 KB（纯编辑数据，不含媒体二进制） | 与"云文档保存"同级 |
+| 导出成品写盘 | 用户显式导出，通常每会话 ≤1 次 | ≤256 MiB/会话（分档评审值），走 4 MiB 分片 | **唯一大块**：与云资料既有上传通道同性质，不新建存储后端 |
+| L2 AI 编排 | 用户显式触发 | 载荷 ≤16 KiB 文本、1 并发、6 次/分、预估 ≤500 次/日/应用（评审定值） | 走 chatproxy 既有额度体系，与桌讯本体系数 |
+| L1 本地分析 | 完全客户端 | 0 字节上行 | 纯本地确定性计算 |
+| 素材导入/预览/逐帧播放/抽帧 | 完全客户端 | 0 字节上行、0 字节下载（media 不经网络） | media-src CSP + network:none 双保证 |
+| L3 Whisper 转写 | 一期不实现 | （若未来实现：音频上行，是潜在最大 AI 负担项——实现前必设 ≤5 分钟/段+日额度+逐段显式点击门禁） | 已定案"只设计不实现"，服务器成本当前为零 |
+
+**并发与转发实现注意（试点必须实测）**：
+- 写会话转发：256 MiB 导出 ≈ 64 次 4 MiB 分片请求，JSON+base64 序列化放大约 1.33×（≈5.6 MiB 文本/请求）。ASP/VBScript 侧处理大字符串代价不低——试点版本若观测到转发 CPU 峰值，降级为 2 MiB 分片或推动 Broker 二进制通道（另行评审）。
+- 写会话节流：客户端 ≤4 片/秒（16 MiB/s 上限，实际导出期间有效带宽由用户网络决定）。
+- 会话并发上限 = 单应用单会话 + 10 分钟 TTL → 峰值并发会话数 ≤ 活跃用户数，无乘法放大；无后台常驻意味着**关窗即清零**。
+
+**与既有基线的关系**：云资料上传通道本来就要承载用户视频上传；«桌影»没有制造更高频的上传模式（无自动同步是定案前提），只是让"用户剪辑完成后主动保存成品"复用同一通道并受用户配额约束（云资料配额是既有核算维度，不需要新增后端配额体系）。
+
+**缓冲与监控措施（进评审清单）**：
+1. 导出目标**默认本地**（`fileDialog.saveBlob`，服务器 0 成本），仅当用户需要远程/发讯筒时推送云资料——把最大块指控变成 opt-in；
+2. L2 日额度 500 次/应用进 permission review 定值（cli 一致性：额度核算写入账面审计项）；
+3. 试点版本诊断面板加三个只读计数器：本会话导出 MB、writeSession 请求峰值延迟、L2 当日用量——管理员侧复核用数据，不进普通用户 UI；
+4. L3 若排期，先单条目小试点（≤5 分钟音频/段，日 ≤20 段/应用）再谈规模。
+
+## 9. 发布与门禁（对齐仓库纪律）
+- 每个契约接入前独立评审、audit 模式运行、drift 显式记录；
 - 应用包提交走 Developer Studio → `developer_api/v1.asp` → 管理员审核 → published；
 - 任务进度记录 `docs/HANDOFF_TASK_QUEUE.md`；部署前 `tools/deployment-preflight.ps1`；
 - G5 已实测完成并固化于 §5（复现页 `tmp/package-csp-probe/index.html` 为开发工具页，不入库，判定与结论可按 §5 重建复核）；

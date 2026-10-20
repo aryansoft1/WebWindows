@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/permissions-declarable-batch-draft-v0.json",
+  "schemaVersion": 1,
+  "contract": "webwindows-function-permissions-declarable-batch-draft-v0",
+  "status": "draft-not-enforced",
+  "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
+  "baseContract": "webwindows-function-permissions-v1",
+  "baseFile": "data/sdk/permissions-v1.json",
+  "deltaType": "review-batch",
+  "notes": [
+    "Phase 0B delta proposal: operations below are to be applied to a future versioned permissions registry after platform review. The production permissions-v1.json is NOT modified in this batch.",
+    "declarablePermissionIds additions make vocabulary writable into Manifest v2 sourceDeclaration; it never implies granted, enabled, or capability-supported.",
+    "Existing permissions keep their semantics; only publicApiTargets gain members scoped by already-authorized handles/targets (see docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md)."
+  ],
+  "operations": [
+    {
+      "op": "upsert-permission",
+      "permission": {
+        "id": "ai.desktalk-assist",
+        "displayName": "DeskTalk AI assist",
+        "description": "Send a bounded scene text payload to DeskTalk AI via a Host-owned confirmation card and receive itemized text proposals through the ai.assist.received event. No file, no thread, no automatic sending.",
+        "sourceDeclarable": true,
+        "risk": "medium",
+        "prompt": "runtime-confirmation",
+        "userGesture": true,
+        "publicApiTargets": ["ai.isSupported", "ai.requestAssist", "ai.on"]
+      }
+    },
+    {
+      "op": "update-permission",
+      "id": "device.storage-file.read",
+      "publicApiTargetsAppend": ["device.storage.stat", "device.storage.readChunk"],
+      "note": "Chunk reads ride the existing resource-grant: the handle token must come from a prior user-authorized device.storage.openFile in the same session; no new file-access authority."
+    },
+    {
+      "op": "update-permission",
+      "id": "cloud.files.save",
+      "publicApiTargetsAppend": ["device.storage.writeSession.begin"],
+      "note": "Write-session begin stays host-owned-user-action; the target is resolved by the trusted save dialog before begin returns."
+    },
+    {
+      "op": "update-permission",
+      "id": "cloud.files.write-selected",
+      "publicApiTargetsAppend": [
+        "device.storage.writeSession.writeChunk",
+        "device.storage.writeSession.commit",
+        "device.storage.writeSession.abort"
+      ],
+      "note": "Chunk/commit/abort ride the session bound to the user-authorized write target; sequential-cursor only."
+    },
+    {
+      "op": "append-source-declarable",
+      "ids": [
+        "ai.desktalk-assist",
+        "cloud.files.open",
+        "cloud.files.read-selected",
+        "cloud.files.save",
+        "cloud.files.write-selected",
+        "device.storage-directory.pick",
+        "device.storage-directory.list",
+        "device.storage-file.read"
+      ],
+      "rationale": "com.aryansoft.deskshadow's planned Manifest v2 permission set: cloud project files (G8 decision: cloud-side project JSON, media reimport mode) plus desk-scoped file pick for source media and ai.desktalk-assist for L2 orchestration. Keeping device.storage-directory.* in the declarable-add list remains optional and may be dropped by review to minimize scope.",
+      "notAffected": "device.battery-status.read already declarable via v1."
+    }
+  ],
+  "validationChecks": [
+    "No operation introduces a permission id absent from the operations themselves and the base registry.",
+    "declarablePermissionIds remains a closed list (no wildcards).",
+    "Every new publicApiTargets member exists in one of the two methods-draft JSONs of this batch (capability-broker-media-methods-draft-v0.json / capability-broker-ai-methods-draft-v0.json), so registry and vocabulary deltas land as one consistent batch."
+  ]
+}

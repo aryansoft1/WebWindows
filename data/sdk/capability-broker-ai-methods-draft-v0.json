@@ -1,0 +1,121 @@
+{
+  "$schema": "https://www.y0.hk/data/sdk/capability-broker-v1.schema.json#/$defs/methodRegistry",
+  "schemaVersion": 1,
+  "contract": "webwindows-capability-broker-ai-methods-draft-v0",
+  "status": "draft-not-enforced",
+  "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
+  "designDoc": "docs/WEBWINDOWS_DESKTALK_AI_ASSIST_V1.md",
+  "publicApiSource": "data/sdk/webwindows-public-api-v1.d.ts (draft additions: ai.isSupported / ai.requestAssist / ai.on; d.ts edit deferred per repo rule 4)",
+  "defaultDecision": "deny",
+  "wildcardsAllowed": false,
+  "unknownMethods": "deny",
+  "notes": [
+    "Phase 0B proposal: the ai public namespace is not yet registered in production; facade will not generate the ai namespace for packages that do not declare ai.desktalk-assist.",
+    "Host-owned confirmation card precedes every requestAssist: a sandbox button click is never proof of authorization (Broker protocol section 8).",
+    "Rate/size limits follow the design doc: payload <= 16 KiB, one in-flight request per app, 6 requests/minute, 120s ticket lifetime.",
+    "Audit logs record requestId/scene/decision/category/latency/payload-bytes only - never payload content."
+  ],
+  "methods": [
+    {
+      "id": "ai.desktalk.requestAssist",
+      "publicNamespace": "ai",
+      "publicMember": "requestAssist",
+      "invocation": "request-response",
+      "requiredPermission": "ai.desktalk-assist",
+      "requiredRuntimeCapability": "desktalk.assist",
+      "riskClass": "medium",
+      "userGesture": "required",
+      "consent": "host-confirmation-card",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["scene", "payload"],
+        "properties": {
+          "scene": { "const": "video-edit" },
+          "payload": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 16384,
+            "contentType": "application/json",
+            "describedBy": "docs/WEBWINDOWS_MEDIA_EDITING_APP_SUPPORT_V1.md video-edit scene summary schema (assetReport + timeline digest; no binary, no user-selected file contents)"
+          },
+          "requestId": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["ticketId", "channel"],
+        "properties": {
+          "ticketId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "channel": { "const": "desktalk" },
+          "expiresAtMs": { "type": "integer", "minimum": 0 },
+          "status": { "enum": ["accepted", "routed"] }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 120000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Payload validated as JSON text <= 16 KiB against the video-edit scene schema before handoff; ticket result carries an opaque id and no generated content - the actual suggestions flow back via the ai.assist.received event bound to the same ticket. null on host decline (fail-closed, mistake-silent)."
+    }
+  ],
+  "events": [
+    {
+      "id": "ai.assist.received",
+      "publicNamespace": "ai",
+      "publicMember": "on",
+      "direction": "host-to-sandbox",
+      "requiredPermission": "ai.desktalk-assist",
+      "riskClass": "medium",
+      "payloadSchema": {
+        "type": "object",
+        "required": ["ticketId", "proposals"],
+        "properties": {
+          "ticketId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "attribution": { "const": "desktalk-assist" },
+          "proposals": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "required": ["kind", "title", "body"],
+              "properties": {
+                "kind": { "enum": ["plan-step", "text-suggestion", "insert-clip", "caption", "cover-copy", "adjustment"] },
+                "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+                "body": { "type": "string", "minLength": 0, "maxLength": 4000 },
+                "reason": { "type": "string", "minLength": 0, "maxLength": 2000 }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "notes": [
+        "Phase 0B keeps exactly one event shape per the design doc; expansion requires a new review.",
+        "Proposals are itemized confirmation cards - DeskShadow never auto-applies; each applies only after the user accepts it in the app UI.",
+        "The sandbox must render the attribution '桌讯 AI 协助' for anything received via this channel."
+      ]
+    }
+  ],
+  "reviewedNotSelected": [
+    {
+      "id": "ai.desktalk.findAssistTargets",
+      "reason": "Letting a sandbox enumerate which DeskTalk session to route into leaks social context; routing is host-side."
+    },
+    {
+      "id": "ai.desktalk.cancelAssist",
+      "reason": "Ticket expiry (120s) plus one-in-flight policy covers cancellation adequately for Phase 0B."
+    }
+  ],
+  "explicitlyExcluded": [
+    "ai.desktalk.attachFile",
+    "ai.desktalk.send",
+    "ai.desktalk.readThread",
+    "ai.complete"
+  ],
+  "$defs": {}
+}

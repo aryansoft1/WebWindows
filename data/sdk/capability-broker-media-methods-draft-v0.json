@@ -1,0 +1,337 @@
+{
+  "$schema": "https://www.y0.hk/data/sdk/capability-broker-v1.schema.json#/$defs/methodRegistry",
+  "schemaVersion": 1,
+  "contract": "webwindows-capability-broker-media-methods-draft-v0",
+  "status": "draft-not-enforced",
+  "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
+  "designDoc": "docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md",
+  "supersedes": "explicitlyExcluded entry 'device.storage' in webwindows-capability-broker-methods-v1 is to be split into directory-surface (still excluded) and file-handle-scoped methods (this draft) upon review",
+  "publicApiSource": "data/sdk/webwindows-public-api-v1.d.ts (draft additions: docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md section 3; d.ts edit deferred per repo rule 4)",
+  "defaultDecision": "deny",
+  "wildcardsAllowed": false,
+  "unknownMethods": "deny",
+  "notes": [
+    "Phase 0B proposal: registering nothing in production; every method below stays denoied until a platform review lands a versioned registry change.",
+    "No new file-access authority: chunk reads are scoped to an already user-authorized openFile handle (device.storage-file.read); chunk writes are scoped to an already user-authorized fileDialog.save/saveBlob target (cloud.files.save / cloud.files.write-selected).",
+    "Write sessions are sequential-cursor only (offset must equal current cursor), single active session per app, TTL 10 minutes, commit-to-finalize.",
+    "Preview and production availability are separate; a Battery-Pilot style preview rollout is the expected first step."
+  ],
+  "methods": [
+    {
+      "id": "device.storage.stat",
+      "publicNamespace": "device.storage",
+      "publicMember": "stat",
+      "invocation": "request-response",
+      "requiredPermission": "device.storage-file.read",
+      "requiredRuntimeCapability": "storage.file-handle",
+      "riskClass": "medium",
+      "userGesture": "none",
+      "consent": "resource-grant-ride",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["fileToken"],
+        "properties": {
+          "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["fileToken", "size"],
+        "properties": {
+          "fileToken": { "type": "string", "maxLength": 128 },
+          "size": { "type": "integer", "minimum": 0 },
+          "mimeType": { "type": ["string", "null"], "maxLength": 128 },
+          "lastModifiedMs": { "type": ["integer", "null"] }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 3000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Return only size/mime/mtime for the referenced granted handle; reject unknown tokens with fail-closed null; never expose path, filename, or owner identity."
+    },
+    {
+      "id": "device.storage.readChunk",
+      "publicNamespace": "device.storage",
+      "publicMember": "readChunk",
+      "invocation": "request-response",
+      "requiredPermission": "device.storage-file.read",
+      "requiredRuntimeCapability": "storage.file-handle-stream",
+      "riskClass": "medium",
+      "userGesture": "none",
+      "consent": "resource-grant-ride",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["fileToken", "offset", "length"],
+        "properties": {
+          "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+          "offset": { "type": "integer", "minimum": 0 },
+          "length": { "type": "integer", "minimum": 1, "maximum": 4194304 }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["fileToken", "offset", "length", "eof"],
+        "properties": {
+          "fileToken": { "type": "string", "maxLength": 128 },
+          "offset": { "type": "integer", "minimum": 0 },
+          "length": { "type": "integer", "minimum": 0, "maximum": 4194304 },
+          "eof": { "type": "boolean" },
+          "bytesB64": { "type": ["string", "null"], "maxLength": 5600000 }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 6291456,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Clamp offset to file size; clamp length to 4 MiB and to remaining bytes; eof when offset+length >= size; bytes base64 (transport encoding to be finalized by pilot; if broker gains a binary channel switch field documented then). Reading beyond size returns empty bytes with eof=true, never an error with partial data."
+    },
+    {
+      "id": "device.storage.writeSession.begin",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.begin",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.save",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "high",
+      "userGesture": "required",
+      "consent": "host-owned-user-action",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["suggestedName", "mimeType"],
+        "properties": {
+          "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
+          "suggestedName": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "mimeType": { "type": "string", "pattern": "^[a-z]+\\/[a-z0-9.+-]+$", "maxLength": 128 },
+          "sizeHint": { "type": "integer", "minimum": 0, "maximum": 268435456 }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["sessionId", "chunkSize", "sessionExpiresInMs"],
+        "properties": {
+          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "chunkSize": { "const": 4194304 },
+          "sessionExpiresInMs": { "type": "integer", "minimum": 0, "maximum": 600000 }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 120000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Host-side trusted save dialog (fileDialog.save/saveBlob) resolves the target before begin returns; when fileToken is provided it must match a previously granted write target (cloud.files.save context) - mismatch fail-closed. Only one active session per app: WRITE_SESSION_ACTIVE error otherwise. suggestedName sanitized by host save dialog; returned sessionId is app-scoped and carries no path."
+    },
+    {
+      "id": "device.storage.writeSession.writeChunk",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.writeChunk",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "high",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["sessionId", "offset", "bytesB64"],
+        "properties": {
+          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
+          "offset": { "type": "integer", "minimum": 0 },
+          "bytesB64": { "type": "string", "minLength": 1, "maxLength": 5600000 }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["acceptedOffset"],
+        "properties": {
+          "acceptedOffset": { "type": "integer", "minimum": 0 },
+          "bytesAccepted": { "type": "integer", "minimum": 0, "maximum": 4194304 }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "offset must equal session cursor exactly (OFFSET_SEQUENCE_ERROR otherwise, cursor unchanged); bytes base64 <= 4 MiB decoded; SESSION_EXPIRED on TTL expiry; audit per call with byte count, never content."
+    },
+    {
+      "id": "device.storage.writeSession.commit",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.commit",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "high",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["sessionId"],
+        "properties": {
+          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["fileToken", "size"],
+        "properties": {
+          "fileToken": { "type": "string", "maxLength": 128 },
+          "size": { "type": "integer", "minimum": 0 },
+          "mimeType": { "type": ["string", "null"], "maxLength": 128 }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 30000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "host materializes the assembled target and returns a new handle token usable by device.storage.stat/readChunk and cloud.files.* flows; expired sessions resolve null (not throw) for sandbox-side degradation."
+    },
+    {
+      "id": "device.storage.writeSession.abort",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.abort",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "medium",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["sessionId"],
+        "properties": {
+          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["aborted"],
+        "properties": {
+          "aborted": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Idempotent; true when an active session belonging to this app was discarded (no partial content is ever materialized), false when no such session."
+    },
+    {
+      "id": "device.media.getCapabilities",
+      "publicNamespace": "device.media",
+      "publicMember": "getCapabilities",
+      "invocation": "handshake-snapshot",
+      "requiredPermission": null,
+      "requiredRuntimeCapability": "media.engine-report",
+      "riskClass": "low",
+      "userGesture": "none",
+      "consent": "no-consent",
+      "parameterSchema": { "type": "object", "maxProperties": 0, "additionalProperties": false },
+      "resultSchema": { "$ref": "#/$defs/sanitizedMediaCapabilities" },
+      "timeoutMs": 0,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Boolean capability report only (presence/codec support). No engine version strings, no device model, no performance telemetry - fingerprinting minimized. Codec support derives from host probing WebCodecs/MediaRecorder at host time, not from the sandbox."
+    }
+  ],
+  "reviewedNotSelected": [
+    {
+      "id": "device.storage.seek",
+      "reason": "Random-access write violates sequential-cursor design; reintroduce only with a reviewed mix-in of justified use cases."
+    },
+    {
+      "id": "device.media.getPerformanceInfo",
+      "reason": "Decode performance counters are fingerprinting and telemetry risk; defer until a need is demonstrated."
+    },
+    {
+      "id": "device.media.pickTrack",
+      "reason": "Host-owned track selection UI is out of scope for this batch; sandbox does not enumerate host media."
+    }
+  ],
+  "explicitlyExcluded": [
+    "device.storage.pickDirectory",
+    "device.storage.listVolumes",
+    "device.storage.listDirectory",
+    "device.storage.requestPermission",
+    "device.media.record",
+    "device.media.upload"
+  ],
+  "$defs": {
+    "sanitizedMediaCapabilities": {
+      "type": "object",
+      "required": ["webcodecs", "mediaRecorder", "offlineAudioContext", "codecs"],
+      "properties": {
+        "webcodecs": {
+          "type": "object",
+          "required": ["videoEncoder", "videoDecoder", "audioEncoder", "audioDecoder"],
+          "properties": {
+            "videoEncoder": { "type": "boolean" },
+            "videoDecoder": { "type": "boolean" },
+            "audioEncoder": { "type": "boolean" },
+            "audioDecoder": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "mediaRecorder": {
+          "type": "object",
+          "required": ["videoMp4", "webmVp9", "webmVp8"],
+          "properties": {
+            "videoMp4": { "type": "boolean" },
+            "webmVp9": { "type": "boolean" },
+            "webmVp8": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "offlineAudioContext": { "type": "boolean" },
+        "codecs": {
+          "type": "object",
+          "required": ["decode"],
+          "properties": {
+            "decode": {
+              "type": "object",
+              "properties": {
+                "avc1": { "type": "boolean" },
+                "hevc": { "type": "boolean" },
+                "vp8": { "type": "boolean" },
+                "vp9": { "type": "boolean" },
+                "av1": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            },
+            "encode": {
+              "type": "object",
+              "properties": {
+                "avc1": { "type": "boolean" },
+                "vp9": { "type": "boolean" },
+                "av1": { "type": "boolean" }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

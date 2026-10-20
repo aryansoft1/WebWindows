@@ -47,3 +47,12 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 `manifest.json` 中以上依赖均写在 `"com.aryansoft.deskshadow"` 命名空间对象内；**顶层的 `permissions` 保持空数组**——
 `data/sdk/permissions-v1.json` 目前 `declarablePermissionIds` 只允许 `device.battery-status.read`，填入未登记 ID 会在 schema 校验时挂掉。
 顶层的 `catalog/package/runtime/launch` 为服务端/Shell 保留，源manifest 不写。
+
+## V2 预览管线（2026-10-21 落地）
+
+- `js/vendor/mp4box.all.min.js`（+ `LICENSE-mp4box.txt`、`js/SOURCE-mp4box.txt`）：MP4 解复用 vendor 库，来源 gpac/mp4box.js v0.5.3（BSD-3-Clause）。沙箱 `network:none` 禁外链，第三方库必须包内自解析；体积 155 KiB，在 30 MiB 包预算内。
+- `js/media-pipeline.js`：WebCodecs→canvas 预览管线。能力检测顺序 `isSecureContext → WebCodecs → MP4Box`（缺一即降级 V1 `<video>` 路径，诊断面板如实显示"预览管线"能力行）。
+- `readProvider` 抽象：浏览器降级模式 = `File.slice()`；Production 将切 G1 `device.storage.readChunk`（契约见 `docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md`）。描述符提取支持 avcC（跳 box 头取 body）与 mp4a.40.2 的 AudioSpecificConfig（ES>DC>ASC 嵌套 tag 解析——两条路径均在真文件上现场验证过）。
+- 帧纪律：`VideoFrame` 用完 `close()`，在飞 ≤8；解码链从最近 keyframe 起步（scrub 两段式的后段）。
+- 实测基准与阶梯：见 `docs/ZHUOYING_DESKSHADOW_V2_SPEC.md` §5（审核环境编码 106.6fps / 解码 551fps 等数字）。
+- 音频预览滑窗（AudioDecoder ±10s → WebAudio）与播放控制全接管列下一里程碑；当前 V1 `<video>` 播放路径保留作兼容。

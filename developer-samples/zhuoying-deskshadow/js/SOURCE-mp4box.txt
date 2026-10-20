@@ -1,0 +1,7 @@
+mp4box.all.min.js — vendored third-party library, NOT developed in this repository.
+
+Source: https://github.com/gpac/mp4box.js (npm package "mp4box" v0.5.3, dist/mp4box.all.min.js)
+License: BSD-3-Clause (see LICENSE-mp4box.txt)
+Vendored: 2026-10-21, task T-072 (zhuoying DeskShadow V2 preview pipeline)
+Reason: packages run in a sandbox with network:none (CSP blocks any external script), so third-party libs must ship inside the package. Budget impact: ~155 KB of the 30 MiB package cap.
+Anti-virus/tamper check record: verify against npm (npm ls mp4box or shasum from registry) when re-vendoring or upgrading.

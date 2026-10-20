@@ -371,6 +371,13 @@
         };
         project.media.push(m);
         session.mediaUrls[m.id] = URL.createObjectURL(f);
+        /* V2 管线挂钩：WebCodecs 可用时登记素材的 readProvider（浏览器降级模式 = File.slice），
+           Production 将切 G1 readChunk。管线初始化失败不影响 V1 登记路径（fail-closed 降级）。 */
+        var pl = window.ZY && ZY.pipeline && ZY.pipeline.detect();
+        if (pl && pl.ready) {
+          session.mediaProviders = session.mediaProviders || {};
+          session.mediaProviders[m.id] = ZY.pipeline.makeSliceProvider(f);
+        }
         added++;
         probeDuration(m);
       }

@@ -41,6 +41,12 @@
       ["fileDialog.open（宿主文件选择）", badge3(fd)],
       ["fileDialog.saveBlob（宿主保存）", badge3(fd)],
       ["ai 命名空间（ai.requestAssist）", caps.aiNamespace ? badge3(caps.aiRequestAssist) : badge(false)],
+      ["预览管线（WebCodecs+MP4Box）", (function () {
+        var pc = window.ZY && ZY.pipeline ? ZY.pipeline.detect() : null;
+        if (pc && pc.ready) return badge(true);
+        if (pc && pc.secure && !pc.mp4box) return `<span>判定中</span>`;
+        return badge(false);
+      })()],
       ["localStorage", badge(caps.localStorage)],
       ["MediaRecorder", badge(caps.mediaRecorder)],
       ["WebCodecs VideoEncoder / VideoDecoder", badge(caps.webCodecsVideoEncoder && caps.webCodecsVideoDecoder)],

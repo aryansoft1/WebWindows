@@ -12,8 +12,10 @@
   "unknownMethods": "deny",
   "notes": [
     "Phase 0B proposal: registering nothing in production; every method below stays denoied until a platform review lands a versioned registry change.",
-    "No new file-access authority: chunk reads are scoped to an already user-authorized openFile handle (device.storage-file.read); chunk writes are scoped to an already user-authorized fileDialog.save/saveBlob target (cloud.files.save / cloud.files.write-selected).",
-    "Write sessions are sequential-cursor only (offset must equal current cursor), single active session per app, TTL 10 minutes, commit-to-finalize.",
+    "No new file-access authority: chunk reads are scoped to an already user-authorized openFile handle (device.storage-file.read); chunk writes are scoped to an already user-authorized fileDialog.save/saveBlob target (cloud.files.save / cloud.files.write-selected). Source model clarified 2026-10-21: cloud resources ARE the WebWindows file system - from the app's perspective there is no separate local-file path; materials arrive via fileDialog.open from the user's file system, uploads to it are the user's own prior cloud-drive activity, not the app's.",
+    "Write sessions are sequential-cursor only (offset must equal current cursor), single active session per app, TTL 30 minutes idle, commit-to-finalize.",
+    "In-session resume decided 2026-10-21: after transport failure the sandbox re-queries status (authoritative cursor) and continues writeChunk; page close still discards the session (no persistent storage).",
+    "Session size cap 2 GiB advisory; the user's own cloud-drive quota is the natural limiter.",
     "Preview and production availability are separate; a Battery-Pilot style preview rollout is the expected first step."
   ],
   "methods": [
@@ -109,7 +111,7 @@
           "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
           "suggestedName": { "type": "string", "minLength": 1, "maxLength": 128 },
           "mimeType": { "type": "string", "pattern": "^[a-z]+\\/[a-z0-9.+-]+$", "maxLength": 128 },
-          "sizeHint": { "type": "integer", "minimum": 0, "maximum": 268435456 }
+          "sizeHint": { "type": "integer", "minimum": 0, "maximum": 2147483648 }
         },
         "additionalProperties": false
       },
@@ -119,7 +121,7 @@
         "properties": {
           "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
           "chunkSize": { "const": 4194304 },
-          "sessionExpiresInMs": { "type": "integer", "minimum": 0, "maximum": 600000 }
+          "sessionExpiresInMs": { "type": "integer", "minimum": 0, "maximum": 1800000 }
         },
         "additionalProperties": false
       },
@@ -128,7 +130,7 @@
       "previewAvailability": "proposed-enabled",
       "productionAvailability": "proposed-disabled",
       "currentStatus": "draft",
-      "sanitization": "Host-side trusted save dialog (fileDialog.save/saveBlob) resolves the target before begin returns; when fileToken is provided it must match a previously granted write target (cloud.files.save context) - mismatch fail-closed. Only one active session per app: WRITE_SESSION_ACTIVE error otherwise. suggestedName sanitized by host save dialog; returned sessionId is app-scoped and carries no path."
+      "sanitization": "Host-side trusted save dialog (fileDialog.save/saveBlob) resolves the target before begin returns; when fileToken is provided it must match a previously granted write target (cloud.files.save context) - mismatch fail-closed. Only one active session per app: WRITE_SESSION_ACTIVE error otherwise. suggestedName sanitized by host save dialog; returned sessionId is app-scoped and carries no path. Session cap 2 GiB (sizeHint advisory; cloud-quota is the natural limiter per product decision 2026-10-21). begin always creates a fresh session at cursor 0; resume uses writeSession.status + writeChunk continuation."
     },
     {
       "id": "device.storage.writeSession.writeChunk",
@@ -152,9 +154,10 @@
       },
       "resultSchema": {
         "type": "object",
-        "required": ["acceptedOffset"],
+        "required": ["acceptedOffset", "cursorOffset"],
         "properties": {
           "acceptedOffset": { "type": "integer", "minimum": 0 },
+          "cursorOffset": { "type": "integer", "minimum": 0 },
           "bytesAccepted": { "type": "integer", "minimum": 0, "maximum": 4194304 }
         },
         "additionalProperties": false
@@ -164,7 +167,7 @@
       "previewAvailability": "proposed-enabled",
       "productionAvailability": "proposed-disabled",
       "currentStatus": "draft",
-      "sanitization": "offset must equal session cursor exactly (OFFSET_SEQUENCE_ERROR otherwise, cursor unchanged); bytes base64 <= 4 MiB decoded; SESSION_EXPIRED on TTL expiry; audit per call with byte count, never content."
+      "sanitization": "offset must equal session cursor exactly (OFFSET_SEQUENCE_ERROR otherwise, cursor unchanged); bytes base64 <= 4 MiB decoded; SESSION_EXPIRED on TTL expiry; cursorOffset echoes the authoritative server-side cursor after this call (authoritative resume point after transport errors - in-session resume decided 2026-10-21); audit per call with byte count, never content."
     },
     {
       "id": "device.storage.writeSession.commit",
@@ -233,6 +236,43 @@
       "productionAvailability": "proposed-disabled",
       "currentStatus": "draft",
       "sanitization": "Idempotent; true when an active session belonging to this app was discarded (no partial content is ever materialized), false when no such session."
+    },
+    {
+      "id": "device.storage.writeSession.status",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.status",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "low",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": ["sessionId"],
+        "properties": {
+          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": ["active", "cursorOffset"],
+        "properties": {
+          "active": { "type": "boolean" },
+          "cursorOffset": { "type": "integer", "minimum": 0 },
+          "bytesWritten": { "type": "integer", "minimum": 0 },
+          "sessionExpiresInMs": { "type": ["integer", "null"], "minimum": 0, "maximum": 1800000 },
+          "targetMimeType": { "type": ["string", "null"], "maxLength": 128 }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Resume query (in-session resume decided 2026-10-21): after transport errors the sandbox re-queries the authoritative cursor and continues writeChunk from cursorOffset - no server-side partial materialization, session state is a target handle plus cursor integers, expired/unknown sessions resolve active:false. null-free fail-closed on foreign session ids."
     },
     {
       "id": "device.media.getCapabilities",

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>桌影 DeskShadow</title>
+  <link rel="stylesheet" href="./styles/app.css">
+</head>
+<body>
+  <!-- 顶栏：新建/打开/保存工程（fileDialog 探测 + 下载降级）· 导入素材（file input）· 诊断 · 桌讯 AI 助手（占位） -->
+  <header class="zy-topbar">
+    <div class="zy-brand">
+      <img src="./icon.svg" alt="桌影" width="26" height="26">
+      <strong>桌影</strong><span class="zy-brand-sub">DeskShadow · 三轨视频剪辑</span>
+    </div>
+    <div class="zy-toolbar">
+      <button id="btn-new" data-i18n>新建工程</button>
+      <button id="btn-open" data-i18n>打开工程</button>
+      <button id="btn-save" data-i18n>保存工程</button>
+      <span class="zy-sep"></span>
+      <button id="btn-import" data-i18n>导入素材</button>
+      <span class="zy-sep"></span>
+      <button id="btn-split" data-i18n>拆分播放头</button>
+      <span class="zy-sep"></span>
+      <button id="btn-diag" data-i18n>诊断</button>
+      <button id="btn-ai" data-i18n>桌讯 AI 助手</button>
+      <select id="lang" class="zy-lang" aria-label="界面语言">
+        <option value="zh">中文</option>
+        <option value="en">EN</option>
+        <option value="jp">日本語</option>
+      </select>
+    </div>
+    <input type="file" id="file-project" accept=".json,application/json" hidden>
+    <input type="file" id="file-media" accept="video/*,audio/*" multiple hidden>
+  </header>
+
+  <main class="zy-grid">
+    <!-- 中央舞台：预览播放器 + 三轨时间线（纯 DOM 渲染） -->
+    <section class="zy-stage">
+      <div class="zy-preview-box">
+        <div class="zy-frame" id="zy-frame">
+          <video id="zy-video" playsinline preload="metadata"></video>
+          <div class="zy-frame-empty" id="zy-frame-empty">无片段：请在时间线放置片段或导入素材</div>
+        </div>
+        <div class="zy-transport">
+          <button id="btn-play" title="播放（空格）">&#9654;</button>
+          <button id="btn-pause" title="暂停">&#10073;&#10073;</button>
+          <button id="btn-frame-back" title="上一帧">&#9664;|</button>
+          <button id="btn-frame-fwd" title="下一帧">|&#9654;</button>
+          <button id="btn-go-start" title="跳到起点">|&#9664;&#9664;</button>
+          <span class="zy-timecode" id="tc-main">00:00.0</span>
+          <span class="zy-timecode-sub" id="tc-frame">第 0 帧</span>
+          <span class="zy-preview-note">预览按“播放头所在的最上层片段”逐段播放；多轨混音与过渡实渲染属 V2+</span>
+        </div>
+      </div>
+
+      <div class="zy-timeline">
+        <div class="zy-tl-zoom">
+          <button id="tl-zoom-out" title="缩小">&minus;</button>
+          <button id="tl-zoom-in" title="放大">&#43;</button>
+        </div>
+        <div class="zy-tl-scroll" id="zy-tl-scroll">
+          <div class="zy-tl-content" id="zy-tl-content">
+            <div class="zy-ruler" id="zy-ruler"></div>
+            <div class="zy-lane" data-track="video">
+              <header class="zy-lane-head sticky">
+                <span>视频轨</span>
+                <button class="zy-lane-add" data-add-track="video" title="添加空视频片段">＋</button>
+              </header>
+              <div class="zy-lane-clips" id="zy-lane-video"></div>
+            </div>
+            <div class="zy-lane zy-lane-audio" data-track="audio">
+              <header class="zy-lane-head sticky">
+                <span>音频轨</span>
+                <button class="zy-lane-add" data-add-track="audio" title="添加空音频片段">＋</button>
+              </header>
+              <div class="zy-lane-clips" id="zy-lane-audio"></div>
+            </div>
+            <div class="zy-lane zy-lane-caption" data-track="caption">
+              <header class="zy-lane-head sticky">
+                <span>字幕轨</span><em>双击空白处添加字幕卡</em>
+              </header>
+              <div class="zy-lane-clips" id="zy-lane-caption"></div>
+            </div>
+            <div class="zy-playhead" id="zy-playhead"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧检查面板：片段 / 字幕卡 / 滤镜与过渡 / 导出 -->
+    <aside class="zy-side">
+      <div class="zy-panel" id="panel-inspect-clip">
+        <h2>片段检查</h2>
+        <div id="inspect-clip-body" class="zy-panel-body"></div>
+      </div>
+      <div class="zy-panel" id="panel-inspect-caption">
+        <h2>字幕卡</h2>
+        <div id="inspect-caption-body" class="zy-panel-body"></div>
+      </div>
+      <div class="zy-panel" id="panel-inspect-fx">
+        <h2>滤镜与过渡</h2>
+        <div id="inspect-fx-body" class="zy-panel-body"></div>
+      </div>
+      <div class="zy-panel" id="panel-export">
+        <h2>导出</h2>
+        <div id="panel-export-body" class="zy-panel-body"></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- 底部抽屉：诊断 / AI（互斥展开） -->
+  <section class="zy-drawer" id="drawer-diag" hidden>
+    <div class="zy-drawer-head">
+      <h2>运行环境诊断</h2>
+      <button class="zy-drawer-close" data-close-drawer>&times;</button>
+    </div>
+    <div id="diag-body" class="zy-drawer-body"></div>
+  </section>
+  <section class="zy-drawer" id="drawer-ai" hidden>
+    <div class="zy-drawer-head">
+      <h2>桌影 · 桌讯 AI 剪辑助手（契约评审中）</h2>
+      <button class="zy-drawer-close" data-close-drawer>&times;</button>
+    </div>
+    <div id="ai-body" class="zy-drawer-body"></div>
+  </section>
+
+  <footer class="zy-statusbar">
+    <span id="status-host" class="zy-statusfield"></span>
+    <span id="status-sel" class="zy-statusfield"></span>
+    <span class="zy-status-note">骨架诚实边界：标注“未接入/设计待评审”的能力尚未接线；工程数据存于 localStorage（ww.deskshadow.*），媒体二进制仅会话内暂存</span>
+  </footer>
+
+  <script src="./js/i18n.js"></script>
+  <script src="./js/app.js"></script>
+  <script src="./js/clips.js"></script>
+  <script src="./js/timeline.js"></script>
+  <script src="./js/player.js"></script>
+  <script src="./js/ai.js"></script>
+  <script src="./js/export.js"></script>
+</body>
+</html>

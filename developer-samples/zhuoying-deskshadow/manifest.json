@@ -1,0 +1,66 @@
+{
+  "manifestVersion": 2,
+  "sdk": {
+    "apiVersion": "1"
+  },
+  "permissions": [],
+  "id": "com.aryansoft.deskshadow",
+  "legacyIds": [],
+  "type": "application",
+  "name": "桌影",
+  "description": "三轨视频剪辑软件：分割拼接、变速、滤镜过渡、字幕、画幅预设与桌讯 AI 剪辑提案（视频剪辑进行中）。",
+  "category": "媒体",
+  "version": "0.1.0",
+  "icon": "icon.svg",
+  "entry": "index.html",
+  "install": {
+    "defaultState": "available",
+    "source": "repository",
+    "uninstallable": true
+  },
+  "placement": {
+    "desktop": false,
+    "startMenu": true,
+    "startMenuGroup": "user",
+    "startMenuOrder": 100,
+    "allFunctions": true,
+    "taskbar": false
+  },
+  "window": {
+    "mode": "iframe",
+    "singleton": true,
+    "width": "1280px",
+    "height": "800px"
+  },
+  "com.aryansoft.deskshadow": {
+    "sampleKind": "developer-skeleton",
+    "functionalScope": "video-editor-v1-skeleton",
+    "plannedPermissions": [
+      {
+        "id": "ai.desktalk-assist",
+        "status": "awaiting-contract-review",
+        "reference": "docs/WEBWINDOWS_DESKTALK_AI_ASSIST_V1.md",
+        "note": "该权限 ID 是契约草稿 §4 中的提案值，尚未登记进 data/sdk/permissions-v1.json，登记前 manifest.permissions 必须保持空数组。"
+      },
+      {
+        "id": "pending-storage-user-files",
+        "realIdUndecided": true,
+        "status": "design-under-review",
+        "reference": "docs/STORAGE_CAPABILITY_V1_DESIGN.md",
+        "note": "工程文件读写与素材暂存依赖存储能力契约定稿后的正式权限 ID；ID 未定，不得在本文件顶层 permissions 数组里占位。"
+      }
+    ],
+    "plannedFileHandlers": [
+      {
+        "note": "ff.zhuoying / .zhuoying.json 工程文件的 fileHandlers 声明，待 fileHandlers 联调方案与存储契约明确后随 V2 加入顶层 fileHandlers 数组。",
+        "extensions": [".json"],
+        "status": "planned"
+      }
+    ],
+    "privacyDiscipline": [
+      "AI 协助只在用户主动点击时发起，不静默、不循环。",
+      "只发送结构化剪辑摘要（片段数/时长统计/滤镜使用等），不传帧画面与媒体内容。",
+      "发送前由 Host 渲染可信确认卡，应用侧无法伪造授权。"
+    ]
+  }
+}

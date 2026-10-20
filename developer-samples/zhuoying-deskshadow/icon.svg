@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="桌影 DeskShadow">
+  <defs><linearGradient id="dsg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#9b5cf6"/><stop offset="1" stop-color="#5a34d0"/></linearGradient></defs>
+  <rect width="128" height="128" rx="28" fill="url(#dsg)"/>
+  <rect x="26" y="32" width="76" height="56" rx="10" fill="none" stroke="#fff" stroke-width="5"/>
+  <rect x="34" y="40" width="60" height="40" rx="6" fill="#ffffff" opacity="0.22"/>
+  <circle cx="102" cy="88" r="13" fill="none" stroke="#fff" stroke-width="5"/>
+  <path fill="#fff" d="M44 52l22 10-22 10z"/>
+  <path d="M38 104h52" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+</svg>

@@ -48,11 +48,14 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 `data/sdk/permissions-v1.json` 目前 `declarablePermissionIds` 只允许 `device.battery-status.read`，填入未登记 ID 会在 schema 校验时挂掉。
 顶层的 `catalog/package/runtime/launch` 为服务端/Shell 保留，源manifest 不写。
 
-## V2 预览管线（2026-10-21 落地）
+## V2 预览管线（2026-10-21 落地，2026-10-22 第八轮全实现）
 
 - `js/vendor/mp4box.all.min.js`（+ `LICENSE-mp4box.txt`、`js/SOURCE-mp4box.txt`）：MP4 解复用 vendor 库，来源 gpac/mp4box.js v0.5.3（BSD-3-Clause）。沙箱 `network:none` 禁外链，第三方库必须包内自解析；体积 155 KiB，在 30 MiB 包预算内。
 - `js/media-pipeline.js`：WebCodecs→canvas 预览管线。能力检测顺序 `isSecureContext → WebCodecs → MP4Box`（缺一即降级 V1 `<video>` 路径，诊断面板如实显示"预览管线"能力行）。
 - `readProvider` 抽象：浏览器降级模式 = `File.slice()`；Production 将切 G1 `device.storage.readChunk`（契约见 `docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md`）。描述符提取支持 avcC（跳 box 头取 body）与 mp4a.40.2 的 AudioSpecificConfig（ES>DC>ASC 嵌套 tag 解析——两条路径均在真文件上现场验证过）。
-- 帧纪律：`VideoFrame` 用完 `close()`，在飞 ≤8；解码链从最近 keyframe 起步（scrub 两段式的后段）。
-- 实测基准与阶梯：见 `docs/ZHUOYING_DESKSHADOW_V2_SPEC.md` §5（审核环境编码 106.6fps / 解码 551fps 等数字）。
-- 音频预览滑窗（AudioDecoder ±10s → WebAudio）与播放控制全接管列下一里程碑；当前 V1 `<video>` 播放路径保留作兼容。
+- **样本读取走索引表驱动**：`getTrackSamplesInfo`（offset/size/cts/dts/is_sync/description）+ 自行 `provider.readRange` 物化，配合 `_blockFor` 双槽 1 MiB 块级缓存（一次 IO 物化几十样本，物化后命中 ~0.2ms）。
+- 帧纪律（实测刚性）：`VideoFrame` 用完即 `close()`，在飞 ≤8——存活 ≈9 张时 Chrome 停发解码器 output 事件（微分实验实锤），勿调大；解码链从最近 keyframe 起步；播放预取 LEAD=260ms 必须落在 8 帧持有窗内。
+- **seek/播放闭环全通**：`seekDecode`（kf 起步解码链→flush→pick→绘）、`startPlay/tickPlay/pausePlay`（墙钟驱动 24fps 实时、片段末自动停）、音频滑窗（AudioDecoder→`f32-planar` copyTo 逐平面拷→BufferSource 按 pts 调度，在飞 ≤24 + `_waitADrain`）。
+- `js/player.js` 播放控制接管，fail-closed 分流：WebCodecs 可用 + 视频媒质 + 速度=1 走管线 canvas 路径；变速、音频媒质、无 WebCodecs 一律回 V1 `<video>`；播放循环用 `setInterval(16ms)` 驱动（rAF 在后台/无焦点 tab 被宿主节流到 ~1/s）；滤镜预览 video+canvas 双目标。
+- 实测基准与阶梯：见 `docs/ZHUOYING_DESKSHADOW_V2_SPEC.md` §5（合成基准 + 2026-10-22 真实素材 854×480 数据点：seek 解码 ≈1ms/帧、包内页端到端零 window error）。
+- 下一里程碑：导出管线（主格式 MP4 avc1.640028+AAC，av1/vp9 备选表）。

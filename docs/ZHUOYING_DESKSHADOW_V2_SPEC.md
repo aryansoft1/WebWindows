@@ -81,9 +81,21 @@
 
 **待复核项**：合成内容 ≠ 真实素材（复杂纹理码率/编码耗时上浮，预计仍在 2× 实时之上）；GPU/软编码路径未区分记录（下一步接入真实 mp4 + mp4box.js 分块转送后加重测）。
 
+**真实素材数据点（2026-10-22 第八轮，Sintel trailer.mp4 4.3MB 实测补档，`tmp/v2-probe/`）**：
+
+| 项目 | 结果 | 备注 |
+| --- | --- | --- |
+| 样本索引表 | 视频 1253 / 音频 2435 条全有（trailer 实测） | `getTrackSamplesInfo` 驱动，弃 onSamples/start() 抽取 |
+| 媒体元数据 | 854×480 · avc1.64001e · 视频时基 24Hz（cts=帧序）· 音频 mp4a.40.2 48kHz×2ch 48000Hz · durationMs 52209 | mp4box onReady：宽高在 `t.video.{width,height}`，`t.width` 为 undefined（已归一化） |
+| seek 解码链 | kf0 链 47 帧物化+解码 46ms（≈1ms/帧）→ 目标帧绘出 46–119ms | 索引表 + `_blockFor` 双槽 1MiB 块缓存（命中 0.2ms） |
+| 播放实时性 | LEAD=260ms 预取（≤持有窗 8 帧/333ms）下 24fps 实时绘制达成（5 绘/2.2s→54 绘/2.2s） | `MAX_FRAMES=8` 纪律实测刚性：存活 VideoFrame ≈9 张 Chrome 停发 output（微分实验 shapeA/B/C），试 14 卡死 |
+| 包内页端到端 | 画布 854×480、seek 非黑帧、播放头 1→2.57→3.58s 跟墙钟、像素实时变化、pause 保持、管线 pos 与 playhead 一致、零 window error | player.js setInterval(16ms) 驱动（rAF 后台节流 ~1/s 的宿主实测） |
+
+综合：合成基准的乐观上界结论在真实 854×480 H.264 素材上方向一致（解码 ≈1ms/帧、播放实时），1080p 真素材复核仍留待导出管线接入时一并做。
+
 ## 6. 剩余开放项
 
-1. **ASP 侧 4 MiB 分片转发 CPU 实测**（试点诊断计数器）；
-2. **字幕样式字体白名单最终三选**（rendering 覆盖率实测）；
-3. **真实素材复核基准**（合成数字为乐观上界；接入 mp4box.js 分块转送后重测）；
-4. **mp4box.js vendor**（BSD，按 T-069 Jodit 惯例附 LICENSE+SOURCE）——预览管线接线时落地。
+1. **导出管线接入后 1080p 真素材编码复核**（真素材/合成差异、码率上浮、GPU vs 软编区分）——本轮 854×480 播放/seek 数据点已补；
+2. **ASP 侧 4 MiB 分片转发 CPU 实测**（试点诊断计数器）；
+3. **字幕样式字体白名单最终三选**（rendering 覆盖率实测）；
+4. ~~mp4box.js vendor~~ **已落地**（第七轮：v0.5.3 BSD-3-Clause + LICENSE + SOURCE 入库）。

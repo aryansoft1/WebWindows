@@ -10,12 +10,20 @@
   var ZY = window.ZY;
 
   var videoEl = null;    /* 预览画框内的 <video>（也能播 audio 媒质，只是无画面） */
+  var canvasEl = null;   /* V2 管线绘制画框（WebCodecs→canvas 路径） */
   var frameEl = null;
   var emptyEl = null;
   var playing = false;   /* “走表”模式：时间线播放头推进，但无媒质可播 */
   var playheadBase = 0;  /* 走表起点 */
   var playedMs = 0;
-  var rafHandle = 0;
+  var tickHandle = 0;    /* 播放循环句柄（setInterval；rAF 在后台/无焦点会被节流，
+                            interval 语义等价：走表 16ms、变速由媒质回写） */
+  var TICK_MS = 16;
+
+  /* V2 管线态（会话内缓存，见 ZY.session.mediaPipelines；不落盘） */
+  var pipeMediaId = null;   /* 当前管线接管中的媒质 id（canvas 模式）*/
+  var pipeWaitId = null;    /* 正在 ingest 的媒质 id */
+  var pipeSeq = 0;          /* 同步代（scrub 串扰防护）*/
 
   function el(id) { return document.getElementById(id); }
 
@@ -44,20 +52,112 @@
     return ZY.session.mediaUrls[clip.mediaId] || null;
   }
 
-  function applyFilterPreview() {
-    if (!videoEl || !ZY.clips) return;
-    var clip = activeClip(ZY.ui.playhead);
-    var preset = clip ? ZY.clips.FILTER_PRESETS[clip.filter] : null;
-    var css = preset ? preset.css : "";
-    videoEl.style.filter = css || "";
+  /* ================= V2 管线路径（WebCodecs→canvas） =================
+   * 接管条件（fail-closed）：detect().ready && 该媒质存在 readProvider &&
+   * 该片段变速 = 1（变速仍走 V1 <video> playbackRate 近似路径，如实降级）。
+   * 管线按媒质缓存（session.mediaPipelines），首用才 ingest（moov 索引+描述符）。 */
+  function clipMediaOf(clip) {
+    if (!clip || !clip.mediaId) return null;
+    var medias = ZY.project.data.media || [];
+    for (var i = 0; i < medias.length; i++) {
+      if (medias[i].id === clip.mediaId) return medias[i];
+    }
+    return null;
   }
 
-  /* 播放头变动（含拖标尺）时：把媒质对齐到播放头（未播放时也有“当前帧”）。 */
+  function pipelineUsable(clip) {
+    if (!clip) return false;
+    if ((clip.speed || 1) !== 1) return false;
+    var m = clipMediaOf(clip);
+    if (!m || m.type !== "video") return false;   /* 变速/音频媒质走 V1 <video> 路径 */
+    var caps;
+    try {
+      if (!ZY.pipeline || !ZY.pipeline.detect) return false;
+      caps = ZY.pipeline.detect();
+    } catch (e) { return false; }
+    if (!caps.ready) return false;
+    return !!(ZY.session.mediaProviders && ZY.session.mediaProviders[clip.mediaId]);
+  }
+
+  function ensurePipeline(clip, cb) {
+    var ps = ZY.session.mediaPipelines || (ZY.session.mediaPipelines = {});
+    var entry = ps[clip.mediaId];
+    if (entry) {
+      if (entry.__ingesting) {
+        /* 并发第一次 ingest：回调入队 */
+        entry.__waiters = entry.__waiters || [];
+        entry.__waiters.push(cb);
+        return;
+      }
+      cb(entry);
+      return;
+    }
+    var pl = ZY.pipeline.create({
+      provider: ZY.session.mediaProviders[clip.mediaId],
+      canvas: canvasEl,
+      onError: function (m) { ZY.util.statusMessage("预览管线：" + m, true); }
+    });
+    entry = { pipeline: pl, __ingesting: true };
+    ps[clip.mediaId] = entry;
+    pl.ingest().then(function () {
+      delete entry.__ingesting;
+      var q = entry.__waiters || [];
+      entry.__waiters = [];
+      cb(entry);
+      for (var i = 0; i < q.length; i++) q[i](entry);
+    }, function (e) {
+      delete ps[clip.mediaId];   /* 回退 V1 <video> 路径（fail-closed） */
+      ZY.util.statusMessage("预览管线初始化失败，回退 V1 播放：" + (e && e.message), true);
+      cb(null);
+    });
+  }
+
+  function canvasMode(on) {
+    if (!canvasEl) canvasEl = el("zy-canvas");
+    if (on && canvasEl) {
+      canvasEl.hidden = false;
+      if (videoEl) { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
+      if (emptyEl) emptyEl.hidden = true;
+    } else {
+      if (canvasEl) canvasEl.hidden = true;
+      if (videoEl) videoEl.hidden = false;
+    }
+  }
+
+  function pipePause() {
+    if (!pipeMediaId) return;
+    var ps = ZY.session.mediaPipelines || {};
+    var entry = ps[pipeMediaId];
+    if (entry) entry.pipeline.pausePlay();
+  }
+
+  /* 播放头变动（含拖标尺）时：把媒质对齐到播放头（未播放时也有“当前帧”）。
+   * V2：管线就绪片段走 canvas 路径（keyframe 起步解码链→目标帧绘出）；
+   * 否则 V1 <video> 路径。 */
   function syncToPlayhead() {
-    if (!videoEl || playing || rafHandle) return;
+    if (!videoEl || playing || tickHandle) return;
     var clip = activeClip(ZY.ui.playhead);
-    var url = mediaUrl(clip);
+    if (pipelineUsable(clip)) {
+      var rel = ZY.util.clamp(ZY.ui.playhead - clip.start, 0, Math.max(0.01, clip.duration));
+      var seq = ++pipeSeq;
+      ensurePipeline(clip, function (entry) {
+        if (!entry) { canvasMode(false); syncMedia(clip); return; }
+        if (playing || tickHandle || seq !== pipeSeq) return;
+        pipeMediaId = clip.mediaId;
+        canvasMode(true);
+        applyFilterPreview();
+        entry.pipeline.seekDecode(rel * 1000);
+      });
+      return;
+    }
+    if (pipeMediaId) { canvasMode(false); pipeMediaId = null; }
+    syncMedia(clip);
+  }
+
+  /* V1 legacy：对齐 <video> */
+  function syncMedia(clip) {
     applyFilterPreview();
+    var url = mediaUrl(clip);
     if (!clip || !url) {
       if (videoEl.getAttribute("src")) {
         videoEl.pause();
@@ -73,28 +173,58 @@
     videoEl.playbackRate = ZY.util.clamp(clip.speed || 1, 0.25, 4);
   }
 
+  function applyFilterPreview() {
+    if (!ZY.clips) return;
+    var clip = activeClip(ZY.ui.playhead);
+    var preset = clip ? ZY.clips.FILTER_PRESETS[clip.filter] : null;
+    var css = preset ? preset.css : "";
+    if (videoEl) videoEl.style.filter = css || "";
+    if (canvasEl && pipeMediaId) canvasEl.style.filter = css || "";
+  }
+
   function play() {
-    if (playing || rafHandle) return;
+    if (playing || tickHandle) return;
     var clip = activeClip(ZY.ui.playhead);
     playing = true;
     playheadBase = ZY.ui.playhead;
     playedMs = performance.now();
-    var url = mediaUrl(clip);
-    applyFilterPreview();
-    if (clip && url) {
-      videoEl.src = url;
-      videoEl.currentTime = ZY.util.clamp(ZY.ui.playhead - clip.start, 0, Math.max(0.01, clip.duration));
-      videoEl.playbackRate = ZY.util.clamp(clip.speed || 1, 0.25, 4);
-      videoEl.play().catch(function () {
-        ZY.util.statusMessage("预览播放未启动（浏览器策略或媒质不可用）", true);
+    if (pipelineUsable(clip)) {
+      var rel = ZY.util.clamp(ZY.ui.playhead - clip.start, 0, Math.max(0.01, clip.duration));
+      ensurePipeline(clip, function (entry) {
+        if (!playing) return;   /* play→pause 已切换 */
+        if (!entry) { canvasMode(false); playMedia(clip); return; }
+        pipeMediaId = clip.mediaId;
+        canvasMode(true);
+        applyFilterPreview();
+        entry.pipeline.startPlay(rel * 1000);
       });
+    } else {
+      playMedia(clip);
     }
     tick();
   }
 
+  /* V1 legacy：媒质播放启动 */
+  function playMedia(clip) {
+    var url = mediaUrl(clip);
+    if (clip && url) {
+      videoEl.src = url;
+      videoEl.currentTime = ZY.util.clamp(ZY.ui.playhead - clip.start, 0, Math.max(0.01, clip.duration));
+      videoEl.playbackRate = ZY.util.clamp(clip.speed || 1, 0.25, 4);
+      /* play() 在部分宿主（如 jsdom、沙箱差异）返回 undefined —— 不假定 Promise */
+      var pr = videoEl.play && videoEl.play();
+      if (pr && typeof pr.catch === "function") {
+        pr.catch(function () {
+          ZY.util.statusMessage("预览播放未启动（浏览器策略或媒质不可用）", true);
+        });
+      }
+    }
+  }
+
   function stopPlayer() {
     playing = false;
-    if (rafHandle) { cancelAnimationFrame(rafHandle); rafHandle = 0; }
+    if (tickHandle) { clearInterval(tickHandle); tickHandle = 0; }
+    pipePause();
     /* 只在确有媒质源时调用 pause（走表模式从未设过 src，避免无谓的 media 元素操作） */
     if (videoEl && videoEl.getAttribute("src")) videoEl.pause();
   }
@@ -104,16 +234,40 @@
     ZY.timeline.updatePlayhead();
   }
 
-  /* 走表 / 媒质推进统一由 rAF 驱动：媒质播放时以 media.currentTime 回写播放头；
-     无媒质时按真实时间推进播放头。到片段末尾自动停（V1 逐段播放，不自动接力）。 */
+  /* 走表 / 媒质推进统一由 rAF 驱动：
+   *  - V2 管线路径：墙钟推进播放头，pipeline.tickPlay 按位驱动解码/绘制/音频滑窗，
+   *    到片段末尾自动停（V1 语义一致）。
+   *  - V1 legacy：媒质播放以 media.currentTime 回写播放头；无媒质按真实时间推进。
+   *  - 不做多片段同时播放。 */
   function tick() {
-    if (!playing) return;
-    rafHandle = requestAnimationFrame(function () {
-      rafHandle = 0;
-      if (!playing) return;
+    if (!playing || tickHandle) return;
+    tickHandle = setInterval(function () {
+      if (!playing) { clearInterval(tickHandle); tickHandle = 0; return; }
       var clip = activeClip(ZY.ui.playhead);
-      if (mediaUrl(clip) && !videoEl.paused) {
-        ZY.ui.playhead = clip.start + videoEl.currentTime * (clip.speed || 1) * (videoEl.paused ? 1 : 1);
+      if (pipeMediaId) {
+        var ps = ZY.session.mediaPipelines || {};
+        var entry = ps[pipeMediaId];
+        if (entry && clip && clip.mediaId === pipeMediaId && clip.track === "video") {
+          var wp = playheadBase + (performance.now() - playedMs) / 1000;
+          var rel = ZY.util.clamp(wp - clip.start, 0, Math.max(0.01, clip.duration));
+          entry.pipeline.tickPlay(rel * 1000);
+          ZY.ui.playhead = clip.start + rel;
+          if (rel >= clip.duration - 0.02) {
+            stopPlayer();
+            ZY.ui.playhead = clip.start + clip.duration;
+            ZY.timeline.updatePlayhead();
+            ZY.state.updateStatusfields();
+            return;
+          }
+        } else {
+          /* 片段越界/媒质变化：停走表（V1 同义，不自动接力） */
+          stopPlayer();
+          ZY.timeline.updatePlayhead();
+          ZY.state.updateStatusfields();
+          return;
+        }
+      } else if (mediaUrl(clip) && !videoEl.paused) {
+        ZY.ui.playhead = clip.start + videoEl.currentTime * (clip.speed || 1);
         var end = clip.start + clip.duration;
         if (clip.start + videoEl.currentTime * (clip.speed || 1) >= end - 0.02) {
           stopPlayer();
@@ -132,11 +286,9 @@
       }
       ZY.timeline.updatePlayhead();
       ZY.state.updateStatusfields();
-      rafHandle = requestAnimationFrame(tickLoop);
-    });
+    }, TICK_MS);
   }
 
-  function tickLoop() { tick(); }
 
   function timelineEnd() {
     var d = ZY.project.data;
@@ -179,6 +331,7 @@
   function init() {
     videoEl = el("zy-video");
     frameEl = el("zy-frame");
+    canvasEl = el("zy-canvas");
     emptyEl = el("zy-frame-empty");
 
     el("btn-play").addEventListener("click", play);

@@ -491,6 +491,160 @@
     return pick;
   };
 
+  /* ---- 导出/合成原语：解码到指定时刻，返回最近一帧的 VideoFrame ----
+   * 调用方拥有返回帧（用完必须 frame.close()）；其余帧一律释放归还帧预算。
+   * 与 seekDecode 同一条解码链，但不出帧到画布、不保留帧（预览缓存隔离：
+   * 导出用独立 MediaPipeline 实例，避免与预览播放态互踩 seq）。 */
+  MediaPipeline.prototype.frameAt = function (timeMs) {
+    var self = this;
+    if (!self.vS.length || self.closed) return Promise.resolve(null);
+    var seq = ++self._seq;
+    self.playing = false;
+    self._releaseFrames();
+    if (!self._freshDecoder()) return Promise.resolve(null);
+    self.positionMs = timeMs;
+    var targetTs = Math.round(timeMs / 1000 * 1e6);
+    var idx = findSampleIndex(self.vS, timeMs);
+    if (idx < 0) idx = 0;
+    var kf = idx;
+    while (kf >= 0 && !self.vS[kf].is_sync) kf--;
+    if (kf < 0) kf = 0;
+    return new Promise(function (resolve) {
+      (async function () {
+        try {
+          for (var i = kf; i < self.vS.length; i++) {
+            if (self.closed || seq !== self._seq) { resolve(null); return; }
+            if (i - kf >= CHAIN_CAP) {
+              self._failStop("素材关键帧间隔过大（>600 帧）：取帧已截断，精度受限");
+              resolve(null);
+              return;
+            }
+            var s = self.vS[i];
+            var data = await self._materialize(s);
+            if (self.closed || seq !== self._seq) { resolve(null); return; }
+            try {
+              self.decoder.decode(new EncodedVideoChunk({
+                type: s.is_sync ? "key" : "delta",
+                timestamp: Math.round(s.cts / s.timescale * 1e6),
+                duration: Math.round((s.duration || 1) / s.timescale * 1e6),
+                data: data
+              }));
+              self._inFlight++;
+            } catch (e) { self._failStop("decode 失败：" + e.message); resolve(null); return; }
+            if (s.cts / s.timescale * 1e6 >= targetTs) break;
+          }
+          await self.decoder.flush();
+          if (seq !== self._seq) { resolve(null); return; }
+          var pick = self._pickFrame(targetTs);
+          var keep = pick ? pick.frame : null;
+          /* 其余帧全部释放（导出逐帧取帧不可在飞堆积） */
+          for (var j = 0; j < self._frames.length; j++) {
+            if (self._frames[j].frame !== keep) try { self._frames[j].frame.close(); } catch (e2) {}
+          }
+          self._frames = [];
+          self._lastDrawnTs = -1;
+          resolve(keep);
+        } catch (e) {
+          self._failStop("取帧链失败：" + e.message);
+          resolve(null);
+        }
+      })();
+    });
+  };
+
+  /* ---- 导出原语：离线解码音频段 [startMs, endMs] → [{ ptsMs, buffer }] ----
+   * bufferCtx = OfflineAudioContext（createBuffer 与主 AudioContext 解耦）。
+   * 返回 null = 无音频轨或解码失败（调用方按"视频-only"处理并如实提示）。 */
+  MediaPipeline.prototype.decodeAudioRange = function (startMs, endMs, bufferCtx) {
+    var self = this;
+    if (!self.aTrack || !self.aS.length || self.closed || !bufferCtx) return Promise.resolve(null);
+    var conf = {
+      codec: self.aTrack.codec,
+      sampleRate: self.aTrack.audio ? self.aTrack.audio.sample_rate : 48000,
+      numberOfChannels: self.aTrack.audio ? self.aTrack.audio.channel_count : 2
+    };
+    if (self._aDesc) conf.description = self._aDesc;
+    return new Promise(function (resolve) {
+      var got = [];
+      var failed = false;
+      var want = 0, arrived = 0;
+      var settled = false;
+      var dec = null;
+      function finish() {
+        if (settled) return;
+        settled = true;
+        try { dec.close(); } catch (e4) {}
+        if (failed) { resolve(null); return; }
+        got.sort(function (a, b) { return a.ptsMs - b.ptsMs; });
+        resolve(got);
+      }
+      try {
+        dec = new AudioDecoder({
+          output: function (ad) {
+            arrived++;
+            try {
+              var ptsMs = ad.timestamp / 1000;
+              var buf = audioDataToBuffer(bufferCtx, ad);
+              got.push({ ptsMs: ptsMs, buffer: buf });
+            } catch (e5) { failed = true; }
+            try { ad.close(); } catch (e6) {}
+            if (arrived >= want) finish();
+          },
+          error: function (e) {
+            failed = true;
+            self.onError("音频解码失败：" + e.message);
+            finish();
+          }
+        });
+        dec.configure(conf);
+      } catch (e7) {
+        self.onError("音频解码器不可用：" + e7.message);
+        finish();
+        return;
+      }
+      (async function () {
+        try {
+          /* 段范围：首个"末采样点 >= startMs"起，至"采样点 > endMs"止 */
+          var i0 = 0;
+          while (i0 < self.aS.length) {
+            var pre = self.aS[i0];
+            if (pre.cts / pre.timescale * 1000 + (pre.duration || 0) / pre.timescale * 1000 >= startMs) break;
+            i0++;
+          }
+          var i1 = i0;
+          while (i1 < self.aS.length) {
+            if (self.aS[i1].cts / self.aS[i1].timescale * 1000 > endMs) break;
+            i1++;
+          }
+          want = i1 - i0;
+          if (want <= 0) { finish(); return; }
+          for (var i = i0; i < i1; i++) {
+            if (self.closed) { finish(); return; }
+            var s = self.aS[i];
+            var data = await self._materialize(s);
+            if (self.closed) { finish(); return; }
+            dec.decode(new EncodedAudioChunk({
+              type: "key",
+              timestamp: Math.round(s.cts / s.timescale * 1e6),
+              duration: Math.round((s.duration || 1) / s.timescale * 1e6),
+              data: data
+            }));
+          }
+          /* AAC 需要输出可能与解码入队节奏不一致：flush 兜底（仅当未到齐时），
+             否则按已到样本收窄如实返回 */
+          if (arrived < want) {
+            try { await dec.flush(); } catch (e9) {}
+          }
+          if (!settled) finish();
+        } catch (e8) {
+          failed = true;
+          self.onError("音频解码失败：" + e8.message);
+          finish();
+        }
+      })();
+    });
+  };
+
   /* ---- 播放：feedLoop 领先窗 + tickPlay 绘制/音频调度 ---- */
   MediaPipeline.prototype.startPlay = function (fromMs) {
     if (!this.vS.length || this.closed) return false;

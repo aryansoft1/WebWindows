@@ -254,6 +254,23 @@ textarea { width: 100%; min-height: 52px; }
 .zy-badge.no { background: rgba(224, 106, 106, .16); color: #e79a9a; }
 .zy-badge.mid { background: rgba(224, 166, 58, .18); color: var(--zz-warn); }
 
+/* 导出面板：格式静态行 / 进度条 */
+.zy-static { font-size: 12px; color: var(--zz-text, #e8e8f0); padding: 4px 0; }
+.zy-export-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .08);
+  overflow: hidden;
+  margin: 8px 0 4px;
+}
+.zy-export-bar {
+  height: 100%;
+  width: 0%;
+  background: var(--zz-ok, #4fd08a);
+  transition: width .15s linear;
+}
+.zy-export-status { font-size: 11px; color: var(--zz-text-dim, #9aa0b5); min-height: 14px; }
+
 /* AI 抽屉 */
 .zy-ai-card { background: var(--zz-panel); border: 1px solid var(--zz-accent-dim); border-radius: 8px; padding: 8px 12px; }
 .zy-ai-card[disabled], .zy-ai-disabled { opacity: .6; }

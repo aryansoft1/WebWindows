@@ -95,6 +95,22 @@ textarea { width: 100%; min-height: 52px; }
 .zy-frame canvas { max-width: 100%; height: 100%; background: transparent; }
 .zy-frame[data-ratio="16:9"] canvas, .zy-frame[data-ratio="9:16"] canvas, .zy-frame[data-ratio="1:1"] canvas, .zy-frame[data-ratio="4:5"] canvas { aspect-ratio: inherit; }
 .zy-frame-empty { color: #8a90a2; }
+.zy-frame { position: relative; }
+.zy-caption-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6%;
+  text-align: center;
+  color: #ffffff;
+  font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+  font-weight: bold;
+  line-height: 1.25;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.85), -2px -2px 0 rgba(0,0,0,.85),
+               2px -2px 0 rgba(0,0,0,.85), -2px 2px 0 rgba(0,0,0,.85);
+  pointer-events: none;
+  z-index: 2;
+}
 .zy-transport { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
 .zy-timecode { font-variant-numeric: tabular-nums; font-weight: 700; margin-left: 8px; }
 .zy-timecode-sub { color: #aab1c4; font-variant-numeric: tabular-nums; }

@@ -619,6 +619,34 @@
     }
   }
 
+  /* 写盘分流（诚实探测）：检测到 Production fileDialog.saveBlob 则先走宿主写盘
+   * （检测到≠放行：失败自动回退浏览器 downloadBlob）；浏览器降级模式直接下载。 */
+  function saveOrDownload(blob, filename) {
+    var envInfo = ZY.env.info;
+    var canSave = !!(envInfo && envInfo.fileDialogSaveBlob &&
+      window.WebWindows && window.WebWindows.fileDialog &&
+      typeof window.WebWindows.fileDialog.saveBlob === "function");
+    if (canSave) {
+      try {
+        var pr = window.WebWindows.fileDialog.saveBlob(blob, filename);
+        if (pr && typeof pr.then === "function") {
+          pr.then(function () {
+            status("导出完成：已写入宿主（fileDialog.saveBlob）——" + filename + "（" + fmtBytes(blob.size) + "）");
+          }, function () {
+            ZY.util.downloadBlob(blob, filename);
+            status("宿主写盘未放行（探测可用≠契约放行），已回退浏览器下载：" + filename + "（" + fmtBytes(blob.size) + "）", true);
+          });
+          return;
+        }
+      } catch (e) { /* 探测可用但同步拒绝 → 回退 */ }
+      status("宿主写盘不可用（探测可用≠放行），已回退浏览器下载：" + filename, true);
+      ZY.util.downloadBlob(blob, filename);
+      return;
+    }
+    ZY.util.downloadBlob(blob, filename);
+    status("导出完成：" + filename + "（浏览器降级写盘，" + fmtBytes(blob.size) + "）");
+  }
+
   /* ---------------- 面板 ---------------- */
 
   function row(label, ok) {
@@ -684,10 +712,7 @@
           if (!res || !res.blob) return; /* 失败/取消已在内部如实上报 */
           var safeName = (ZY.project.data.name || "deskshadow").replace(/[\\/:*?"<>|]/g, "_");
           var filename = safeName + "-" + stamp() + ".mp4";
-          ZY.util.downloadBlob(res.blob, filename);
-          status("导出完成：" + filename + "（" + fmtBytes(res.bytes) + "，" +
-            res.width + "×" + res.height + "@" + res.fps + "fps、" +
-            res.frames + " 帧" + (res.hasAudio ? "、含音轨" : "、无音轨") + "）");
+          saveOrDownload(res.blob, filename);
         }, function (e) {
           status("导出失败：" + (e && e.message || e), true);
         });

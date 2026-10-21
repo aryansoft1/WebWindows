@@ -16,7 +16,7 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 
 - **顶栏**：新建工程 / 打开工程（`.json` file input 降级；`WebWindows.fileDialog.open` 为探测占位）/ 保存工程（`a[download]` 下载降级；`fileDialog.saveBlob` 为探测占位）/ 导入素材（`<input type=file multiple accept="video/*,audio/*">`）/ 诊断 / 桌讯 AI 助手。
 - **三轨时间线**（`js/timeline.js`，纯 DOM 渲染）：轨道头 sticky 固定、秒/帧刻度标尺（帧刻度 30fps）、Ctrl+滚轮与 ± 按钮缩放；单击选中、同轨拖拽移动、`Delete` 删除、`拆分播放头` 按播放头切两段；轨道头「＋」可添加空片段便于排版。
-- **预览播放器**（`js/player.js`）：`<video>` + 画幅比例框、播放/暂停、逐帧步进（方向键）、跳回起点、播放头时码与帧码显示；按“播放头所在的最上层片段”逐段播放，时间线播放头与媒质 currentTime 双向联动。
+- **预览播放器**（`js/player.js`）：`<video>` + 画幅比例框、播放/暂停、逐帧步进（方向键）、跳回起点、播放头时码与帧码显示；按“播放头所在的最上层片段”逐段播放，时间线播放头与媒质 currentTime 双向联动。第十一轮增补两条闭合项：**字幕预览实时叠层**（预览画框内按播放头实时显示当前字幕卡，DOM 近似：底部居中、白字暗描边，与导出烧录同语义，字号按画框高/输出高缩放）与**多片段衔接接力**（相邻同轨片段边界自动续播：衔接点相邻 ≤0.05s 才接力，有空档跳转维持"片段末自动停"；实现为 stopPlayer+play 逐段重启，段间可能一帧停顿，如实实现）。
 - **片段检查面板**（`js/clips.js`）：名称/时长编辑、变速倍率 0.25~4、音量单值 0~1.5、媒质信息、删除片段。
 - **字幕轨**：字幕轨双击空白新增字幕卡（默认 2 秒）、双击已有卡进入编辑（起止时间/文本/字号/描边开关；底部居中 V1 固定）。
 - **滤镜与过渡面板**：6 个滤镜预设（none/暖/冷/灰度/高对比/复古，CSS filter 字符串常量，片段级存储）、过渡下拉（none/叠化/黑场/白闪，存于“相邻片段衔接处”＝前段 `transitionOut`）、画幅预设（16:9/9:16/1:1/4:5，工程级）。
@@ -33,7 +33,7 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 
 - **未接入 / 设计待评审**：`fileDialog.open`、`fileDialog.saveBlob`、`dialog`、Broker 调用——`window.WebWindows` 检测不到时走普通浏览器降级，检测到了也只是“命名空间存在≠契约放行”。
 - **桌讯 AI**：面板明确标注“契约评审中”，L2 发送按钮置灰，“依赖桌讯 AI 协助契约评审通过后可用”；L1 仅本地统计且展示。
-- **导出**：MP4（avc1.640028+AAC）导出已实现；边界如实标注：变速音频按一期拍板**不保音调**；webm/MediaRecorder 备选档即后续评审未提供入口；宿主无 VideoEncoder 时按钮置灰（不做坏产物）；无 AudioEncoder/OfflineAudioContext 时自动导出无音轨版本并提示；写盘在浏览器降级模式经 `downloadBlob` 落盘，Production 云资料写盘待 `fileDialog.save` 契约；导出用开始时刻的工程快照，导出期间请勿改动时间线。
+- **导出**：MP4（avc1.640028+AAC）导出已实现；边界如实标注：变速音频按一期拍板**不保音调**；webm/MediaRecorder 备选档即后续评审未提供入口；宿主无 VideoEncoder 时按钮置灰（不做坏产物）；无 AudioEncoder/OfflineAudioContext 时自动导出无音轨版本并提示；写盘分流已接入：检测到 Production `fileDialog.saveBlob` 则先走宿主写盘（**检测到≠放行**：失败自动回退 `downloadBlob` 并如实上报），浏览器降级模式直接下载；导出用开始时刻的工程快照，导出期间请勿改动时间线。
 - **媒体二进制**：仅会话内 objectURL 暂存，不写入工程文件与 localStorage；重新打开旧工程时引用媒质无本地文件，需重新导入——UI 如实提示。
 
 ## 后续契约依赖（把 manifest.permissions 填上时对照）
@@ -70,4 +70,4 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 - **编码**：`VideoEncoder(avc1.640028)` backpressure（`encodeQueueSize>8` 等待）+ 每 8 帧让出主线程更新进度；音频走 `OfflineAudioContext` 混音（playbackRate=speed **不保音调**、GainNode=volume）→ `AudioEncoder(mp4a.40.2, 128k, 48k×2ch, AAC 每 1024 帧一 AudioData f32-planar)`。
 - **封装**：视频轨 `addTrack({type:"avc1", timescale:fps, avcDecoderConfigRecord:编码器 meta.description})`（`MP4BoxStream` 只吃 ArrayBuffer，已折型）；音频轨 esds 用 `craftEsdsBox(ascBytes)` 手工拼 ES(3)>DC(4)>ASC(5)>SL(6) 字节流经 `MP4Box.createFile+appendBuffer` 解析出 Box 实例喂 `addTrack({description})`——用编码器输出的全新 ASC（保证与 48k 编码一致，不用源 esds 防采样率错配）；末态 `dbuf.write(DataStream BIG_ENDIAN)`→`slice(0,position)`→`Blob(video/mp4)`→`downloadBlob` 落盘。
 - **回灌自检（真实浏览器 e2e 已过）**：2s trailer 片段导出 190KB/60 帧/含音轨，blob ftyp 魔数 ✓；导出 blob 回灌新建 pipeline → vTrack 60 样本 + aTrack 113 样本 + `frameAt(500)` 非空；双片段 crossfade + warm 滤镜 + 0.5× 慢放第二轮全过；全程 console 零 error。jsdom 回归扩至 26 用例（导出面板诚实置灰/格式如实/画幅选项）。
-- **开放项（后续档位评审）**：变速保音调重采样（V3 拍板项）、webm（vp9/av1 备选表中的 webm 档）、MediaRecorder 原型档、Production 云资料写盘（`fileDialog.save` 契约）、字幕在预览画框内的实时叠层（导出已烧录、预览仍为时间线卡展示）。
+- **开放项（后续档位评审）**：变速保音调重采样（V3 拍板项）、webm（vp9/av1 备选表中的 webm 档）、MediaRecorder 原型档、1080p 真素材导出复核（合成 1080p 基准已补：144.5fps @8Mbps，见 V2 规格 §5）。

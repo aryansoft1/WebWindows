@@ -93,13 +93,23 @@
 
 综合：合成基准的乐观上界结论在真实 854×480 H.264 素材上方向一致（解码 ≈1ms/帧、播放实时），1080p 真素材复核仍留待导出管线接入时一并做。
 
+**第十一轮补档（2026-10-22，导出/预览闭合项数据点）**：
+
+| 项目 | 结果 | 备注 |
+| --- | --- | --- |
+| 720p 真素材导出（854×480→1280×720） | 2s/60 帧全程 **5.1s**（含逐片段独立 seek 解码链、Mixed 60 帧含 crossfade/filter/0.5× 慢放变体 1.5s） | 帧级原语：独立 seek 链每输出帧开新 decoder（导出非实时，成本可接受） |
+| 1080p 合成导出基准 | 60 帧 415ms（**144.5fps**，8Mbps，avc1.640028，产生 711KB） | 与 §5 首行 106.6fps 同量级，编码路径依旧不是瓶颈 |
+| 字体可用性探测（canvas 量宽法，审核环境） | 可用：**Microsoft YaHei/微软雅黑、Segoe UI、Verdana、Tahoma、Arial；不可用：SimHei/黑体、Noto Sans CJK SC、Source Han Sans SC** | 字幕白名单三选数据点落地：`"Segoe UI","Microsoft YaHei",sans-serif`（当前代码即此三元组，中字/拉丁/兜底各占，黑体与思源均不可用不宜入选） |
+| 字幕预览实时叠层 | seek 0.5s 显示"测试字幕"、区间外隐藏，与烧录同语义（DOM 近似） | 新增 `updateCaptionOverlay`；tick/seek 双路径刷新 |
+| 多片段衔接接力预览 | 0.9s 起 pipeline canvas 模式 → 跨 1.0s 边界全自动接力 → 2.0s 片段末停（isPlaying=false）| `chainTo` 逐段重启（stopPlayer+play），衔接点相邻 ≤0.05s 才接力；jsdom 30/30（含验 V1 路径） |
+
 ## 6. 剩余开放项
 
-1. **导出 1080p 真素材编码复核**（真素材/合成差异、码率上浮、GPU vs 软编区分）——导出管线主链已于 2026-10-22 落地（854×480 档位：2s/60 帧 720p 导出 190KB、回灌自检 60 视频样本 + 113 AAC 样本、双片段 crossfade+滤镜+0.5× 慢放全过、console 零 error）；1080p 与 GPU 软编数据点待真机场景补测；
+1. **导出 1080p 真素材编码复核**（真素材/合成差异、码率上浮、GPU vs 软编区分）——导出管线主链已于 2026-10-22 落地（854×480 档位：2s/60 帧 720p 导出 190KB、回灌自检 60 视频样本 + 113 AAC 样本、双片段 crossfade+滤镜+0.5× 慢放全过、console 零 error）；**第十一轮已补 1080p 合成基准 144.5fps@8Mbps**（与 §5 首行同量级），真素材 1080p 数据点待真机场景补测；
 2. **变速保音调重采样**（V3 拍板项，一期按不保音调交付并如实标注）；
 3. **webm 备选档（vp9/av1 编码器探测入表）与 MediaRecorder 原型档**——导出面板只保留 MP4 主档，不做空按钮（诚实边界）；
-4. **字幕预览实时叠层**（导出已烧录；预览仍为时间线卡展示，属预览/导出视觉差，如实标注）；
-5. **Production 写盘**（浏览器降级 `downloadBlob` 已通；云资料经 `fileDialog.save` 待契约）；
+4. ~~字幕预览实时叠层~~ **已落地**（第十一轮：DOM 叠层与烧录同语义，tick/seek 双路径刷新）；
+5. ~~Production 写盘~~ **探测分支已接**（第十一轮：导出完成先试 `fileDialog.saveBlob`（检测到≠放行），失败自动回退 `downloadBlob` 并如实上报；契约放行语义待正式评审）；
 6. **ASP 侧 4 MiB 分片转发 CPU 实测**（试点诊断计数器）；
-7. **字幕样式字体白名单最终三选**（rendering 覆盖率实测）；
-8. ~~mp4box.js vendor~~ **已落地**（第七轮：v0.5.3 BSD-3-Clause + LICENSE + SOURCE 入库）；~~导出管线~~ **已落地**（第十轮，见 README「V2 导出管线」）。
+7. ~~字幕样式字体白名单最终三选~~ **数据点已落地**（第十一轮：canvas 量宽法实测——可用 Microsoft YaHei/Segoe UI/Verdana/Tahoma/Arial；SimHei/黑体/Noto·思源不可用。代码当前三元组 `"Segoe UI","Microsoft YaHei",sans-serif` 正确；最终定名仍待产品拍板）；
+8. ~~mp4box.js vendor~~ **已落地**（第七轮：v0.5.3 BSD-3-Clause + LICENSE + SOURCE 入库）；~~导出管线~~ **已落地**（第十轮，见 README「V2 导出管线」）；~~多片段衔接预览接力~~ **已落地**（第十一轮 `chainTo`，e2e 实测跨边界续播至末尾正确停）。

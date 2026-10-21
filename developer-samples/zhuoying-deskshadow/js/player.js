@@ -25,6 +25,8 @@
   var pipeSeq = 0;          /* 同步代（scrub 串扰防护）*/
   var PIPE_CACHE_MAX = 4;   /* 会话管线 LRU 上限：解码器/AudioContext 不无限驻留 */
   var inited = false;       /* init 幂等守卫（双 init 会重复绑监听） */
+  var capOverlay = null;    /* 字幕预览实时叠层（与导出烧录同语义：底部居中、白字暗描边；
+                               预览为 DOM 近似——字号按画框高/720 口径缩放，描边用 text-shadow） */
 
   function el(id) { return document.getElementById(id); }
 
@@ -51,6 +53,29 @@
   function mediaUrl(clip) {
     if (!clip || !clip.mediaId) return null;
     return ZY.session.mediaUrls[clip.mediaId] || null;
+  }
+
+  /* ---- 字幕预览实时叠层（第十轮开放项闭合：预览/导出视觉差收敛） ----
+   * 语义与导出 compositeFrame.drawCaptions 一致：start<=t<end 生效、底部居中、
+   * 白底黑描边；预览为 DOM 近似（描边 text-shadow、字号按画框高/720 缩放）。 */
+  function activeCaption(t) {
+    var caps = ZY.project.data.captions || [];
+    var best = null;
+    for (var i = 0; i < caps.length; i++) {
+      if (caps[i].start <= t && t < caps[i].end) best = caps[i];
+    }
+    return best;
+  }
+
+  function updateCaptionOverlay() {
+    if (!capOverlay) return;
+    var cap = activeCaption(ZY.ui.playhead);
+    if (!cap || !cap.text) { capOverlay.hidden = true; return; }
+    var fh = frameEl ? (frameEl.clientHeight || 0) : 0;
+    var scale = fh > 0 ? fh / 720 : 1;
+    capOverlay.style.fontSize = Math.max(10, (cap.fontSize || 24) * scale).toFixed(0) + "px";
+    capOverlay.textContent = cap.text;
+    capOverlay.hidden = false;
   }
 
   /* ================= V2 管线路径（WebCodecs→canvas） =================
@@ -271,6 +296,21 @@
     }
   }
 
+  /* ---- 多片段衔接：边界处自动接力 ----
+   * 与"播放头所在片段逐段播放"的拍板一致；实现为 stopPlayer()+play() 逐段重启
+   * （段间可能一帧停顿，如实实现）。仅衔接点相邻（|next.start-boundary|<=0.05s）
+   * 才接力；有空档的跳转维持原"片段末自动停"。返回 true 表示已接力（外层须返回）。 */
+  function chainTo() {
+    var t = ZY.ui.playhead;
+    var next = activeClip(t + 0.01);
+    if (!next) return false;
+    if (Math.abs(next.start - t) > 0.05) return false;
+    stopPlayer();
+    ZY.ui.playhead = t;
+    play();
+    return playing;
+  }
+
   function stopPlayer() {
     playing = false;
     if (tickHandle) { clearInterval(tickHandle); tickHandle = 0; }
@@ -303,6 +343,12 @@
           entry.pipeline.tickPlay(rel * 1000);
           ZY.ui.playhead = clip.start + rel;
           if (rel >= clip.duration - 0.02) {
+            ZY.ui.playhead = clip.start + clip.duration;
+            if (chainTo()) {
+              ZY.timeline.updatePlayhead();
+              ZY.state.updateStatusfields();
+              return;   /* 接力：外层 interval 已被 stopPlayer 清除，play() 已重启新循环 */
+            }
             stopPlayer();
             ZY.ui.playhead = clip.start + clip.duration;
             ZY.timeline.updatePlayhead();
@@ -320,6 +366,12 @@
         ZY.ui.playhead = clip.start + videoEl.currentTime * (clip.speed || 1);
         var end = clip.start + clip.duration;
         if (clip.start + videoEl.currentTime * (clip.speed || 1) >= end - 0.02) {
+          ZY.ui.playhead = end;
+          if (chainTo()) {
+            ZY.timeline.updatePlayhead();
+            ZY.state.updateStatusfields();
+            return;
+          }
           stopPlayer();
           ZY.ui.playhead = end;
           ZY.timeline.updatePlayhead();
@@ -334,6 +386,7 @@
         stopPlayer();
         return;
       }
+      updateCaptionOverlay();
       ZY.timeline.updatePlayhead();
       ZY.state.updateStatusfields();
     }, TICK_MS);
@@ -352,6 +405,7 @@
     ZY.ui.playhead = Math.max(0, Math.round(sec * 100) / 100);
     ZY.timeline.updatePlayhead();
     syncToPlayhead();
+    updateCaptionOverlay();
     ZY.state.updateStatusfields();
   }
 
@@ -411,6 +465,15 @@
     });
 
     applyAspectRatio();
+
+    /* 字幕预览叠层（overlay 挂预览画框；样式见 app.css .zy-caption-overlay） */
+    if (frameEl) {
+      capOverlay = document.createElement("div");
+      capOverlay.id = "zy-caption-overlay";
+      capOverlay.hidden = true;
+      frameEl.appendChild(capOverlay);
+    }
+    updateCaptionOverlay();
   }
 
   ZY.player = {

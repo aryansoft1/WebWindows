@@ -22,8 +22,9 @@
 
   /* V2 管线态（会话内缓存，见 ZY.session.mediaPipelines；不落盘） */
   var pipeMediaId = null;   /* 当前管线接管中的媒质 id（canvas 模式）*/
-  var pipeWaitId = null;    /* 正在 ingest 的媒质 id */
   var pipeSeq = 0;          /* 同步代（scrub 串扰防护）*/
+  var PIPE_CACHE_MAX = 4;   /* 会话管线 LRU 上限：解码器/AudioContext 不无限驻留 */
+  var inited = false;       /* init 幂等守卫（双 init 会重复绑监听） */
 
   function el(id) { return document.getElementById(id); }
 
@@ -83,6 +84,9 @@
     var ps = ZY.session.mediaPipelines || (ZY.session.mediaPipelines = {});
     var entry = ps[clip.mediaId];
     if (entry) {
+      /* LRU 访问序维护（对象键序 = 最久未用在前，供触顶剔除） */
+      delete ps[clip.mediaId];
+      ps[clip.mediaId] = entry;
       if (entry.__ingesting) {
         /* 并发第一次 ingest：回调入队 */
         entry.__waiters = entry.__waiters || [];
@@ -95,10 +99,29 @@
     var pl = ZY.pipeline.create({
       provider: ZY.session.mediaProviders[clip.mediaId],
       canvas: canvasEl,
-      onError: function (m) { ZY.util.statusMessage("预览管线：" + m, true); }
+      onError: function (m) { ZY.util.statusMessage("预览管线：" + m, true); },
+      /* M2：管内运行失败（解码器 error / 链异常）单次停根——停走表 + 单条提示 */
+      onStopped: function (msg) {
+        if (msg) ZY.util.statusMessage("预览停止：" + msg, true);
+        if (playing || tickHandle) {
+          stopPlayer();
+          ZY.timeline.updatePlayhead();
+          ZY.state.updateStatusfields();
+        }
+      }
     });
     entry = { pipeline: pl, __ingesting: true };
     ps[clip.mediaId] = entry;
+    /* LRU 触顶：剔除最旧且非 ingest 中的条目（软上限，全忙时允许暂超） */
+    var keys = Object.keys(ps);
+    while (keys.length > PIPE_CACHE_MAX) {
+      var victim = keys[0];
+      var ve = ps[victim];
+      if (ve && ve.__ingesting) break;
+      try { ve.pipeline.destroy(); } catch (e2) {}
+      delete ps[victim];
+      keys = Object.keys(ps);
+    }
     pl.ingest().then(function () {
       delete entry.__ingesting;
       var q = entry.__waiters || [];
@@ -106,9 +129,14 @@
       cb(entry);
       for (var i = 0; i < q.length; i++) q[i](entry);
     }, function (e) {
+      /* M4：失败路径同样 flush 排队回调（原来只通知第一个，并发时第二个
+         seek/play 的回调丢失 → 点播放只见走表无画面） */
       delete ps[clip.mediaId];   /* 回退 V1 <video> 路径（fail-closed） */
       ZY.util.statusMessage("预览管线初始化失败，回退 V1 播放：" + (e && e.message), true);
+      var q = entry.__waiters || [];
+      entry.__waiters = [];
       cb(null);
+      for (var i = 0; i < q.length; i++) { try { q[i](null); } catch (err) {} }
     });
   }
 
@@ -116,7 +144,14 @@
     if (!canvasEl) canvasEl = el("zy-canvas");
     if (on && canvasEl) {
       canvasEl.hidden = false;
-      if (videoEl) { videoEl.pause(); videoEl.removeAttribute("src"); videoEl.load(); }
+      if (videoEl) {
+        /* M5：canvas 接管时藏 <video>（只藏不删，回退时恢复）——原先漏了
+           hidden=true，黑面 video 与 canvas 叠放 */
+        videoEl.hidden = true;
+        videoEl.pause();
+        videoEl.removeAttribute("src");
+        videoEl.load();
+      }
       if (emptyEl) emptyEl.hidden = true;
     } else {
       if (canvasEl) canvasEl.hidden = true;
@@ -146,7 +181,16 @@
         pipeMediaId = clip.mediaId;
         canvasMode(true);
         applyFilterPreview();
-        entry.pipeline.seekDecode(rel * 1000);
+        entry.pipeline.seekDecode(rel * 1000).then(function (ok) {
+          /* M3 伴生：seek 失败（如 codec 不被支持）时如实回 V1 媒质路径。
+             seq 守卫：失败回调只在仍是本次 scrub 时生效 */
+          if (!ok && !playing && !tickHandle && seq === pipeSeq &&
+              ZY.session.mediaPipelines[clip.mediaId]) {
+            pipeMediaId = null;
+            canvasMode(false);
+            syncMedia(clip);
+          }
+        });
       });
       return;
     }
@@ -196,7 +240,13 @@
         pipeMediaId = clip.mediaId;
         canvasMode(true);
         applyFilterPreview();
-        entry.pipeline.startPlay(rel * 1000);
+        var ok = entry.pipeline.startPlay(rel * 1000);
+        if (!ok) {
+          /* M3：startPlay 同步失败（configure 不受支持等）→ 回 V1 媒质路径 */
+          pipeMediaId = null;
+          canvasMode(false);
+          playMedia(clip);
+        }
       });
     } else {
       playMedia(clip);
@@ -329,6 +379,8 @@
   }
 
   function init() {
+    if (inited) return;   /* 双 init 会重复绑监听（幂等守卫） */
+    inited = true;
     videoEl = el("zy-video");
     frameEl = el("zy-frame");
     canvasEl = el("zy-canvas");

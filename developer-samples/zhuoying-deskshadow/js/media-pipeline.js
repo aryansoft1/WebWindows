@@ -24,6 +24,15 @@
  *     WebAudio BufferSource 按 pts 调度（每批以"此刻 position"重定基）。
  *     AudioContext 需用户手势 resume（真实用户点「播放」即手势；无手势时音频
  *     静音排队，视频照常 —— 不阻塞视频路径，如实呈现能力边界）。
+ *
+ * 会审修复（2026-10-22，第九轮）：
+ *   - M1 ingest 只保留尾部 ≤2 个 4MiB 分块（moov 必在尾部；描述符落在更早分块时
+ *     单点重读兜底），防止大文件把整个文件堆进 _reg 造成 OOM。
+ *   - M2/M3 解码器失败 fail-closed：_freshDecoder 捕获 configure 同步异常（返回
+ *     null）；运行中 error / 链异常走 _failStop（playing=false + onStopped 单次
+ *     通知宿主停表）——消除每 tick 重建链再炸的错误刷屏。
+ *   - P1 seek 解码链上限 CHAIN_CAP=600 帧（病态单 keyframe 素材防整片解码），
+ *     截断时如实提示。P3 _blockFor single-flight（同块并行复用同一 IO）。
  */
 (function () {
   "use strict";
@@ -135,12 +144,15 @@
                                   持续 close 放行下游 = 引擎自然而行，勿调大） */
   var MAX_INFLIGHT = 8;        /* 解码请求在飞上限（=基准口径） */
   var MAX_AUDIO_INFLIGHT = 24; /* 音频解码在飞上限 */
+  var CHAIN_CAP = 600;         /* seek 解码链上限（≈25s@24fps）：病态单 keyframe
+                                  素材防"seek 一次解码整片"，截断时如实提示 */
 
   function MediaPipeline(opts) {
     this.provider = opts.provider;
     this.canvas = opts.canvas || null;
     this.onReady = opts.onReady || function () {};
     this.onError = opts.onError || function () {};
+    this.onStopped = opts.onStopped || function () {};
     this.file = null;
     this.vTrack = null;
     this.aTrack = null;
@@ -170,6 +182,8 @@
     this._aLoop = false;
     this._aSources = [];
     this._rBufs = [];   /* 块级读缓存（双槽 LRU） */
+    this._busy = {};    /* 块读取 single-flight（同块并行请求复用同一 IO） */
+    this._stoppedReported = false;
     this.closed = false;
   }
 
@@ -229,6 +243,9 @@
           if (self.closed || done) return;
           buf.fileStart = offset;
           self._reg.push({ start: offset, buffer: buf, len: buf.byteLength });
+          /* M1：描述符必住在 moov = 文件尾部；只留尾 2 块，其余分块 append 后即弃
+             （否则大素材会把整个文件驻留内存直到 _finalizeTracks，OOM 风险） */
+          if (self._reg.length > 2) self._reg.shift();
           try { file.appendBuffer(buf); if (file.flush) file.flush(); }
           catch (e) { done = true; reject(new Error("MP4Box 解析错误：" + e.message)); return; }
           if (self.vTrack || self.aTrack) { finish(); return; }
@@ -250,13 +267,11 @@
       if (s0 && s0.description) {
         var c = s0.description.avcC;
         if (c && typeof c.start === "number") {
-          var b = regBytes(self._reg, c.start + (c.hdr_size || 8), c.size - (c.hdr_size || 8));
-          self._desc = b ? new Uint8Array(b) : null;
+          self._setDescFrom(c.start + (c.hdr_size || 8), c.size - (c.hdr_size || 8));
         }
         if (!self._desc && s0.description.hvcC) {
           var h = s0.description.hvcC;
-          var hb = regBytes(self._reg, h.start + (h.hdr_size || 8), h.size - (h.hdr_size || 8));
-          self._desc = hb ? new Uint8Array(hb) : null;
+          self._setDescFrom(h.start + (h.hdr_size || 8), h.size - (h.hdr_size || 8));
         }
         if (!self._desc && s0.description.vpcC) {
           self._desc = null; /* vp9 附加逻辑列后续档位 */
@@ -281,6 +296,19 @@
     if (self.onReady) self.onReady(self);
   };
 
+  /* ---- 描述符提取（M1 兜底）：优先从尾 2 分块的解析缓冲取；落在更早分块
+         （moov >8MiB 的罕见路径）时单点重读，异步回填。 ---- */
+  MediaPipeline.prototype._setDescFrom = function (off, len) {
+    var self = this;
+    if (typeof off !== "number" || off < 0 || len <= 0) return;
+    var b = regBytes(self._reg, off, len);
+    if (b) { self._desc = new Uint8Array(b); return; }
+    self.provider.readRange(off, len).then(function (ab) {
+      if (self.closed || self._desc) return;
+      self._desc = new Uint8Array(ab);
+    }, function () { /* 读失败：保持无描述符，configure 阶段如实报错 */ });
+  };
+
   /* ---- 纯懒取物化：provider.readRange → 块级缓存（一次 IO 物化一串样本 =
         production 对 G1 readChunk 同样有效：IO 次数 ≈ 文件大小 / 块长） ---- */
   MediaPipeline.prototype._blockFor = async function (offset, size) {
@@ -298,9 +326,18 @@
     var start = Math.max(0, Math.floor(offset / BLOCK) * BLOCK);
     var need = BLOCK * 3;
     if (start + need > self.provider.size) need = self.provider.size - start;
-    var ab = await self.provider.readRange(start, need);
+    /* P3 single-flight：视频链与音频回路同时撞同一块，只发一次 IO */
+    var key = start + ":" + need;
+    var pr = self._busy[key];
+    if (!pr) {
+      pr = self.provider.readRange(start, need);
+      var clr = function () { delete self._busy[key]; };
+      pr.then(clr, clr);
+      self._busy[key] = pr;
+    }
+    var ab = await pr;
     if (self.closed) return { start: start, buf: new Uint8Array(0) };
-    r = { start: start, buf: new Uint8Array(ab) };
+    var r = { start: start, buf: new Uint8Array(ab) };
     self._rBufs.unshift(r);
     if (self._rBufs.length > 2) self._rBufs.pop();
     return r;
@@ -312,6 +349,20 @@
       var p = s.offset - blk.start;
       return blk.buf.subarray(p, p + s.size);
     });
+  };
+
+  /* ---- 会审修复（M2/M3)：管线运行期失败统一停根 ----
+     playing=false、停视频链/音频回路、停掉已调度的音频源，onStopped 只上报一次
+     （宿主 player 停走表 + 单条状态提示）；消除了"每 tick 重建链再炸"的错误刷屏。 */
+  MediaPipeline.prototype._failStop = function (msg) {
+    this.playing = false;
+    this._chainRunning = false;
+    this._aLoop = false;
+    this.audioPause();
+    if (!this._stoppedReported) {
+      this._stoppedReported = true;
+      this.onStopped(msg);
+    }
   };
 
   /* ---- 视频解码器：每次 seek/play 重建 ---- */
@@ -326,29 +377,41 @@
     var self = this;
     self._killDecoder();
     var seqAtConf = self._seq;
-    var d = new VideoDecoder({
-      output: function (vf) {
-        self._inFlight--;
-        if (self.closed || seqAtConf !== self._seq) { vf.close(); return; }
-        var first = self._frames.length === 0;
-        self._frames.push({ ts: vf.timestamp, frame: vf });
-        if (self._frames.length > MAX_FRAMES) {
-          var old = self._frames.shift();
-          old.frame.close();
+    var d = null;
+    try {
+      d = new VideoDecoder({
+        output: function (vf) {
+          self._inFlight--;
+          if (self.closed || seqAtConf !== self._seq) { vf.close(); return; }
+          var first = self._frames.length === 0;
+          self._frames.push({ ts: vf.timestamp, frame: vf });
+          if (self._frames.length > MAX_FRAMES) {
+            var old = self._frames.shift();
+            old.frame.close();
+          }
+          /* 两段式 scrub：链首（keyframe）一出即绘，链继续解码到目标帧 */
+          if (first) self._draw(vf);
+        },
+        error: function (e) {
+          /* M2：运行中失败 fail-closed——停根 + 单次上报（原来只 onError，
+             player 每 tick 重建链再炸会刷屏） */
+          self._failStop("VideoDecoder: " + e.message);
         }
-        /* 两段式 scrub：链首（keyframe）一出即绘，链继续解码到目标帧 */
-        if (first) self._draw(vf);
-      },
-      error: function (e) { self.onError("VideoDecoder: " + e.message); }
-    });
-    var conf = {
-      codec: self.vTrack.codec,
-      width: self.vTrack.width,
-      height: self.vTrack.height,
-      optimizeForLatency: true
-    };
-    if (self._desc) conf.description = self._desc;
-    d.configure(conf);
+      });
+      var conf = {
+        codec: self.vTrack.codec,
+        width: self.vTrack.width,
+        height: self.vTrack.height,
+        optimizeForLatency: true
+      };
+      if (self._desc) conf.description = self._desc;
+      d.configure(conf);
+    } catch (e) {
+      /* M3：configure 同步异常（codec/profile 不受支持）不穿透调用链 */
+      self.onError("视频解码器不可用：" + (e && e.message));
+      self.decoder = null;
+      return null;
+    }
     self.decoder = d;
     return d;
   };
@@ -371,7 +434,7 @@
     var seq = ++self._seq;
     self.playing = false;
     self._releaseFrames();
-    self._freshDecoder();
+    if (!self._freshDecoder()) { self.positionMs = timeMs; return Promise.resolve(false); }
     self.positionMs = timeMs;
     var targetTs = Math.round(timeMs / 1000 * 1e6);
     var idx = findSampleIndex(self.vS, timeMs);
@@ -384,6 +447,12 @@
         try {
           for (var i = kf; i < self.vS.length; i++) {
             if (self.closed || seq !== self._seq) { resolve(false); return; }
+            /* P1：链长上限——病态单 keyframe 素材防"一次 seek 解码整片" */
+            if (i - kf >= CHAIN_CAP) {
+              self._failStop("素材关键帧间隔过大（>600 帧）：seek 已截断，精度受限");
+              resolve(false);
+              return;
+            }
             var s = self.vS[i];
             var data = await self._materialize(s);
             if (self.closed || seq !== self._seq) { resolve(false); return; }
@@ -405,7 +474,7 @@
           if (pick) { self._draw(pick.frame); self._lastDrawnTs = pick.ts; }
           resolve(!!pick);
         } catch (e) {
-          self.onError("解码链失败：" + e.message);
+          self._failStop("解码链失败：" + e.message);
           if (seq === self._seq) resolve(false);
         }
       })();
@@ -429,7 +498,7 @@
     this.playing = true;
     this.positionMs = fromMs || 0;
     this._releaseFrames();
-    this._freshDecoder();
+    if (!this._freshDecoder()) { this.playing = false; return false; }
     var idx = findSampleIndex(this.vS, this.positionMs);
     if (idx < 0) idx = 0;
     this._feedPtr = idx;
@@ -466,8 +535,7 @@
           }));
           self._inFlight++;
         } catch (e) {
-          self.onError("解码失败：" + e.message);
-          self._chainRunning = false;
+          self._failStop("解码失败：" + e.message);
           return;
         }
       }
@@ -606,8 +674,7 @@
           }));
           self._aInFlight++;
         } catch (e) {
-          self.onError("音频解码失败：" + e.message);
-          self._aLoop = false;
+          self._failStop("音频解码失败：" + e.message);
           return;
         }
       }

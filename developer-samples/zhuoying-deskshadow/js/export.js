@@ -7,10 +7,13 @@
  *   → VideoFrame→VideoEncoder(avc1.640028)（backpressure + 定期让出主线程）
  *   → OfflineAudioContext 混音（playbackRate=speed 不保音调=一期拍板；GainNode=volume）
  *   → AudioEncoder(AAC 128k, 48k×2ch) → mp4box.js addTrack/addSample 封装 → Blob 下载。
- * 诚实降级：无 AudioEncoder/OfflineAudioContext → 导出无音轨版本并如实提示；
- *           无 VideoEncoder → 按钮置灰 + 提示（不做坏产物）。
- *           webm 备选档与 MediaRecorder 原型另评审，本版不提供入口。
- * 写盘：浏览器降级走 downloadBlob；Production 云资料写盘待 fileDialog.save 契约（见 README）。 */
+ * WebM 原型档（MediaRecorder 实时录制）：为缺 VideoEncoder 的宿主提供诚实降级——
+ *   同一合成器 + captureStream + 实时混音音轨；1× 速录制、webm 容器时长元数据缺省，
+ *   正式转正待评审（面板/README 均如实标注）。
+ * 诚实降级：无 AudioEncoder/OfflineAudioContext → MP4 导出无音轨版本并如实提示；
+ *           无 VideoEncoder 且 MediaRecorder 不可用 → 按钮置灰 + 提示（不做坏产物）。
+ * 写盘分流：检测到 Production fileDialog.saveBlob 先走宿主写盘（检测到≠放行，
+ *   失败回退）；浏览器降级走 downloadBlob。 */
 (function () {
   "use strict";
   var ZY = window.ZY;
@@ -18,7 +21,7 @@
   var body = null;
   var lastChoice = null;
 
-  /* 导出画幅 → 输出分辨率（720p 基准；9:16 用 720×1280 竖屏） */
+  /* 导出画幅 → 输出分辨率（MP4 主档 WebCodecs 编码路径；720p 基准） */
   var OUT_SIZE = {
     "16:9": [1280, 720],
     "9:16": [720, 1280],
@@ -29,7 +32,7 @@
   var ENC_BACKPRESSURE = 8;   /* encodeQueueSize 上限，超过则等待（帧预算纪律） */
   var UI_YIELD_EVERY = 8;     /* 每 N 帧让出主线程一次，进度条不冻结 */
   var AAC_FRAME = 1024;       /* AAC 一次编码帧（样本数） */
-  var AUDIO_SR = 48000;       /* 导出音频统一重排到 48kHz×2ch */
+  var AUDIO_SR = 48000;       /* MP4 导出音频统一重排到 48kHz×2ch */
 
   /* 导出运行态（UI 与 ZY.export.state 同源） */
   var state = {
@@ -66,12 +69,20 @@
     var cbtn = body.querySelector("[data-e='cancel-export']");
     if (bar) bar.style.width = state.pct + "%";
     if (label) label.textContent = state.active ? (state.phase + " " + state.pct + "%") : "";
-    if (btn) btn.disabled = state.active || !capabilityOk();
+    if (btn) btn.disabled = state.active || (!capabilityOk() && !canRecorderExport());
     if (cbtn) cbtn.hidden = !state.active;
   }
 
+  /* MP4 主档可用：WebCodecs VideoEncoder + 管线就绪 */
   function capabilityOk() {
     return !!(window.VideoEncoder && ZY.pipeline.detect().ready);
+  }
+
+  /* WebM 原型档可用：管线就绪（解码共用）+ MediaRecorder + captureStream + AudioContext */
+  function canRecorderExport() {
+    var caps = ZY.env.detect();
+    return caps.mediaRecorder && caps.captureStream &&
+      !!(window.AudioContext || window.webkitAudioContext) && ZY.pipeline.detect().ready;
   }
 
   /* ---------------- 快照：导出为开始时刻的工程冻结版本 ---------------- */
@@ -245,7 +256,7 @@
     drawCaptions(ctx, plan, t);
   }
 
-  /* ---------------- 音频：离线混音 + AAC 编码 ---------------- */
+  /* ---------------- 音频：离线混音 + AAC 编码（MP4 主档） ---------------- */
 
   /* 返回 mixed AudioBuffer；null = 全程无音频（调用方按"视频-only"处理） */
   async function renderAudioMix(run, plan) {
@@ -346,7 +357,7 @@
     return { samples: samples, asc: asc };
   }
 
-  /* ---------------- mp4box.js 封装 ---------------- */
+  /* ---------------- mp4box.js 封装（MP4 主档） ---------------- */
 
   /* 手工拼 esds fullbox（ES(3) > DecoderConfig(4) > ASC(5) > SLConfig(6)），
    * 用 MP4Box 空文件 appendBuffer 解析出 Box 实例喂 addTrack(description)。
@@ -452,7 +463,7 @@
     return new Blob([ds.buffer.slice(0, ds.position)], { type: "video/mp4" });
   }
 
-  /* ---------------- 主流程 ---------------- */
+  /* ---------------- 主流程：MP4 主档 ---------------- */
 
   async function runExport(opts) {
     if (state.active) { status("已有导出在进行，请等待或取消", true); return null; }
@@ -463,7 +474,7 @@
       return null;
     }
     if (!window.VideoEncoder) {
-      status("宿主缺少 WebCodecs VideoEncoder：导出暂不可用（诚实置灰，不产出坏文件）", true);
+      status("宿主缺少 WebCodecs VideoEncoder：MP4 主档暂不可用（诚实置灰，不产出坏文件）", true);
       return null;
     }
     var plan = snapshotPlan(aspect);
@@ -491,7 +502,6 @@
       var vSamples = [];
       var vDesc = null;
       var veErr = null;
-      var firstVLen = 0;
       var ve = new VideoEncoder({
         output: function (chunk, meta) {
           if (!vDesc && meta && meta.decoderConfig && meta.decoderConfig.description) {
@@ -529,7 +539,6 @@
         });
         ve.encode(vf, { keyFrame: i % kfEvery === 0 });
         vf.close();
-        if (firstVLen === 0 && vSamples.length) firstVLen = vSamples[0].data.length;
         /* backpressure：防止编码队列在飞堆积 */
         while (ve.encodeQueueSize > ENC_BACKPRESSURE && !state.cancel) {
           await new Promise(function (r) { setTimeout(r, 8); });
@@ -587,7 +596,8 @@
         width: plan.width,
         height: plan.height,
         fps: plan.fps,
-        hasAudio: !!(aSamples && aSamples.length)
+        hasAudio: !!(aSamples && aSamples.length),
+        realtime: false
       };
     } finally {
       var ps = run.pipes;
@@ -596,6 +606,183 @@
           try { ps[k].destroy(); } catch (e2) {}
         }
       }
+      run.pipes = null;
+      run.cachedB = null;
+      state.active = false;
+      state.cancel = false;
+      setUI();
+      setTimeout(function () {
+        if (!state.active) {
+          state.pct = 0;
+          state.phase = "";
+          setUI();
+        }
+      }, 2500);
+    }
+    return result;
+  }
+
+  /* ---------------- WebM 原型档（MediaRecorder 实时录制） ----------------
+   * 为缺 VideoEncoder 的宿主提供诚实降级：同一合成器（滤镜/过渡/字幕/变速取帧），
+   * 编码交 MediaRecorder（canvas.captureStream + 实时混音音轨）。
+   * 档位性质=原型：实时 1× 速录制（导出耗时=时间线时长）、帧率贴墙钟、
+   * webm 容器时长元数据缺省——正式转正待评审，UI/README 均如实标注。 */
+
+  function pickRecorderMime() {
+    var cands = ["video/webm;codecs=vp9,opus", "video/webm;codecs=vp8,opus", "video/webm"];
+    if (!window.MediaRecorder || !window.MediaRecorder.isTypeSupported) return "video/webm";
+    for (var i = 0; i < cands.length; i++) {
+      try { if (window.MediaRecorder.isTypeSupported(cands[i])) return cands[i]; } catch (e) {}
+    }
+    return "video/webm";
+  }
+
+  async function runRecorderExport(opts) {
+    if (state.active) { status("已有导出在进行，请等待或取消", true); return null; }
+    var pcaps = ZY.pipeline.detect();
+    if (!pcaps.ready) {
+      status("环境不支持 WebM 原型档：需要 secure context + WebCodecs 解码 + mp4box 解析器", true);
+      return null;
+    }
+    if (!canRecorderExport()) {
+      status("MediaRecorder/captureStream/AudioContext 不可用：WebM 原型档不支持当前宿主", true);
+      return null;
+    }
+    var aspect = (opts && opts.aspect) || (ZY.project.data.settings && ZY.project.data.settings.aspectRatio) || "16:9";
+    var plan = snapshotPlan(aspect);
+    if (plan.duration <= 0) {
+      status("时间线为空：没有可导出的内容", true);
+      return null;
+    }
+
+    var run = { cancel: false, pipes: null, cachedB: null };
+    state.active = true;
+    state.cancel = false;
+    state.pct = 0;
+    state.phase = "WebM 实时录制";
+    setUI();
+
+    var canvas = document.createElement("canvas");
+    canvas.width = plan.width;
+    canvas.height = plan.height;
+    var ctx = canvas.getContext("2d");
+    var result = null;
+    var ac = null;
+
+    try {
+      /* 音频：先集中解码（bufferCtx=活 AudioContext），录制开始后再统一排源。
+       * 变速=playbackRate 不保音调（与 MP4 主档同拍板）；无音轨素材不建音轨。 */
+      var AC = window.AudioContext || window.webkitAudioContext;
+      ac = new AC();
+      var dest = null;
+      var pending = [];
+      try { dest = ac.createMediaStreamDestination(); } catch (e0) { dest = null; }
+      var i;
+      for (i = 0; i < plan.clips.length; i++) {
+        if (run.cancel) throw new Error("已取消");
+        var c = plan.clips[i];
+        if (!c.mediaId) continue;
+        var pl;
+        var chunks = null;
+        try {
+          pl = await pipeForMedia(run, c.mediaId);
+          chunks = await pl.decodeAudioRange(0, c.duration * c.speed * 1000, ac);
+        } catch (e1) {
+          status("媒质音频跳过：" + (e1 && e1.message || e1), true);
+          continue;
+        }
+        if (chunks && dest) pending.push({ clip: c, chunks: chunks, gain: c.volume });
+      }
+      var hasAudio = pending.length > 0;
+
+      var stream = canvas.captureStream(plan.fps);
+      var tracks = stream.getVideoTracks().slice();
+      if (hasAudio && dest) tracks = tracks.concat(dest.stream.getAudioTracks());
+      var mime = pickRecorderMime();
+      var mr = new MediaRecorder(new MediaStream(tracks), { mimeType: mime });
+      var parts = [];
+      var mrErr = null;
+      var stopped = new Promise(function (resolve) {
+        mr.onstop = function () { resolve(); };
+      });
+      mr.ondataavailable = function (e) { if (e.data && e.data.size) parts.push(e.data); };
+      mr.onerror = function (e) { mrErr = e && e.error || e; };
+
+      if (ac.state === "suspended") { try { await ac.resume(); } catch (e2) {} }
+      if (hasAudio && ac.state !== "running") {
+        status("AudioContext 未运行（自动播放策略）：继续录制，但音轨可能为空（如实标注）", true);
+      }
+
+      var startWall = performance.now();
+      var acStartAt = ac.currentTime + 0.08;
+      mr.start(1000);
+
+      /* 统一排音频源（outT = clip.start + (ptsMs/1000)/speed 对录制起点） */
+      for (i = 0; i < pending.length; i++) {
+        var pd = pending[i];
+        for (var k = 0; k < pd.chunks.length; k++) {
+          var ch = pd.chunks[k];
+          var src = ac.createBufferSource();
+          src.buffer = ch.buffer;
+          src.playbackRate.value = pd.clip.speed;
+          var g = ac.createGain();
+          g.gain.value = pd.gain;
+          src.connect(g);
+          g.connect(dest);
+          var when = acStartAt + pd.clip.start + ch.ptsMs / 1000 / pd.clip.speed;
+          try { src.start(when); }
+          catch (ee) { try { src.start(0); } catch (e3) { /* 越界小偏移如实丢弃 */ } }
+        }
+      }
+
+      /* 实时驱动：墙钟对齐 fps（导出耗时=时间线时长，这是原型档的固有限制） */
+      var totalFrames = Math.max(1, Math.ceil(plan.duration * plan.fps));
+      var frameMs = 1000 / plan.fps;
+      var f;
+      for (f = 0; f < totalFrames; f++) {
+        if (run.cancel) { try { mr.stop(); } catch (e4) {} throw new Error("已取消"); }
+        if (mrErr) throw new Error("录制器错误：" + (mrErr.message || mrErr));
+        /* 贴墙钟：等到第 f 帧的目标时刻 */
+        var targetAt = startWall + f * frameMs;
+        var waitMs = targetAt - performance.now();
+        if (waitMs > 0) await new Promise(function (r) { setTimeout(r, waitMs); });
+        var t = f / plan.fps;
+        await compositeFrame(run, ctx, plan, Math.min(t, plan.duration - 1 / plan.fps));
+        if (f % UI_YIELD_EVERY === 0) {
+          state.pct = Math.round(f / totalFrames * 96);
+          state.phase = "WebM 实时录制";
+          setUI();
+        }
+      }
+      /* 收尾：录满时长后停止 */
+      var tail = startWall + totalFrames * frameMs + 60 - performance.now();
+      if (tail > 0) await new Promise(function (r) { setTimeout(r, tail); });
+      try { mr.stop(); } catch (e5) {}
+      await stopped;
+      if (mrErr) throw new Error("录制器错误：" + (mrErr.message || mrErr));
+      var blob = new Blob(parts, { type: mime });
+      state.pct = 100;
+      state.phase = "完成";
+      setUI();
+      result = {
+        blob: blob,
+        frames: totalFrames,
+        bytes: blob.size,
+        width: plan.width,
+        height: plan.height,
+        fps: plan.fps,
+        hasAudio: hasAudio,
+        realtime: true,
+        mime: mime
+      };
+    } finally {
+      var ps = run.pipes;
+      if (ps) {
+        for (var k2 in ps) {
+          try { ps[k2].destroy(); } catch (e6) {}
+        }
+      }
+      if (ac && ac.state !== "closed") { try { ac.close(); } catch (e7) {} }
       run.pipes = null;
       run.cachedB = null;
       state.active = false;
@@ -658,13 +845,14 @@
     var caps = ZY.env.detect();
     var cur = (ZY.project.data.settings && ZY.project.data.settings.aspectRatio) || "16:9";
 
+    var webmOk = !!caps.mediaRecorder && !!caps.captureStream;
     var html = "";
     html += "<table class='zy-diag-table'>" +
       row("WebCodecs VideoEncoder", caps.webCodecsVideoEncoder) +
       row("WebCodecs VideoDecoder", caps.webCodecsVideoDecoder) +
       row("WebCodecs AudioEncoder", caps.webCodecsAudioEncoder) +
-      row("OfflineAudioContext", !!(window.OfflineAudioContext || window.webkitOfflineAudioContext)) +
-      row("mp4box 解析/封装", caps.mp4box) +
+      row("MediaRecorder（WebM 原型档）", caps.mediaRecorder) +
+      row("Canvas.captureStream", caps.captureStream) +
       "</table>";
 
     html += "<div class='zy-field'><label>目标画幅</label><select data-e='aspect'>";
@@ -674,20 +862,25 @@
     }
     html += "</select></div>";
 
-    html += "<div class='zy-field'><label>目标格式</label>" +
-      "<div class='zy-static'>MP4（H.264 avc1.640028 + AAC mp4a.40.2，WebCodecs 逐帧编码 + mp4box.js 封装）</div></div>";
+    html += "<div class='zy-field'><label>目标格式</label><select data-e='format'>" +
+      "<option value='mp4' selected>MP4 主档（H.264 avc1.640028 + AAC，WebCodecs + mp4box.js）</option>" +
+      "<option value='webm'" + (webmOk ? "" : " disabled") + ">WebM 原型（MediaRecorder 实时录制，1× 速，待评审）</option>" +
+      "</select></div>";
+    if (!webmOk) {
+      html += "<p class='zy-warn-hint'>WebM 原型档需 mediaRecorder + captureStream，当前宿主不可用（选项置灰，不做空按钮）。</p>";
+    }
 
     html += "<div class='zy-field' style='display:flex;gap:8px;border:none'>" +
-      "<button data-e='do-export'>开始导出 MP4</button>" +
+      "<button data-e='do-export'>开始导出</button>" +
       "<button data-e='cancel-export' hidden>取消导出</button></div>";
 
     html += "<div class='zy-export-progress'><div class='zy-export-bar' data-e='export-bar' style='width:0%'></div></div>" +
       "<div data-e='export-progress' class='zy-export-status'></div>";
 
     html += "<p class='zy-warn-hint'>导出按开始时刻的工程快照逐帧渲染（导出期间请勿改动时间线）；" +
-      "变速音频按一期拍板不保音调；宿主缺 AudioEncoder/OfflineAudioContext 时自动导出无音轨版本并如实提示；" +
-      "webm 备选档与 MediaRecorder 原型属后续评审，本版不提供入口。" +
-      "写盘：浏览器降级模式经 downloadBlob 落盘；Production 云资料写盘待 fileDialog.save 契约，见 README 诚实边界。</p>";
+      "变速音频按一期拍板不保音调。MP4 主档：宿主缺 AudioEncoder 时自动导出无音轨版本并如实提示；" +
+      "WebM 原型档：实时 1× 速录制（导出耗时=时间线时长）、帧率贴墙钟、webm 时长元数据缺省——转正待评审。" +
+      "写盘：检测到 Production fileDialog.saveBlob 先走宿主写盘（检测到≠放行，失败回退），浏览器降级走 downloadBlob。</p>";
 
     body.innerHTML = html;
 
@@ -702,16 +895,31 @@
       });
     }
 
+    var fmt = body.querySelector("[data-e='format']");
+    if (fmt) fmt.value = lastChoice && lastChoice.format ? lastChoice.format : "mp4";
+    if (fmt) fmt.addEventListener("change", function () { lastChoice = { format: fmt.value }; });
+
     var btn = body.querySelector("[data-e='do-export']");
     if (btn) {
-      btn.disabled = state.active || !capabilityOk();
+      btn.disabled = state.active || (!capabilityOk() && !canRecorderExport());
       btn.addEventListener("click", function () {
         if (state.active) return;
+        var chosen = fmt && fmt.value ? fmt.value : "mp4";
+        if (chosen === "webm" && !canRecorderExport()) {
+          status("WebM 原型档当前宿主不可用（mediaRecorder/captureStream/AudioContext 缺失）", true);
+          return;
+        }
+        if (chosen === "mp4" && !capabilityOk()) {
+          status("MP4 主档需 WebCodecs VideoEncoder（当前宿主缺失）；如可用请切 WebM 原型档", true);
+          return;
+        }
         var a = aspect && aspect.value ? aspect.value : "16:9";
-        runExport({ aspect: a }).then(function (res) {
+        var runner = chosen === "webm" ? runRecorderExport : runExport;
+        runner({ aspect: a }).then(function (res) {
           if (!res || !res.blob) return; /* 失败/取消已在内部如实上报 */
+          var ext = res.realtime ? "webm" : "mp4";
           var safeName = (ZY.project.data.name || "deskshadow").replace(/[\\/:*?"<>|]/g, "_");
-          var filename = safeName + "-" + stamp() + ".mp4";
+          var filename = safeName + "-" + stamp() + "." + ext;
           saveOrDownload(res.blob, filename);
         }, function (e) {
           status("导出失败：" + (e && e.message || e), true);
@@ -738,7 +946,10 @@
     render();
     ZY.export = ZY.export || {};
     /* 扩展运行态属性（保留 init/render 指针） */
-    ZY.export.run = runExport;
+    ZY.export.run = function (opts) {
+      var fmt = opts && opts.format ? opts.format : "mp4";
+      return fmt === "webm" ? runRecorderExport(opts) : runExport(opts);
+    };
     ZY.export.cancel = cancelExport;
     ZY.export.state = {
       get active() { return state.active; },

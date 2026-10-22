@@ -68,6 +68,6 @@
   "validationChecks": [
     "No operation introduces a permission id absent from the operations themselves and the base registry.",
     "declarablePermissionIds remains a closed list (no wildcards).",
-    "Every new publicApiTargets member exists in one of the two methods-draft JSONs of this batch (capability-broker-media-methods-draft-v0.json / capability-broker-ai-methods-draft-v0.json), so registry and vocabulary deltas land as one consistent batch."
+    "Every new publicApiTargets member resolves to a facade member of this batch's two methods-draft JSONs (methods/events entries: publicNamespace + '.' + publicMember), or is a facade-synthesized member documented therein (ai.isSupported, computed from authoritative namespace registration without a broker round-trip). Broker-internal ids (no publicMember) are not public targets. Registry and vocabulary deltas land as one consistent batch."
   ]
 }

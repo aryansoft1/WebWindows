@@ -950,6 +950,11 @@
       var fmt = opts && opts.format ? opts.format : "mp4";
       return fmt === "webm" ? runRecorderExport(opts) : runExport(opts);
     };
+    /* L1 分析也用主档画幅口径（导出分辨率表原样暴露，两处不漂移） */
+    ZY.export.outSizeFor = function (aspect) {
+      var s = OUT_SIZE[aspect] || OUT_SIZE["16:9"];
+      return [s[0], s[1]];
+    };
     ZY.export.cancel = cancelExport;
     ZY.export.state = {
       get active() { return state.active; },

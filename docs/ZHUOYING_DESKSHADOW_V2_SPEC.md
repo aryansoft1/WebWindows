@@ -111,6 +111,16 @@
 | 1080p 真素材视频链路复核（解码+合成+编码） | 854×480 源→1920×1080 烧字幕→avc1.640028@8Mbps，60 帧 **3.02s=19.8fps（0.66× 实时）**、262KB | 瓶颈在逐帧独立 seek 解码链+1080p draw，非编码器（对照：1080p 合成编码基准 144.5fps）；提速归 V3 复用解码链 |
 | jsdom 回归 | 扩至 **35/35**（webm 选项三态：缺能力置灰/含 mediaRecorder 桩可选/无 VE 仍可点） | 按钮启用条件统一为 `!capabilityOk() && !canRecorderExport()` 才置灰 |
 
+**第十三轮补档（2026-10-22，L1 本地素材分析 + i18n 补齐）**：
+
+| 项目 | 结果 | 备注 |
+| --- | --- | --- |
+| L1 assetReport e2e（52.2s 854×480 真素材） | 65 视觉采样点 + 63 响度窗、全扫描 **6.7s**、报告 615B ≤16KiB；断网蜜罐 `netCalls` 全程为空（零外发实证） | 视觉车道=luma 16-bin 柱状图相邻差（峰值 0.67，阈值 0.55）；音频车道=全块拼接过窗 RMS dBFS（-50dB/≥300ms 静音段）；车道阈值与"估算"标注=诚实边界 |
+| 2s 双片段工程结构摘要 | 615B：clip 2/media 1/字幕覆盖 1.2s 均字 6/warm✓crossfade✓/gap 0 | 纯工程数据同步生成；缺 `captions` 字段旧 JSON 防御容错 |
+| `frameAt(0)` 修复（`_pickFrame`） | 目标早于首帧时取首帧；修复前反派 null | **副产**：导出首帧黑帧老 bug 顺带治好（export 冒烟 60v+113a 回灌 `firstFrameAtZero:true`）；jsdom 既有 35 例全数通过无回归 |
+| i18n en/jp 补齐 | chrome 层 12 缺键全量真翻译（en + jp），jsdom 断言三语键翻齐 | 面板内部长文案仍中文键值（回退可读），深层国际化属后续轮次 |
+| jsdom 回归 | 扩至 **51/51**（L1 结构确定性/车道统计/诚实 skip/noteOnly/缺 provider 报告组装/零网络静态断言） | ai.js 不得含 `fetch(`/`XMLHttpRequest`/`sendBeacon` |
+
 ## 6. 剩余开放项
 
 1. ~~导出 1080p 真素材编码复核~~ **数据点已补**（第十二轮：854×480→1920×1080 视频链路 19.8fps=0.66× 实时，瓶颈=逐帧独立 seek 解码链+1080p draw，见 §5 第十二轮表；1080p 导出提速属 V3 复用解码链优化，不做 hack）；
@@ -120,4 +130,5 @@
 5. ~~Production 写盘~~ **探测分支已接**（第十一轮：导出完成先试 `fileDialog.saveBlob`（检测到≠放行），失败自动回退 `downloadBlob` 并如实上报；契约放行语义待正式评审）；
 6. **ASP 侧 4 MiB 分片转发 CPU 实测**（试点诊断计数器）；
 7. ~~字幕样式字体白名单最终三选~~ **数据点已落地**（第十一轮：canvas 量宽法实测——可用 Microsoft YaHei/Segoe UI/Verdana/Tahoma/Arial；SimHei/黑体/Noto·思源不可用。代码当前三元组 `"Segoe UI","Microsoft YaHei",sans-serif` 正确；最终定名仍待产品拍板）；
-8. ~~mp4box.js vendor~~ **已落地**（第七轮：v0.5.3 BSD-3-Clause + LICENSE + SOURCE 入库）；~~导出管线~~ **已落地**（第十轮，见 README「V2 导出管线」）；~~多片段衔接预览接力~~ **已落地**（第十一轮 `chainTo`，e2e 实测跨边界续播至末尾正确停）。
+8. ~~mp4box.js vendor~~ **已落地**（第七轮：v0.5.3 BSD-3-Clause + LICENSE + SOURCE 入库）；~~导出管线~~ **已落地**（第十轮，见 README「V2 导出管线」）；~~多片段衔接预览接力~~ **已落地**（第十一轮 `chainTo`，e2e 实测跨边界续播至末尾正确停）；
+9. ~~L1 本地素材分析~~ **已落地**（第十三轮，页内两级：工程结构摘要 + assetReport 车道〔抽帧场景/运动/响度/静音〕，schema 对齐 §7.4、≤16KiB 下采样、断网蜜罐实证零外发；e2e 52.2s 素材 65 点+63 窗 6.7s；`_pickFrame` 副产修复 frameAt(0)/导出首帧黑帧）；~~i18n en/jp~~ chrome 层 **已补齐**（第十三轮，21 键三语对齐；面板内部长文案后续轮次再议）。L2 桌讯编排仍依赖 `ai.desktalk-assist` 契约评审（保持 disabled）。

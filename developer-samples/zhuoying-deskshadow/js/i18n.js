@@ -1,6 +1,7 @@
 /* 桌影 i18n 层：仿仓库 tw.js 的键值习惯——以简体中文文案为键，
  * 每种语言用「文案 -> 译文」映射，缺失键回退为键本身（即中文）。
- * zh 完整，en/jp 为骨架占位，V2 补齐；不引用仓库 assets/js/tw.js。 */
+ * zh/en/jp 的 chrome 层键全量对齐（en/jp 第十三轮补齐）；面板内部长文案仍走回退。
+ * 不引用仓库 assets/js/tw.js。 */
 (function () {
   "use strict";
   var ZY = (window.ZY = window.ZY || {});
@@ -35,15 +36,21 @@
       "导入素材": "Import Media",
       "拆分播放头": "Split at Playhead",
       "诊断": "Diagnostics",
-      "桌讯 AI 助手": "DeskTalk AI (placeholder)",
+      "桌讯 AI 助手": "DeskTalk AI Assistant",
       "视频轨": "Video Track",
       "音频轨": "Audio Track",
       "字幕轨": "Caption Track",
       "片段检查": "Clip Inspector",
       "字幕卡": "Caption Card",
       "滤镜与过渡": "Filters & Transitions",
-      "导出": "Export"
-      /* 其余键暂缺，回退为中文键值（V2 补齐）。 */
+      "导出": "Export",
+      "桌影": "DeskShadow",
+      "DeskShadow · 三轨视频剪辑": "DeskShadow · Three-Track Video Editing",
+      "无片段：请在时间线放置片段或导入素材": "No clips: place clips on the timeline or import media",
+      "双击空白处添加字幕卡": "Double-click empty space to add a caption",
+      "运行环境诊断": "Runtime Diagnostics",
+      "桌影 · 桌讯 AI 剪辑助手（契约评审中）": "DeskShadow · DeskTalk AI Assistant (under contract review)"
+      /* chrome 层 21 键已全部覆盖；面板内部长文案保持中文键值回退，后续轮次再议 */
     },
     jp: {
       "新建工程": "新規プロジェクト",
@@ -52,15 +59,21 @@
       "导入素材": "メディアを読み込む",
       "拆分播放头": "再生ヘッドで分割",
       "诊断": "診断",
-      "桌讯 AI 助手": "DeskTalk AI（仮）",
+      "桌讯 AI 助手": "DeskTalk AI アシスタント",
       "视频轨": "映像トラック",
       "音频轨": "音声トラック",
       "字幕轨": "字幕トラック",
       "片段检查": "クリップ検査",
       "字幕卡": "字幕カード",
       "滤镜与过渡": "フィルターとトランジション",
-      "导出": "書き出し"
-      /* 其余键暂缺，回退为中文键值（V2 补齐）。 */
+      "导出": "書き出し",
+      "桌影": "デスクシャドウ",
+      "DeskShadow · 三轨视频剪辑": "DeskShadow・三トラック動画編集",
+      "无片段：请在时间线放置片段或导入素材": "クリップがありません：タイムラインに配置するか、メディアを読み込んでください",
+      "双击空白处添加字幕卡": "空白をダブルクリックで字幕カードを追加",
+      "运行环境诊断": "実行環境診断",
+      "桌影 · 桌讯 AI 剪辑助手（契约评审中）": "デスクシャドウ・DeskTalk AI アシスタント（契約審査中）"
+      /* chrome 层 21 键已全部覆盖；面板内部长文案保持中文键值回退，后续轮次再议 */
     }
   };
 

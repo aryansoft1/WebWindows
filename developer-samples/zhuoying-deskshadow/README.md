@@ -20,19 +20,18 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 - **片段检查面板**（`js/clips.js`）：名称/时长编辑、变速倍率 0.25~4、音量单值 0~1.5、媒质信息、删除片段。
 - **字幕轨**：字幕轨双击空白新增字幕卡（默认 2 秒）、双击已有卡进入编辑（起止时间/文本/字号/描边开关；底部居中 V1 固定）。
 - **滤镜与过渡面板**：6 个滤镜预设（none/暖/冷/灰度/高对比/复古，CSS filter 字符串常量，片段级存储）、过渡下拉（none/叠化/黑场/白闪，存于“相邻片段衔接处”＝前段 `transitionOut`）、画幅预设（16:9/9:16/1:1/4:5，工程级）。
-- **诊断 + AI 抽屉**（`js/ai.js`）：`window.WebWindows`/device/dialog/fileDialog/ai/localStorage/WebCodecs/MediaRecorder 等的真实检测结果；桌讯 AI 占位卡、本地素材分析 L1（拟定，只统计不发送）、L2 置灰按钮、隐私边界引用。
+- **诊断 + AI 抽屉**（`js/ai.js`）：`window.WebWindows`/device/dialog/fileDialog/ai/localStorage/WebCodecs/MediaRecorder 等的真实检测结果；桌讯 AI 占位卡、**L1 本地素材分析已落地**（两级：工程结构摘要=同步纯工程数据；素材扫描报告 assetReport=抽帧场景/运动/响度/静音车道，页内计算零外发，细节见下「L1 本地素材分析」）、L2 置灰按钮、隐私边界引用。
 - **导出面板**（`js/export.js`）：能力支持矩阵 + 画幅/格式选择；MP4 导出已实现（逐帧合成→H.264/AAC 编码→mp4box.js 封装→下载），WebM 原型档（MediaRecorder 实时录制）作为无 VideoEncoder 宿主的诚实降级路径同步落地，细节见下「V2 导出管线」。
 - **持久化**：全部工程状态入 `localStorage`（键 `ww.deskshadow.project.v1`），语言偏好 `ww.deskshadow.lang`；工程 JSON 结构为 `format/formatVersion/settings/media[]/clips[]/captions[]`，字段含义见 `js/app.js` 头部注释，便于 V2 增量实现。
 
 ## i18n
 
-`js/i18n.js` 仿仓库 `assets/js/tw.js` 的键值习惯（以简体中文文案为键、目标语言映射译文、缺失回退中文键值），
-`zh` 完整，`en`/`jp` 为骨架占位；不引用 `assets/js/tw.js`。
+`js/i18n.js` 仿仓库 `assets/js/tw.js` 的键值习惯（以简体中文文案为键、目标语言映射译文、缺失回退中文键值），不引用 `assets/js/tw.js`。第十三轮起 **chrome 层 21 键 zh/en/jp 全量对齐**（en/jp 真翻译，非占位；jsdom 断言键翻齐）；面板内部长文案暂保持中文键值（回退可读），深层字符串国际化属后续轮次。
 
 ## 诚实边界（写进 UI 文案并全站一致）
 
 - **未接入 / 设计待评审**：`fileDialog.open`、`fileDialog.saveBlob`、`dialog`、Broker 调用——`window.WebWindows` 检测不到时走普通浏览器降级，检测到了也只是“命名空间存在≠契约放行”。
-- **桌讯 AI**：面板明确标注“契约评审中”，L2 发送按钮置灰，“依赖桌讯 AI 协助契约评审通过后可用”；L1 仅本地统计且展示。
+- **桌讯 AI**：面板明确标注“契约评审中”，L2 发送按钮置灰，“依赖桌讯 AI 协助契约评审通过后可用”；L1 已落地为页内确定性两级分析（结构摘要 + assetReport 车道），只输出数值型摘要、不传帧画面/音频内容，零网络由断网蜜罐实测背书。
 - **导出**：MP4（avc1.640028+AAC）主档已实现；**WebM 原型档（MediaRecorder 实时录制）已作为无 VideoEncoder 宿主的诚实降级路径落地**——面板如实标注"原型/1× 速/待评审"，mediaRecorder+captureStream 缺失时选项置灰（不做空按钮）；边界如实标注：变速音频按一期拍板**不保音调**（两档同）；MP4 无 AudioEncoder 时自动导出无音轨版本并提示；写盘分流已接入：检测到 Production `fileDialog.saveBlob` 先走宿主写盘（**检测到≠放行**：失败自动回退 `downloadBlob` 并如实上报），浏览器降级模式直接下载；导出用开始时刻的工程快照，导出期间请勿改动时间线。
 - **媒体二进制**：仅会话内 objectURL 暂存，不写入工程文件与 localStorage；重新打开旧工程时引用媒质无本地文件，需重新导入——UI 如实提示。
 
@@ -73,3 +72,17 @@ WebWindows 第三方应用生态的功能包样例：**三轨视频剪辑软件*
 - **WebM 原型档（MediaRecorder 实时录制，第十二轮）**：为缺 `VideoEncoder` 的宿主提供诚实降级——沿用同一 `compositeFrame` 合成器（滤镜/过渡/字幕/变速取帧完全一致），视频走 `canvas.captureStream(fps)`、音频用活 `AudioContext` + `MediaStreamAudioDestinationNode` 实时排源（playbackRate 变速同拍板不保音调），`MediaRecorder(vp9/opus 择型)` 封装 webm。**档位性质=原型**：实时 1× 速录制（导出耗时=时间线时长）、帧率贴墙钟、webm 容器时长元数据缺省；面板格式 select 双项如实标注「原型/待评审」，mediaRecorder/captureStream 缺失时选项置灰（不做空按钮）。e2e：2s 双片段（crossfade+warm+字幕+音量差+音轨）实时录制墙钟 2.57s→62.7KB vp9+opus 含音轨，console 零 error。
 - **实测耗时（真素材，诚实数据）**：720p 真素材完整导出（854×480 源→1280×720、含解码+合成+音频混音+AAC+封装）2s/60 帧全程 ≈5.1s——瓶颈在逐帧独立 seek 解码链（每帧新 decoder）而非编码器（合成基准 144.5fps、1080p 编码基准均 >100fps）；1080p 真素材视频链路（解码+合成+编码，无音轨）60 帧 3.02s=**19.8fps（0.66× 实时）**。结论：主档 720p 导出耗时≈素材时长 2~3 倍量级、可用；1080p 提速属 V3「复用解码链/快照窗口」优化项。720p 主档为当前性能优档，1080p 输出建议谨慎使用（如实提示）。
 - **开放项（收口后遗留，全部有明确归属）**：变速保音调重采样（V3，用户拍板一期不保）、WebM 原型档转正评审（时长元数据缺省/帧率偏移收敛后）、1080p 导出提速（V3 复用解码链）。
+
+## L1 本地素材分析（2026-10-22 第十三轮落地）
+
+对齐 `WEBWINDOWS_MEDIA_EDITING_APP_SUPPORT_V1.md` §7.3「L1 一期实现（应用内，零外发）」与 §7.4 `video-edit` scene 摘要 schema。两级入口都在桌讯 AI 抽屉：
+
+- **工程结构摘要（L1-结构）**：同步、纯工程数据——片/媒质/字幕数、总时长、变速范围、`videoGap`（视频轨同轨相邻空隙数与总秒）、滤镜/过渡使用分布、字幕覆盖秒数与平均字数；缺 `captions` 字段的旧工程 JSON 防御性容错。
+- **素材扫描报告（assetReport，L1-扫描）**：每媒质独立导出管线（`canvas:null`，结束 `destroy()`）+ 两条确定性车道：
+  - **视觉车道**：抽帧（步长自适应——≤30s 用 0.5s 基准步长，>30s 拉大到整段 ≤64+1 点）→ 64px 降采样 luma 16-bin 柱状图 → 相邻差归一化（L1 距离 ≥0.55 记场景切换候选）= motion 车道 + sceneCuts（均标注"估算"）；
+  - **音频车道**：`decodeAudioRange` 离线解码全部音轨块（AAC 单块 ~1024 样本 ≠ 窗长，按 pts 顺序拼接成一条全轨样本走廊再按步长开窗）→ RMS→dBFS 响度包络 + `-50dB/≥300ms` 静音段（左声道确定性车道，如实标注）；失败/无音轨 skip 并进 notes。
+  - **语义约定**：V1 片段从素材 0 起播 → 片段素材窗= `duration×speed`；车道值按窗裁剪，工程轴= `clip.start + 素材秒/speed`；片段素材窗短于一个采样步长时该车道如实缺值（不动 0 值、notes 说明）。
+  - **schema 对齐**：`summary.project{duration,resolution,fps,tracks,aspectRatio}/clips[{id,duration,speed,scenes,motion,silenceRatio,loudness,resolution}]/analysis{sceneCuts,silenceSpans,motionHistogram,loudnessDownsample}/notes`；数组 ≤64 点确定性下采样；序列化 >16 KiB 按 2 的幂加密抽样直到 ≤16KiB（实测 2s 工程 615B、富工程走加密车道）。
+- **零外发实证**：真机断网蜜罐（劫持 `fetch`/`XMLHttpRequest` 后全扫描）`netCalls` 为空；jsdom 静态断言 ai.js 无 `fetch(`/`XMLHttpRequest`/`sendBeacon`；`AI 上行字节=0` 与产品规格 §8「L1 完全客户端」一致。
+- **e2e 数据点（52.2s 854×480 真素材）**：65 视觉采样点+63 响度窗、6.7s 全扫描；结构摘要 2s 工程 615B；luma 差峰值 0.67（<0.55 记阈值内不切——估算车道阈值保守）；`frameAt(0)` 修复（`_pickFrame` 目标早于首帧→取首帧，顺带治好导出首帧黑帧的老 bug，export 2s 冒烟 60v+113a 回灌全过）。
+- **L2 不变**：发送按钮保持 disabled——`ai.desktalk-assist` 契约评审落地后才启用；assetReport 即未来 L2 载荷（`ai.requestAssist`）。

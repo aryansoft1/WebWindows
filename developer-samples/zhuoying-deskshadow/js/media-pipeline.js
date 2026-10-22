@@ -488,6 +488,9 @@
       if (this._frames[i].ts > posTs) break;
       pick = this._frames[i];
     }
+    /* 目标早于首帧（典型 frameAt(0) 流首采样点 cts≈2μs>0）：最近一帧=首帧。
+       修复前返回 null（导出首帧/扫描第一采样点误判为无帧）。 */
+    if (!pick && this._frames.length && this._frames[0].ts > posTs) pick = this._frames[0];
     return pick;
   };
 

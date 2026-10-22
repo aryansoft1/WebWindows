@@ -115,6 +115,8 @@ window.WebWindowsDeskTalk = Object.freeze({
 
 `ai/knowledge/` 新增《桌影》条目（keywords：桌影|视频剪辑|剪视频|字幕|导出）。**注意 `index.inc.asp` 注册表上限 32 条（`KnowledgeIds(31)`），接入前必须先盘点当前占用数**；上限不足时先扩容数组，属独立评审变更。
 
+> **盘点（2026-10-22，T-072 第十六轮）**：`ai/knowledge/index.inc.asp` 现登记 **16 条**（overview/desktop/windows/functions/function-center/cloud-files/file-open/local-device-storage/settings/sound/display/power-battery/account/developer-center/mobile-android/troubleshooting），占用 16/32、**剩余空位 16**。加《桌影》1 条后 17/32，**无需扩容**；占位后再次达 50%。
+
 ## 9. 错误模型
 
 复用 `capability-broker-errors-v1.json` 全部稳定错误，另增（禁止携带 provider/stack/原始异常）：

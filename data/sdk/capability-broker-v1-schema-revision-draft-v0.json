@@ -1,0 +1,256 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.y0.hk/data/sdk/capability-broker-v1-schema-revision-draft-v0.json",
+  "schemaVersion": 1,
+  "contract": "webwindows-capability-broker-schema-revision-draft-v0",
+  "status": "draft-not-applied",
+  "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
+  "baseContract": "webwindows-capability-broker-v1",
+  "baseFile": "data/sdk/capability-broker-v1.schema.json",
+  "targetFile": "data/sdk/capability-broker-v1.schema.json",
+  "deltaType": "schema-revision-for-registry-edition",
+  "purpose": "R-A① step 2 (register the reviewed G1/G2 broker method drafts into the production registry data/sdk/capability-broker-methods-v1.json) is mechanically blocked by frozen v1 ceilings/vocabularies. Clamp-translating instead of revising would distort approved contracts (4 MiB chunks cannot pass a 1 MiB response cap; host-owned dialog dwell cannot pass a 10 s timeout). This draft proposes the minimal schema revision set so registration becomes byte-faithful. Approval of THIS draft is a separate review decision from R-A①; nothing in revisions below flips any availability or enables any runtime behavior.",
+  "notes": [
+    "Battery rows are untouched in every revision: device.battery.getState/refresh stay enabled in preview and production, and the bundle production-battery-broker.global.js behavior is unchanged (defaultDecision deny + unknownMethods deny still deny everything not implemented).",
+    "The alternative (clamp) was measured and rejected: registering readChunk with a 1 MiB response cap would shrink the approved chunk size from 4 MiB to ~760 KiB; clamping begin/commit/requestAssist timeouts to 10 s would force split-request workarounds not present in any reviewed design. Distortion is worse than a reviewed ceiling raise.",
+    "Registry edition itself (methods entries, events entry, exclusion split, provenance note) happens AFTER this revision is approved, in a follow-up commit that also regenerates tools/build-developer-studio-validator.mjs outputs and extends tests/capability-broker-contract-smoke.mjs."
+  ],
+  "conflicts": [
+    {
+      "id": "C1",
+      "area": "methodDefinition.timeoutMs ceiling",
+      "schemaCurrent": { "maximum": 10000 },
+      "draftValues": [
+        { "method": "device.storage.writeSession.begin", "value": 120000, "why": "host-side trusted save dialog dwell is in-band before begin returns" },
+        { "method": "device.storage.writeSession.commit", "value": 30000, "why": "host materialization of the assembled target before commit returns" },
+        { "method": "ai.desktalk.requestAssist", "value": 120000, "why": "host-owned confirmation card dwell is in-band before the ticket result returns" }
+      ]
+    },
+    {
+      "id": "C2",
+      "area": "methodDefinition.maximumResponseBytes ceiling",
+      "schemaCurrent": { "maximum": 1048576 },
+      "draftValues": [
+        { "method": "device.storage.readChunk", "value": 6291456, "why": "carries 4 MiB chunk bytes as base64 (~5.6 MiB chars) plus envelope fields" }
+      ]
+    },
+    {
+      "id": "C3",
+      "area": "methodDefinition.consent enum",
+      "schemaCurrent": { "enum": ["no-consent", "session-grant", "persistent-user-grant"] },
+      "draftValues": [
+        { "method": "device.storage.stat", "value": "resource-grant-ride", "why": "authorization rides the already-granted resource permission (device.storage-file.read); no per-call ceremony" },
+        { "method": "device.storage.readChunk", "value": "resource-grant-ride", "why": "same grant-ride as stat; no per-call ceremony" },
+        { "method": "device.storage.writeSession.begin", "value": "host-owned-user-action", "why": "host save dialog is the user action constituting the grant" },
+        { "method": "device.storage.writeSession.writeChunk", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
+        { "method": "device.storage.writeSession.commit", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
+        { "method": "device.storage.writeSession.abort", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
+        { "method": "device.storage.writeSession.status", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
+        { "method": "ai.desktalk.requestAssist", "value": "host-confirmation-card", "why": "host confirmation card precedes every request (protocol section 8)" }
+      ]
+    },
+    {
+      "id": "C4",
+      "area": "methodDefinition.userGesture enum",
+      "schemaCurrent": { "enum": ["none", "host-required"] },
+      "draftValues": [
+        { "method": "device.storage.writeSession.begin / ai.desktalk.requestAssist", "value": "required" }
+      ]
+    },
+    {
+      "id": "C5",
+      "area": "availability + currentStatus vocabulary",
+      "schemaCurrent": {
+        "previewAvailability": ["disabled", "phase-2b-candidate", "enabled"],
+        "productionAvailability": ["disabled", "future-candidate", "enabled"],
+        "currentStatus": ["pilot-contract-only", "enabled", "deprecated"]
+      },
+      "draftValues": [
+        { "scope": "all nine methods in the two drafts", "value": "proposed-enabled / proposed-disabled / draft" }
+      ]
+    },
+    {
+      "id": "C6",
+      "area": "methodDefinition.requiredPermission nullability",
+      "schemaCurrent": { "type": "string" },
+      "draftValues": [
+        { "method": "device.media.getCapabilities", "value": null, "why": "permission-free capability-report handshake; gated purely on runtime capability media.engine-report" }
+      ]
+    },
+    {
+      "id": "C7",
+      "area": "methodRegistry events section",
+      "schemaCurrent": { "properties": "methods / reviewedNotSelected / explicitlyExcluded / $defs only (additionalProperties false)" },
+      "draftValues": [
+        { "event": "ai.assist.received", "facadeTarget": "ai.on", "why": "the reviewed assist channel is event-shaped; without an events home the production registry cannot represent half the approved G2 contract" }
+      ]
+    },
+    {
+      "id": "C8",
+      "area": "methodDefinition.requiredRuntimeCapability pattern",
+      "schemaCurrent": { "pattern": "segments admit only alnum (battery.status); hyphenated segments rejected" },
+      "draftValues": [
+        { "method": "device.storage.stat", "value": "storage.file-handle" },
+        { "method": "device.storage.readChunk", "value": "storage.file-handle-stream" },
+        { "method": "device.storage.writeSession.*", "value": "storage.file-write-session" },
+        { "method": "device.media.getCapabilities", "value": "media.engine-report" }
+      ]
+    },
+    {
+      "id": "C9",
+      "area": "methodDefinition.publicMember pattern",
+      "schemaCurrent": { "pattern": "single alnum token only (getState); dotted getter chains rejected" },
+      "draftValues": [
+        { "method": "device.storage.writeSession.begin", "value": "writeSession.begin" },
+        { "method": "device.storage.writeSession.writeChunk", "value": "writeSession.writeChunk" },
+        { "method": "device.storage.writeSession.commit", "value": "writeSession.commit" },
+        { "method": "device.storage.writeSession.abort", "value": "writeSession.abort" },
+        { "method": "device.storage.writeSession.status", "value": "writeSession.status" }
+      ]
+    }
+  ],
+  "schemaRevisions": [
+    {
+      "id": "V1",
+      "op": "raise-maximum",
+      "path": "$defs.methodDefinition.properties.timeoutMs.maximum",
+      "from": 10000,
+      "to": 120000,
+      "affectedMethods": ["device.storage.writeSession.begin", "device.storage.writeSession.commit", "ai.desktalk.requestAssist"]
+    },
+    {
+      "id": "V2",
+      "op": "raise-maximum",
+      "path": "$defs.methodDefinition.properties.maximumResponseBytes.maximum",
+      "from": 1048576,
+      "to": 6291456,
+      "affectedMethods": ["device.storage.readChunk"]
+    },
+    {
+      "id": "V3",
+      "op": "extend-enum",
+      "path": "$defs.methodDefinition.properties.consent.enum",
+      "append": ["resource-grant-ride", "host-owned-user-action", "ride-on-session", "host-confirmation-card"],
+      "affectedMethods": ["device.storage.stat", "device.storage.readChunk", "device.storage.writeSession.begin", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status", "ai.desktalk.requestAssist"]
+    },
+    {
+      "id": "V4",
+      "op": "extend-enum",
+      "path": "$defs.methodDefinition.properties.userGesture.enum",
+      "append": ["required"],
+      "affectedMethods": ["device.storage.writeSession.begin", "ai.desktalk.requestAssist"]
+    },
+    {
+      "id": "V5",
+      "op": "extend-enum",
+      "paths": [
+        { "path": "$defs.methodDefinition.properties.previewAvailability.enum", "append": ["proposed-enabled"] },
+        { "path": "$defs.methodDefinition.properties.productionAvailability.enum", "append": ["proposed-disabled"] },
+        { "path": "$defs.methodDefinition.properties.currentStatus.enum", "append": ["draft"] }
+      ],
+      "affectedMethods": ["all nine candidate methods from the two drafts"]
+    },
+    {
+      "id": "V6",
+      "op": "widen-type",
+      "path": "$defs.methodDefinition.properties.requiredPermission.type",
+      "from": "string",
+      "to": ["string", "null"],
+      "affectedMethods": ["device.media.getCapabilities"]
+    },
+    {
+      "id": "V9",
+      "op": "widen-pattern",
+      "path": "$defs.methodDefinition.properties.requiredRuntimeCapability.pattern",
+      "from": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)+$",
+      "to": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*(?:-[a-z][A-Za-z0-9]*)*)+$",
+      "affectedMethods": ["device.storage.stat (storage.file-handle)", "device.storage.readChunk (storage.file-handle-stream)", "device.storage.writeSession.* (storage.file-write-session)", "device.media.getCapabilities (media.engine-report)"],
+      "rationale": "reviewed drafts use hyphenated capability segments; the frozen v1 pattern admits only alnum segments (battery.status). Hyphenated segments must be admitted or the four reviewed runtime capabilities cannot register. Battery values unaffected."
+    },
+    {
+      "id": "V10",
+      "op": "widen-pattern",
+      "path": "$defs.methodDefinition.properties.publicMember.pattern",
+      "from": "^[a-z][A-Za-z0-9]*$",
+      "to": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$",
+      "affectedMethods": ["device.storage.writeSession.begin", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status"],
+      "rationale": "the reviewed write-session family lives under one namespace with chained members (device.storage.writeSession.begin); the schema's publicMember admits a single token. Dotted members must be admitted or five of the nine reviewed methods cannot register. Facade construction stays publicNamespace + '.' + publicMember (battery rows unaffected: getState/refresh remain single tokens)."
+    },
+    {
+      "id": "V7",
+      "op": "add-optional-property",
+      "path": "$defs.methodRegistry.properties.events",
+      "design": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["id", "publicNamespace", "publicMember", "direction", "requiredPermission", "riskClass", "payloadSchema"],
+          "properties": {
+            "id": { "$ref": "#/$defs/methodId" },
+            "publicNamespace": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$" },
+            "publicMember": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$" },
+            "direction": { "enum": ["host-to-sandbox", "sandbox-to-host"] },
+            "requiredPermission": { "$ref": "#/$defs/methodDefinition/properties/requiredPermission" },
+            "riskClass": { "enum": ["low", "medium", "high"] },
+            "payloadSchema": { "type": "object" },
+            "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+          },
+          "additionalProperties": false
+        }
+      },
+      "affectedEvents": ["ai.assist.received (facade ai.on)"],
+      "shapeRationale": "modeled on the actual reviewed event entries (the ai draft's events[0] carries no availability/currentStatus/sanitization fields; its governance text lives in a notes array). Event enablement is decided by the per-method runtime review of the channel that carries it - it is NOT a registry availability field.",
+      "note": "The wire-level event envelope stays frozen (event.type enum snapshot.update/capability.change unchanged); V7 only gives event CONTRACTS a registry home. The runtime event-channel extension for assist.received is a per-method review item, not implied by registration."
+    },
+    {
+      "id": "V8",
+      "op": "add-optional-property",
+      "path": "$defs.methodRegistry.properties.notes",
+      "design": { "type": "array", "items": { "type": "string", "minLength": 1 }, "maxItems": 32 },
+      "rationale": "edition provenance on the production registry (permissions-v1.json precedent already carries a notes array); without it the registry cannot contain the review-decision note that accompanies the edition"
+    }
+  ],
+  "registryEditsAfterRevision": [
+    {
+      "step": "R1",
+      "op": "register-methods",
+      "file": "data/sdk/capability-broker-methods-v1.json",
+      "source": "the two drafts, verbatim (no field translation needed once V1-V6 apply)",
+      "methodIds": ["device.storage.stat", "device.storage.readChunk", "device.storage.writeSession.begin", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status", "device.media.getCapabilities", "ai.desktalk.requestAssist"],
+      "unchanged": "availability words verbatim from drafts (proposed-enabled / proposed-disabled / draft); battery rows untouched"
+    },
+    {
+      "step": "R2",
+      "op": "register-event",
+      "eventId": "ai.assist.received",
+      "condition": "only if V7 approved",
+      "source": "ai methods draft events[0] verbatim"
+    },
+    {
+      "step": "R3",
+      "op": "split-exclusion",
+      "remove": ["device.storage"],
+      "add": ["device.storage.pickDirectory", "device.storage.listVolumes", "device.storage.listDirectory", "device.storage.requestPermission", "device.media.record", "device.media.upload", "ai.desktalk.attachFile", "ai.desktalk.send", "ai.desktalk.readThread", "ai.complete"],
+      "rationale": "the blanket 'device.storage' namespace exclusion (battery-era) is split per the media draft's supersedes note: directory-surface methods stay excluded (no reviewed contract), file-handle-scoped methods register as candidates; ai-side always-excluded methods carry over from the ai draft"
+    },
+    {
+      "step": "R4",
+      "op": "add-notes-entry",
+      "condition": "only if V8 approved",
+      "note": "2026-10-22: G1/G2 method contracts registered as candidates (proposed-enabled preview / proposed-disabled production) from permissions-declarable-batch-draft-v0 per docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A① + schema revision review; per-method runtime enablement stays a separate review; battery rows unchanged."
+    }
+  ],
+  "explicitlyNotInThisRevision": [
+    "No availability flip: no method moves toward enabled; preview audit-mode enablement is a later, per-batch review.",
+    "No runtime/broker code change (production-battery-broker and developer-studio preview brokers untouched).",
+    "No facade generation (d.ts edit stays deferred per repo rule 4); registered candidates are still invisible to sandboxes until facade lands per-method.",
+    "No error-registry/policy changes (capability-broker-errors-v1.json / capability-broker-policy-v1.json untouched)."
+  ],
+  "validationChecks": [
+    "Every revision path (V1-V4, V6, and each path in V5) exists in the base schema JSON with the stated current shape (raise/append/widen pre-checked mechanically before human review).",
+    "V7/V8 designs are legal JSON Schema 2020-12 fragments reused from existing $defs references.",
+    "Every affectedMethod listed in V1-V6 appears in one of the two method drafts with the cited conflicting value.",
+    "Battery registry rows are not touched by any revision (mechanically verified against the base file before/after).",
+    "A simulated post-revision registry (battery rows + the nine candidate methods + event + split exclusions + notes) validates clean against the revised schema (in-memory simulation in the round checker, before any production file is touched)."
+  ]
+}

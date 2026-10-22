@@ -142,3 +142,14 @@ window.WebWindowsDeskTalk = Object.freeze({
   3. share 需要登录态 + `X-WebWindows-Request: desktalk-file` 头 + `recipientId` 好友校验，而第三方沙箱为 `connect-src 'none'`、无登录态上下文——**该端点永远不会由应用直接调用**，share 动作只能由 Host-owned UI 代发。
 
 **结论（用户已确认，2026-10-21）**：一期降级 = «桌影»导出只到云资料，界面明确提示"请到桌讯手动发送"；同时新增独立契约草案 `WEBWINDOWS_DESKTALK_HOST_SHARE_V1.md`（提案）：Host-owned 分享动作（沙箱先经 `fileDialog.saveBlob` 写云资料、Host 校验该 blob 的会话归属后代发 share）+ 分享类型白名单扩展 mp4/webm（大小上限分档：视频建议按 250 MiB/段另评）+ 好友可见性沿用既有校验。二期实现，与 G1/G2 同批评审。
+
+## 12. Preview-audit 试点现状（2026-10-22，第十八轮）
+
+本文 §1-§11 的 L2 全链已在 **Developer Studio Preview 侧试点落地**（`webwindows-vue/src/developer-studio/`，production broker、registry、schema、d.ts、`assets/js/desktalk.js` 零触碰）：
+
+- **流路**：sandbox `WebWindows.ai.requestAssist` → broker 信封（协议 v1，共享 battery 同一 MessageChannel/channelId）→ `PreviewAiBroker`（audit 模式）→ 经过三步裁决（declaration → platform policy → host-confirmation-card grant → capability，method-policy 步经 `auditAllowance` 试点放行）→ 深层 payload 校验（本 §6 视频 schema + 试点 cap 表，`ratifiedByEnablementReview:false`）→ Host 确认卡（三选：发送到桌讯=one-shot / 仅本次会话=session-grant / 拒绝）→ ticket 响应 → 仿真提案源（`PreviewDeskTalkSimulator`，正文带【预览仿真】标记）→ `ai.assist.received` 事件帧回流 sandbox listener。
+- **§7 提案接线未做**：提案源是仿真器；`assets/js/desktalk.js askAppAssist` 真实接线与 `previewAvailability` 翻 `enabled` 属后续独立轮次。本轮不含 chatproxy 改动，L2 发送按钮保持 disabled。
+- **wire 事件 gap（留待下轮 schema 修订评审）**：broker v1 wire `$defs.event` 枚举仍只有 `snapshot.update`/`capability.change`，`ai.assist.received` 不能过 `validateEnvelope`；事件走 pilot 专用帧协议 `webwindows-studio-preview-assist-event-v1`（host runtime `validBrokerEvent` 与 sandbox `handleAssistEvent` 双侧校验），请求/响应仍走真实 broker 信封。
+- **错误码落点**：§9 新码（assist-rejected-by-user / assist-confirmation-required / desktalk-unavailable / ai-provider-unavailable / ai-rate-limited / assist-session-limit / payload-schema-invalid / scene-not-registered）进 studio 试点错误表（`ai-assist-errors.js`），**不进** `capability-broker-errors-v1.json`（冻结层不动）；正式化需逐码评审。
+- **timeout 姿态偏差**：audit broker 用 `min(方法 timeoutMs 120000, 剩余 session)`，**不被** policy `maximumRequestTimeoutMs`(10s) 钳制；每行审计记 `timeoutBudgetSource: "method-registry-pilot"`，偏差作为启用评审 finding（生产可维持钳制）。
+- **审计**：行字段=scene/payloadBytes/payloadChars/ticketId/proposalCount/attribution/outcome，机器摘要（`ai-confirmation-summary.js`，字段名+数值）上卡、不回显 payload 文本；jsdom+Ajv 双层验收 `tmp/studio-audit-smoke.cjs` 58/58（drift 对账/launch 形状/ladder/卡流/one-shot+reject/lifecycle 门限/cpp 组合引导行为/facade 路径/production 零 diff）。

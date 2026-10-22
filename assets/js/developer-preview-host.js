@@ -12,6 +12,10 @@
   const MAX_DOCUMENT_BYTES = 30 * 1024 * 1024;
   const MAX_CONSOLE_BYTES = 32 * 1024;
   const MAX_BROKER_BYTES = 64 * 1024;
+  /* preview-audit pilot transport for ai.assist.received (see
+   * webwindows-vue/src/developer-studio/preview/preview-protocol.js) */
+  const ASSIST_EVENT_PROTOCOL = "webwindows-studio-preview-assist-event-v1";
+  const ASSIST_EVENT_NAME = "ai.assist.received";
   const LEVELS = new Set(["log", "info", "warn", "error", "debug"]);
   const surface = document.getElementById("previewSurface");
   const stateNode = document.getElementById("previewState");
@@ -37,6 +41,10 @@
         || message.hostNonce !== hostNonce || typeof message.type !== "string") return;
     if (message.type === "preview.broker.response") {
       forwardBrokerResponse(message.payload);
+      return;
+    }
+    if (message.type === "preview.broker.event") {
+      forwardBrokerEvent(message.payload);
       return;
     }
     if (typeof message.requestId !== "string" || !plain(message.payload)) return;
@@ -142,6 +150,25 @@
     try { active.brokerPort.postMessage(message); } catch { /* revoked */ }
   }
 
+  /* preview-audit pilot only: forward a validated ai.assist.received frame into the sandbox port */
+  function forwardBrokerEvent(message) {
+    if (!active?.brokerPort || !validBrokerEvent(message, active)) return;
+    try { active.brokerPort.postMessage(message); } catch { /* revoked */ }
+  }
+
+  function validBrokerEvent(message, binding) {
+    if (!plain(message) || message.protocol !== ASSIST_EVENT_PROTOCOL || message.version !== 1
+      || message.type !== "event" || message.event !== ASSIST_EVENT_NAME
+      || message.method !== ASSIST_EVENT_NAME
+      || message.sessionId !== binding.session.sessionId
+      || message.snapshotId !== binding.session.snapshotId
+      || message.channelId !== binding.brokerLaunch.channelId
+      || typeof message.requestId !== "string"
+      || !plain(message.detail)
+      || binding.brokerLaunch?.ai?.facadeEnabled !== true) return false;
+    try { return byteLength(JSON.stringify(message)) <= MAX_BROKER_BYTES; } catch { return false; }
+  }
+
   function validBrokerEnvelope(message, binding) {
     if (!plain(message) || message.protocol !== BROKER_PROTOCOL || message.version !== 1
         || message.sessionId !== binding.session.sessionId
@@ -153,11 +180,36 @@
 
   function validBrokerLaunch(launch) {
     if (!plain(launch) || typeof launch.facadeEnabled !== "boolean") return false;
-    if (!launch.facadeEnabled) return Object.keys(launch).length === 1;
-    return launch.protocol === BROKER_PROTOCOL && launch.version === 1
-      && typeof launch.channelId === "string" && launch.channelId.length >= 16
-      && Number.isSafeInteger(launch.refreshTimeoutMs) && launch.refreshTimeoutMs > 0
-      && plain(launch.handshake) && plain(launch.clientErrors);
+    const keys = Object.keys(launch);
+    if (!launch.facadeEnabled) {
+      if (!("ai" in launch)) return keys.length === 1;
+      return keys.length === 2 && validAiPilotLaunch(launch.ai, true);
+    }
+    if (!("ai" in launch) ? keys.length !== 7 : keys.length !== 8) return false;
+    if (launch.protocol !== BROKER_PROTOCOL || launch.version !== 1) return false;
+    if (typeof launch.channelId !== "string" || launch.channelId.length < 16) return false;
+    if (!Number.isSafeInteger(launch.refreshTimeoutMs) || launch.refreshTimeoutMs <= 0) return false;
+    if (!plain(launch.handshake) || !plain(launch.clientErrors)) return false;
+    if ("ai" in launch) {
+      if (!validAiPilotLaunch(launch.ai, launch.facadeEnabled)) return false;
+      /* the ai pilot rides the SAME wire channel as the battery facade */
+      if (typeof launch.ai.channelId === "string" && launch.ai.channelId !== launch.channelId) return false;
+    }
+    return true;
+  }
+
+  /* ai audit pilot descriptor: preview-only, must never carry a production posture */
+  function validAiPilotLaunch(ai, facadeEnabled) {
+    if (!plain(ai)) return false;
+    if (facadeEnabled === false) {
+      return ai.facadeEnabled === false && Object.keys(ai).length === 1;
+    }
+    if (ai.facadeEnabled !== true || ai.mode !== "preview-audit"
+      || ai.protocol !== BROKER_PROTOCOL || ai.version !== 1
+      || !Number.isSafeInteger(ai.assistTimeoutMs) || ai.assistTimeoutMs <= 0 || ai.assistTimeoutMs > 120000
+      || !plain(ai.handshake) || !plain(ai.clientErrors)) return false;
+    const allowed = ["facadeEnabled", "mode", "methodId", "assistTimeoutMs", "handshake", "clientErrors", "protocol", "version"];
+    return Object.keys(ai).every((key) => allowed.includes(key));
   }
 
   function validConsole(message, binding) {

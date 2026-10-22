@@ -39,6 +39,8 @@ const previewHostReady = ref(false);
 const previewSession = ref(null);
 const consoleEvents = ref([]);
 const brokerDiagnostics = ref([]);
+const aiConfirmation = ref(null);
+const aiDeciding = ref(false);
 const bottomPanel = ref("problems");
 const inspectorMode = ref("manifest");
 const consoleLevel = ref("all");
@@ -58,6 +60,7 @@ let saveTimer = 0;
 let manifestValidationSequence = 0;
 let previewHostClient = null;
 let previewController = null;
+let aiConfirmationResolver = null;
 
 const tree = computed(() => buildProjectTree(entries.value));
 const activeEntry = computed(() => entries.value.find((entry) => entry.path === activeFile.value));
@@ -531,6 +534,19 @@ async function connectPreviewHost() {
     hostClient: previewHostClient,
     onBrokerDiagnostic: (diagnostic) => {
       brokerDiagnostics.value = [...brokerDiagnostics.value, diagnostic].slice(-500);
+    },
+    onAiConfirmation: (request) => {
+      aiConfirmation.value = Object.freeze({
+        requestId: request.requestId,
+        appId: request.appId,
+        appName: request.appName,
+        scene: request.scene,
+        methodName: request.methodName,
+        lines: request.summary.lines,
+        payloadChars: request.summary.payloadChars,
+        payloadBytes: request.summary.payloadBytes
+      });
+      return new Promise((resolve) => { aiConfirmationResolver = resolve; });
     }
   });
   try {
@@ -574,10 +590,27 @@ async function stopPreview() {
     await previewController.stop(previewSession.value.sessionId);
     previewSession.value = null;
     brokerDiagnostics.value = [];
+    aiConfirmation.value = null;
+    aiConfirmationResolver = null;
+    aiDeciding.value = false;
     showStatus("Developer Preview 已停止，会话凭据已撤销。");
   } catch (error) {
     showError(error);
   }
+}
+
+/* Host-owned decision for the ai audit confirmation card. Resolves the broker's card promise:
+ * 『拒绝』 → assist-rejected-by-user；『仅在本次会话允许』 → scene-scoped session grant；
+ * 『发送到桌讯』 → one-shot grant for this single request. The card itself is the gesture
+ * evidence; a sandbox click never grants anything. */
+async function decideAiConfirmation(kind) {
+  if (!aiConfirmation.value || aiDeciding.value) return;
+  aiDeciding.value = true;
+  const resolver = aiConfirmationResolver;
+  aiConfirmationResolver = null;
+  aiConfirmation.value = null;
+  try { resolver?.({ kind }); } catch { /* decision handling must not throw into the UI */ }
+  aiDeciding.value = false;
 }
 
 function clearConsole() {
@@ -829,11 +862,12 @@ function finishDialog(result) {
             <strong>开发者预览</strong>
             <span v-if="previewSession">{{ previewSession.state }} · {{ previewSession.snapshotId }}</span>
             <span v-else>无活动会话</span>
+            <span v-if="previewSession?.aiFacadeEnabled" class="ai-pilot-badge" title="登记候选 ai.desktalk.requestAssist 的 preview audit 试点：确认卡为 Host-owned，提案来自预览仿真源；生产 proposed-disabled 未变。">AI 协助预览试点</span>
           </div>
           <iframe
             ref="previewHostFrame"
             class="preview-host-frame"
-            src="developer-preview-host.html?v=20260829-1"
+            src="developer-preview-host.html?v=20261022-1"
             title="Trusted Developer Preview Host"
             referrerpolicy="no-referrer"
             @load="connectPreviewHost"
@@ -915,6 +949,31 @@ function finishDialog(result) {
     </section>
 
     <div v-if="status" class="studio-status" :class="statusKind" role="status">{{ status }}</div>
+
+    <section v-if="aiConfirmation" class="ai-confirmation-backdrop" role="dialog" aria-modal="true" aria-labelledby="aiConfirmHeading">
+      <form class="studio-dialog ai-confirmation" @submit.prevent="decideAiConfirmation('send')">
+        <h2 id="aiConfirmHeading">桌讯协助请求 · preview 试点</h2>
+        <p class="ai-confirmation-anchor">
+          「{{ aiConfirmation.appName }}」请求调用 <code>{{ aiConfirmation.methodName }}</code>（登记候选，previewAvailability=proposed-enabled）。
+          将发送以下摘要，16 KiB 以内：
+        </p>
+        <ul class="ai-confirmation-lines">
+          <li v-for="(line, index) in aiConfirmation.lines" :key="index">{{ line }}</li>
+        </ul>
+        <p class="ai-confirmation-meta">
+          payload：{{ aiConfirmation.payloadChars }} 字符 / {{ aiConfirmation.payloadBytes }} 字节 · 场景
+          {{ aiConfirmation.scene }} · 提案源为桌讯（Developer Studio 内预览仿真，未接入桌讯真实对话）。
+        </p>
+        <p class="ai-confirmation-note">
+          本卡为 Host-owned 授权凭据（沙箱按钮不算授权）。拒绝 → assist-rejected-by-user；仅在本次会话允许 → 会话级 grant；发送到桌讯 → 仅此一次grant。
+        </p>
+        <div class="studio-dialog-actions ai-confirmation-actions">
+          <button type="button" :disabled="aiDeciding" @click="decideAiConfirmation('reject')">拒绝</button>
+          <button type="button" :disabled="aiDeciding" @click="decideAiConfirmation('session')">仅在本次会话允许</button>
+          <button class="primary" type="submit" :disabled="aiDeciding">发送到桌讯</button>
+        </div>
+      </form>
+    </section>
 
     <div v-if="dialog" class="studio-dialog-backdrop" @keydown.esc="finishDialog(dialog.kind === 'confirm' ? false : null)">
       <form class="studio-dialog" @submit.prevent="finishDialog(dialog.kind === 'confirm' ? true : dialog.value)">

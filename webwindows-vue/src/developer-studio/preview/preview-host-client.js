@@ -49,6 +49,21 @@ export class PreviewHostClient {
     return this.#request("preview.stop", { sessionId: session.sessionId, token: session.token }, 5000);
   }
 
+  /* Host-to-sandbox delivery for the ai.assist.received pilot event frame. Fire-and-forget:
+   * the preview host runtime validates the frame again before it reaches the sandbox port. */
+  notifyBrokerEvent(frame) {
+    if (!this.port || !this.hostNonce || !isPlainObject(frame)) return;
+    try {
+      this.port.postMessage({
+        protocol: PREVIEW_CONTROL_PROTOCOL,
+        version: 1,
+        type: "preview.broker.event",
+        hostNonce: this.hostNonce,
+        payload: frame
+      });
+    } catch { /* port revoked mid-flight */ }
+  }
+
   disconnect() {
     this.port?.close();
     this.port = null;

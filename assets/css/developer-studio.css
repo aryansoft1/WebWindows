@@ -592,6 +592,43 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .studio-dialog-actions button { min-height: 32px; padding: 5px 12px; border: 1px solid #c8d2e1; border-radius: 7px; background: #fff; }
 .studio-dialog-actions button.primary { border-color: #1769e0; background: #1769e0; color: #fff; }
 
+/* ai assist confirmation card (preview audit pilot, round 18) */
+.ai-confirmation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 28, 45, .48);
+}
+.ai-confirmation { border-color: #17457e; box-shadow: 0 24px 70px rgba(12, 26, 48, .4); }
+.ai-confirmation-anchor { color: #33465e; }
+.ai-confirmation-anchor code { padding: 1px 5px; border-radius: 5px; background: #eef2f8; font-size: 12px; }
+.ai-confirmation-lines {
+  margin: 0 0 12px;
+  padding: 10px 12px 10px 26px;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  background: #f4f7fc;
+  color: #2c3b52;
+  font-size: 12.5px;
+  line-height: 1.55;
+  list-style: disc;
+}
+.ai-confirmation-meta { font-size: 12px; color: #64748b; }
+.ai-confirmation-note { font-size: 11.5px; color: #8a5a13; }
+.ai-confirmation-actions { justify-content: space-between; gap: 8px; }
+.ai-confirmation-actions button { min-height: 32px; padding: 5px 12px; border: 1px solid #c8d2e1; border-radius: 7px; background: #fff; }
+.ai-pilot-badge {
+  padding: 2px 8px;
+  border: 1px solid #a7c0e3;
+  border-radius: 999px;
+  background: #e8f0fc;
+  color: #14549c;
+  font-size: 11.5px;
+}
+
 @media (max-width: 900px) {
   .studio-main:not(.explorer-hidden) { grid-template-columns: 190px minmax(300px, 1fr); }
   .studio-main.inspector-hidden:not(.explorer-hidden) { grid-template-columns: 190px minmax(300px, 1fr); }

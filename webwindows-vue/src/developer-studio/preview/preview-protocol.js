@@ -1,4 +1,10 @@
 export const PREVIEW_CONTROL_PROTOCOL = "webwindows-studio-preview-control-v1";
+/* Preview-audit pilot transport for ai.assist.received. The broker v1 wire schema still enumerates
+   only snapshot.update / capability.change, so the registered AI event rides this preview-only
+   frame protocol until a reviewed schema revision canonicalizes the wire shape. Never presented
+   to production; the sandbox facade API is identical regardless of transport. */
+export const PREVIEW_ASSIST_EVENT_PROTOCOL = "webwindows-studio-preview-assist-event-v1";
+export const AI_ASSIST_EVENT_NAME = "ai.assist.received";
 export const PREVIEW_CONSOLE_PROTOCOL = "webwindows-studio-preview-console-v1";
 export const PREVIEW_CONSOLE_INIT_PROTOCOL = "webwindows-studio-preview-console-init-v1";
 export const PREVIEW_SDK_INIT_PROTOCOL = "webwindows-studio-preview-sdk-init-v1";

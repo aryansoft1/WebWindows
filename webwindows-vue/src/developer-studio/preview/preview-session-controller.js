@@ -2,6 +2,8 @@ import { validateProjectSnapshot } from "../validation/project-validator.js";
 import { createPreviewDocument } from "./preview-snapshot-runtime.js";
 import { getSnapshotFile } from "../snapshot/project-snapshot.js";
 import { PreviewBatteryBroker } from "../broker/preview-battery-broker.js";
+import { PreviewAiBroker } from "../broker/preview-ai-broker.js";
+import { PreviewDeskTalkSimulator } from "./preview-desktalk-simulator.js";
 import {
   PREVIEW_SESSION_CONTRACT,
   createOpaqueIdentity
@@ -17,7 +19,10 @@ export class PreviewSessionController {
     publicApiProvider = defaultPublicApiProvider,
     platformPolicyPermits = true,
     grantResolver,
-    onBrokerDiagnostic
+    onBrokerDiagnostic,
+    onAiConfirmation,
+    aiAuditPilot = true,
+    assistanceSource = null
   }) {
     if (!hostClient) throw new TypeError("PreviewHostClient is required.");
     this.hostClient = hostClient;
@@ -27,6 +32,9 @@ export class PreviewSessionController {
     this.platformPolicyPermits = platformPolicyPermits;
     this.grantResolver = grantResolver;
     this.onBrokerDiagnostic = typeof onBrokerDiagnostic === "function" ? onBrokerDiagnostic : null;
+    this.onAiConfirmation = typeof onAiConfirmation === "function" ? onAiConfirmation : null;
+    this.aiAuditPilot = aiAuditPilot;
+    this.assistanceSource = assistanceSource || new PreviewDeskTalkSimulator({ now });
     this.sessions = new Map();
     this.activeSessionId = null;
     this.hostClient.onBroker = (message) => this.#handleBroker(message);
@@ -56,6 +64,17 @@ export class PreviewSessionController {
         now: this.now
       });
       session.brokerLaunch = await session.broker.createLaunchDescriptor();
+      session.aiBroker = this.#createAiBroker(session, manifest, contracts);
+      if (session.aiBroker) {
+        const aiLaunch = await session.aiBroker.createLaunchDescriptor();
+        if (aiLaunch.facadeEnabled) {
+          session.aiLaunch = aiLaunch;
+          session.brokerLaunch = Object.freeze({ ...session.brokerLaunch, ai: aiLaunch });
+        } else {
+          session.aiBroker = null;
+          session.aiLaunch = null;
+        }
+      }
       const documentHtml = createPreviewDocument(snapshot, session, { domParser, sdkLaunch: session.brokerLaunch });
       await this.hostClient.start(session, documentHtml, session.brokerLaunch);
       session.state = "running";
@@ -67,6 +86,24 @@ export class PreviewSessionController {
       this.#revoke(session);
       throw error;
     }
+  }
+
+  #createAiBroker(session, manifest, contracts) {
+    if (!this.aiAuditPilot) return null;
+    return new PreviewAiBroker({
+      session,
+      manifest,
+      contracts,
+      auditMode: true,
+      channelId: session.broker?.channelId || null,
+      assistanceSource: this.assistanceSource,
+      onConfirmation: this.onAiConfirmation,
+      onEvent: (frame) => {
+        try { this.hostClient.notifyBrokerEvent(frame); } catch { /* delivery must not throw */ }
+      },
+      onDiagnostic: this.onBrokerDiagnostic,
+      now: this.now
+    });
   }
 
   async reload(snapshot, options = {}) {
@@ -85,6 +122,7 @@ export class PreviewSessionController {
     const session = sessionId ? this.sessions.get(sessionId) : null;
     if (!session) return null;
     session.broker?.close("request-cancelled");
+    session.aiBroker?.close("request-cancelled");
     try { await this.hostClient.stop(session); } finally {
       session.state = "closed";
       this.#revoke(session);
@@ -100,15 +138,28 @@ export class PreviewSessionController {
   }
 
   getBrokerAudit(sessionId = this.activeSessionId) {
-    return sessionId ? this.sessions.get(sessionId)?.broker?.getAudit() || [] : [];
+    const session = sessionId ? this.sessions.get(sessionId) : null;
+    if (!session) return [];
+    return [
+      ...(session.broker?.getAudit() || []),
+      ...(session.aiBroker?.getAudit() || [])
+    ];
   }
 
   getBrokerDiagnostics(sessionId = this.activeSessionId) {
-    return sessionId ? this.sessions.get(sessionId)?.broker?.getDiagnostics() || [] : [];
+    const session = sessionId ? this.sessions.get(sessionId) : null;
+    if (!session) return [];
+    return [
+      ...(session.broker?.getDiagnostics() || []),
+      ...(session.aiBroker?.getDiagnostics() || [])
+    ];
   }
 
   clearBrokerDiagnostics(sessionId = this.activeSessionId) {
-    if (sessionId) this.sessions.get(sessionId)?.broker?.clearDiagnostics();
+    if (!sessionId) return;
+    const session = this.sessions.get(sessionId);
+    session?.broker?.clearDiagnostics();
+    session?.aiBroker?.clearDiagnostics();
   }
 
   #createSession(snapshot) {
@@ -126,12 +177,17 @@ export class PreviewSessionController {
       expiryTimer: null,
       failure: null,
       broker: null,
-      brokerLaunch: null
+      brokerLaunch: null,
+      aiBroker: null,
+      aiLaunch: null
     };
   }
 
   #handleBroker(message) {
     const session = message?.sessionId ? this.sessions.get(message.sessionId) : null;
+    if (typeof message?.method === "string" && message.method.startsWith("ai.")) {
+      if (session?.aiBroker) return session.aiBroker.handleEnvelope(message);
+    }
     if (!session?.broker) return Promise.resolve(null);
     return session.broker.handleEnvelope(message);
   }
@@ -140,6 +196,7 @@ export class PreviewSessionController {
     const session = this.sessions.get(sessionId);
     if (!session) return;
     session.broker?.close("session-expired");
+    session.aiBroker?.close("session-expired");
     try { await this.hostClient.stop(session); } finally {
       session.state = "closed";
       this.#revoke(session);
@@ -154,6 +211,9 @@ export class PreviewSessionController {
     session.broker?.close("request-cancelled");
     session.broker = null;
     session.brokerLaunch = null;
+    session.aiBroker?.close("request-cancelled");
+    session.aiBroker = null;
+    session.aiLaunch = null;
     this.sessions.delete(session.sessionId);
     if (this.activeSessionId === session.sessionId) this.activeSessionId = null;
   }
@@ -169,6 +229,7 @@ function publicSession(session) {
     expiresAt: session.expiresAt,
     state: session.state,
     brokerEnabled: session.brokerLaunch?.facadeEnabled === true,
+    aiFacadeEnabled: session.aiLaunch?.facadeEnabled === true,
     ...(session.failure ? { failure: session.failure } : {})
   });
 }

@@ -4,6 +4,13 @@
   "schemaVersion": 1,
   "contract": "webwindows-function-permissions-declarable-batch-draft-v0",
   "status": "draft-not-enforced",
+  "reviewDecision": {
+    "decision": "approved-for-application",
+    "approvedBy": "product owner (T-072 拍板, 2026-10-22)",
+    "reference": "docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A①",
+    "application": "operations applied verbatim to data/sdk/permissions-v1.json on 2026-10-22; runtime enforcement and platform code items (facade generation, broker registry editions, askAppAssist, host confirmation card, knowledge-base 32-cap audit) are scheduled separately and do not follow from this approval. productionAvailability stays proposed-disabled per method until its own review.",
+    "crosscheck": "tmp/review-crosscheck.cjs 5/5 pass (facade vocabulary)"
+  },
   "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
   "baseContract": "webwindows-function-permissions-v1",
   "baseFile": "data/sdk/permissions-v1.json",

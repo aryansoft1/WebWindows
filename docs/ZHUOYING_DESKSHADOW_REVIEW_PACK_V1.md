@@ -2,7 +2,7 @@
 
 - 任务：T-072《桌影》(com.aryansoft.deskshadow)
 - 产出轮次：第十四轮（2026-10-22），前置：第十三轮 `22a6c3f`（L1+i18n）、Phase 0B 机器草案入库 `33df95d`
-- 性质：**评审决策材料，不含本批生产契约改动**。生产 `data/sdk/permissions-v1.json` 本轮不动；A 节的登记以平台批准（见 §A-4）为前置。
+- 性质：评审决策材料。**2026-10-22 四项拍板已完成并记录在 §A-4/§B-1/§B-2/§C-1**：批次经用户批准 R-A① 后，生产 `data/sdk/permissions-v1.json` 同日按 delta 逐字应用（registry 头部 notes 有决策注记）；WebM 原型档移除、字体定名、fileDialog 语义确认均已落地。"批准≠线上部署≠Runtime 实现"的边界不变。
 - 附带机器校验：`tmp/review-crosscheck.cjs`（facade 词汇层级复算 validationChecks）——**5 pass / 0 fail**。
 
 ---
@@ -44,6 +44,8 @@
 
 **批准边界**：批准≠线上部署、≠Runtime 能力已实现（registry 注记原文语义）；`productionAvailability: proposed-disabled` → 启用是各方法独立评审，不在本批。
 
+> **拍板记录（2026-10-22）：用户选 R-A①「批准提交」，且应用已执行**——生产 `data/sdk/permissions-v1.json` 当日逐字应用全部 5 operations（upsert ai.desktalk-assist + 3 条 targets 追加 + declarable 8 ids），`$defs.permissionId.enum` 同步扩 9（manifest 校验词汇 ref），notes 记决策注记；`tmp/review-crosscheck.cjs` 重写为已应用验证器 **5 pass / 0 fail**（registry 落点 vs delta 逐项对账）。三件套草案已加 `reviewDecision` 对象。**边界不变**：registry 仍 `draft-not-enforced`、broker 方法仍 `proposed-disabled`，A-5 平台代码项（facade/askAppAssist/确认卡/知识库盘点）逐项独立排期。桌影 manifest permissions 已从 `[]` 填 5 项（§7.1 清单）；`device.storage-directory.*`/`device.storage-file.read` 在 registry 层申报化但**桌影 manifest 不申报**（G8 走 cloud.files.*）。
+
 ### A-5 批准后的平台侧执行清单（逐项验收）
 
 1. `data/sdk/permissions-v1.json` 应用 5 operations → 复跑 `manifest-v2.schema.json`（Ajv2020 + registry ref）与 Developer Studio 双校验器 → 桌影 manifest `permissions` 字段从 `[]` 填入 6 项（G8 定案集合）。
@@ -67,6 +69,8 @@
   - B-1c 移除：破坏无 VideoEncoder 宿主（审核环境实测无 VD/VE）可用性，违背诚实边界。
 - **批准后改动清单（若 b）**：export.js 三处 label、README 两行、spec §6 一行；`tmp/static-check`/回归不受影响。
 
+> **拍板记录（2026-10-22）：用户拍板「从面板移除」（非建议项）**——同日执行完毕：export.js 六处手术（门控回归纯 VideoEncoder 路径、三函数删除、格式 select 单项、`ZY.export.run` 诚实回退），面板保留移除说明（诚实 UI）；无 VideoEncoder 宿主导出按钮置灰+提示。技术债不失忆：实时 1× 速/webm 时长元数据缺省的历史数据点保留在本档 §E 与 spec §5 第十二轮行。jsdom 断言替换为拍板生效三断言（51/51），真机 e2e MP4 冒烟复跑通过（1.28s/60v+113a/console 零 error）。
+
 ### B-2 字幕字体白名单定名
 
 - **现状**：第十一轮 canvas 量宽法实测数据点——可用：Microsoft YaHei(微软雅黑)/Segoe UI/Verdana/Tahoma/Arial；不可用：SimHei(黑体)/Noto Sans CJK SC/Source Han Sans SC。代码即 `"Segoe UI","Microsoft YaHei",sans-serif`（export.js:178，拉丁/中文/兜底各占位）。
@@ -74,6 +78,8 @@
   - B-2a **定名现三元组（建议）**：零代码改动，仅把条文从"最终定名待产品拍板"固化为"已定案（2026-10-22 拍板）"。
   - B-2b 换用 Verdana 等纯英池：中文主体验崩坏（数据点已排除）。
 - **批准后改动清单（若 a）**：spec §5 第十一轮行备注+§6 第 7 项措辞、README 字体说明一行；static-check/回归不动。
+
+> **拍板记录（2026-10-22）：用户选 a「定名现三元组」**——条文已固化（spec §6 第 7 项「已定案（2026-10-22 拍板）」），代码零改动。
 
 ---
 
@@ -83,6 +89,8 @@
 
 提案语：**"检测到≠放行"** 已是包内实现语义（探测分支已接 `fileDialog.open/saveBlob`，失败自动回退 `downloadBlob`/file input 并如实上报）。平台实现时请保持：方法未接入 → facade 成员存在但返回 `null`+稳定 reason code（建议 `unimplemented`/`host-declined`），**不抛异常、不假成功**；open 与 saveBlob 成为 stub 到真实实现间无行为差异。包内无需改动即可随放行生效。
 （需要拍板的是确认这一语义方向，成本为零；具体实现属平台排期。）
+
+> **拍板记录（2026-10-22）：用户「确认」**——语义方向条文固化（spec §6 第 5 项、本档案注释），包内实现不变，平台实现时照此放行。
 
 ### C-2 ASP 4 MiB 分片转发 CPU 实测方案（试点部署时照单执行）
 

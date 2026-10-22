@@ -3,6 +3,13 @@
   "schemaVersion": 1,
   "contract": "webwindows-capability-broker-media-methods-draft-v0",
   "status": "draft-not-enforced",
+  "reviewDecision": {
+    "decision": "approved-for-registry-edition",
+    "approvedBy": "product owner (T-072 拍板, 2026-10-22)",
+    "reference": "docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A①",
+    "note": "Registry edition approved; production method availability stays proposed-disabled until each method's own runtime review. Platform code items (device.storage.* runtime, write-session persistence model) are scheduled separately.",
+    "crosscheck": "tmp/review-crosscheck.cjs 5/5 pass (facade vocabulary)"
+  },
   "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
   "designDoc": "docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md",
   "supersedes": "explicitlyExcluded entry 'device.storage' in webwindows-capability-broker-methods-v1 is to be split into directory-surface (still excluded) and file-handle-scoped methods (this draft) upon review",

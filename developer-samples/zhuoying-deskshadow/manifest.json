@@ -3,7 +3,13 @@
   "sdk": {
     "apiVersion": "1"
   },
-  "permissions": [],
+  "permissions": [
+    "cloud.files.open",
+    "cloud.files.read-selected",
+    "cloud.files.save",
+    "cloud.files.write-selected",
+    "ai.desktalk-assist"
+  ],
   "id": "com.aryansoft.deskshadow",
   "legacyIds": [],
   "type": "application",
@@ -38,16 +44,19 @@
     "plannedPermissions": [
       {
         "id": "ai.desktalk-assist",
-        "status": "awaiting-contract-review",
-        "reference": "docs/WEBWINDOWS_DESKTALK_AI_ASSIST_V1.md",
-        "note": "该权限 ID 是契约草稿 §4 中的提案值，尚未登记进 data/sdk/permissions-v1.json，登记前 manifest.permissions 必须保持空数组。"
+        "status": "registered (2026-10-22 declarable batch approval); runtime capability pending",
+        "reference": "docs/WEBWINDOWS_DESKTALK_AI_ASSIST_V1.md + docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A",
+        "note": "顶层 permissions 已申报（metadata: 申报≠授权≠能力实现）；Runtime 未接入前 ai.requestAssist 契约不可用，应用侧 L2 发送按钮保持 disabled 诚实降级。"
       },
       {
-        "id": "pending-storage-user-files",
-        "realIdUndecided": true,
-        "status": "design-under-review",
-        "reference": "docs/STORAGE_CAPABILITY_V1_DESIGN.md",
-        "note": "工程文件读写与素材暂存依赖存储能力契约定稿后的正式权限 ID；ID 未定，不得在本文件顶层 permissions 数组里占位。"
+        "id": "cloud.files.open / cloud.files.read-selected",
+        "status": "registered (2026-10-22 批次批准)",
+        "note": "G8 定案：云端工程文件读写（打开/读取所选）。fileDialog 契约未放行前走浏览器降级（file input / a[download]），诊断如实标注「检测到≠放行」。"
+      },
+      {
+        "id": "cloud.files.save / cloud.files.write-selected",
+        "status": "registered (2026-10-22 批次批准)",
+        "note": "G8 工程文件保存（宿主写盘分流已接，失败回退浏览器下载）。"
       }
     ],
     "plannedFileHandlers": [

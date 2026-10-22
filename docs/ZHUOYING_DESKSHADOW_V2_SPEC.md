@@ -121,14 +121,25 @@
 | i18n en/jp 补齐 | chrome 层 12 缺键全量真翻译（en + jp），jsdom 断言三语键翻齐 | 面板内部长文案仍中文键值（回退可读），深层国际化属后续轮次 |
 | jsdom 回归 | 扩至 **51/51**（L1 结构确定性/车道统计/诚实 skip/noteOnly/缺 provider 报告组装/零网络静态断言） | ai.js 不得含 `fetch(`/`XMLHttpRequest`/`sendBeacon` |
 
+**第十五轮拍板执行（2026-10-22，四项拍板落地——决策记录见评审备忘录 §A-4/§B-1/§B-2/§C-1）**：
+
+| 项目 | 结果 | 备注 |
+| --- | --- | --- |
+| WebM 原型档移除（用户拍板：**从面板移除**） | export.js 六处手术：头部注释、按钮门控回归 `state.active \|\| !capabilityOk()`、`canRecorderExport`/`runRecorderExport`/`pickRecorderMime` 三函数删除、格式 select 单 mp4 项、点击处理器纯 MP4 路径、`ZY.export.run` 诚实回退（`format:"webm"` → MP4 + 如实提示，API 签名不变） | 无 VideoEncoder 宿主下导出按钮置灰+面板保留「已按 2026-10-22 拍板移除」诚实提示；实时 1× 速与 webm 时长元数据缺省两项技术债不因移除而失忆（历史数据点保留本表第十二轮行） |
+| 申报化批次应用（用户拍板：**批准提交**） | 生产 `data/sdk/permissions-v1.json` 逐字应用 `permissions-declarable-batch-draft-v0.json` 全部 5 operations：upsert `ai.desktalk-assist`（targets ai.isSupported/requestAssist/on，sourceDeclarable）+ 3 条 publicApiTargets 追加（`device.storage-file.read` +stat/readChunk；`cloud.files.save` +writeSession.begin；`cloud.files.write-selected` +writeChunk/commit/abort——骑既有授权句柄）+ `declarablePermissionIds` 扩 battery+8；`$defs.permissionId.enum`（manifest 校验词汇 ref）同步扩 9；notes 决策注记 | **申报≠授权≠能力实现**：registry 仍 `draft-not-enforced`，broker 方法 `productionAvailability: proposed-disabled` 不变，Runtime 接入是独立排期；三件套草案 `reviewDecision` 已记 |
+| manifest v2 permissions | `[]` → **5 项**（cloud.files.open/read-selected/save/write-selected + ai.desktalk-assist，= §7.1 清单）；plannedPermissions 从「 ждать 登记/ID 未定」更新为「registered + runtime pending」 | `device.storage-directory.*`/`device.storage-file.read` 在 registry 已申报化（任何应用可申报），但桌影 manifest 不申报（本产品 G8 走 cloud.files.*，desk 媒质文件拾取设计沿用 fileDialog/浏览器降级） |
+| 字体白名单（用户拍板：**定名现三元组**） | 条文固化「已定案（2026-10-22 拍板）：`"Segoe UI","Microsoft YaHei",sans-serif`」，代码零改动 | §5 第十一轮实测数据点（可用/不可用清单）维持为定案依据 |
+| fileDialog 放行语义（用户拍板：**确认**） | 「检出但未实现 → facade 成员在但返回 null + reason 码（`unimplemented`/`host-declined`），不假成功、不抛异常」为平台实现时的错误模型方向 | 包内已按此语义实现（探测分支+失败回退+如实上报），零改动即随放行生效 |
+| 门禁 | `tmp/static-check.cjs` 9/9（新增断言：manifest permissions ⊆ registry 申报词汇 5/9）；`tmp/v2-regression.cjs` **51/51**（webm 三态断言替换为拍板生效断言：无 webm 选项+移除提示在、格式单项、recorder-only 宿主按钮置灰）；`tmp/review-crosscheck.cjs` 重写为**已应用验证器 5 pass / 0 fail**（registry 落点 vs 草案 delta 逐项对账） | 真机 e2e：面板格式只剩 mp4+移除提示、MP4 冒烟 1.28s **60v+113a**（realtime:false）、console 零 error、tab 全清 |
+
 ## 6. 剩余开放项
 
 1. ~~导出 1080p 真素材编码复核~~ **数据点已补**（第十二轮：854×480→1920×1080 视频链路 19.8fps=0.66× 实时，瓶颈=逐帧独立 seek 解码链+1080p draw，见 §5 第十二轮表；1080p 导出提速属 V3 复用解码链优化，不做 hack）；
 2. **变速保音调重采样**（V3 拍板项，一期按不保音调交付并如实标注）；
-3. ~~webm 备选档 / MediaRecorder 原型档~~ **原型已落地待转正**（第十二轮：无 VideoEncoder 宿主的诚实降级路径——同一 `compositeFrame` 合成器 + `captureStream` + 活 `AudioContext` 实时排源→`MediaRecorder(vp9/opus)`；诚实限制=实时 1× 速录制、帧率贴墙钟、webm 时长元数据缺省；面板如实标注「原型/待评审」，能力缺失置灰不做空按钮；转正需评审时长偏移收敛）；
+3. ~~webm 备选档 / MediaRecorder 原型档~~ **已按 2026-10-22 拍板从面板移除**（用户拍板见评审备忘录 §B-1：实时 1× 速与 webm 时长元数据缺省两项技术债不因"转正"文案而消失，不留半成品档位；`ZY.export.run` API 保留、`format:"webm"` 如实回退 MP4 主档；无 VideoEncoder 宿主导出按钮诚实置灰——历史数据点与移除后行为见 §5 第十五轮表）；
 4. ~~字幕预览实时叠层~~ **已落地**（第十一轮：DOM 叠层与烧录同语义，tick/seek 双路径刷新）；
-5. ~~Production 写盘~~ **探测分支已接**（第十一轮：导出完成先试 `fileDialog.saveBlob`（检测到≠放行），失败自动回退 `downloadBlob` 并如实上报；契约放行语义待正式评审）；
+5. ~~Production 写盘~~ **探测分支已接**（第十一轮：导出完成先试 `fileDialog.saveBlob`（检测到≠放行），失败自动回退 `downloadBlob` 并如实上报；**放行语义已确认（2026-10-22 拍板，评审备忘录 §C-1）**：平台实现 dialog/fileDialog 方法时「检出但未实现 → facade 成员在但返回 null+reason 码，不假成功、不抛异常」——包内零改动即随放行生效，方法实现属平台排期）；
 6. **ASP 侧 4 MiB 分片转发 CPU 实测**（试点诊断计数器）；
-7. ~~字幕样式字体白名单最终三选~~ **数据点已落地**（第十一轮：canvas 量宽法实测——可用 Microsoft YaHei/Segoe UI/Verdana/Tahoma/Arial；SimHei/黑体/Noto·思源不可用。代码当前三元组 `"Segoe UI","Microsoft YaHei",sans-serif` 正确；最终定名仍待产品拍板）；
+7. ~~字幕样式字体白名单最终三选~~ **已定案（2026-10-22 拍板）**：定名 `"Segoe UI","Microsoft YaHei",sans-serif`（代码零改动）。第十一轮 canvas 量宽法实测为定案依据——可用 Microsoft YaHei/Segoe UI/Verdana/Tahoma/Arial；SimHei/黑体/Noto·思源不可用；
 8. ~~mp4box.js vendor~~ **已落地**（第七轮：v0.5.3 BSD-3-Clause + LICENSE + SOURCE 入库）；~~导出管线~~ **已落地**（第十轮，见 README「V2 导出管线」）；~~多片段衔接预览接力~~ **已落地**（第十一轮 `chainTo`，e2e 实测跨边界续播至末尾正确停）；
-9. ~~L1 本地素材分析~~ **已落地**（第十三轮，页内两级：工程结构摘要 + assetReport 车道〔抽帧场景/运动/响度/静音〕，schema 对齐 §7.4、≤16KiB 下采样、断网蜜罐实证零外发；e2e 52.2s 素材 65 点+63 窗 6.7s；`_pickFrame` 副产修复 frameAt(0)/导出首帧黑帧）；~~i18n en/jp~~ chrome 层 **已补齐**（第十三轮，21 键三语对齐；面板内部长文案后续轮次再议）。L2 桌讯编排仍依赖 `ai.desktalk-assist` 契约评审（保持 disabled）。
+9. ~~L1 本地素材分析~~ **已落地**（第十三轮，页内两级：工程结构摘要 + assetReport 车道〔抽帧场景/运动/响度/静音〕，schema 对齐 §7.4、≤16KiB 下采样、断网蜜罐实证零外发；e2e 52.2s 素材 65 点+63 窗 6.7s；`_pickFrame` 副产修复 frameAt(0)/导出首帧黑帧）；~~i18n en/jp~~ chrome 层 **已补齐**（第十三轮，21 键三语对齐；面板内部长文案后续轮次再议）。L2 桌讯编排：`ai.desktalk-assist` 权限**已登记（2026-10-22 批次批准）**，但 Runtime 未接入（平台代码项：facade ai 命名空间生成、broker methods 登记、askAppAssist、Host 确认卡，逐项独立排期）——**L2 发送按钮保持 disabled 诚实降级**。

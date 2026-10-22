@@ -10,7 +10,8 @@
   "notes": [
     "This is a Phase 0B design contract, not a statement that sandbox API access is currently implemented.",
     "Permission grants application authority; Runtime capability reports implementation availability. Both are required and neither implies the other.",
-    "All broker targets are stable members of window.WebWindows described by webwindows-public-api-v1.d.ts."
+    "All broker targets are stable members of window.WebWindows described by webwindows-public-api-v1.d.ts.",
+    "2026-10-22: declarable batch (permissions-declarable-batch-draft-v0.json, crosscheck 5/5) approved by the product owner per docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A① and applied verbatim: 5 operations (upsert ai.desktalk-assist + 3 publicApiTargets appends riding existing grants + append-source-declarable 8 ids) and the permissionId vocabulary enum. sourceDeclarable/declarable never implies granted, enabled, or capability-supported; registry status stays draft-not-enforced until the Runtime ships enforcement."
   ],
   "baselineFacadeMethods": [
     "device.ready",
@@ -20,7 +21,15 @@
   "sourceDeclaration": {
     "default": "not-declarable",
     "declarablePermissionIds": [
-      "device.battery-status.read"
+      "device.battery-status.read",
+      "ai.desktalk-assist",
+      "cloud.files.open",
+      "cloud.files.read-selected",
+      "cloud.files.save",
+      "cloud.files.write-selected",
+      "device.storage-directory.pick",
+      "device.storage-directory.list",
+      "device.storage-file.read"
     ],
     "note": "Source-declarable means a Manifest v2 may request the permission. It never means granted, enabled, or capability-supported."
   },
@@ -28,7 +37,15 @@
     "permissionId": {
       "type": "string",
       "enum": [
-        "device.battery-status.read"
+        "device.battery-status.read",
+        "ai.desktalk-assist",
+        "cloud.files.open",
+        "cloud.files.read-selected",
+        "cloud.files.save",
+        "cloud.files.write-selected",
+        "device.storage-directory.pick",
+        "device.storage-directory.list",
+        "device.storage-file.read"
       ]
     }
   },
@@ -118,7 +135,7 @@
       "risk": "high",
       "prompt": "resource-grant",
       "userGesture": false,
-      "publicApiTargets": ["device.storage.openFile"]
+      "publicApiTargets": ["device.storage.openFile", "device.storage.stat", "device.storage.readChunk"]
     },
     {
       "id": "device.power-status.read",
@@ -146,14 +163,24 @@
       "risk": "high",
       "prompt": "host-owned-user-action",
       "userGesture": true,
-      "publicApiTargets": ["fileDialog.save", "fileDialog.saveBlob"]
+      "publicApiTargets": ["fileDialog.save", "fileDialog.saveBlob", "device.storage.writeSession.begin"]
     },
     {
       "id": "cloud.files.write-selected",
       "risk": "high",
       "prompt": "resource-grant",
       "userGesture": false,
-      "publicApiTargets": ["fileDialog.write"]
+      "publicApiTargets": ["fileDialog.write", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort"]
+    },
+    {
+      "id": "ai.desktalk-assist",
+      "displayName": "DeskTalk AI assist",
+      "description": "Send a bounded scene text payload to DeskTalk AI via a Host-owned confirmation card and receive itemized text proposals through the ai.assist.received event. No file, no thread, no automatic sending.",
+      "sourceDeclarable": true,
+      "risk": "medium",
+      "prompt": "runtime-confirmation",
+      "userGesture": true,
+      "publicApiTargets": ["ai.isSupported", "ai.requestAssist", "ai.on"]
     }
   ]
 }

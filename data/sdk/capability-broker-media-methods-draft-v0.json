@@ -8,7 +8,8 @@
     "approvedBy": "product owner (T-072 拍板, 2026-10-22)",
     "reference": "docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A①",
     "note": "Registry edition approved; production method availability stays proposed-disabled until each method's own runtime review. Platform code items (device.storage.* runtime, write-session persistence model) are scheduled separately.",
-    "crosscheck": "tmp/review-crosscheck.cjs 5/5 pass (facade vocabulary)"
+    "crosscheck": "tmp/review-crosscheck.cjs 5/5 pass (facade vocabulary)",
+    "application": "2026-10-22: methods/events carried verbatim into data/sdk/capability-broker-methods-v1.json as proposed-disabled candidates (V1-V10 schema revision approved-and-applied in full; registry edition R1-R4). Facade generation and per-method runtime enablement stay future reviews; tests/capability-broker-contract-smoke.mjs (extended) is the standing cross-check."
   },
   "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
   "designDoc": "docs/WEBWINDOWS_STORAGE_MEDIA_V1_DRAFT.md",
@@ -38,20 +39,47 @@
       "consent": "resource-grant-ride",
       "parameterSchema": {
         "type": "object",
-        "required": ["fileToken"],
+        "required": [
+          "fileToken"
+        ],
         "properties": {
-          "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" }
+          "fileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["fileToken", "size"],
+        "required": [
+          "fileToken",
+          "size"
+        ],
         "properties": {
-          "fileToken": { "type": "string", "maxLength": 128 },
-          "size": { "type": "integer", "minimum": 0 },
-          "mimeType": { "type": ["string", "null"], "maxLength": 128 },
-          "lastModifiedMs": { "type": ["integer", "null"] }
+          "fileToken": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          },
+          "lastModifiedMs": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
         },
         "additionalProperties": false
       },
@@ -74,23 +102,62 @@
       "consent": "resource-grant-ride",
       "parameterSchema": {
         "type": "object",
-        "required": ["fileToken", "offset", "length"],
+        "required": [
+          "fileToken",
+          "offset",
+          "length"
+        ],
         "properties": {
-          "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
-          "offset": { "type": "integer", "minimum": 0 },
-          "length": { "type": "integer", "minimum": 1, "maximum": 4194304 }
+          "fileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4194304
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["fileToken", "offset", "length", "eof"],
+        "required": [
+          "fileToken",
+          "offset",
+          "length",
+          "eof"
+        ],
         "properties": {
-          "fileToken": { "type": "string", "maxLength": 128 },
-          "offset": { "type": "integer", "minimum": 0 },
-          "length": { "type": "integer", "minimum": 0, "maximum": 4194304 },
-          "eof": { "type": "boolean" },
-          "bytesB64": { "type": ["string", "null"], "maxLength": 5600000 }
+          "fileToken": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4194304
+          },
+          "eof": {
+            "type": "boolean"
+          },
+          "bytesB64": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 5600000
+          }
         },
         "additionalProperties": false
       },
@@ -113,22 +180,56 @@
       "consent": "host-owned-user-action",
       "parameterSchema": {
         "type": "object",
-        "required": ["suggestedName", "mimeType"],
+        "required": [
+          "suggestedName",
+          "mimeType"
+        ],
         "properties": {
-          "fileToken": { "type": "string", "minLength": 1, "maxLength": 128, "pattern": "^[A-Za-z0-9._:-]+$" },
-          "suggestedName": { "type": "string", "minLength": 1, "maxLength": 128 },
-          "mimeType": { "type": "string", "pattern": "^[a-z]+\\/[a-z0-9.+-]+$", "maxLength": 128 },
-          "sizeHint": { "type": "integer", "minimum": 0, "maximum": 2147483648 }
+          "fileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          },
+          "suggestedName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "mimeType": {
+            "type": "string",
+            "pattern": "^[a-z]+\\/[a-z0-9.+-]+$",
+            "maxLength": 128
+          },
+          "sizeHint": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483648
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["sessionId", "chunkSize", "sessionExpiresInMs"],
+        "required": [
+          "sessionId",
+          "chunkSize",
+          "sessionExpiresInMs"
+        ],
         "properties": {
-          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
-          "chunkSize": { "const": 4194304 },
-          "sessionExpiresInMs": { "type": "integer", "minimum": 0, "maximum": 1800000 }
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "chunkSize": {
+            "const": 4194304
+          },
+          "sessionExpiresInMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1800000
+          }
         },
         "additionalProperties": false
       },
@@ -151,21 +252,49 @@
       "consent": "ride-on-session",
       "parameterSchema": {
         "type": "object",
-        "required": ["sessionId", "offset", "bytesB64"],
+        "required": [
+          "sessionId",
+          "offset",
+          "bytesB64"
+        ],
         "properties": {
-          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 },
-          "offset": { "type": "integer", "minimum": 0 },
-          "bytesB64": { "type": "string", "minLength": 1, "maxLength": 5600000 }
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesB64": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5600000
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["acceptedOffset", "cursorOffset"],
+        "required": [
+          "acceptedOffset",
+          "cursorOffset"
+        ],
         "properties": {
-          "acceptedOffset": { "type": "integer", "minimum": 0 },
-          "cursorOffset": { "type": "integer", "minimum": 0 },
-          "bytesAccepted": { "type": "integer", "minimum": 0, "maximum": 4194304 }
+          "acceptedOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cursorOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesAccepted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4194304
+          }
         },
         "additionalProperties": false
       },
@@ -188,19 +317,40 @@
       "consent": "ride-on-session",
       "parameterSchema": {
         "type": "object",
-        "required": ["sessionId"],
+        "required": [
+          "sessionId"
+        ],
         "properties": {
-          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["fileToken", "size"],
+        "required": [
+          "fileToken",
+          "size"
+        ],
         "properties": {
-          "fileToken": { "type": "string", "maxLength": 128 },
-          "size": { "type": "integer", "minimum": 0 },
-          "mimeType": { "type": ["string", "null"], "maxLength": 128 }
+          "fileToken": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          }
         },
         "additionalProperties": false
       },
@@ -223,17 +373,27 @@
       "consent": "ride-on-session",
       "parameterSchema": {
         "type": "object",
-        "required": ["sessionId"],
+        "required": [
+          "sessionId"
+        ],
         "properties": {
-          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["aborted"],
+        "required": [
+          "aborted"
+        ],
         "properties": {
-          "aborted": { "type": "boolean" }
+          "aborted": {
+            "type": "boolean"
+          }
         },
         "additionalProperties": false
       },
@@ -256,21 +416,51 @@
       "consent": "ride-on-session",
       "parameterSchema": {
         "type": "object",
-        "required": ["sessionId"],
+        "required": [
+          "sessionId"
+        ],
         "properties": {
-          "sessionId": { "type": "string", "minLength": 1, "maxLength": 128 }
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
         },
         "additionalProperties": false
       },
       "resultSchema": {
         "type": "object",
-        "required": ["active", "cursorOffset"],
+        "required": [
+          "active",
+          "cursorOffset"
+        ],
         "properties": {
-          "active": { "type": "boolean" },
-          "cursorOffset": { "type": "integer", "minimum": 0 },
-          "bytesWritten": { "type": "integer", "minimum": 0 },
-          "sessionExpiresInMs": { "type": ["integer", "null"], "minimum": 0, "maximum": 1800000 },
-          "targetMimeType": { "type": ["string", "null"], "maxLength": 128 }
+          "active": {
+            "type": "boolean"
+          },
+          "cursorOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesWritten": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sessionExpiresInMs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1800000
+          },
+          "targetMimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          }
         },
         "additionalProperties": false
       },
@@ -291,8 +481,14 @@
       "riskClass": "low",
       "userGesture": "none",
       "consent": "no-consent",
-      "parameterSchema": { "type": "object", "maxProperties": 0, "additionalProperties": false },
-      "resultSchema": { "$ref": "#/$defs/sanitizedMediaCapabilities" },
+      "parameterSchema": {
+        "type": "object",
+        "maxProperties": 0,
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/sanitizedMediaCapabilities"
+      },
       "timeoutMs": 0,
       "maximumResponseBytes": 4096,
       "previewAvailability": "proposed-enabled",
@@ -326,51 +522,99 @@
   "$defs": {
     "sanitizedMediaCapabilities": {
       "type": "object",
-      "required": ["webcodecs", "mediaRecorder", "offlineAudioContext", "codecs"],
+      "required": [
+        "webcodecs",
+        "mediaRecorder",
+        "offlineAudioContext",
+        "codecs"
+      ],
       "properties": {
         "webcodecs": {
           "type": "object",
-          "required": ["videoEncoder", "videoDecoder", "audioEncoder", "audioDecoder"],
+          "required": [
+            "videoEncoder",
+            "videoDecoder",
+            "audioEncoder",
+            "audioDecoder"
+          ],
           "properties": {
-            "videoEncoder": { "type": "boolean" },
-            "videoDecoder": { "type": "boolean" },
-            "audioEncoder": { "type": "boolean" },
-            "audioDecoder": { "type": "boolean" }
+            "videoEncoder": {
+              "type": "boolean"
+            },
+            "videoDecoder": {
+              "type": "boolean"
+            },
+            "audioEncoder": {
+              "type": "boolean"
+            },
+            "audioDecoder": {
+              "type": "boolean"
+            }
           },
           "additionalProperties": false
         },
         "mediaRecorder": {
           "type": "object",
-          "required": ["videoMp4", "webmVp9", "webmVp8"],
+          "required": [
+            "videoMp4",
+            "webmVp9",
+            "webmVp8"
+          ],
           "properties": {
-            "videoMp4": { "type": "boolean" },
-            "webmVp9": { "type": "boolean" },
-            "webmVp8": { "type": "boolean" }
+            "videoMp4": {
+              "type": "boolean"
+            },
+            "webmVp9": {
+              "type": "boolean"
+            },
+            "webmVp8": {
+              "type": "boolean"
+            }
           },
           "additionalProperties": false
         },
-        "offlineAudioContext": { "type": "boolean" },
+        "offlineAudioContext": {
+          "type": "boolean"
+        },
         "codecs": {
           "type": "object",
-          "required": ["decode"],
+          "required": [
+            "decode"
+          ],
           "properties": {
             "decode": {
               "type": "object",
               "properties": {
-                "avc1": { "type": "boolean" },
-                "hevc": { "type": "boolean" },
-                "vp8": { "type": "boolean" },
-                "vp9": { "type": "boolean" },
-                "av1": { "type": "boolean" }
+                "avc1": {
+                  "type": "boolean"
+                },
+                "hevc": {
+                  "type": "boolean"
+                },
+                "vp8": {
+                  "type": "boolean"
+                },
+                "vp9": {
+                  "type": "boolean"
+                },
+                "av1": {
+                  "type": "boolean"
+                }
               },
               "additionalProperties": false
             },
             "encode": {
               "type": "object",
               "properties": {
-                "avc1": { "type": "boolean" },
-                "vp9": { "type": "boolean" },
-                "av1": { "type": "boolean" }
+                "avc1": {
+                  "type": "boolean"
+                },
+                "vp9": {
+                  "type": "boolean"
+                },
+                "av1": {
+                  "type": "boolean"
+                }
               },
               "additionalProperties": false
             }

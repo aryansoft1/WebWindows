@@ -8,7 +8,7 @@
     "decision": "approved-for-application",
     "approvedBy": "product owner (T-072 拍板, 2026-10-22)",
     "reference": "docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A①",
-    "application": "operations applied verbatim to data/sdk/permissions-v1.json on 2026-10-22; runtime enforcement and platform code items (facade generation, broker registry editions, askAppAssist, host confirmation card, knowledge-base 32-cap audit) are scheduled separately and do not follow from this approval. productionAvailability stays proposed-disabled per method until its own review.",
+    "application": "operations applied verbatim to data/sdk/permissions-v1.json on 2026-10-22; runtime enforcement and platform code items (facade generation, broker registry editions, askAppAssist, host confirmation card, knowledge-base 32-cap audit) are scheduled separately and do not follow from this approval. productionAvailability stays proposed-disabled per method until its own review. 2026-10-22 round-17 carry: device.storage.writeSession.status was appended to cloud.files.write-selected.publicApiTargets (the batch's target enumeration had omitted it; surfaced by the extended capability-broker-contract-smoke cross-check and completed per the reviewed media methods draft's permission attribution).",
     "crosscheck": "tmp/review-crosscheck.cjs 5/5 pass (facade vocabulary)"
   },
   "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
@@ -31,19 +31,28 @@
         "risk": "medium",
         "prompt": "runtime-confirmation",
         "userGesture": true,
-        "publicApiTargets": ["ai.isSupported", "ai.requestAssist", "ai.on"]
+        "publicApiTargets": [
+          "ai.isSupported",
+          "ai.requestAssist",
+          "ai.on"
+        ]
       }
     },
     {
       "op": "update-permission",
       "id": "device.storage-file.read",
-      "publicApiTargetsAppend": ["device.storage.stat", "device.storage.readChunk"],
+      "publicApiTargetsAppend": [
+        "device.storage.stat",
+        "device.storage.readChunk"
+      ],
       "note": "Chunk reads ride the existing resource-grant: the handle token must come from a prior user-authorized device.storage.openFile in the same session; no new file-access authority."
     },
     {
       "op": "update-permission",
       "id": "cloud.files.save",
-      "publicApiTargetsAppend": ["device.storage.writeSession.begin"],
+      "publicApiTargetsAppend": [
+        "device.storage.writeSession.begin"
+      ],
       "note": "Write-session begin stays host-owned-user-action; the target is resolved by the trusted save dialog before begin returns."
     },
     {

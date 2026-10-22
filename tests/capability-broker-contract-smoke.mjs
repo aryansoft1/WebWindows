@@ -26,13 +26,41 @@ assert.equal(errors.status, "preview-and-production-battery-pilot");
 assert.equal(methods.defaultDecision, "deny");
 assert.equal(methods.wildcardsAllowed, false);
 assert.equal(methods.unknownMethods, "deny");
-assert.deepEqual(methods.methods.map((method) => method.id), ["device.battery.getState", "device.battery.refresh"]);
+/* Round 17 G1/G2 edition: battery pilot rows stay first and byte-identical; nine candidate
+ * methods follow verbatim from the two approved drafts (proposed-disabled in production). */
+assert.deepEqual(methods.methods.slice(0, 2).map((method) => method.id), ["device.battery.getState", "device.battery.refresh"]);
+const batteryMethods = methods.methods.slice(0, 2);
+const candidateMethods = methods.methods.slice(2);
+assert.equal(methods.methods.length, 11);
 assert.equal(new Set(methods.methods.map((method) => method.id)).size, methods.methods.length);
+assert.deepEqual(candidateMethods.map((method) => method.id), [
+  "device.storage.stat", "device.storage.readChunk",
+  "device.storage.writeSession.begin", "device.storage.writeSession.writeChunk",
+  "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status",
+  "device.media.getCapabilities", "ai.desktalk.requestAssist"
+]);
+for (const method of candidateMethods) {
+  assert.equal(method.previewAvailability, "proposed-enabled");
+  assert.equal(method.productionAvailability, "proposed-disabled");
+  assert.equal(method.currentStatus, "draft");
+}
 const methodRegistryText = JSON.stringify(methods);
-for (const forbidden of ["*", "WebWindowsNative", "NativeAdapter", "invokeNative", "WebWindows.apps"]) {
+for (const forbidden of ["WebWindowsNative", "NativeAdapter", "invokeNative", "WebWindows.apps"]) {
   assert.doesNotMatch(methodRegistryText, new RegExp(escapeRegExp(forbidden)), forbidden);
 }
+/* no authority carries a wildcard: ids and patterns are schema-enforced, the remaining
+ * authority fields are asserted explicitly (prose like "cloud.files.* flows" in a
+ * sanitization string is descriptive, not an authority claim) */
 for (const method of methods.methods) {
+  for (const field of ["id", "publicNamespace", "publicMember", "requiredRuntimeCapability"]) {
+    assert.doesNotMatch(String(method[field]), /\*/, `${method.id}.${field}`);
+  }
+  if (typeof method.requiredPermission === "string") {
+    assert.doesNotMatch(method.requiredPermission, /\*/, `${method.id}.requiredPermission`);
+  }
+  assert.equal(methods.wildcardsAllowed, false);
+}
+for (const method of batteryMethods) {
   assert.equal(`${method.publicNamespace}.${method.publicMember}`, method.id);
   assert.match(publicApi, new RegExp(`${method.publicMember.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\(`));
   const permission = permissions.permissions.find((item) => item.id === method.requiredPermission);
@@ -45,9 +73,57 @@ for (const method of methods.methods) {
   assert.equal(method.productionAvailability, "enabled");
   assert.equal(method.currentStatus, "enabled");
 }
-for (const excluded of ["device.storage", "fileDialog.open", "fileDialog.save", "fileDialog.write", "fileDialog.read", "fileDialog.saveBlob"]) {
-  assert.ok(methods.explicitlyExcluded.includes(excluded), excluded);
+for (const method of candidateMethods) {
+  /* Candidates are contract rows only: no d.ts facade members yet (d.ts edit deferred per repo rule 4). */
+  const facadeTarget = `${method.publicNamespace}.${method.publicMember}`;
+  if (method.requiredPermission !== null) {
+    const permission = permissions.permissions.find((item) => item.id === method.requiredPermission);
+    assert.ok(permission, `${method.id}: ${method.requiredPermission}`);
+    /* the facade target is what the permission authorizes; the broker id may differ from it
+     * (ai rides namespace "ai", so ai.desktalk.requestAssist authorizes the facet ai.requestAssist) */
+    assert.equal(permission.publicApiTargets.includes(facadeTarget), true, `${method.id} -> ${facadeTarget}`);
+  } else {
+    assert.equal(method.id, "device.media.getCapabilities", "null permission is reserved for the capability handshake");
+  }
+  /* the factual compatibility table must NOT claim candidate capabilities yet (no overclaim) */
+  for (const runtime of compatibility.hostRuntimes.filter((item) => item.capabilities)) {
+    assert.equal(Object.hasOwn(runtime.capabilities, method.requiredRuntimeCapability), false, `${runtime.id}:${method.requiredRuntimeCapability} must not be claimed before its runtime review`);
+  }
 }
+/* no candidate facade member has shipped into the public vocabulary */
+for (const absent of ["writeSession", "requestAssist", "desktalk"]) {
+  assert.doesNotMatch(publicApi, new RegExp(absent), `${absent} has no facade member yet`);
+}
+assert.deepEqual([...methods.explicitlyExcluded].sort(), [
+  "ai.complete", "ai.desktalk.attachFile", "ai.desktalk.readThread", "ai.desktalk.send",
+  "device.media.record", "device.media.upload",
+  "device.storage.listDirectory", "device.storage.listVolumes", "device.storage.pickDirectory", "device.storage.requestPermission",
+  "fileDialog.open", "fileDialog.read", "fileDialog.save", "fileDialog.saveBlob", "fileDialog.write"
+].sort());
+assert.equal(methods.explicitlyExcluded.includes("device.storage"), false, "the blanket device.storage exclusion was split in the round 17 edition (directory surface stays excluded via its four explicit ids)");
+
+/* registry status and edition notes (R4 provenance + pending facade honesty note) */
+assert.equal(methods.status, "preview-and-production-battery-pilot");
+assert.equal(methods.notes.length, 2);
+assert.match(methods.notes[0], /registered verbatim as candidates/);
+assert.match(methods.notes[1], /Facade generation for the candidate namespaces is pending/);
+
+/* one reviewed event contract: ai.assist.received bound to the assist permission */
+assert.deepEqual(methods.events.map((event) => event.id), ["ai.assist.received"]);
+const assistEvent = methods.events[0];
+assert.equal(`${assistEvent.publicNamespace}.${assistEvent.publicMember}`, "ai.on");
+assert.equal(assistEvent.direction, "host-to-sandbox");
+{
+  const permission = permissions.permissions.find((item) => item.id === assistEvent.requiredPermission);
+  assert.ok(permission, assistEvent.requiredPermission);
+  assert.equal(permission.publicApiTargets.includes("ai.on"), true);
+}
+assert.deepEqual(assistEvent.payloadSchema.required, ["ticketId", "proposals"]);
+assert.ok(methods.$defs.sanitizedMediaCapabilities, "getCapabilities result ref must be resolvable in the registry $defs");
+
+/* reviewed-and-declined rows: battery-era four stay first, five carried verbatim from the drafts */
+assert.deepEqual(methods.reviewedNotSelected.map((row) => row.id).slice(0, 4), ["device.network.getState", "device.runtime.getInfo", "device.display.getInfo", "device.audio.getVolume"]);
+assert.deepEqual(methods.reviewedNotSelected.map((row) => row.id).slice(4), ["device.storage.seek", "device.media.getPerformanceInfo", "device.media.pickTrack", "ai.desktalk.findAssistTargets", "ai.desktalk.cancelAssist"]);
 
 const expectedErrors = [
   "method-not-allowed", "permission-not-declared", "permission-denied", "capability-unsupported",
@@ -153,8 +229,9 @@ assert.equal(policy.sameProtocolForPreviewAndProduction, true);
 assert.deepEqual(policy.modeDifferences, ["identity", "grantPersistence", "policyContext", "assetSource"]);
 assert.equal(policy.manifestPermissionDeclaration.status, "resolved-by-manifest-v2-contract-preview-pilot-enabled");
 assert.equal(policy.manifestPermissionDeclaration.sourceManifestSchema, "data/sdk/manifest-v2.schema.json");
-assert.equal(methods.methods.every((method) => method.productionAvailability === "enabled"), true);
-assert.deepEqual(methods.methods.map((method) => method.id), ["device.battery.getState", "device.battery.refresh"]);
+assert.equal(batteryMethods.every((method) => method.productionAvailability === "enabled"), true);
+assert.deepEqual(batteryMethods.map((method) => method.id), ["device.battery.getState", "device.battery.refresh"]);
+assert.equal(candidateMethods.every((method) => method.productionAvailability === "proposed-disabled"), true);
 assert.equal(manifestSchema.$defs.sourceManifest.properties.permissions, undefined);
 
 console.log("capability broker v1 contract smoke test passed");

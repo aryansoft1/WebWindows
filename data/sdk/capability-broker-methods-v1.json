@@ -23,7 +23,9 @@
         "maxProperties": 0,
         "additionalProperties": false
       },
-      "resultSchema": { "$ref": "#/$defs/sanitizedBatteryState" },
+      "resultSchema": {
+        "$ref": "#/$defs/sanitizedBatteryState"
+      },
       "timeoutMs": 0,
       "maximumResponseBytes": 4096,
       "previewAvailability": "enabled",
@@ -46,13 +48,629 @@
         "maxProperties": 0,
         "additionalProperties": false
       },
-      "resultSchema": { "$ref": "#/$defs/sanitizedBatteryState" },
+      "resultSchema": {
+        "$ref": "#/$defs/sanitizedBatteryState"
+      },
       "timeoutMs": 3000,
       "maximumResponseBytes": 4096,
       "previewAvailability": "enabled",
       "productionAvailability": "enabled",
       "currentStatus": "enabled",
       "sanitization": "Same public BatteryState shape as getState; never return adapter or transport objects."
+    },
+    {
+      "id": "device.storage.stat",
+      "publicNamespace": "device.storage",
+      "publicMember": "stat",
+      "invocation": "request-response",
+      "requiredPermission": "device.storage-file.read",
+      "requiredRuntimeCapability": "storage.file-handle",
+      "riskClass": "medium",
+      "userGesture": "none",
+      "consent": "resource-grant-ride",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "fileToken"
+        ],
+        "properties": {
+          "fileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "fileToken",
+          "size"
+        ],
+        "properties": {
+          "fileToken": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          },
+          "lastModifiedMs": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 3000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Return only size/mime/mtime for the referenced granted handle; reject unknown tokens with fail-closed null; never expose path, filename, or owner identity."
+    },
+    {
+      "id": "device.storage.readChunk",
+      "publicNamespace": "device.storage",
+      "publicMember": "readChunk",
+      "invocation": "request-response",
+      "requiredPermission": "device.storage-file.read",
+      "requiredRuntimeCapability": "storage.file-handle-stream",
+      "riskClass": "medium",
+      "userGesture": "none",
+      "consent": "resource-grant-ride",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "fileToken",
+          "offset",
+          "length"
+        ],
+        "properties": {
+          "fileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4194304
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "fileToken",
+          "offset",
+          "length",
+          "eof"
+        ],
+        "properties": {
+          "fileToken": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4194304
+          },
+          "eof": {
+            "type": "boolean"
+          },
+          "bytesB64": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 5600000
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 6291456,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Clamp offset to file size; clamp length to 4 MiB and to remaining bytes; eof when offset+length >= size; bytes base64 (transport encoding to be finalized by pilot; if broker gains a binary channel switch field documented then). Reading beyond size returns empty bytes with eof=true, never an error with partial data."
+    },
+    {
+      "id": "device.storage.writeSession.begin",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.begin",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.save",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "high",
+      "userGesture": "required",
+      "consent": "host-owned-user-action",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "suggestedName",
+          "mimeType"
+        ],
+        "properties": {
+          "fileToken": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          },
+          "suggestedName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "mimeType": {
+            "type": "string",
+            "pattern": "^[a-z]+\\/[a-z0-9.+-]+$",
+            "maxLength": 128
+          },
+          "sizeHint": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2147483648
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "sessionId",
+          "chunkSize",
+          "sessionExpiresInMs"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "chunkSize": {
+            "const": 4194304
+          },
+          "sessionExpiresInMs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1800000
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 120000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Host-side trusted save dialog (fileDialog.save/saveBlob) resolves the target before begin returns; when fileToken is provided it must match a previously granted write target (cloud.files.save context) - mismatch fail-closed. Only one active session per app: WRITE_SESSION_ACTIVE error otherwise. suggestedName sanitized by host save dialog; returned sessionId is app-scoped and carries no path. Session cap 2 GiB (sizeHint advisory; cloud-quota is the natural limiter per product decision 2026-10-21). begin always creates a fresh session at cursor 0; resume uses writeSession.status + writeChunk continuation."
+    },
+    {
+      "id": "device.storage.writeSession.writeChunk",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.writeChunk",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "high",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "sessionId",
+          "offset",
+          "bytesB64"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "offset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesB64": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 5600000
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "acceptedOffset",
+          "cursorOffset"
+        ],
+        "properties": {
+          "acceptedOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "cursorOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesAccepted": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4194304
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "offset must equal session cursor exactly (OFFSET_SEQUENCE_ERROR otherwise, cursor unchanged); bytes base64 <= 4 MiB decoded; SESSION_EXPIRED on TTL expiry; cursorOffset echoes the authoritative server-side cursor after this call (authoritative resume point after transport errors - in-session resume decided 2026-10-21); audit per call with byte count, never content."
+    },
+    {
+      "id": "device.storage.writeSession.commit",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.commit",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "high",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "sessionId"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "fileToken",
+          "size"
+        ],
+        "properties": {
+          "fileToken": {
+            "type": "string",
+            "maxLength": 128
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "mimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 30000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "host materializes the assembled target and returns a new handle token usable by device.storage.stat/readChunk and cloud.files.* flows; expired sessions resolve null (not throw) for sandbox-side degradation."
+    },
+    {
+      "id": "device.storage.writeSession.abort",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.abort",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "medium",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "sessionId"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "aborted"
+        ],
+        "properties": {
+          "aborted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Idempotent; true when an active session belonging to this app was discarded (no partial content is ever materialized), false when no such session."
+    },
+    {
+      "id": "device.storage.writeSession.status",
+      "publicNamespace": "device.storage",
+      "publicMember": "writeSession.status",
+      "invocation": "request-response",
+      "requiredPermission": "cloud.files.write-selected",
+      "requiredRuntimeCapability": "storage.file-write-session",
+      "riskClass": "low",
+      "userGesture": "none",
+      "consent": "ride-on-session",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "sessionId"
+        ],
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "active",
+          "cursorOffset"
+        ],
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "cursorOffset": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "bytesWritten": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sessionExpiresInMs": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1800000
+          },
+          "targetMimeType": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 128
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 10000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Resume query (in-session resume decided 2026-10-21): after transport errors the sandbox re-queries the authoritative cursor and continues writeChunk from cursorOffset - no server-side partial materialization, session state is a target handle plus cursor integers, expired/unknown sessions resolve active:false. null-free fail-closed on foreign session ids."
+    },
+    {
+      "id": "device.media.getCapabilities",
+      "publicNamespace": "device.media",
+      "publicMember": "getCapabilities",
+      "invocation": "handshake-snapshot",
+      "requiredPermission": null,
+      "requiredRuntimeCapability": "media.engine-report",
+      "riskClass": "low",
+      "userGesture": "none",
+      "consent": "no-consent",
+      "parameterSchema": {
+        "type": "object",
+        "maxProperties": 0,
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "$ref": "#/$defs/sanitizedMediaCapabilities"
+      },
+      "timeoutMs": 0,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Boolean capability report only (presence/codec support). No engine version strings, no device model, no performance telemetry - fingerprinting minimized. Codec support derives from host probing WebCodecs/MediaRecorder at host time, not from the sandbox."
+    },
+    {
+      "id": "ai.desktalk.requestAssist",
+      "publicNamespace": "ai",
+      "publicMember": "requestAssist",
+      "invocation": "request-response",
+      "requiredPermission": "ai.desktalk-assist",
+      "requiredRuntimeCapability": "desktalk.assist",
+      "riskClass": "medium",
+      "userGesture": "required",
+      "consent": "host-confirmation-card",
+      "parameterSchema": {
+        "type": "object",
+        "required": [
+          "scene",
+          "payload"
+        ],
+        "properties": {
+          "scene": {
+            "const": "video-edit"
+          },
+          "payload": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 16384,
+            "contentType": "application/json",
+            "describedBy": "docs/WEBWINDOWS_MEDIA_EDITING_APP_SUPPORT_V1.md video-edit scene summary schema (assetReport + timeline digest; no binary, no user-selected file contents)"
+          },
+          "requestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9._:-]+$"
+          }
+        },
+        "additionalProperties": false
+      },
+      "resultSchema": {
+        "type": "object",
+        "required": [
+          "ticketId",
+          "channel"
+        ],
+        "properties": {
+          "ticketId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "channel": {
+            "const": "desktalk"
+          },
+          "expiresAtMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "enum": [
+              "accepted",
+              "routed"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "timeoutMs": 120000,
+      "maximumResponseBytes": 4096,
+      "previewAvailability": "proposed-enabled",
+      "productionAvailability": "proposed-disabled",
+      "currentStatus": "draft",
+      "sanitization": "Payload validated as JSON text <= 16 KiB against the video-edit scene schema before handoff; ticket result carries an opaque id and no generated content - the actual suggestions flow back via the ai.assist.received event bound to the same ticket. null on host decline (fail-closed, mistake-silent)."
+    }
+  ],
+  "events": [
+    {
+      "id": "ai.assist.received",
+      "publicNamespace": "ai",
+      "publicMember": "on",
+      "direction": "host-to-sandbox",
+      "requiredPermission": "ai.desktalk-assist",
+      "riskClass": "medium",
+      "payloadSchema": {
+        "type": "object",
+        "required": [
+          "ticketId",
+          "proposals"
+        ],
+        "properties": {
+          "ticketId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "attribution": {
+            "const": "desktalk-assist"
+          },
+          "proposals": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 12,
+            "items": {
+              "type": "object",
+              "required": [
+                "kind",
+                "title",
+                "body"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "plan-step",
+                    "text-suggestion",
+                    "insert-clip",
+                    "caption",
+                    "cover-copy",
+                    "adjustment"
+                  ]
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 80
+                },
+                "body": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 4000
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 0,
+                  "maxLength": 2000
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "notes": [
+        "Phase 0B keeps exactly one event shape per the design doc; expansion requires a new review.",
+        "Proposals are itemized confirmation cards - DeskShadow never auto-applies; each applies only after the user accepts it in the app UI.",
+        "The sandbox must render the attribution '桌讯 AI 协助' for anything received via this channel."
+      ]
     }
   ],
   "reviewedNotSelected": [
@@ -71,27 +689,201 @@
     {
       "id": "device.audio.getVolume",
       "reason": "Exposes a user or page media setting and differs between native and page scopes."
+    },
+    {
+      "id": "device.storage.seek",
+      "reason": "Random-access write violates sequential-cursor design; reintroduce only with a reviewed mix-in of justified use cases."
+    },
+    {
+      "id": "device.media.getPerformanceInfo",
+      "reason": "Decode performance counters are fingerprinting and telemetry risk; defer until a need is demonstrated."
+    },
+    {
+      "id": "device.media.pickTrack",
+      "reason": "Host-owned track selection UI is out of scope for this batch; sandbox does not enumerate host media."
+    },
+    {
+      "id": "ai.desktalk.findAssistTargets",
+      "reason": "Letting a sandbox enumerate which DeskTalk session to route into leaks social context; routing is host-side."
+    },
+    {
+      "id": "ai.desktalk.cancelAssist",
+      "reason": "Ticket expiry (120s) plus one-in-flight policy covers cancellation adequately for Phase 0B."
     }
   ],
   "explicitlyExcluded": [
-    "device.storage",
     "fileDialog.open",
     "fileDialog.save",
     "fileDialog.write",
     "fileDialog.read",
-    "fileDialog.saveBlob"
+    "fileDialog.saveBlob",
+    "device.storage.pickDirectory",
+    "device.storage.listVolumes",
+    "device.storage.listDirectory",
+    "device.storage.requestPermission",
+    "device.media.record",
+    "device.media.upload",
+    "ai.desktalk.attachFile",
+    "ai.desktalk.send",
+    "ai.desktalk.readThread",
+    "ai.complete"
+  ],
+  "notes": [
+    "2026-10-22: G1/G2 broker method and event contracts registered verbatim as candidates (preview proposed-enabled / production proposed-disabled) from capability-broker-media-methods-draft-v0.json and capability-broker-ai-methods-draft-v0.json per docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-4 R-A① plus the approved V1-V10 schema revision. Per-method runtime enablement stays a separate review; battery rows unchanged; the registry keeps defaultDecision deny and unknownMethods deny.",
+    "Facade generation for the candidate namespaces is pending (d.ts edit deferred per repo rule 4). Candidate methods are not visible to any sandbox until their per-method enablement reviews and the facade work land."
   ],
   "$defs": {
     "sanitizedBatteryState": {
       "type": "object",
-      "required": ["supported", "present", "level", "charging", "connected", "source"],
+      "required": [
+        "supported",
+        "present",
+        "level",
+        "charging",
+        "connected",
+        "source"
+      ],
       "properties": {
-        "supported": { "type": "boolean" },
-        "present": { "type": ["boolean", "null"] },
-        "level": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
-        "charging": { "type": ["boolean", "null"] },
-        "connected": { "type": ["boolean", "null"] },
-        "source": { "enum": ["browser", "runtime", "unsupported"] }
+        "supported": {
+          "type": "boolean"
+        },
+        "present": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "level": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "charging": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "connected": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "source": {
+          "enum": [
+            "browser",
+            "runtime",
+            "unsupported"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "sanitizedMediaCapabilities": {
+      "type": "object",
+      "required": [
+        "webcodecs",
+        "mediaRecorder",
+        "offlineAudioContext",
+        "codecs"
+      ],
+      "properties": {
+        "webcodecs": {
+          "type": "object",
+          "required": [
+            "videoEncoder",
+            "videoDecoder",
+            "audioEncoder",
+            "audioDecoder"
+          ],
+          "properties": {
+            "videoEncoder": {
+              "type": "boolean"
+            },
+            "videoDecoder": {
+              "type": "boolean"
+            },
+            "audioEncoder": {
+              "type": "boolean"
+            },
+            "audioDecoder": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "mediaRecorder": {
+          "type": "object",
+          "required": [
+            "videoMp4",
+            "webmVp9",
+            "webmVp8"
+          ],
+          "properties": {
+            "videoMp4": {
+              "type": "boolean"
+            },
+            "webmVp9": {
+              "type": "boolean"
+            },
+            "webmVp8": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "offlineAudioContext": {
+          "type": "boolean"
+        },
+        "codecs": {
+          "type": "object",
+          "required": [
+            "decode"
+          ],
+          "properties": {
+            "decode": {
+              "type": "object",
+              "properties": {
+                "avc1": {
+                  "type": "boolean"
+                },
+                "hevc": {
+                  "type": "boolean"
+                },
+                "vp8": {
+                  "type": "boolean"
+                },
+                "vp9": {
+                  "type": "boolean"
+                },
+                "av1": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "encode": {
+              "type": "object",
+              "properties": {
+                "avc1": {
+                  "type": "boolean"
+                },
+                "vp9": {
+                  "type": "boolean"
+                },
+                "av1": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": false
     }

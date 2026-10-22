@@ -3,7 +3,13 @@
   "$id": "https://www.y0.hk/data/sdk/capability-broker-v1-schema-revision-draft-v0.json",
   "schemaVersion": 1,
   "contract": "webwindows-capability-broker-schema-revision-draft-v0",
-  "status": "draft-not-applied",
+  "status": "applied-2026-10-22",
+  "reviewDecision": {
+    "decision": "approved-and-applied-in-full",
+    "approvedBy": "product owner (T-072 全批修订 拍板, 2026-10-22)",
+    "reference": "docs/ZHUOYING_DESKSHADOW_REVIEW_PACK_V1.md §A-5",
+    "application": "V1-V10 applied verbatim to data/sdk/capability-broker-v1.schema.json on 2026-10-22 (cycle tmp/apply-round17.mjs; on-disk gates passed: full schema compile + pre-edition battery registry still valid = backward compatible). R1-R4 applied to data/sdk/capability-broker-methods-v1.json in the same cycle: nine candidates + event ai.assist.received + five carried reviewedNotSelected + exclusion split + two provenance notes; battery rows byte-identical. Standing verification: tests/capability-broker-contract-smoke.mjs (extended) + tmp/review-crosscheck.cjs 5/5. Cross-draft finding fixed in the same round: device.storage.writeSession.status appended to cloud.files.write-selected.publicApiTargets (the approved batch's target enumeration had omitted it)."
+  },
   "ownerTask": "T-072 com.aryansoft.deskshadow (zhuoying DeskShadow)",
   "baseContract": "webwindows-capability-broker-v1",
   "baseFile": "data/sdk/capability-broker-v1.schema.json",
@@ -19,93 +25,217 @@
     {
       "id": "C1",
       "area": "methodDefinition.timeoutMs ceiling",
-      "schemaCurrent": { "maximum": 10000 },
+      "schemaCurrent": {
+        "maximum": 10000
+      },
       "draftValues": [
-        { "method": "device.storage.writeSession.begin", "value": 120000, "why": "host-side trusted save dialog dwell is in-band before begin returns" },
-        { "method": "device.storage.writeSession.commit", "value": 30000, "why": "host materialization of the assembled target before commit returns" },
-        { "method": "ai.desktalk.requestAssist", "value": 120000, "why": "host-owned confirmation card dwell is in-band before the ticket result returns" }
+        {
+          "method": "device.storage.writeSession.begin",
+          "value": 120000,
+          "why": "host-side trusted save dialog dwell is in-band before begin returns"
+        },
+        {
+          "method": "device.storage.writeSession.commit",
+          "value": 30000,
+          "why": "host materialization of the assembled target before commit returns"
+        },
+        {
+          "method": "ai.desktalk.requestAssist",
+          "value": 120000,
+          "why": "host-owned confirmation card dwell is in-band before the ticket result returns"
+        }
       ]
     },
     {
       "id": "C2",
       "area": "methodDefinition.maximumResponseBytes ceiling",
-      "schemaCurrent": { "maximum": 1048576 },
+      "schemaCurrent": {
+        "maximum": 1048576
+      },
       "draftValues": [
-        { "method": "device.storage.readChunk", "value": 6291456, "why": "carries 4 MiB chunk bytes as base64 (~5.6 MiB chars) plus envelope fields" }
+        {
+          "method": "device.storage.readChunk",
+          "value": 6291456,
+          "why": "carries 4 MiB chunk bytes as base64 (~5.6 MiB chars) plus envelope fields"
+        }
       ]
     },
     {
       "id": "C3",
       "area": "methodDefinition.consent enum",
-      "schemaCurrent": { "enum": ["no-consent", "session-grant", "persistent-user-grant"] },
+      "schemaCurrent": {
+        "enum": [
+          "no-consent",
+          "session-grant",
+          "persistent-user-grant"
+        ]
+      },
       "draftValues": [
-        { "method": "device.storage.stat", "value": "resource-grant-ride", "why": "authorization rides the already-granted resource permission (device.storage-file.read); no per-call ceremony" },
-        { "method": "device.storage.readChunk", "value": "resource-grant-ride", "why": "same grant-ride as stat; no per-call ceremony" },
-        { "method": "device.storage.writeSession.begin", "value": "host-owned-user-action", "why": "host save dialog is the user action constituting the grant" },
-        { "method": "device.storage.writeSession.writeChunk", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
-        { "method": "device.storage.writeSession.commit", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
-        { "method": "device.storage.writeSession.abort", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
-        { "method": "device.storage.writeSession.status", "value": "ride-on-session", "why": "rides the session established by begin without a new ceremony" },
-        { "method": "ai.desktalk.requestAssist", "value": "host-confirmation-card", "why": "host confirmation card precedes every request (protocol section 8)" }
+        {
+          "method": "device.storage.stat",
+          "value": "resource-grant-ride",
+          "why": "authorization rides the already-granted resource permission (device.storage-file.read); no per-call ceremony"
+        },
+        {
+          "method": "device.storage.readChunk",
+          "value": "resource-grant-ride",
+          "why": "same grant-ride as stat; no per-call ceremony"
+        },
+        {
+          "method": "device.storage.writeSession.begin",
+          "value": "host-owned-user-action",
+          "why": "host save dialog is the user action constituting the grant"
+        },
+        {
+          "method": "device.storage.writeSession.writeChunk",
+          "value": "ride-on-session",
+          "why": "rides the session established by begin without a new ceremony"
+        },
+        {
+          "method": "device.storage.writeSession.commit",
+          "value": "ride-on-session",
+          "why": "rides the session established by begin without a new ceremony"
+        },
+        {
+          "method": "device.storage.writeSession.abort",
+          "value": "ride-on-session",
+          "why": "rides the session established by begin without a new ceremony"
+        },
+        {
+          "method": "device.storage.writeSession.status",
+          "value": "ride-on-session",
+          "why": "rides the session established by begin without a new ceremony"
+        },
+        {
+          "method": "ai.desktalk.requestAssist",
+          "value": "host-confirmation-card",
+          "why": "host confirmation card precedes every request (protocol section 8)"
+        }
       ]
     },
     {
       "id": "C4",
       "area": "methodDefinition.userGesture enum",
-      "schemaCurrent": { "enum": ["none", "host-required"] },
+      "schemaCurrent": {
+        "enum": [
+          "none",
+          "host-required"
+        ]
+      },
       "draftValues": [
-        { "method": "device.storage.writeSession.begin / ai.desktalk.requestAssist", "value": "required" }
+        {
+          "method": "device.storage.writeSession.begin / ai.desktalk.requestAssist",
+          "value": "required"
+        }
       ]
     },
     {
       "id": "C5",
       "area": "availability + currentStatus vocabulary",
       "schemaCurrent": {
-        "previewAvailability": ["disabled", "phase-2b-candidate", "enabled"],
-        "productionAvailability": ["disabled", "future-candidate", "enabled"],
-        "currentStatus": ["pilot-contract-only", "enabled", "deprecated"]
+        "previewAvailability": [
+          "disabled",
+          "phase-2b-candidate",
+          "enabled"
+        ],
+        "productionAvailability": [
+          "disabled",
+          "future-candidate",
+          "enabled"
+        ],
+        "currentStatus": [
+          "pilot-contract-only",
+          "enabled",
+          "deprecated"
+        ]
       },
       "draftValues": [
-        { "scope": "all nine methods in the two drafts", "value": "proposed-enabled / proposed-disabled / draft" }
+        {
+          "scope": "all nine methods in the two drafts",
+          "value": "proposed-enabled / proposed-disabled / draft"
+        }
       ]
     },
     {
       "id": "C6",
       "area": "methodDefinition.requiredPermission nullability",
-      "schemaCurrent": { "type": "string" },
+      "schemaCurrent": {
+        "type": "string"
+      },
       "draftValues": [
-        { "method": "device.media.getCapabilities", "value": null, "why": "permission-free capability-report handshake; gated purely on runtime capability media.engine-report" }
+        {
+          "method": "device.media.getCapabilities",
+          "value": null,
+          "why": "permission-free capability-report handshake; gated purely on runtime capability media.engine-report"
+        }
       ]
     },
     {
       "id": "C7",
       "area": "methodRegistry events section",
-      "schemaCurrent": { "properties": "methods / reviewedNotSelected / explicitlyExcluded / $defs only (additionalProperties false)" },
+      "schemaCurrent": {
+        "properties": "methods / reviewedNotSelected / explicitlyExcluded / $defs only (additionalProperties false)"
+      },
       "draftValues": [
-        { "event": "ai.assist.received", "facadeTarget": "ai.on", "why": "the reviewed assist channel is event-shaped; without an events home the production registry cannot represent half the approved G2 contract" }
+        {
+          "event": "ai.assist.received",
+          "facadeTarget": "ai.on",
+          "why": "the reviewed assist channel is event-shaped; without an events home the production registry cannot represent half the approved G2 contract"
+        }
       ]
     },
     {
       "id": "C8",
       "area": "methodDefinition.requiredRuntimeCapability pattern",
-      "schemaCurrent": { "pattern": "segments admit only alnum (battery.status); hyphenated segments rejected" },
+      "schemaCurrent": {
+        "pattern": "segments admit only alnum (battery.status); hyphenated segments rejected"
+      },
       "draftValues": [
-        { "method": "device.storage.stat", "value": "storage.file-handle" },
-        { "method": "device.storage.readChunk", "value": "storage.file-handle-stream" },
-        { "method": "device.storage.writeSession.*", "value": "storage.file-write-session" },
-        { "method": "device.media.getCapabilities", "value": "media.engine-report" }
+        {
+          "method": "device.storage.stat",
+          "value": "storage.file-handle"
+        },
+        {
+          "method": "device.storage.readChunk",
+          "value": "storage.file-handle-stream"
+        },
+        {
+          "method": "device.storage.writeSession.*",
+          "value": "storage.file-write-session"
+        },
+        {
+          "method": "device.media.getCapabilities",
+          "value": "media.engine-report"
+        }
       ]
     },
     {
       "id": "C9",
       "area": "methodDefinition.publicMember pattern",
-      "schemaCurrent": { "pattern": "single alnum token only (getState); dotted getter chains rejected" },
+      "schemaCurrent": {
+        "pattern": "single alnum token only (getState); dotted getter chains rejected"
+      },
       "draftValues": [
-        { "method": "device.storage.writeSession.begin", "value": "writeSession.begin" },
-        { "method": "device.storage.writeSession.writeChunk", "value": "writeSession.writeChunk" },
-        { "method": "device.storage.writeSession.commit", "value": "writeSession.commit" },
-        { "method": "device.storage.writeSession.abort", "value": "writeSession.abort" },
-        { "method": "device.storage.writeSession.status", "value": "writeSession.status" }
+        {
+          "method": "device.storage.writeSession.begin",
+          "value": "writeSession.begin"
+        },
+        {
+          "method": "device.storage.writeSession.writeChunk",
+          "value": "writeSession.writeChunk"
+        },
+        {
+          "method": "device.storage.writeSession.commit",
+          "value": "writeSession.commit"
+        },
+        {
+          "method": "device.storage.writeSession.abort",
+          "value": "writeSession.abort"
+        },
+        {
+          "method": "device.storage.writeSession.status",
+          "value": "writeSession.status"
+        }
       ]
     }
   ],
@@ -116,7 +246,11 @@
       "path": "$defs.methodDefinition.properties.timeoutMs.maximum",
       "from": 10000,
       "to": 120000,
-      "affectedMethods": ["device.storage.writeSession.begin", "device.storage.writeSession.commit", "ai.desktalk.requestAssist"]
+      "affectedMethods": [
+        "device.storage.writeSession.begin",
+        "device.storage.writeSession.commit",
+        "ai.desktalk.requestAssist"
+      ]
     },
     {
       "id": "V2",
@@ -124,39 +258,82 @@
       "path": "$defs.methodDefinition.properties.maximumResponseBytes.maximum",
       "from": 1048576,
       "to": 6291456,
-      "affectedMethods": ["device.storage.readChunk"]
+      "affectedMethods": [
+        "device.storage.readChunk"
+      ]
     },
     {
       "id": "V3",
       "op": "extend-enum",
       "path": "$defs.methodDefinition.properties.consent.enum",
-      "append": ["resource-grant-ride", "host-owned-user-action", "ride-on-session", "host-confirmation-card"],
-      "affectedMethods": ["device.storage.stat", "device.storage.readChunk", "device.storage.writeSession.begin", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status", "ai.desktalk.requestAssist"]
+      "append": [
+        "resource-grant-ride",
+        "host-owned-user-action",
+        "ride-on-session",
+        "host-confirmation-card"
+      ],
+      "affectedMethods": [
+        "device.storage.stat",
+        "device.storage.readChunk",
+        "device.storage.writeSession.begin",
+        "device.storage.writeSession.writeChunk",
+        "device.storage.writeSession.commit",
+        "device.storage.writeSession.abort",
+        "device.storage.writeSession.status",
+        "ai.desktalk.requestAssist"
+      ]
     },
     {
       "id": "V4",
       "op": "extend-enum",
       "path": "$defs.methodDefinition.properties.userGesture.enum",
-      "append": ["required"],
-      "affectedMethods": ["device.storage.writeSession.begin", "ai.desktalk.requestAssist"]
+      "append": [
+        "required"
+      ],
+      "affectedMethods": [
+        "device.storage.writeSession.begin",
+        "ai.desktalk.requestAssist"
+      ]
     },
     {
       "id": "V5",
       "op": "extend-enum",
       "paths": [
-        { "path": "$defs.methodDefinition.properties.previewAvailability.enum", "append": ["proposed-enabled"] },
-        { "path": "$defs.methodDefinition.properties.productionAvailability.enum", "append": ["proposed-disabled"] },
-        { "path": "$defs.methodDefinition.properties.currentStatus.enum", "append": ["draft"] }
+        {
+          "path": "$defs.methodDefinition.properties.previewAvailability.enum",
+          "append": [
+            "proposed-enabled"
+          ]
+        },
+        {
+          "path": "$defs.methodDefinition.properties.productionAvailability.enum",
+          "append": [
+            "proposed-disabled"
+          ]
+        },
+        {
+          "path": "$defs.methodDefinition.properties.currentStatus.enum",
+          "append": [
+            "draft"
+          ]
+        }
       ],
-      "affectedMethods": ["all nine candidate methods from the two drafts"]
+      "affectedMethods": [
+        "all nine candidate methods from the two drafts"
+      ]
     },
     {
       "id": "V6",
       "op": "widen-type",
       "path": "$defs.methodDefinition.properties.requiredPermission.type",
       "from": "string",
-      "to": ["string", "null"],
-      "affectedMethods": ["device.media.getCapabilities"]
+      "to": [
+        "string",
+        "null"
+      ],
+      "affectedMethods": [
+        "device.media.getCapabilities"
+      ]
     },
     {
       "id": "V9",
@@ -164,7 +341,12 @@
       "path": "$defs.methodDefinition.properties.requiredRuntimeCapability.pattern",
       "from": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)+$",
       "to": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*(?:-[a-z][A-Za-z0-9]*)*)+$",
-      "affectedMethods": ["device.storage.stat (storage.file-handle)", "device.storage.readChunk (storage.file-handle-stream)", "device.storage.writeSession.* (storage.file-write-session)", "device.media.getCapabilities (media.engine-report)"],
+      "affectedMethods": [
+        "device.storage.stat (storage.file-handle)",
+        "device.storage.readChunk (storage.file-handle-stream)",
+        "device.storage.writeSession.* (storage.file-write-session)",
+        "device.media.getCapabilities (media.engine-report)"
+      ],
       "rationale": "reviewed drafts use hyphenated capability segments; the frozen v1 pattern admits only alnum segments (battery.status). Hyphenated segments must be admitted or the four reviewed runtime capabilities cannot register. Battery values unaffected."
     },
     {
@@ -173,7 +355,13 @@
       "path": "$defs.methodDefinition.properties.publicMember.pattern",
       "from": "^[a-z][A-Za-z0-9]*$",
       "to": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$",
-      "affectedMethods": ["device.storage.writeSession.begin", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status"],
+      "affectedMethods": [
+        "device.storage.writeSession.begin",
+        "device.storage.writeSession.writeChunk",
+        "device.storage.writeSession.commit",
+        "device.storage.writeSession.abort",
+        "device.storage.writeSession.status"
+      ],
       "rationale": "the reviewed write-session family lives under one namespace with chained members (device.storage.writeSession.begin); the schema's publicMember admits a single token. Dotted members must be admitted or five of the nine reviewed methods cannot register. Facade construction stays publicNamespace + '.' + publicMember (battery rows unaffected: getState/refresh remain single tokens)."
     },
     {
@@ -184,21 +372,60 @@
         "type": "array",
         "items": {
           "type": "object",
-          "required": ["id", "publicNamespace", "publicMember", "direction", "requiredPermission", "riskClass", "payloadSchema"],
+          "required": [
+            "id",
+            "publicNamespace",
+            "publicMember",
+            "direction",
+            "requiredPermission",
+            "riskClass",
+            "payloadSchema"
+          ],
           "properties": {
-            "id": { "$ref": "#/$defs/methodId" },
-            "publicNamespace": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$" },
-            "publicMember": { "type": "string", "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$" },
-            "direction": { "enum": ["host-to-sandbox", "sandbox-to-host"] },
-            "requiredPermission": { "$ref": "#/$defs/methodDefinition/properties/requiredPermission" },
-            "riskClass": { "enum": ["low", "medium", "high"] },
-            "payloadSchema": { "type": "object" },
-            "notes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+            "id": {
+              "$ref": "#/$defs/methodId"
+            },
+            "publicNamespace": {
+              "type": "string",
+              "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$"
+            },
+            "publicMember": {
+              "type": "string",
+              "pattern": "^[a-z][A-Za-z0-9]*(?:\\.[a-z][A-Za-z0-9]*)*$"
+            },
+            "direction": {
+              "enum": [
+                "host-to-sandbox",
+                "sandbox-to-host"
+              ]
+            },
+            "requiredPermission": {
+              "$ref": "#/$defs/methodDefinition/properties/requiredPermission"
+            },
+            "riskClass": {
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            },
+            "payloadSchema": {
+              "type": "object"
+            },
+            "notes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
           },
           "additionalProperties": false
         }
       },
-      "affectedEvents": ["ai.assist.received (facade ai.on)"],
+      "affectedEvents": [
+        "ai.assist.received (facade ai.on)"
+      ],
       "shapeRationale": "modeled on the actual reviewed event entries (the ai draft's events[0] carries no availability/currentStatus/sanitization fields; its governance text lives in a notes array). Event enablement is decided by the per-method runtime review of the channel that carries it - it is NOT a registry availability field.",
       "note": "The wire-level event envelope stays frozen (event.type enum snapshot.update/capability.change unchanged); V7 only gives event CONTRACTS a registry home. The runtime event-channel extension for assist.received is a per-method review item, not implied by registration."
     },
@@ -206,7 +433,14 @@
       "id": "V8",
       "op": "add-optional-property",
       "path": "$defs.methodRegistry.properties.notes",
-      "design": { "type": "array", "items": { "type": "string", "minLength": 1 }, "maxItems": 32 },
+      "design": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maxItems": 32
+      },
       "rationale": "edition provenance on the production registry (permissions-v1.json precedent already carries a notes array); without it the registry cannot contain the review-decision note that accompanies the edition"
     }
   ],
@@ -216,7 +450,17 @@
       "op": "register-methods",
       "file": "data/sdk/capability-broker-methods-v1.json",
       "source": "the two drafts, verbatim (no field translation needed once V1-V6 apply)",
-      "methodIds": ["device.storage.stat", "device.storage.readChunk", "device.storage.writeSession.begin", "device.storage.writeSession.writeChunk", "device.storage.writeSession.commit", "device.storage.writeSession.abort", "device.storage.writeSession.status", "device.media.getCapabilities", "ai.desktalk.requestAssist"],
+      "methodIds": [
+        "device.storage.stat",
+        "device.storage.readChunk",
+        "device.storage.writeSession.begin",
+        "device.storage.writeSession.writeChunk",
+        "device.storage.writeSession.commit",
+        "device.storage.writeSession.abort",
+        "device.storage.writeSession.status",
+        "device.media.getCapabilities",
+        "ai.desktalk.requestAssist"
+      ],
       "unchanged": "availability words verbatim from drafts (proposed-enabled / proposed-disabled / draft); battery rows untouched"
     },
     {
@@ -229,8 +473,21 @@
     {
       "step": "R3",
       "op": "split-exclusion",
-      "remove": ["device.storage"],
-      "add": ["device.storage.pickDirectory", "device.storage.listVolumes", "device.storage.listDirectory", "device.storage.requestPermission", "device.media.record", "device.media.upload", "ai.desktalk.attachFile", "ai.desktalk.send", "ai.desktalk.readThread", "ai.complete"],
+      "remove": [
+        "device.storage"
+      ],
+      "add": [
+        "device.storage.pickDirectory",
+        "device.storage.listVolumes",
+        "device.storage.listDirectory",
+        "device.storage.requestPermission",
+        "device.media.record",
+        "device.media.upload",
+        "ai.desktalk.attachFile",
+        "ai.desktalk.send",
+        "ai.desktalk.readThread",
+        "ai.complete"
+      ],
       "rationale": "the blanket 'device.storage' namespace exclusion (battery-era) is split per the media draft's supersedes note: directory-surface methods stay excluded (no reviewed contract), file-handle-scoped methods register as candidates; ai-side always-excluded methods carry over from the ai draft"
     },
     {

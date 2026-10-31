@@ -1,78 +1,52 @@
+// main.js —— 仅负责把预编译的 IIFE/UMD 小部件挂载到页面
+// 依赖：index.html 里已引入
+//  1) vue.global.prod.js
+//  2) dist-desktop/desktop-menus.global.js  或  desktop-menus.umd.js（二选一）
+//  3) dist-weather/weather-widget.global.js 或  weather-widget.umd.js（二选一）
+const WEBWINDOWS_REGIONS = window.WebWindowsLocale?.REGIONS || {
+    CN: { code: 'CN', locale: 'zh-CN', timeZone: 'Asia/Shanghai' },
+    JP: { code: 'JP', locale: 'ja-JP', timeZone: 'Asia/Tokyo' },
+    TW: { code: 'TW', locale: 'zh-TW', timeZone: 'Asia/Taipei' },
+    US: { code: 'US', locale: 'en-US', timeZone: 'America/New_York' }
+};
+
+function getWebWindowsRegion() {
+    if (window.WebWindowsLocale) return window.WebWindowsLocale.getRegion();
+    const code = localStorage.getItem('webwindows.region') || 'CN';
+    const fallback = WEBWINDOWS_REGIONS[code] || WEBWINDOWS_REGIONS.CN;
+    return {
+        ...fallback,
+        timeZone: localStorage.getItem('webwindows.timeZone') || fallback.timeZone
+    };
+}
+
+function dateInTimeZone(date = new Date(), region = getWebWindowsRegion()) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: region.timeZone,
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+    }).formatToParts(date);
+    const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return new Date(Number(value.year), Number(value.month) - 1, Number(value.day));
+}
+
+// session-ready：桌面基础环境与会话初始化完成后的统一挂载点。
+// StartupManager（assets/js/startup-manager.js）以此为启动项执行时机。
+function announceWebWindowsSessionReady() {
+    window.dispatchEvent(new CustomEvent('webwindows:session-ready'));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
-    /**VUE加载--天气 */
-    (function () {
-        // 1) 诊断：看看全局导出的库对象叫什么
-        const lib =
-        window['weather-widget'] ||
-        window.weatherWidget ||
-        window.WeatherWidget ||
-        null;
-        console.log('[weather-widget] detected lib =', lib);
+    // Weather is mounted once by mountWeather() below.  Keeping a single
+    // mount point prevents two independent widgets from updating in parallel.
 
-        if (!lib) {
-        console.error('[weather-widget] 未找到 UMD 全局变量。确认 --name 与这里匹配，并检查 dist-widget/weather-widget.umd.min.js 是否加载成功。');
-        return;
-        }
-
-        // Vue 3 全局在 window.Vue（CDN 引入），Vue 2 也是 window.Vue（构造函数不同）
-        const V = window.Vue;
-        if (!V) {
-        console.error('[weather-widget] 未检测到 window.Vue（请确保已引入 https://unpkg.com/vue 的 CDN）。');
-        return;
-        }
-
-        // 2) 判断是 Vue 3 还是 Vue 2
-        const isVue3 = !!V.createApp;
-
-        // 3) 兼容组件导出 / 插件导出
-        const CompOrPlugin = lib.default || lib;
-        const isPlugin = CompOrPlugin && typeof CompOrPlugin.install === 'function';
-
-        if (isVue3) {
-        // ---- Vue 3 注册 ----
-        const app = V.createApp({});
-
-        if (isPlugin) {
-            app.use(CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue3 插件 use()');
-        } else {
-            // 组件对象：用 kebab 名称注册（与模板里的 <weather-time-widget> 对应）
-            app.component('weather-time-widget', CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue3 组件 component()');
-        }
-
-        const mountTarget = document.querySelector('#app-root') || document.body;
-        app.mount(mountTarget);
-        console.log('[weather-widget] Vue3 app mounted on', mountTarget);
-
-        } else {
-        // ---- Vue 2 注册 ----
-        if (isPlugin) {
-            V.use(CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue2 插件 use()');
-        } else if (CompOrPlugin && CompOrPlugin.name) {
-            V.component(CompOrPlugin.name, CompOrPlugin);
-            // 同时确保我们模板用的标签名也可用：
-            V.component('weather-time-widget', CompOrPlugin);
-            console.log('[weather-widget] 已作为 Vue2 组件 component()');
-        } else {
-            console.error('[weather-widget] 未识别的导出（既不是插件也不是组件对象）。');
-        }
-
-        new V({
-            el: document.querySelector('#app-root') || document.body
-        });
-        console.log('[weather-widget] Vue2 app mounted');
-        }
-    })();
-
-    /** 窗口 */
-    try { window.WindowManagerWidget && window.WindowManagerWidget.unmount && window.WindowManagerWidget.unmount() } catch(e){}
-    try { WindowManagerWidget.mount('#desktop-vue-root'); } catch (e) { console.error(e); }
     // ✅ 判断是否已经加载过，若已加载过则不再显示启动动画
     if (sessionStorage.getItem("booted") === "yes") {
         const root = document.getElementById("desktop-root");
         if (root) root.style.opacity = "1";
+        document.documentElement.classList.remove("ww-boot-pending");
+        announceWebWindowsSessionReady();
         // 不执行动画加载逻辑
         return;
     }
@@ -93,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 `;
     loader.innerHTML = `
                     <img src="assets/icons/ARYANSOFT-logo1-01.gif" style="width: 120px; height: 120px; margin-bottom: 20px;">
-                    <div style="font-size: 15px; opacity: 0.85;">正在启动WebWindows...</div>
+                    <div data-boot-status style="font-size: 15px; opacity: 0.85;">正在启动 WebWindows…</div>
                     <div style="
                       width: 44px;
                       height: 44px;
@@ -107,6 +81,10 @@ document.addEventListener("DOMContentLoaded", () => {
                       @keyframes spin { to { transform: rotate(360deg); } }
                     </style>
                 `;
+    const i18n = window.WebWindowsI18n;
+    if (i18n && typeof i18n.applyTo === 'function') {
+        i18n.applyTo(loader, i18n.getLanguage());
+    }
     document.body.appendChild(loader);
 
     // 动画延迟后淡出 boot-loader，桌面淡入
@@ -119,41 +97,167 @@ document.addEventListener("DOMContentLoaded", () => {
             if (root) {
                 root.style.opacity = "1"; // 淡入桌面
             }
+            document.documentElement.classList.remove("ww-boot-pending");
+            announceWebWindowsSessionReady();
         }, 500);
     }, 1800);
 });
+(function () {
+  function ensureEl(id) {
+    var el = document.getElementById(id);
+    if (!el) {
+      el = document.createElement('div');
+      el.id = id;
+      document.body.appendChild(el);
+    }
+    return el;
+  }
 
+  function mountDesktopMenus() {
+    if (!window.DesktopMenusWidget || !window.Vue) {
+      console.warn('[DesktopMenusWidget] 未加载到全局，跳过挂载');
+      return;
+    }
+    // 避免二次挂载
+    if (document.getElementById('ww-desktop-menus-root')?.__mounted) return;
 
-document.querySelectorAll('.taskbar-app').forEach(el => {
-    el.style.backgroundColor = 'rgba(255,255,255,0.1)';
-});
+    var root = ensureEl('ww-desktop-menus-root');
 
+    try {
+      // 可按需把旧逻辑里的动作桥接过来
+      window.DesktopMenusWidget.mount(root, {
+        ignoreSelectors: ['.window .buttons', '.taskbar', '#start-menu'],
+        // 右键菜单点选回调（示例）
+        onCommand(cmd) {
+          switch (cmd) {
+            case 'refresh':
+              if (window.refreshDesktop) window.refreshDesktop();
+              break;
+            case 'settings':
+              if (window.openWindow)
+                window.openWindow('settings', '设置', 'settings.html', 'assets/icons/settings.png', true);
+              break;
+            case 'personalize':
+            case 'personalization':
+              if (window.openWindow)
+                window.openWindow('settings', '设置', 'settings.html?tab=personalization', 'assets/icons/settings.png', true);
+              break;
+            // 其它命令根据你菜单项继续补
+          }
+        },
+      });
+      root.__mounted = true;
+    } catch (e) {
+      console.error('[DesktopMenusWidget] 挂载失败：', e);
+    }
+  }
 
-function updateClock() {
-    const elTime = document.getElementById('clock-time');
-    const elDate = document.getElementById('clock-date');
-    const now = new Date();
-
-    if (elTime) {
-        const hh = String(now.getHours()).padStart(2, '0');
-        const mm = String(now.getMinutes()).padStart(2, '0');
-        elTime.textContent = `${hh}:${mm}`;
+  function mountWeather() {
+    const Vue = window.Vue;
+    const mod = window.WeatherTimeWidget; // 来自 weather-widget.umd.js 或 .global.js
+    if (!Vue || !mod) {
+        console.warn('[WeatherTimeWidget] 未加载到全局，或 Vue 未就绪，跳过挂载');
+        return;
+    }
+    // 兼容 UMD/IIFE 两种导出：可能是组件，也可能是 {default: 组件}
+    const Comp = mod.default || mod;
+    if (!Comp) {
+        console.error('[WeatherTimeWidget] 未找到组件导出：', mod);
+        return;
     }
 
-    if (elDate) {
-        const yyyy = now.getFullYear();
-        const mo = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        elDate.textContent = `${yyyy}/${mo}/${dd}`;
+    const root = ensureEl('ww-weather-root');
+    if (root.__app) return; // 避免重复挂载
+
+    try {
+        const app = Vue.createApp(Comp, /* props 可传这里 */ {});
+        app.mount(root);
+        root.__app = app;
+        root.__mounted = true;
+    } catch (e) {
+        console.error('[WeatherTimeWidget] 挂载失败：', e);
     }
 }
-setInterval(updateClock, 1000);
-updateClock();
+
+  document.addEventListener('DOMContentLoaded', function () {
+    mountDesktopMenus();         // 再挂桌面/窗口右键菜单（Vue 版）
+    mountWeather();              // 再挂天气部件（Vue 版）
+  });
+})();
+
+// 在文档就绪后，等一帧再调用（保证前面的 defer 脚本已执行）
+document.addEventListener('DOMContentLoaded', () => {
+   updateTaskbarClock(true);
+  requestAnimationFrame(() => {
+    // 1) 用户状态初始化：优先用 Vue 暴露的，再退回到全局同名
+    (function initUser() {
+      const call = window.WW?.ui?.initUserStatus || window.initUserStatus;
+      if (typeof call === 'function') call();
+    })();
+
+    // 2) 桌面图标拖拽：如果旧函数存在就调用一次
+    if (typeof window.makeDesktopIconsDraggable === 'function') {
+      window.makeDesktopIconsDraggable();
+    }
+
+    // 3) 全屏：只触发你已有的实现（如果存在）
+    // if (typeof window.enterFullscreen === 'function') {
+    //   window.enterFullscreen();
+    // }
+
+    // -------------------------------------
+    // 4) 动态绑定 电源按钮
+    // -------------------------------------
+    const powerBtn = document.getElementById('power-button'); // 假设 ID
+    if (powerBtn && window.togglePowerMenu) {
+        powerBtn.addEventListener('click', window.togglePowerMenu);
+    }
+    // -------------------------------------
+    // 6) 桌面壁纸
+    // 新用户和未保存壁纸的设备使用 WebWindows 默认壁纸；已有选择继续保留。
+    const defaultWallpaperPath = "assets/wallpapers/wall1.jpg";
+    const savedPath = localStorage.getItem("selectedWallpaper");
+    const wallpaperPath = savedPath || defaultWallpaperPath;
+
+    if (!savedPath) {
+        localStorage.setItem("selectedWallpaper", defaultWallpaperPath);
+        console.log("[Wallpaper] 未找到已保存的壁纸，使用默认壁纸:", defaultWallpaperPath);
+    } else {
+        console.log("[Wallpaper] 发现已保存的壁纸，正在加载:", savedPath);
+    }
+
+    if (window.setWallpaperByPath) {
+        window.setWallpaperByPath(wallpaperPath);
+
+        // 保存的自定义壁纸若已失效，则回退到默认壁纸，避免桌面显示空白。
+        const wallpaperProbe = new Image();
+        wallpaperProbe.onerror = () => {
+            if (localStorage.getItem("selectedWallpaper") !== wallpaperPath) return;
+
+            if (wallpaperPath !== defaultWallpaperPath) {
+                localStorage.setItem("selectedWallpaper", defaultWallpaperPath);
+                window.setWallpaperByPath(defaultWallpaperPath);
+            }
+            console.warn("[Wallpaper] 壁纸无法加载，已回退到默认壁纸:", wallpaperPath);
+        };
+        wallpaperProbe.src = wallpaperPath;
+    }
+    // -------------------------------------
+  });
+
 async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
-    const cnHolidayMap = await getChinaHolidayMap(year); // 来自 timor.tech API
-    const localHolidayMap = await getLocalHolidayMap(year, userCountryCode); // Nager.Date
+    const [cnResult, localResult] = await Promise.allSettled([
+        holidaySourceFor(`cn:${year}`, () => getChinaHolidayMap(year)),
+        holidaySourceFor(`local:${year}:${userCountryCode}`, () => getLocalHolidayMap(year, userCountryCode))
+    ]);
+    const cnHolidayMap = cnResult.status === 'fulfilled' ? cnResult.value : {};
+    const localHolidayMap = localResult.status === 'fulfilled' ? localResult.value : {};
 
     const result = {};
+
+    // 元旦是固定法定节日。年度安排 API 可能尚未发布或尚未收录未来年份，仍应标记 1 月 1 日。
+    const newYearDate = `${year}-01-01`;
+    result[newYearDate] = { cnHoliday: true, cnName: '元旦' };
 
     // ✅ 遍历中国节假日，保留完整日期作为 key
     for (const date in cnHolidayMap) {
@@ -189,31 +293,35 @@ async function getCombinedHolidayMap(year, userCountryCode = 'JP') {
         }
     }
 
-    return result;
+    return {
+        holidays: result,
+        unavailable: [
+            ...(cnResult.status === 'rejected' ? ['cn'] : []),
+            ...(localResult.status === 'rejected' ? ['local'] : [])
+        ]
+    };
 }
 async function getChinaHolidayMap(year) {
-    try {
-        const res = await fetch(`https://timor.tech/api/holiday/year/${year}`);
-        const json = await res.json();
-        const raw = json.holiday || {};
-
-        const result = {};
-        for (const k in raw) {
-            const item = raw[k];
-            result[item.date] = {   // ✅ 使用完整 date 作为 key
-                name: item.name,
-                holiday: item.holiday
-            };
-        }
-        return result;
-    } catch (e) {
-        console.warn("获取中国节假日失败", e);
-        return {};
+    const res = await fetch(`https://timor.tech/api/holiday/year/${year}`);
+    if (!res.ok) throw new Error(`China holiday API returned ${res.status}`);
+    const json = await res.json();
+    if (json.code !== undefined && Number(json.code) !== 0) throw new Error(json.msg || 'China holiday API rejected the year');
+    if (!json.holiday || typeof json.holiday !== 'object' || Array.isArray(json.holiday)) {
+        throw new Error('China holiday API returned an invalid response');
     }
+    if (Object.keys(json.holiday).length === 0) throw new Error(`No China holiday data published for ${year}`);
+    const result = {};
+    for (const k in json.holiday) {
+        const item = json.holiday[k];
+        if (item?.date) result[item.date] = { name: item.name, holiday: item.holiday };
+    }
+    return result;
 }
 async function getLocalHolidayMap(year, countryCode) {
     const res = await fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`);
+    if (!res.ok) throw new Error(`Local holiday API returned ${res.status}`);
     const list = await res.json();
+    if (!Array.isArray(list)) throw new Error('Local holiday API returned an invalid response');
     const map = {};
     list.forEach(item => {
         map[item.date] = {
@@ -224,86 +332,225 @@ async function getLocalHolidayMap(year, countryCode) {
     return map;
 }
 
-let calendarDate = new Date();
+let calendarDate = dateInTimeZone();
+let calendarSelectedDate = new Date(calendarDate.getTime());
+const calendarHolidayCache = new Map();
+let calendarBuildToken = 0;
+
+function holidaySourceFor(key, load) {
+    if (!calendarHolidayCache.has(key)) {
+        const request = load().catch((error) => {
+            calendarHolidayCache.delete(key);
+            throw error;
+        });
+        calendarHolidayCache.set(key, request);
+    }
+    return calendarHolidayCache.get(key);
+}
+
+function calendarDateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function calendarText(text) {
+    const language = window.WebWindowsI18n?.getLanguage?.() || 'zh';
+    const translations = {
+        '今天': { tw: '今天', en: 'Today', jp: '今日' },
+        '中国节日': { tw: '中國節日', en: 'China holiday', jp: '中国の祝日' },
+        '本地节日': { tw: '本地節日', en: 'Local holiday', jp: '現地の祝日' },
+        '选择年月': { tw: '選擇年月', en: 'Choose month and year', jp: '年月を選択' },
+        '正在确认节假日…': { tw: '正在確認節假日…', en: 'Checking holidays…', jp: '祝日を確認中…' },
+        '部分节假日数据暂不可用': { tw: '部分節假日資料暫不可用', en: 'Some holiday data is unavailable', jp: '一部の祝日データを取得できません' },
+        '重试': { tw: '重試', en: 'Retry', jp: '再試行' }
+    };
+    return translations[text]?.[language] || window.WebWindowsI18n?.translate?.(text) || text;
+}
+
+function ensureCalendarStructure() {
+    const popup = document.getElementById('calendar-popup');
+    const header = popup?.querySelector('header');
+    const days = document.getElementById('calendar-days');
+    if (!popup || !header || !days) return;
+
+    if (!document.getElementById('calendar-today')) {
+        const button = document.createElement('button');
+        button.id = 'calendar-today';
+        button.type = 'button';
+        header.insertBefore(button, document.getElementById('next-month'));
+    }
+    if (!document.getElementById('calendar-month-picker')) {
+        const picker = document.createElement('input');
+        picker.id = 'calendar-month-picker';
+        picker.type = 'month';
+        picker.setAttribute('aria-label', calendarText('选择年月'));
+        const oldHeader = document.getElementById('calendar-header');
+        if (oldHeader) header.replaceChild(picker, oldHeader);
+    }
+    if (!document.getElementById('calendar-weekdays')) {
+        const weekdays = document.createElement('div');
+        weekdays.id = 'calendar-weekdays';
+        weekdays.className = 'weekdays-header';
+        weekdays.setAttribute('aria-hidden', 'true');
+        popup.insertBefore(weekdays, days);
+    }
+    if (!document.getElementById('calendar-data-status')) {
+        const status = document.createElement('div');
+        status.id = 'calendar-data-status';
+        status.className = 'calendar-data-status';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        status.hidden = true;
+        popup.appendChild(status);
+    }
+    if (!popup.querySelector('.calendar-legend')) {
+        const legend = document.createElement('div');
+        legend.className = 'calendar-legend';
+        for (const [kind, label] of [['cn', '中国节日'], ['local', '本地节日']]) {
+            const item = document.createElement('span');
+            const marker = document.createElement('i');
+            marker.className = `holiday-marker holiday-marker--${kind}`;
+            marker.setAttribute('aria-hidden', 'true');
+            item.append(marker, document.createTextNode(calendarText(label)));
+            legend.appendChild(item);
+        }
+        popup.appendChild(legend);
+    }
+}
+
+ensureCalendarStructure();
+
+function holidayMapFor(year, countryCode) {
+    return getCombinedHolidayMap(year, countryCode);
+}
+
+function decorateCalendarDay(el, currentDate, info) {
+    const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
+    const localHoliday = Boolean(info?.holiday);
+    const cnHoliday = Boolean(info?.cnHoliday);
+    el.classList.toggle('weekend', isWeekend);
+    el.classList.toggle('holiday-cn', cnHoliday && !localHoliday);
+    el.classList.toggle('holiday-local', localHoliday && !cnHoliday);
+    el.classList.toggle('holiday-both', localHoliday && cnHoliday);
+    el.setAttribute('aria-pressed', String(calendarDateKey(currentDate) === calendarDateKey(calendarSelectedDate)));
+    if (calendarDateKey(currentDate) === calendarDateKey(calendarSelectedDate)) el.classList.add('selected');
+    else el.classList.remove('selected');
+
+    const markers = el.querySelector('.holiday-markers');
+    if (markers) {
+        markers.replaceChildren();
+        if (cnHoliday) {
+            const marker = document.createElement('span');
+            marker.className = 'holiday-marker holiday-marker--cn';
+            marker.setAttribute('aria-hidden', 'true');
+            markers.appendChild(marker);
+        }
+        if (localHoliday) {
+            const marker = document.createElement('span');
+            marker.className = 'holiday-marker holiday-marker--local';
+            marker.setAttribute('aria-hidden', 'true');
+            markers.appendChild(marker);
+        }
+    }
+
+    const holidayNames = [];
+    if (cnHoliday && info.cnName) holidayNames.push(`${calendarText('中国节日')}：${info.cnName}`);
+    if (localHoliday && info.name) holidayNames.push(`${calendarText('本地节日')}：${info.name}`);
+    if (holidayNames.length) el.title = holidayNames.join(' / ');
+    else el.removeAttribute('title');
+    const dateLabel = new Intl.DateTimeFormat(window.WebWindowsI18n?.getLocale?.() || undefined, { dateStyle: 'full' }).format(currentDate);
+    el.setAttribute('aria-label', holidayNames.length ? `${dateLabel}，${holidayNames.join('，')}` : dateLabel);
+}
+
 async function buildCalendar(date) {
+    const token = ++calendarBuildToken;
     const year = date.getFullYear();
     const month = date.getMonth();
-    const today = new Date();
+    const region = getWebWindowsRegion();
+    const today = dateInTimeZone(new Date(), region);
     const daysEl = document.getElementById('calendar-days');
-    const locale = Intl.DateTimeFormat().resolvedOptions().locale == "ja" ? "jp-jp" : Intl.DateTimeFormat().resolvedOptions().locale || 'en-US';
-    const userCountry = locale.split('-')[1]?.toUpperCase() || 'US';
+    const weekdaysEl = document.getElementById('calendar-weekdays');
+    const todayButton = document.getElementById('calendar-today');
+    const monthPicker = document.getElementById('calendar-month-picker');
+    const status = document.getElementById('calendar-data-status');
 
-    const holidayMap = await getCombinedHolidayMap(year, userCountry);
-    const headerEl = document.getElementById('calendar-header');
     daysEl.innerHTML = '';
-    headerEl.textContent = year + '/' + String(month + 1).padStart(2, '0');
+    if (monthPicker) monthPicker.value = `${year}-${String(month + 1).padStart(2, '0')}`;
+    if (weekdaysEl) {
+        weekdaysEl.replaceChildren();
+        for (let day = 0; day < 7; day++) {
+            const label = document.createElement('span');
+            label.textContent = new Date(2023, 0, 1 + day).toLocaleDateString(region.locale, { weekday: 'short' });
+            weekdaysEl.appendChild(label);
+        }
+    }
+    if (todayButton) todayButton.textContent = calendarText('今天');
 
     const firstDay = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) {
         const blank = document.createElement('div');
-        blank.className = 'day';
-        blank.textContent = '';
+        blank.className = 'day day-empty';
+        blank.setAttribute('aria-hidden', 'true');
         daysEl.appendChild(blank);
     }
     for (let d = 1; d <= totalDays; d++) {
-        const el = document.createElement('div');
+        const el = document.createElement('button');
+        el.type = 'button';
         el.className = 'day';
-
         const currentDate = new Date(year, month, d);
-        const weekday = currentDate.toLocaleDateString(undefined, { weekday: 'short' });
-
-        el.innerHTML = `
-        <div style="font-weight:bold;">${d}</div>
-        <div class="weekday-label">${weekday}</div>
-    `;
-        //节假日调休标注
-        const dateStr = `${String(year)}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-        const info = holidayMap[dateStr];
-        if (info) {
-            const isWeekend = currentDate.getDay() === 0 || currentDate.getDay() === 6;
-            const localHoliday = info.holiday;
-            const cnHoliday = info.cnHoliday;
-            // 🟢 中外都放假 红色
-            if (localHoliday && cnHoliday) {
-                el.style.color = '#ff4d4f';
-                el.title = `${info.name}  中国节：${info.cnName}`;
-            }
-            // 🟢 周末同时中国休假 非当地节日 蓝色
-            else if (isWeekend && cnHoliday & !localHoliday) {
-                el.style.color = '#69c0ff';
-                el.title = `中国节：${info.cnName}`;
-            }
-            // 🟢 周末同时国内休假，国外周末特殊假期为 红色
-            else if (isWeekend && cnHoliday && localHoliday) {
-                el.style.color = '#ff4d4f';
-                el.title = `${info.name}  中国节：${info.cnName}`;
-            }
-            // 🔵 仅中国节假日（本地不是节假日）蓝色
-            else if (!localHoliday && cnHoliday) {
-                el.style.color = '#69c0ff';
-                el.title = `中国节：${info.cnName}`;
-            }
-
-            // 🔴 仅本地节假日 红色
-            else if (localHoliday && !cnHoliday) {
-                el.style.color = '#ff4d4f';
-                el.title = info.name;
-            }
-
-            // 🟡 本地不是节日但为周末调休（且中国是工作日或补班）
-            else if (!localHoliday && isWeekend) {
-                el.style.color = '#ffc107';  // 黄色字体
-                el.title = info.cnName || '';
-            }
-        }
+        el.textContent = String(d);
+        const markers = document.createElement('span');
+        markers.className = 'holiday-markers';
+        markers.setAttribute('aria-hidden', 'true');
+        el.appendChild(markers);
+        const dateStr = calendarDateKey(currentDate);
+        el.dataset.date = dateStr;
         if (
             d === today.getDate() &&
             month === today.getMonth() &&
             year === today.getFullYear()
         ) el.classList.add('today');
+        if (dateStr === calendarDateKey(calendarSelectedDate)) el.classList.add('selected');
+        el.setAttribute('aria-pressed', String(dateStr === calendarDateKey(calendarSelectedDate)));
+        el.addEventListener('click', () => {
+            calendarSelectedDate = new Date(year, month, d);
+            daysEl.querySelectorAll('.day[data-date]').forEach((dayElement) => {
+                const selected = dayElement.dataset.date === dateStr;
+                dayElement.classList.toggle('selected', selected);
+                dayElement.setAttribute('aria-pressed', String(selected));
+            });
+        });
         daysEl.appendChild(el);
+    }
+
+    // 月历骨架先同步呈现；节假日数据随后异步补充，不阻塞弹窗。
+    if (status) {
+        status.replaceChildren();
+        status.textContent = calendarText('正在确认节假日…');
+        status.hidden = false;
+    }
+    const holidayResult = await holidayMapFor(year, region.code);
+    if (token !== calendarBuildToken) return;
+    daysEl.querySelectorAll('.day[data-date]').forEach((el) => {
+        const parts = el.dataset.date.split('-').map(Number);
+        decorateCalendarDay(el, new Date(parts[0], parts[1] - 1, parts[2]), holidayResult.holidays[el.dataset.date]);
+    });
+    if (status) {
+        status.replaceChildren();
+        if (holidayResult.unavailable.length) {
+            const label = holidayResult.unavailable.map((source) => calendarText(source === 'cn' ? '中国节日' : '本地节日')).join('、');
+            status.append(document.createTextNode(`${calendarText('部分节假日数据暂不可用')}：${label}。`));
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'calendar-retry';
+            retry.textContent = calendarText('重试');
+            retry.addEventListener('click', () => buildCalendar(calendarDate));
+            status.appendChild(retry);
+            status.hidden = false;
+        } else {
+            status.hidden = true;
+        }
     }
 }
 document.getElementById('taskbar-datetime')?.addEventListener('click', () => {
@@ -313,549 +560,121 @@ document.getElementById('taskbar-datetime')?.addEventListener('click', () => {
     if (!isVisible) buildCalendar(calendarDate);
 });
 document.getElementById('prev-month')?.addEventListener('click', () => {
-    calendarDate.setMonth(calendarDate.getMonth() - 1);
+    calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1);
+    buildCalendar(calendarDate);
+});
+document.getElementById('calendar-month-picker')?.addEventListener('change', (event) => {
+    const match = /^(\d{4})-(\d{2})$/.exec(event.currentTarget.value);
+    if (!match) return;
+    calendarDate = new Date(Number(match[1]), Number(match[2]) - 1, 1);
     buildCalendar(calendarDate);
 });
 document.getElementById('next-month')?.addEventListener('click', () => {
-    calendarDate.setMonth(calendarDate.getMonth() + 1);
+    calendarDate = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1);
     buildCalendar(calendarDate);
+});
+document.getElementById('calendar-today')?.addEventListener('click', () => {
+    calendarDate = dateInTimeZone();
+    calendarSelectedDate = new Date(calendarDate.getTime());
+    buildCalendar(calendarDate);
+});
+
+window.addEventListener('webwindows:language-changed', () => {
+    const popup = document.getElementById('calendar-popup');
+    const todayButton = document.getElementById('calendar-today');
+    const monthPicker = document.getElementById('calendar-month-picker');
+    if (todayButton) todayButton.textContent = calendarText('今天');
+    if (monthPicker) monthPicker.setAttribute('aria-label', calendarText('选择年月'));
+    const legend = popup?.querySelector('.calendar-legend');
+    if (legend) [...legend.children].forEach((item, index) => {
+        const label = index === 0 ? '中国节日' : '本地节日';
+        item.lastChild.textContent = calendarText(label);
+    });
+    if (popup?.style.display === 'block') buildCalendar(calendarDate);
 });
 
 
 document.addEventListener('click', function (e) {
-    const calendar = document.getElementById('calendar');
+    const calendar = document.getElementById('calendar-popup');
     const time = document.getElementById('taskbar-datetime');
     if (calendar && !calendar.contains(e.target) && !time.contains(e.target)) {
         calendar.style.display = 'none';
     }
 });
 
+  /**
+ * 任务栏时钟功能
+ * @param {boolean} initialRun - 是否是首次运行（用于启动定时器）
+ */
+function updateTaskbarClock(initialRun = false) {
+    const timeEl = document.getElementById('clock-time');
+    const dateEl = document.getElementById('clock-date');
 
-function toggleCalendar() {
-    const calendar = document.getElementById('calendar');
-    if (calendar) {
-        calendar.style.display = (calendar.style.display === 'block') ? 'none' : 'block';
-    }
-}
-
-
-window.onload = function () {
-    const popup = document.getElementById('user-popup');
-    if (sessionStorage.getItem('webwindows_user_nickname') != '' && sessionStorage.getItem('webwindows_user_nickname') != null) {
-    popup.innerHTML = `
-        <div class="text-sm text-center mb-2 text-gray-700">欢迎你：${sessionStorage.getItem('webwindows_user_nickname')}</div>
-        <div class="text-sm text-center mb-2 text-gray-700">角色：普通用户</div>
-        <button onclick="logout()" class="...">注销</button>
-    `;
-    } else {
-    popup.style.display = 'none'; // 或 hidden
-    }
-    document.getElementById('login-username').addEventListener('click', () => {
-            const username = sessionStorage.getItem('webwindows_user');
-            
-            const menu = document.getElementById("power-menu");
-            menu.style.display = "none"
-
-            if (username != null && username!='') {
-                showUserMenu(); // 显示用户菜单
-            } else {
-                window.openWindow('login', '登录', 'login.html', 'https://cdn-icons-png.flaticon.com/512/747/747376.png', true, 'login-type');
-                document.getElementById('start-menu').style.display = 'none';
-            }
-    });
-    document.querySelectorAll('.window').forEach(win => {
-        const header = win.querySelector('.window-header');
-        if (!header) return;
-
-        let isDragging = false, offsetX = 0, offsetY = 0;
-        let isMaximized = false;
-        let prev = {};
-
-        header.addEventListener('mousedown', e => {
-            isDragging = true;
-            win.addEventListener('click', e => {
-                hideWindowContextMenu();
-            });
-            offsetX = e.clientX - win.offsetLeft;
-            offsetY = e.clientY - win.offsetTop;
-            win.style.zIndex = 9998; // bring to front
-        });
-
-        document.addEventListener('mousemove', e => {
-            if (!isDragging) return;
-            let x = e.clientX - offsetX;
-            let y = e.clientY - offsetY;
-            hideWindowContextMenu();
-            const snap = 20;
-            const maxW = window.innerWidth - win.offsetWidth;
-            const maxH = window.innerHeight - win.offsetHeight;
-            if (Math.abs(x) < snap) x = 0;
-            if (Math.abs(x - maxW) < snap) x = maxW;
-            if (Math.abs(y) < snap) y = 0;
-            if (Math.abs(y - maxH) < snap) y = maxH;
-
-            win.style.left = x + 'px';
-            win.style.top = y + 'px';
-        });
-
-        document.addEventListener('mouseup', () => isDragging = false);
-
-        header.addEventListener('dblclick', () => {
-            if (!isMaximized) {
-                prev = {
-                    top: win.style.top,
-                    left: win.style.left,
-                    width: win.style.width,
-                    height: win.style.height
-                };
-                win.style.top = '0';
-                win.style.left = '0';
-                win.style.width = '100vw';
-                win.style.height = 'calc(100vh - 46px)';
-            } else {
-                win.style.top = prev.top;
-                win.style.left = prev.left;
-                win.style.width = prev.width;
-                win.style.height = prev.height;
-            }
-            isMaximized = !isMaximized;
-        });
-    });
-    initUserStatus();
-};
-
-
-function bindWindowBehavior(win) {
-    const header = win.querySelector('.window-header');
-    const minimizeBtn = header?.querySelector('.button.minimize');
-    const maximizeBtn = header?.querySelector('.button.maximize');
-    const closeBtn = header?.querySelector('.button.close');
-
-    let isDragging = false, offsetX = 0, offsetY = 0;
-    let isMaximized = false;
-    let prev = {};
-
-    header?.addEventListener('mousedown', e => {
-        isDragging = true;
-        offsetX = e.clientX - win.offsetLeft;
-        offsetY = e.clientY - win.offsetTop;
-        win.style.zIndex = 9998;
-    });
-
-    document.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        let x = e.clientX - offsetX;
-        let y = e.clientY - offsetY;
-        const snap = 20;
-        const maxW = window.innerWidth - win.offsetWidth;
-        const maxH = window.innerHeight - win.offsetHeight;
-        if (Math.abs(x) < snap) x = 0;
-        if (Math.abs(x - maxW) < snap) x = maxW;
-        if (Math.abs(y) < snap) y = 0;
-        if (Math.abs(y - maxH) < snap) y = maxH;
-        win.style.left = x + 'px';
-        win.style.top = y + 'px';
-    });
-
-    document.addEventListener('mouseup', () => isDragging = false);
-    header?.addEventListener('dblclick', () => toggleMaximize());
-    maximizeBtn?.addEventListener('click', () => toggleMaximize());
-    minimizeBtn?.addEventListener('click', () => {
-        win.style.display = 'none';
-        updateTaskbarActive(win.id.replace('win-', ''), false);
-        updateTaskbarActive(win.id, false);
-    });
-    closeBtn?.addEventListener('click', () => {
-        win.remove();
-        updateTaskbarActive(win.id.replace('win-', ''), false);
-        const icon = document.querySelector('.taskbar-app[data-id="' + win.id + '"]');
-        icon?.remove();
-    });
-
-    function toggleMaximize() {
-        if (!isMaximized) {
-            prev = {
-                top: win.style.top,
-                left: win.style.left,
-                width: win.style.width,
-                height: win.style.height
-            };
-            win.style.top = '0';
-            win.style.left = '0';
-            win.style.width = '100vw';
-            win.style.height = 'calc(100vh - 46px)';
-        } else {
-            win.style.top = prev.top;
-            win.style.left = prev.left;
-            win.style.width = prev.width;
-            win.style.height = prev.height;
-        }
-        isMaximized = !isMaximized;
-    }
-}
-
-
-
-
-document.querySelectorAll('.icon-tile').forEach(tile => {
-    tile.addEventListener('click', () => {
-        const id = tile.dataset.id || tile.id || Math.random().toString(36).substring(2, 8);
-        const title = tile.querySelector('label')?.innerText || '窗口';
-        const icon = tile.querySelector('img')?.src || '';
-        const href = tile.dataset.href || tile.getAttribute('data-href') || '';
-        if (href) {
-            window.openWindow(id, title, href, icon);
-        }
-    });
-});
-
-
-document.querySelectorAll('.icon').forEach(icon => {
-    if (icon.classList.contains('no-auto')) return; 
-    icon.addEventListener('click', () => {
-        const id = icon.id || Math.random().toString(36).slice(2, 8);
-        const title = icon.querySelector('label')?.innerText || '窗口';
-        const iconUrl = icon.querySelector('img')?.getAttribute('src') || 'assets/icons/default.png';
-        const onclickAttr = icon.getAttribute('onclick') || '';
-        let href = '';
-
-        // 云秘书特殊处理
-        if (id == "yunmishu") {
-            return;
-        }
-
-        const match = onclickAttr.match(/window.openWindow\([^,]+,[^,]+,\s*['"]([^'"]+)['"]/);
-        if (match) {
-            href = match[1];
-        }
-
-        window.openWindow(id, title, href, iconUrl);
-
-    });
-});
-
-
-function createTaskbarIcon(id, title, iconUrl) {
-    const existing = document.querySelector('.taskbar-app[data-id="win-' + id + '"]');
-    if (existing) return;
-    const taskbar = document.querySelector('.taskbar');
-    const icon = document.createElement('div');
-    icon.className = 'taskbar-app';
-    icon.dataset.id = 'win-' + id;
-    icon.title = title;
-    icon.style.display = 'flex';
-    icon.style.alignItems = 'center';
-    icon.style.gap = '6px';
-    icon.style.marginLeft = '6px';
-    icon.style.padding = '4px 8px';
-    icon.style.borderRadius = '6px';
-    icon.style.cursor = 'pointer';
-    icon.style.background = 'rgba(255,255,255,0.15)';
-    icon.style.color = 'white';
-    icon.style.fontSize = '12px';
-    icon.addEventListener("contextmenu", function (e) {
-        showWindowContextMenu(e, 'win-' + id);
-    });
-    document.addEventListener("click", () => {
-        document.getElementById("window-context-menu").style.display = "none";
-    });
-    const img = document.createElement('img');
-    img.src = iconUrl;
-    img.style.width = '18px';
-    img.style.height = '18px';
-    img.style.borderRadius = '4px';
-
-    const text = document.createElement('span');
-    text.textContent = title;
-
-    icon.appendChild(img);
-    icon.appendChild(text);
-    taskbar.appendChild(icon);
-    updateTaskbarActive(id, true);
-
-    icon.addEventListener('click', () => {
-        const win = document.getElementById('win-' + id);
-        if (win) {
-            const isVisible = win.style.display !== 'none';
-            win.style.display = isVisible ? 'none' : 'block';
-            updateTaskbarActive(id, !isVisible);
-            if (!isVisible) win.style.zIndex = 9998;
-        }
-    });
-}
-
-//平板窗体移动支持
-function padTitleBarTouch(win, titleBar) {
-    titleBar.addEventListener("touchstart", (e) => {
-        const win = e.target.closest(".window");
-        const touch = e.touches[0];
-        const offsetX = touch.clientX - win.offsetLeft;
-        const offsetY = touch.clientY - win.offsetTop;
-
-        function onTouchMove(e) {
-            const touch = e.touches[0];
-            win.style.left = `${touch.clientX - offsetX}px`;
-            win.style.top = `${touch.clientY - offsetY}px`;
-            e.preventDefault(); // 🔑 关键：阻止滚动，启用拖动
-        }
-
-        function onTouchEnd() {
-            document.removeEventListener("touchmove", onTouchMove);
-            document.removeEventListener("touchend", onTouchEnd);
-        }
-
-        // ⚠️ 添加 passive: false 以允许 preventDefault 生效
-        document.addEventListener("touchmove", onTouchMove, { passive: false });
-        document.addEventListener("touchend", onTouchEnd);
-    });
-
-}
-function clearAspSessionCookies() {
-  document.cookie.split(';').forEach(cookie => {
-    const name = cookie.trim().split('=')[0];
-    if (name.startsWith('ASPSESSIONID')) {
-      document.cookie = name + '=;expires=' + new Date(0).toUTCString() + ';path=/';
-    }
-  });
-}
-
-function openCloudWindow() {
-    if (document.getElementById("win-yunmishu_cloud") || document.getElementById("win-yunmishu_cloud")) {
+    if (!timeEl || !dateEl) {
+        // 元素不存在，停止运行
+        console.warn('任务栏时钟元素未找到，跳过更新。');
         return;
     }
-    const win = document.createElement("div");
-    const content = document.createElement("iframe");
-    const titleBar = document.createElement("div");
-    win.className = "window";
-    win.id = "win-yunmishu_cloud";
-    win.style.position = "absolute";
-    win.style.top = "120px";
-    win.style.left = "120px";
-    win.style.width = "600px";
-    win.style.height = "400px"
-    titleBar.className = "window-header";
-    titleBar.innerHTML = `
-                                                               <img class="window-icon" src='assets/icons/cloud_secretary.png' />
-                                                               <div class="title">云秘书对日外贸评测中心</div>
-                                                               <div class="buttons">
-                                                                 <div class="button minimize" title="最小化">_</div>
-                                                                 <div class="button maximize" title="缩放" onclick="toggleMaximizeWindow('win-yunmishu_cloud')">⬜</div>
-                                                                 <div class="button close" title="关闭" onclick="document.getElementById('win-yunmishu_cloud').remove();closeWindow('${win.id}');">✕</div>
-                                                               </div>`
 
-    padTitleBarTouch(win, titleBar);
+    const now = new Date();
+    const region = getWebWindowsRegion();
+    let clock12 = false;
+    try {
+      clock12 = window.localStorage.getItem("webwindows.taskbar.clock12") === "1";
+    } catch (_) {}
 
-    content.src = 'https://www.aryansoft.cn/jpshop/';
-    content.style.width = "100%";
-    content.style.height = 'calc(100vh - 46px)';
-    content.style.border = "none";
-
-    // ✅ 屏蔽 iframe 自身右键菜单
-    content.onload = () => {
-        try {
-            content.contentWindow.document.addEventListener("contextmenu", e => e.preventDefault());
-        } catch (e) {
-            // 跨域则忽略
-            console.log(e);
-        }
-    };
-    win.appendChild(titleBar);
-    win.appendChild(content);
-    document.body.appendChild(win);
-
-    setTimeout(() => bindWindowBehavior(win), 0);
-    setTimeout(() => {
-        toggleMaximizeWindow(win.id);
-    }, 50);
-    win.style.zIndex = "1001";
-    createTaskbarIcon("yunmishu_cloud", "云秘书对日外贸评测中心", 'assets/icons/cloud_secretary.png')
-    updateTaskbarActive(win.id, true);
-}
-
-
-function updateTaskbarActive(id, isActive) {
-    const icon = document.querySelector('.taskbar-app[data-id="win-' + id + '"]');
-    if (icon) {
-        icon.style.backgroundColor = isActive ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.1)';
-        icon.style.border = isActive ? '1px solid rgba(255,255,255,0.6)' : 'none';
-    }
-}
-
-function disableIframes() {
-  document.querySelectorAll("iframe").forEach(iframe => {
-    iframe.dataset.prevPointer = iframe.style.pointerEvents;
-    iframe.style.pointerEvents = "none";
-  });
-}
-
-function restoreIframes() {
-  document.querySelectorAll("iframe").forEach(iframe => {
-    iframe.style.pointerEvents = iframe.dataset.prevPointer || "";
-  });
-}
-
-(function () {
-    const directions = ["n", "s", "e", "w", "ne", "nw", "se", "sw"];
-    const attachResizers = (win) => {
-        if (win.dataset.resizable === "true") return;
-        directions.forEach(dir => {
-            const el = document.createElement("div");
-            el.className = "resizer " + dir;
-            win.appendChild(el);
-            el.addEventListener("mousedown", e => initResize(e, win, dir));
-        });
-        win.dataset.resizable = "true";
-    };
-    // main.js 更新版本：使用专用边角拖动机制进行窗口缩放（避免 iframe 卡顿）
-
-    function initWindowResize(win, cornerEl) {
-    let startX, startY, startWidth, startHeight;
-
-    cornerEl.addEventListener("mousedown", function (e) {
-        e.preventDefault();
-        startX = e.clientX;
-        startY = e.clientY;
-        startWidth = parseInt(document.defaultView.getComputedStyle(win).width, 10);
-        startHeight = parseInt(document.defaultView.getComputedStyle(win).height, 10);
-
-        document.documentElement.addEventListener("mousemove", doDrag, false);
-        document.documentElement.addEventListener("mouseup", stopDrag, false);
+    // 格式化时间 (例如：12:45)
+    const timeString = now.toLocaleTimeString(region.locale, {
+        timeZone: region.timeZone,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: clock12
+    });
+    
+    // 格式化日期 (例如：2025/11/23)
+    const dateString = now.toLocaleDateString(region.locale, {
+        timeZone: region.timeZone,
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit' 
     });
 
-    function doDrag(e) {
-        const newWidth = Math.max(300, startWidth + e.clientX - startX);
-        const newHeight = Math.max(200, startHeight + e.clientY - startY);
+    timeEl.textContent = timeString;
+    dateEl.textContent = dateString;
 
-        win.style.width = newWidth + "px";
-        win.style.height = newHeight + "px";
-    }
-
-    function stopDrag() {
-        document.documentElement.removeEventListener("mousemove", doDrag, false);
-        document.documentElement.removeEventListener("mouseup", stopDrag, false);
-    }
-    }
-
-    // 示例：为所有含 .window 的元素添加右下角拖动逻辑
-    window.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll(".window").forEach(win => {
-        let resizer = win.querySelector(".window-resize-corner");
-        if (!resizer) {
-        resizer = document.createElement("div");
-        resizer.className = "window-resize-corner";
-        Object.assign(resizer.style, {
-            position: "absolute",
-            width: "20px",
-            height: "20px",
-            right: "0",
-            bottom: "0",
-            cursor: "nwse-resize",
-            zIndex: "1000"
-        });
-        win.appendChild(resizer);
-        }
-        initWindowResize(win, resizer);
-    });
-    });
-
-    function initResize(e, win, dir) {
-        e.preventDefault();
-        disableIframes();
-        const startX = e.clientX, startY = e.clientY;
-        const startW = parseInt(window.getComputedStyle(win).width, 10);
-        const startH = parseInt(window.getComputedStyle(win).height, 10);
-        const startL = win.offsetLeft, startT = win.offsetTop;
-
-        function doDrag(e) {
-            if (dir.includes("e")) win.style.width = Math.max(300, startW + e.clientX - startX) + "px";
-            if (dir.includes("s")) win.style.height = Math.max(200, startH + e.clientY - startY) + "px";
-            if (dir.includes("w")) {
-                const newW = Math.max(300, startW - (e.clientX - startX));
-                win.style.width = newW + "px";
-                win.style.left = startL + (startW - newW) + "px";
-            }
-            if (dir.includes("n")) {
-                const newH = Math.max(200, startH - (e.clientY - startY));
-                win.style.height = newH + "px";
-                win.style.top = startT + (startH - newH) + "px";
-            }
-        }
-        
-
-        function stopDrag() {
-            document.removeEventListener("mousemove", doDrag);
-            document.removeEventListener("mouseup", stopDrag);
-            restoreIframes(); // ✅ 拖动结束，恢复 iframe
-        }
-
-        document.addEventListener("mousemove", doDrag);
-        document.addEventListener("mouseup", stopDrag);
-    }
-
-    // 初始执行
-    document.querySelectorAll('.window').forEach(attachResizers);
-
-    // 动态观察后续添加的 .window
-    const observer = new MutationObserver(mutations => {
-        mutations.forEach(m => {
-            m.addedNodes.forEach(node => {
-                if (node.classList && node.classList.contains("window")) {
-                    attachResizers(node);
-                }
-            });
-        });
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
-})();
-function togglePowerMenu() {
-    const menu = document.getElementById("power-menu");
-    const powerBtn = document.querySelector(".power-btn");
-
-    if (!powerBtn || !menu) return;
-    document.getElementById('user-popup').style.display = 'none';
-    const rect = powerBtn.getBoundingClientRect();
-
-    if (menu.style.display !== "block") {
-        menu.style.display = "block";
-        requestAnimationFrame(() => {
-            const menuHeight = menu.offsetHeight;
-            const menuWidth = menu.offsetWidth;
-            const centerX = rect.left + rect.width / 2 - menuWidth / 2;
-            const maxLeft = window.innerWidth - menuWidth - 10;
-
-            menu.style.left = `${Math.min(centerX, maxLeft)}px`;
-            menu.style.top = `${rect.top - menuHeight - 5}px`;
-        });
-    } else {
-        menu.style.display = "none";
+    // 首次运行时，设置定时器每秒更新
+    if (initialRun) {
+        // 使用 setTimeout + 递归，保证时间在秒数变化时准确同步
+        const delay = 1000 - (now.getMilliseconds() % 1000);
+        setTimeout(() => {
+            updateTaskbarClock(false); // 第一次调用后，不再设置为 initialRun
+            setInterval(updateTaskbarClock, 1000); // 启动每秒更新
+        }, delay);
     }
 }
-/**
- * VUE不可，云资源使用
- */
-function RemoveExplorer(){
-    document.querySelector(`.taskbar-app[data-id="win-explorer"]`).remove();
-}
-
-function toggleStartMenu() {
-    const menu = document.getElementById("start-menu");
-    if (menu) {
-        menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
-    }
-}
-
-
+});
 function bindStartMenuAutoHide(attempt = 0) {
     const startMenu = document.getElementById("start-menu");
     const startButton = document.querySelector(".start-button");
     const powerMenu = document.getElementById("power-menu");
+    const userPopup = document.getElementById("user-popup");
+    const loginArea = document.getElementById("login-area");
     if (startMenu && startButton) {
         document.addEventListener("click", function (e) {
             if (!startMenu.contains(e.target) && !startButton.contains(e.target)) {
                 startMenu.style.display = "none";
+                if (typeof window.hideUserPopup === "function") window.hideUserPopup();
             }
             if (!powerMenu.contains(e.target) && !e.target.closest(".power-btn")) {
                 powerMenu.style.display = "none";
+            }
+            if (
+                userPopup &&
+                !userPopup.contains(e.target) &&
+                !loginArea?.contains(e.target) &&
+                typeof window.hideUserPopup === "function"
+            ) {
+                window.hideUserPopup();
             }
         });
     } else if (attempt < 60) { // 最多尝试约 1 秒（60 帧）
@@ -865,272 +684,238 @@ function bindStartMenuAutoHide(attempt = 0) {
     }
 
 }
-bindStartMenuAutoHide();
-
-//任务栏右键菜单
-let currentContextTarget = null;
-
-function showWindowContextMenu(e, winId) {
-    e.preventDefault();
-
-    const menu = document.getElementById("window-context-menu");
-    currentContextTarget = document.getElementById(winId);
-    menu.style.display = "block";  // 必须先显示，才能正确获取尺寸
-
-    // 动态获取菜单宽高
-    const menuWidth = menu.offsetWidth;
-    const menuHeight = menu.offsetHeight;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-
-    let left = e.pageX;
-    let top = e.pageY;
-
-    // 如果超出右边界
-    if (left + menuWidth > viewportWidth) {
-        left = viewportWidth - menuWidth - 8;
-    }
-
-    // 如果超出底部边界
-    if (top + menuHeight > viewportHeight) {
-        top = viewportHeight - menuHeight - 8;
-    }
-
-    menu.style.left = left + "px";
-    menu.style.top = top + "px";
-}
-
-function hideWindowContextMenu() {
-    document.getElementById("window-context-menu").style.display = "none";
-}
-function refreshDesktop() {
-    const desktop = document.querySelector(".desktop");
-
-    // 示例：重载图标内容（可以自定义你的图标加载逻辑）
-    // 先保存原始HTML结构
-    const iconsHTML = desktop.querySelector(".desktop-icons")?.innerHTML;
-
-    if (iconsHTML) {
-        // 模拟重载：清空再重新插入图标HTML
-        const iconContainer = desktop.querySelector(".desktop-icons");
-        iconContainer.innerHTML = "";
-        setTimeout(() => {
-            iconContainer.innerHTML = iconsHTML;
-        }, 100);  // 轻微延迟模拟刷新
-    }
-
-    // 可选：重新加载背景图
-    const bg = document.querySelector(".desktop-background");
-    if (bg && bg.tagName === "IMG") {
-        const src = bg.src;
-        bg.src = "";   // 清空
-        setTimeout(() => {
-            bg.src = src;  // 恢复原图
-        }, 50);
-    }
-
-    // 可选：播放一个“刷新动效”
-    desktop.classList.add("desktop-flash");
-    setTimeout(() => desktop.classList.remove("desktop-flash"), 300);
-}
-// 全局点击关闭右键菜单
-document.addEventListener("click", hideWindowContextMenu);
-
-
-
-document.addEventListener("DOMContentLoaded", () => {
-    setupLanguageControl();  // ⬅️ 自动执行简繁切换（根据 localStorage.lang）
-});
-
-//关机
-function shutdownSystem() {
-    // 1. 移除所有事件监听器（推荐先解绑自定义的）
-    sessionStorage.removeItem('booted');
-    const clone = document.body.cloneNode(false); // 深度为 false，仅保留结构
-    document.body.parentNode.replaceChild(clone, document.body);
-
-    // 2. 清除所有定时器（setInterval / setTimeout）
-    let id = window.setTimeout(() => { }, 0);
-    while (id--) window.clearTimeout(id);
-    id = window.setInterval(() => { }, 0);
-    while (id--) window.clearInterval(id);
-    document.body.innerHTML = "";
-    // 3. 清除本地存储缓存（可选）
-    localStorage.clear();  // 若希望下次启动是干净的可以启用
-
-    // 4. 清除页面内容只保留黑屏动画
-    const shutdownOverlay = document.createElement("div");
-    shutdownOverlay.style.position = "fixed";
-    shutdownOverlay.style.top = 0;
-    shutdownOverlay.style.left = 0;
-    shutdownOverlay.style.width = "100vw";
-    shutdownOverlay.style.height = "100vh";
-    shutdownOverlay.style.backgroundColor = "black";
-    shutdownOverlay.style.color = "white";
-    shutdownOverlay.style.display = "flex";
-    shutdownOverlay.style.flexDirection = "column";
-    shutdownOverlay.style.justifyContent = "center";
-    shutdownOverlay.style.alignItems = "center";
-    shutdownOverlay.style.fontSize = "24px";
-    shutdownOverlay.style.zIndex = "99999";
-    shutdownOverlay.innerHTML = `
-    <div style="margin-bottom: 20px;">WebWindows 正在关机...</div>
-    <div class="loader"></div>
-`;
-
-    document.body.appendChild(shutdownOverlay);
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-            for (let registration of registrations) {
-                registration.unregister(); // 清除 PWA 缓存行为
-            }
-        });
-    }
-    // 5. 1.5秒后显示结束语，并“挂起”页面
-    setTimeout(() => {
-        shutdownOverlay.innerHTML = "<div>您已安全退出 WebWindows</div>";
-        // 将 document 内容全部置空，降低内存占用
-        document.body.innerHTML = "";
-        document.body.appendChild(shutdownOverlay);
-    }, 1500);
-
-    // 6. （可选）尝试关闭窗口
-    window.open('', '_self', '');
-    window.close();
-
-    // Android端末自动关闭
-    if (window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App) {
-        Capacitor.Plugins.App.exitApp();
-    }
-}
-function makeDesktopIconsDraggable() {
-    const icons = document.querySelectorAll('.desktop .icon');
-    icons.forEach(icon => {
-        icon.draggable = true;
-
-        icon.addEventListener('dragstart', e => {
-            e.dataTransfer.setData("text/plain", icon.id);
-            icon.classList.add('dragging');
-        });
-
-        icon.addEventListener('dragend', () => {
-            icon.classList.remove('dragging');
-        });
-    });
-
-    const desktop = document.querySelector('.desktop');
-    desktop.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
-
-    desktop.addEventListener('drop', e => {
-        e.preventDefault();
-        const id = e.dataTransfer.getData("text/plain");
-        const icon = document.getElementById(id);
-        if (icon) {
-            // 将图标移动到 drop 位置的“最近网格”
-            const gridX = Math.floor(e.offsetX / 116) * 116;
-            const gridY = Math.floor(e.offsetY / 116) * 116;
-            icon.style.position = 'absolute';
-            icon.style.left = gridX + 'px';
-            icon.style.top = gridY + 'px';
-            icon.style.zIndex = Date.now();
-        }
-    });
-}
-function enterFullscreen() {
-    const elem = document.documentElement;
-    if (elem.requestFullscreen) {
-        elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen(); // Safari
-    } else if (elem.msRequestFullscreen) {
-        elem.msRequestFullscreen(); // IE11
-    }
-}
+/**
+ * 设置桌面壁纸背景
+ * @param {string} path - 壁纸图片的路径
+ */
 function setWallpaperByPath(path) {
-    document.body.style.backgroundImage = `url('${path}')`;
-    document.body.style.backgroundSize = 'cover';
-    document.body.style.backgroundRepeat = 'no-repeat';
-    document.body.style.backgroundPosition = 'center center';
-    document.body.style.backgroundAttachment = 'fixed';
-}
-document.addEventListener("DOMContentLoaded", () => {
-    // 其他已有代码...
+    // 假设您的桌面根元素是 body
+    const desktopEl = document.body;
 
-    // ✅ 加载保存的壁纸路径
-    const savedWallpaper = localStorage.getItem("selectedWallpaper");
-    if (savedWallpaper) {
-        setWallpaperByPath(savedWallpaper);
+    if (desktopEl) {
+        desktopEl.style.backgroundImage = `url(${path})`;
+        desktopEl.style.backgroundSize = 'cover';
+        desktopEl.style.backgroundRepeat = 'no-repeat';
+        desktopEl.style.backgroundPosition = 'center center';
+    }
+}
+
+window.addEventListener('webwindows:region-changed', () => {
+    calendarDate = dateInTimeZone();
+    updateTaskbarClock(false);
+    const popup = document.getElementById('calendar-popup');
+    if (popup?.style.display === 'block') buildCalendar(calendarDate);
+});
+
+const DESKTOP_SCALE_MIN = 0.75;
+const DESKTOP_SCALE_MAX = 1.5;
+
+function isValidDesktopScale(scale) {
+    const value = Number(scale);
+    return Number.isFinite(value) && value >= DESKTOP_SCALE_MIN && value <= DESKTOP_SCALE_MAX;
+}
+
+function getDesktopScalePreference() {
+    const mode = localStorage.getItem("ui-scale-mode");
+    const savedScale = localStorage.getItem("ui-scale");
+    if (mode === "auto") return "auto";
+    if (mode === "manual" && isValidDesktopScale(savedScale)) return String(Number(savedScale));
+
+    // Older builds saved their implicit 100% startup default exactly like a
+    // manual choice. Treat that ambiguous legacy value as unset; other saved
+    // values came from an explicit selection and remain manual.
+    if (!isValidDesktopScale(savedScale) || Number(savedScale) === 1) return "auto";
+    return String(Number(savedScale));
+}
+
+function getAutomaticDesktopScale() {
+    // Automatic mode keeps the browser's 100% coordinate space. Responsive
+    // layouts handle viewport size; CSS zoom remains an explicit user choice.
+    return 1;
+}
+
+function getDesktopScaleFactor() {
+    return window.WebWindowsCoordinates?.scale?.() || 1;
+}
+
+// Backward-compatible scale accessor; pointer and geometry conversion belongs
+// to the shared WebWindows coordinate system.
+window.getDesktopScaleFactor = getDesktopScaleFactor;
+
+/** Applies either the automatic viewport scale or an explicit manual scale. */
+function setDesktopScale(scale) {
+    const automatic = String(scale).trim().toLowerCase() === "auto";
+    const normalizedScale = automatic ? getAutomaticDesktopScale() : Number(scale);
+    if (!isValidDesktopScale(normalizedScale)) return;
+
+    document.body.style.zoom = String(normalizedScale);
+    localStorage.setItem("ui-scale", String(normalizedScale));
+    localStorage.setItem("ui-scale-mode", automatic ? "auto" : "manual");
+}
+
+window.setDesktopScale = setDesktopScale;
+window.getDesktopScalePreference = getDesktopScalePreference;
+
+let desktopScaleResizeFrame = 0;
+function refreshAutomaticDesktopScale() {
+    if (localStorage.getItem("ui-scale-mode") !== "auto" || desktopScaleResizeFrame) return;
+    desktopScaleResizeFrame = requestAnimationFrame(() => {
+        desktopScaleResizeFrame = 0;
+        setDesktopScale("auto");
+    });
+}
+
+window.addEventListener("resize", refreshAutomaticDesktopScale, { passive: true });
+window.screen?.orientation?.addEventListener?.("change", refreshAutomaticDesktopScale);
+
+document.addEventListener("DOMContentLoaded", () => {
+    setDesktopScale(getDesktopScalePreference());
+});
+
+window.addEventListener("message", (event) => {
+    if (event.data?.type === "set-desktop-scale") {
+        setDesktopScale(event.data.scale);
     }
 });
-window.addEventListener("contextmenu", function (e) {
-    e.preventDefault();
-});
-function initUserStatus() {
-  console.log("initUserStatus")
-  const nameEl = document.getElementById('login-username');
-  const avatarEl = document.getElementById('login-avatar');
-  const statusDot = document.getElementById('login-status');
 
-  const username = sessionStorage.getItem('webwindows_user');
-  const nickname = sessionStorage.getItem('webwindows_user_nickname');
-  
-  if (username != '' && username != null) {
-    nameEl.textContent = nickname; 
-    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/747/747376.png";
-    statusDot.style.backgroundColor = '#44cc44';
-    
-  } else {
-    nameEl.textContent = '线下用户';
-    avatarEl.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    statusDot.style.backgroundColor = '#cc8800';
+function openAbout() {
+  const overlay = document.getElementById('about-overlay');
+  if (!overlay) return;
+  const i18n = window.WebWindowsI18n;
+  if (i18n && typeof i18n.applyTo === 'function') {
+    i18n.applyTo(overlay, i18n.getLanguage());
   }
-  document.getElementById("user-popup").style.display = "none";
-}
-function showUserMenu() {
-  const menu = document.getElementById("user-popup");
-  const btn = document.getElementById("login-username");
-
-  if (!menu || !btn) return;
-
-  menu.classList.add('show');
+  overlay.classList.add('show');
 }
 
-function toggleUserPopup(e) {
-  e.stopPropagation(); // 防止冒泡关闭
-  const popup = document.getElementById('user-popup');
-  popup.style.display = (popup.style.display === 'block') ? 'none' : 'block';
+function closeAbout() {
+  document.getElementById('about-overlay').classList.remove('show');
 }
 
-// 登录成功后绑定点击事件
-const userArea = document.getElementById('login-username');
-if (userArea) {
-  userArea.addEventListener('click', toggleUserPopup);
+async function openGuide(topic) {
+  const entry = topic
+    ? `guide.html?topic=${encodeURIComponent(topic)}`
+    : 'guide.html';
+  try {
+    if (window.WebWindows?.apps?.launch) {
+      return await window.WebWindows.apps.launch('webwindows.system.guide', { url: entry });
+    }
+    return window.openWindow(
+      'guide',
+      '使用向导',
+      entry,
+      'assets/icons/guide.svg',
+      true,
+      '',
+      '1060px',
+      '740px'
+    );
+  } catch (error) {
+    console.error('[Guide]', error);
+    window.alert(error.message || '使用向导暂时无法打开。');
+  }
 }
 
-// 点击其他区域自动关闭
-document.addEventListener('click', function (e) {
-  const popup = document.getElementById('user-popup');
-  if (!popup.contains(e.target) && !document.getElementById('login-username').contains(e.target)) {
-    popup.style.display = 'none';
+function switchTabAbout(index) {
+  const overlay = document.getElementById('about-overlay');
+  const tabs = overlay?.querySelectorAll('.tabAbout') || [];
+  const pages = overlay?.querySelectorAll('.page') || [];
+
+  if (!tabs[index] || !pages[index]) {
+    console.warn("switchTab 越界:", index, tabs.length, pages.length);
+    return;
+  }
+
+  tabs.forEach(t => t.classList.remove('active'));
+  pages.forEach(p => p.classList.remove('active'));
+
+  tabs[index].classList.add('active');
+  pages[index].classList.add('active');
+}
+/* 点击背景关闭 */
+document.getElementById('about-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAbout();
+});
+// ===== 音量模块 =====
+
+const knob = document.getElementById('knob');
+const label = document.getElementById('label');
+const ring = document.getElementById('ring');
+const panel = document.getElementById('volume-panel');
+const volumeRange = document.getElementById('volume-range');
+const deviceAudio = window.WebWindows?.device?.audio;
+
+let volume = deviceAudio?.getVolume().value ?? 0.5;
+
+const MIN = -135;
+const MAX = 135;
+
+let active = false;
+
+// hover 控制
+ring.addEventListener('mouseenter', () => {
+  active = true;
+  ring.classList.add('active');
+});
+
+ring.addEventListener('mouseleave', () => {
+  active = false;
+  ring.classList.remove('active');
+});
+
+// 设置音量
+function setVolume(v, applyControl = true) {
+  v = Math.max(0, Math.min(1, v));
+
+  const step = 0.02;
+  v = Math.round(v / step) * step;
+
+  volume = v;
+
+  const angle = MIN + (MAX - MIN) * volume;
+  knob.style.transform = `rotate(${angle}deg)`;
+
+  label.innerText = Math.round(volume * 100) + '%';
+  if (volumeRange) volumeRange.value = String(Math.round(volume * 100));
+  if (applyControl) {
+    deviceAudio?.setVolume(volume).catch((error) => console.warn('[DeviceAPI]', error));
+  }
+}
+
+// 滚轮控制
+ring.addEventListener('wheel', (e) => {
+  if (!active) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const direction = Math.sign(e.deltaY);
+  setVolume(volume - direction * 0.02);
+
+}, { passive: false });
+
+const btn = document.getElementById('volume-btn');
+
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  panel.classList.toggle('hidden');
+});
+
+volumeRange?.addEventListener('input', () => {
+  setVolume(Number(volumeRange.value) / 100);
+});
+
+// 点击外部关闭
+document.addEventListener('click', (e) => {
+  if (!panel.contains(e.target) && e.target !== btn) {
+    panel.classList.add('hidden');
   }
 });
 
-
-function logout() {
-  sessionStorage.removeItem('webwindows_user');
-  sessionStorage.removeItem('webwindows_user_nickname');
-  document.getElementById("user-popup").style.display = "none";
-  deleteCookie("webwindows_user");
-  deleteCookie("webwindows_user_nickname");
-  initUserStatus();
-}
-function deleteCookie(name) {
-  document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-}
-
-window.addEventListener('DOMContentLoaded', function () {
-    // 可不传容器，内部会 teleport 到 body；需要可传选择器：DesktopMenusWidget.mount('#menus-root')
-    DesktopMenusWidget.mount('#menus-root');
+// 初始化
+setVolume(volume, false);
+window.addEventListener('webwindows:volume-change', (event) => {
+  const next = Number(event.detail?.value);
+  if (Number.isFinite(next)) setVolume(next, false);
 });
+bindStartMenuAutoHide();
